@@ -1,0 +1,292 @@
+# Stakeholder profiles. Template from ciao-views/02-stakeholders-and-concerns.md.
+# Role list is V&B Table 9.1 (see vb_table_9_1.yaml), not invented.
+# ISO 42010:2022 class is Clause 3.17.
+#
+# Extra profiles that V&B folds into a coarser row (security analyst → Analyst,
+# SRE → Infrastructure support) keep the V&B row id as `vb_row` and add
+# concern/task specialisation on top.
+
+defaults: &defaults
+  presentation:
+    granularity: medium
+    notation: semi-formal
+    max_elements_per_view: 20
+    vocabulary: implementation
+    include_rationale: false
+  evidence_policy:
+    require_anchor: true
+    allow_inference: true
+    on_missing_evidence: infer-and-flag
+  acceptance:
+    concern_coverage_min: 0.70
+    grounding_rate_min: 0.75
+    correspondence_violations_max: 2
+
+stakeholders:
+
+  - id: tester-and-integrator
+    <<: *defaults
+    name: Tester and integrator
+    vb_row: tester-and-integrator
+    iso_42010_class: developer
+    technical_depth: high
+    system_familiarity: occasional
+    concerns:
+      - {id: functional-suitability, priority: 1}
+      - {id: control-flow,           priority: 2}
+      - {id: connectivity,           priority: 3}
+    tasks:
+      - id: design-integration-tests
+        description: design tests that follow a request through the running system
+        success_criterion: >
+          every participant in the generated behavioural view resolves to a
+          type in the repository, and ordered calls correspond to graph edges
+    presentation:
+      granularity: low
+      notation: formal
+      max_elements_per_view: 20
+      vocabulary: implementation
+      include_rationale: false
+    evidence_policy:
+      require_anchor: true
+      allow_inference: false
+      on_missing_evidence: declare-gap
+    viewpoints:
+      required: [scenario, control-flow, code-mapping, api-contract]
+      optional: [module-uses, context]
+
+  - id: member-of-development-team
+    <<: *defaults
+    name: Member of development team
+    vb_row: member-of-development-team
+    iso_42010_class: developer
+    technical_depth: high
+    system_familiarity: expert
+    concerns:
+      - {id: maintainability, priority: 1}
+      - {id: control-flow,    priority: 2}
+      - {id: connectivity,    priority: 3}
+    tasks:
+      - id: locate-change
+        description: find the modules a proposed change touches
+        success_criterion: >
+          every module named in the change description resolves to a directory
+          or file present in the repository
+    viewpoints:
+      required: [module-decomposition, module-uses, cnc-runtime, code-mapping]
+      optional: [control-flow, data-model, scenario]
+
+  - id: maintainer
+    <<: *defaults
+    name: Maintainer
+    vb_row: maintainer
+    iso_42010_class: maintainer
+    technical_depth: high
+    system_familiarity: expert
+    concerns:
+      - {id: maintainability, priority: 1}
+      - {id: flexibility,     priority: 2}
+      - {id: control-flow,    priority: 3}
+    presentation:
+      granularity: medium
+      notation: semi-formal
+      max_elements_per_view: 20
+      vocabulary: implementation
+      include_rationale: true
+    viewpoints:
+      required: [module-decomposition, module-uses, cnc-runtime, code-mapping]
+      optional: [control-flow, decision-record]
+
+  - id: current-and-future-architect
+    <<: *defaults
+    name: Current and future architect
+    vb_row: current-and-future-architect
+    iso_42010_class: developer
+    technical_depth: high
+    system_familiarity: expert
+    concerns:
+      - {id: flexibility,     priority: 1}
+      - {id: maintainability, priority: 2}
+      - {id: general,         priority: 3}
+    presentation:
+      granularity: medium
+      notation: semi-formal
+      max_elements_per_view: 25
+      vocabulary: implementation
+      include_rationale: true
+    evidence_policy:
+      require_anchor: true
+      allow_inference: false
+      on_missing_evidence: declare-gap
+    viewpoints:
+      required: [module-uses, cnc-runtime, decision-record, context]
+      optional: [allocation-deployment, module-layered]
+
+  - id: new-stakeholder
+    <<: *defaults
+    name: New stakeholder
+    vb_row: new-stakeholder
+    iso_42010_class: developer
+    technical_depth: medium
+    system_familiarity: newcomer
+    concerns:
+      - {id: maintainability, priority: 1}
+      - {id: general,         priority: 2}
+    presentation:
+      granularity: high
+      notation: informal
+      max_elements_per_view: 7
+      vocabulary: domain
+      include_rationale: false
+    evidence_policy:
+      require_anchor: false
+      allow_inference: true
+      on_missing_evidence: omit
+    viewpoints:
+      required: [context, module-decomposition, onboarding-path]
+      optional: []
+
+  - id: project-manager
+    <<: *defaults
+    name: Project manager
+    vb_row: project-manager
+    iso_42010_class: acquirer
+    technical_depth: medium
+    system_familiarity: occasional
+    concerns:
+      - {id: general,         priority: 1}
+      - {id: maintainability, priority: 2}
+    presentation:
+      granularity: high
+      notation: informal
+      max_elements_per_view: 12
+      vocabulary: domain
+      include_rationale: true
+    viewpoints:
+      required: [context, allocation-deployment, build-work-assignment]
+      optional: [module-decomposition]
+
+  - id: analyst
+    <<: *defaults
+    name: Analyst
+    vb_row: analyst
+    iso_42010_class: assessor
+    technical_depth: high
+    system_familiarity: newcomer
+    concerns:
+      - {id: security,        priority: 1}
+      - {id: data-protection, priority: 2}
+      - {id: connectivity,    priority: 3}
+      - {id: deployment,      priority: 4}
+    presentation:
+      granularity: medium
+      notation: semi-formal
+      max_elements_per_view: 15
+      vocabulary: domain
+      include_rationale: true
+    evidence_policy:
+      require_anchor: true
+      allow_inference: false
+      on_missing_evidence: declare-gap
+    acceptance:
+      concern_coverage_min: 0.80
+      grounding_rate_min: 0.90
+      correspondence_violations_max: 0
+    viewpoints:
+      required: [context, trust-boundary, data-flow, allocation-deployment]
+      optional: [data-model, api-contract, module-uses]
+
+  - id: infrastructure-support-personnel
+    <<: *defaults
+    name: Infrastructure support personnel
+    vb_row: infrastructure-support-personnel
+    iso_42010_class: operator
+    technical_depth: high
+    system_familiarity: occasional
+    concerns:
+      - {id: reliability,  priority: 1}
+      - {id: deployment,   priority: 2}
+      - {id: performance,  priority: 3}
+    evidence_policy:
+      require_anchor: true
+      allow_inference: false
+      on_missing_evidence: declare-gap
+    viewpoints:
+      required: [allocation-deployment, failure-resilience, cnc-runtime]
+      optional: [concurrency, code-mapping]
+
+  - id: customer
+    <<: *defaults
+    name: Customer
+    vb_row: customer
+    iso_42010_class: acquirer
+    technical_depth: low
+    system_familiarity: newcomer
+    concerns:
+      - {id: general,                priority: 1}
+      - {id: interaction-capability, priority: 2}
+    presentation:
+      granularity: high
+      notation: informal
+      max_elements_per_view: 10
+      vocabulary: domain
+      include_rationale: false
+    evidence_policy:
+      require_anchor: false
+      allow_inference: true
+      on_missing_evidence: omit
+    viewpoints:
+      required: [context, scenario]
+      optional: []
+
+  - id: end-user
+    <<: *defaults
+    name: End user
+    vb_row: end-user
+    iso_42010_class: user
+    technical_depth: low
+    system_familiarity: newcomer
+    concerns:
+      - {id: interaction-capability, priority: 1}
+      - {id: general,                priority: 2}
+    presentation:
+      granularity: high
+      notation: informal
+      max_elements_per_view: 8
+      vocabulary: domain
+      include_rationale: false
+    evidence_policy:
+      require_anchor: false
+      allow_inference: true
+      on_missing_evidence: omit
+    viewpoints:
+      required: [context, scenario]
+      optional: [cnc-runtime]
+
+  - id: designer-of-other-systems
+    <<: *defaults
+    name: Designer of other systems
+    vb_row: designer-of-other-systems
+    iso_42010_class: developer
+    technical_depth: high
+    system_familiarity: newcomer
+    concerns:
+      - {id: compatibility, priority: 1}
+      - {id: connectivity,  priority: 2}
+    viewpoints:
+      required: [api-contract, context]
+      optional: [data-model]
+
+  - id: product-line-application-builder
+    <<: *defaults
+    name: Product line application builder
+    vb_row: product-line-application-builder
+    iso_42010_class: developer
+    technical_depth: high
+    system_familiarity: occasional
+    concerns:
+      - {id: flexibility,     priority: 1}
+      - {id: maintainability, priority: 2}
+    viewpoints:
+      required: [module-decomposition, module-uses, context]
+      optional: [cnc-runtime, code-mapping]

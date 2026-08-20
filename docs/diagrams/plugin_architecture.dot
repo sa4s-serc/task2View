@@ -1,0 +1,97 @@
+digraph plugin_architecture {
+  rankdir=LR;
+  bgcolor="white";
+  compound=true;
+  nodesep=0.12;
+  ranksep=0.55;
+  fontname="Helvetica";
+  labelloc="t";
+  label=<<b>Task2View v2 — the two extension points</b><br/><font point-size="11" color="#64748b">Phase 3 is any Scoper · Stage 4b is any NotationAdapter · the contracts between them never change</font><br/> >;
+  fontsize=18;
+
+  node [fontname="Helvetica", fontsize=10, shape=box, style="filled,rounded", penwidth=1.3, margin="0.12,0.06"];
+  edge [color="#94a3b8", arrowsize=0.7];
+
+  // ---------------- fixed spine ----------------
+  spec  [label=<<b>view_specification.json</b><br/><font point-size="8">concerns · granularity<br/>required_information[ ]</font>>,
+         fillcolor="#dcfce7", color="#16a34a", shape=note];
+
+  scope [label=<<b>repository_scope.json</b><br/><font point-size="8">candidates · origin<br/>coverage_report</font>>,
+         fillcolor="#dcfce7", color="#16a34a", shape=note];
+
+  vm    [label=<<b>view_model.json</b><br/><font point-size="8"><b>notation-neutral</b><br/>elements · relations · groups<br/>evidence · support · agreement</font>>,
+         fillcolor="#dcfce7", color="#16a34a", shape=note, penwidth=2.2];
+
+  img   [label=<<b>diagram source + image</b><br/><font point-size="8">svg · png · pdf</font>>,
+         fillcolor="#dcfce7", color="#16a34a", shape=note];
+
+  // ---------------- PHASE 3 : Scoper plug-ins ----------------
+  subgraph cluster_scoper {
+    label=<  <b>PHASE 3 — Scoper</b>  ·  <font color="#dc2626">replaceable</font>  <br/><font point-size="8">scope(view_spec, repo_graph, budget) &#8594; ScopeResult</font>  >;
+    fontsize=12; color="#dc2626"; style="rounded"; penwidth=2.2; margin=12;
+
+    s_full  [label=<<b>full</b>  <font point-size="8">no scoping — upper-bound control</font>>, fillcolor="#f1f5f9", color="#64748b"];
+    s_lex   [label=<<b>lexical</b>  <font point-size="8">filename keywords — v1, lower bound</font>>, fillcolor="#f1f5f9", color="#64748b"];
+    s_embed [label=<<b>embed</b>  <font point-size="8">dense retrieval — RepoCoder, RLCoder</font>>, fillcolor="#e0e7ff", color="#6366f1"];
+    s_graph [label=<<b>graph1</b>  <font point-size="8">seeds + 1-hop — LocAgent, RepoGraph</font>>, fillcolor="#e0e7ff", color="#6366f1"];
+    s_cent  [label=<<b>central</b>  <font point-size="8">PageRank / degree — Aider RepoMap</font>>, fillcolor="#e0e7ff", color="#6366f1"];
+    s_layer [label=<<b>layer</b>  <font point-size="8">top-n per package — this work</font>>, fillcolor="#e0e7ff", color="#6366f1"];
+    s_clust [label=<<b>cluster</b>  <font point-size="8">whole modules — ACDC, Bunch, ARC, SARIF</font>>, fillcolor="#fef9c3", color="#ca8a04"];
+    s_semar [label=<<b>cluster+llm</b>  <font point-size="8">LLM-refined — SemArc, SemRef, ArchAgent</font>>, fillcolor="#fef9c3", color="#ca8a04"];
+    s_flow  [label=<<b>dataflow</b>  <font point-size="8">def-use slicing — ARISE</font>>, fillcolor="#e0e7ff", color="#6366f1"];
+    s_agent [label=<<b>agentic</b>  <font point-size="8">tool navigation — SWE-agent, AutoCodeRover</font>>, fillcolor="#dbeafe", color="#3b82f6"];
+    s_comp  [label=<<b>composite = graph1 &#8746; central &#8746; layer</b><br/><font point-size="8" color="#dc2626">v2 default — 100% recall, 8/8 views</font>>,
+             fillcolor="#fee2e2", color="#dc2626", penwidth=2.2];
+
+    { rank=same; s_full; s_lex; s_embed; s_graph; s_cent; s_layer; s_clust; s_semar; s_flow; s_agent; s_comp; }
+  }
+
+  // ---------------- PHASE 4a ----------------
+  subgraph cluster_extract {
+    label=<  <b>STAGE 4a — extraction</b>  >;
+    fontsize=12; color="#3b82f6"; style="rounded"; penwidth=1.8; margin=10;
+    e_ciao [label=<<b>CIAO</b>  <font point-size="8">Repomix flatten</font>>, fillcolor="#dbeafe", color="#3b82f6"];
+    e_arch [label=<<b>ArchView</b>  <font point-size="8">hierarchical summary</font>>, fillcolor="#dbeafe", color="#3b82f6"];
+    e_own  [label=<<b>purpose-built</b>  <font point-size="8">N samples &#8594; agreement</font>>, fillcolor="#dbeafe", color="#3b82f6"];
+    { rank=same; e_ciao; e_arch; e_own; }
+  }
+
+  // ---------------- PHASE 4b : Notation plug-ins ----------------
+  subgraph cluster_notation {
+    label=<  <b>STAGE 4b — NotationAdapter</b>  ·  <font color="#dc2626">generalisable</font>  <br/><font point-size="8">emit(view_model) &#8594; source ; declares supports[ViewType]</font>  >;
+    fontsize=12; color="#dc2626"; style="rounded"; penwidth=2.2; margin=12;
+
+    n_puml  [label=<<b>PlantUML</b>  <font point-size="8">seq · comp · depl · class · state — formal UML</font>>, fillcolor="#fce7f3", color="#db2777"];
+    n_merm  [label=<<b>Mermaid</b>  <font point-size="8">seq · comp · class · state — GitHub-native</font>>, fillcolor="#fce7f3", color="#db2777"];
+    n_c4    [label=<<b>C4-PlantUML</b>  <font point-size="8">context · container · component</font>>, fillcolor="#fce7f3", color="#db2777"];
+    n_struc [label=<<b>Structurizr DSL</b>  <font point-size="8">C4, model-first</font>>, fillcolor="#fce7f3", color="#db2777"];
+    n_d2    [label=<<b>D2</b>  <font point-size="8">all types — strong auto-layout</font>>, fillcolor="#fce7f3", color="#db2777"];
+    n_dot   [label=<<b>Graphviz DOT</b>  <font point-size="8">generic graph</font>>, fillcolor="#fce7f3", color="#db2777"];
+    n_nom   [label=<<b>Nomnoml</b>  <font point-size="8">semi-formal</font>>, fillcolor="#fce7f3", color="#db2777"];
+    n_exc   [label=<<b>Excalidraw</b>  <font point-size="8" color="#dc2626">informal boxes-and-arrows — 54% of real views</font>>,
+             fillcolor="#fee2e2", color="#dc2626", penwidth=2.0];
+    n_bpmn  [label=<<b>BPMN</b>  <font point-size="8">process views</font>>, fillcolor="#fce7f3", color="#db2777"];
+    n_more  [label=<<font point-size="8" color="#64748b">… ~28 total via one registry entry each</font>>, fillcolor="none", color="#cbd5e1", style="rounded,dashed"];
+
+    { rank=same; n_puml; n_merm; n_c4; n_struc; n_d2; n_dot; n_nom; n_exc; n_bpmn; n_more; }
+  }
+
+  kroki [label=<<b>Kroki</b><br/><font point-size="8">one HTTP API<br/>self-hosted, offline<br/>reproducible</font>>,
+         fillcolor="#ffedd5", color="#ea580c", penwidth=1.8];
+
+  gate [label=<<b>4c semantic gate</b><br/><font point-size="8">stated over view_model + repo graph,<br/><b>never over diagram source</b><br/>&#8658; identical for every notation</font>>,
+        fillcolor="#ffedd5", color="#ea580c", penwidth=1.8];
+
+  // ---------------- wiring ----------------
+  spec  -> s_layer [lhead=cluster_scoper, minlen=1];
+  s_layer -> scope [ltail=cluster_scoper];
+  scope -> e_arch  [lhead=cluster_extract];
+  e_arch -> vm     [ltail=cluster_extract];
+  vm -> n_d2       [lhead=cluster_notation];
+  n_d2 -> kroki    [ltail=cluster_notation];
+  kroki -> img;
+
+  vm   -> gate [style=dashed, color="#ea580c"];
+  gate -> img  [style=dashed, color="#ea580c", constraint=false];
+  { rank=same; kroki; gate; }
+}

@@ -1,0 +1,228 @@
+# Verbatim V&B Table 9.1 (1st ed.), transcribed from
+# some_other_work/ciao-views/00-provenance.md which checked it against
+# Pearson's sample chapter and CMU/SEI-2005-TN-017.
+#
+# Key: d = detailed · s = some details · o = overview · x = anything
+# Empty cell = stakeholder has no documented interest in that view.
+#
+# "Beyond views" columns (mapping, variability, analysis, rationale) are
+# documentation artefacts, not generated architecture views. They remain in
+# the table so Step 1 is faithful; Step 2 drops them unless a later phase
+# asks for documentation-beyond-views output.
+
+source:
+  work: "Clements, Bachmann, Bass, Garlan, Ivers, Little, Merson, Nord, Stafford. Documenting Software Architectures: Views and Beyond."
+  table: "Table 9.1, 1st edition"
+  verified_in: "some_other_work/ciao-views/00-provenance.md"
+
+levels:
+  d: {rank: 3, label: detailed}
+  s: {rank: 2, label: some_details}
+  o: {rank: 1, label: overview}
+  x: {rank: 1, label: anything}
+
+# Columns of Table 9.1, mapped onto catalog viewpoint ids.
+# viewpoint: null means the column is documentation-beyond-views.
+columns:
+  - id: decomposition
+    vb_name: Decomposition
+    viewpoint: module-decomposition
+    beyond_views: false
+  - id: uses
+    vb_name: Uses
+    viewpoint: module-uses
+    beyond_views: false
+  - id: generalization
+    vb_name: Generalization
+    viewpoint: module-generalization
+    beyond_views: false
+  - id: layered
+    vb_name: Layered
+    viewpoint: module-layered
+    beyond_views: false
+  - id: cnc
+    vb_name: C&C (various)
+    viewpoint: cnc-runtime
+    beyond_views: false
+  - id: deployment
+    vb_name: Deployment
+    viewpoint: allocation-deployment
+    beyond_views: false
+  - id: implementation
+    vb_name: Implementation
+    viewpoint: code-mapping
+    beyond_views: false
+  - id: work-assignment
+    vb_name: Work Assignment
+    viewpoint: build-work-assignment
+    beyond_views: false
+  - id: interface-spec
+    vb_name: Interface Spec
+    viewpoint: api-contract
+    beyond_views: false
+  - id: context
+    vb_name: Context
+    viewpoint: context
+    beyond_views: false
+  - id: mapping-between-views
+    vb_name: Mapping between Views
+    viewpoint: null
+    beyond_views: true
+  - id: variability
+    vb_name: Variability
+    viewpoint: null
+    beyond_views: true
+  - id: analysis-results
+    vb_name: Analysis Results
+    viewpoint: null
+    beyond_views: true
+  - id: rationale
+    vb_name: Rationale
+    viewpoint: decision-record
+    beyond_views: true
+
+# Rows of Table 9.1. Keys are canonical stakeholder ids.
+rows:
+  project-manager:
+    vb_label: Project manager
+    decomposition: s
+    uses: s
+    layered: s
+    deployment: d
+    work-assignment: d
+    context: o
+    rationale: s
+
+  member-of-development-team:
+    vb_label: Member of development team
+    decomposition: d
+    uses: d
+    generalization: d
+    layered: d
+    cnc: d
+    deployment: s
+    implementation: s
+    interface-spec: d
+    context: d
+    mapping-between-views: d
+    variability: d
+    rationale: s
+
+  tester-and-integrator:
+    vb_label: Tester and integrator
+    decomposition: d
+    uses: d
+    generalization: d
+    layered: d
+    cnc: s
+    deployment: s
+    implementation: s
+    interface-spec: d
+    context: d
+    mapping-between-views: s
+    variability: d
+    rationale: s
+
+  designer-of-other-systems:
+    vb_label: Designer of other systems
+    interface-spec: d
+    context: o
+
+  maintainer:
+    vb_label: Maintainer
+    decomposition: d
+    uses: d
+    generalization: d
+    layered: d
+    cnc: d
+    deployment: s
+    implementation: s
+    interface-spec: d
+    context: d
+    mapping-between-views: d
+    variability: d
+    rationale: d
+
+  product-line-application-builder:
+    vb_label: Product line application builder
+    decomposition: d
+    uses: d
+    generalization: s
+    layered: o
+    cnc: s
+    deployment: s
+    implementation: s
+    interface-spec: s
+    context: d
+    mapping-between-views: s
+    variability: d
+    rationale: s
+
+  customer:
+    vb_label: Customer
+    deployment: o
+    work-assignment: o
+    context: o
+    analysis-results: s
+
+  end-user:
+    vb_label: End user
+    cnc: s
+    deployment: s
+    analysis-results: s
+
+  analyst:
+    vb_label: Analyst
+    decomposition: d
+    uses: d
+    generalization: s
+    layered: d
+    cnc: s
+    deployment: d
+    interface-spec: d
+    context: d
+    variability: s
+    analysis-results: d
+    rationale: s
+
+  infrastructure-support-personnel:
+    vb_label: Infrastructure support personnel
+    decomposition: s
+    uses: s
+    deployment: s
+    implementation: d
+    variability: d
+
+  new-stakeholder:
+    vb_label: New stakeholder
+    decomposition: x
+    uses: x
+    generalization: x
+    layered: x
+    cnc: x
+    deployment: x
+    implementation: x
+    work-assignment: x
+    interface-spec: x
+    context: x
+    mapping-between-views: x
+    variability: x
+    analysis-results: x
+    rationale: x
+
+  current-and-future-architect:
+    vb_label: Current and future architect
+    decomposition: d
+    uses: d
+    generalization: d
+    layered: d
+    cnc: d
+    deployment: d
+    implementation: s
+    work-assignment: s
+    interface-spec: d
+    context: d
+    mapping-between-views: d
+    variability: d
+    analysis-results: d
+    rationale: d

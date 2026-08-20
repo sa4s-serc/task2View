@@ -1,0 +1,94 @@
+# Inspectable task → concern / viewpoint cues. Phase 2 uses these to boost
+# Table 9.1 candidates; it does not invent new viewpoints.
+# Longer cue phrases are matched before shorter ones.
+
+cues:
+  - id: behavioural-flow
+    phrases:
+      - integration test
+      - integration tests
+      - how a request
+      - how a user
+      - processed
+      - processing
+      - sequence
+      - control flow
+      - call chain
+      - runtime interaction
+      - registration
+      - login
+      - request is
+      - execution order
+    concerns: [control-flow, functional-suitability]
+    prefer_viewpoints: [scenario, control-flow]
+
+  - id: structural-change
+    phrases:
+      - where do i change
+      - which module
+      - modify
+      - refactor
+      - maintain
+      - decomposition
+      - package
+    concerns: [maintainability]
+    prefer_viewpoints: [module-decomposition, module-uses, code-mapping]
+
+  - id: layering
+    phrases:
+      - layer
+      - allowed to use
+      - dependency rule
+      - bced
+    concerns: [maintainability, flexibility]
+    prefer_viewpoints: [module-layered, module-uses]
+
+  - id: deployment
+    phrases:
+      - deploy
+      - dockerfile
+      - kubernetes
+      - infrastructure
+      - where does it run
+      - blast radius
+    concerns: [deployment, reliability]
+    prefer_viewpoints: [allocation-deployment, failure-resilience]
+
+  - id: security
+    phrases:
+      - attack surface
+      - trust boundary
+      - authentication
+      - authorization
+      - security
+    concerns: [security, data-protection]
+    prefer_viewpoints: [trust-boundary, data-flow, context]
+
+  - id: api
+    phrases:
+      - api
+      - interface
+      - integrate with
+      - contract
+      - endpoint
+    concerns: [compatibility, connectivity]
+    prefer_viewpoints: [api-contract, context]
+
+  - id: data
+    phrases:
+      - schema
+      - persistence
+      - database
+      - entity
+      - data model
+    concerns: [compatibility, data-protection]
+    prefer_viewpoints: [data-model, data-flow]
+
+  - id: onboarding
+    phrases:
+      - new to the codebase
+      - get started
+      - overview
+      - onboarding
+    concerns: [general, maintainability]
+    prefer_viewpoints: [context, onboarding-path, module-decomposition]

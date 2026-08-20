@@ -1,0 +1,67 @@
+# Stage 7 capability matrix. Phase 3 may only pick a (view_type, language)
+# pair that is marked true here. Adapters emit source for every listed pair.
+
+formality:
+  plantuml: formal
+  mermaid: semi-formal
+  c4plantuml: formal
+  structurizr: formal
+  d2: semi-formal
+  graphviz: informal
+  nomnoml: semi-formal
+  excalidraw: informal
+  bpmn: formal
+
+_all_views: &all_views
+  - sequence_view
+  - component_view
+  - deployment_view
+  - class_view
+  - state_view
+  - dataflow_view
+  - context_view
+
+languages:
+  plantuml:
+    view_types: *all_views
+    formats: [svg, png, pdf]
+    kroki: plantuml
+  mermaid:
+    view_types: *all_views
+    formats: [svg, png]
+    kroki: mermaid
+  c4plantuml:
+    view_types: *all_views
+    formats: [svg, png, pdf]
+    kroki: c4plantuml
+  structurizr:
+    view_types: *all_views
+    formats: [svg, png]
+    kroki: structurizr
+  d2:
+    view_types: *all_views
+    formats: [svg, png]
+    kroki: d2
+  graphviz:
+    view_types: *all_views
+    formats: [svg, png, pdf]
+    kroki: graphviz
+  nomnoml:
+    view_types: *all_views
+    formats: [svg, png]
+    kroki: nomnoml
+  excalidraw:
+    view_types: *all_views
+    formats: [svg, png]
+    kroki: excalidraw
+  bpmn:
+    view_types: *all_views
+    formats: [svg, png]
+    kroki: bpmn
+
+# Preferred language given (notation formality, view_type). First match wins
+# if the user did not set preferences.diagram_language.
+preference_order:
+  formal: [plantuml, c4plantuml, structurizr, mermaid]
+  semi-formal: [mermaid, d2, nomnoml, plantuml]
+  informal: [excalidraw, mermaid, d2, graphviz]

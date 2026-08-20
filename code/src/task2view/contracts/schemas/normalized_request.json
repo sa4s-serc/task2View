@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://task2view.local/schemas/normalized_request.json",
+  "title": "NormalizedRequest",
+  "type": "object",
+  "required": ["request_id", "repository", "stakeholder", "task", "goal", "preferences"],
+  "properties": {
+    "request_id": { "type": "string", "minLength": 1 },
+    "repository": {
+      "type": "object",
+      "required": ["name", "location"],
+      "properties": {
+        "name": { "type": "string" },
+        "location": { "type": "string" },
+        "revision": { "type": "string" }
+      }
+    },
+    "stakeholder": {
+      "type": "object",
+      "required": ["role", "original_label"],
+      "properties": {
+        "role": { "type": "string" },
+        "original_label": { "type": "string" },
+        "iso_42010_class": { "type": ["string", "null"] },
+        "vb_row": { "type": ["string", "null"] }
+      }
+    },
+    "task": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "goal": { "type": "string", "minLength": 1 },
+    "preferences": {
+      "type": "object",
+      "properties": {
+        "diagram_language": { "type": ["string", "null"] },
+        "max_views": { "type": "integer", "minimum": 1 },
+        "scope_token_budget": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

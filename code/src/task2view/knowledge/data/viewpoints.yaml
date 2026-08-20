@@ -1,0 +1,276 @@
+# Viewpoint catalog. Schema follows 42010 viewpoint ≈ V&B style guide
+# (CMU/SEI-2005-TN-017) plus ciao-views/03-viewpoint-catalog.md.
+#
+# genericity:
+#   generic     -> applies to every system (V&B Step 1: decomp, uses, work assignment)
+#   conditional -> applies when the corresponding style/evidence is present
+#   specific    -> also requires a stakeholder trigger
+#
+# Phase 2 does not inspect the repository. Applicability predicates that need
+# AKB facts are recorded here and evaluated later; Phase 2 only uses stakeholder
+# × view (Table 9.1), profile.required, and task cues.
+
+viewpoints:
+
+  - id: context
+    name: System Context View
+    genericity: generic
+    frames_concerns: [general, connectivity]
+    serves_stakeholders: [all]
+    model_kinds: [context, use-case]
+    view_type: context_view
+    default_granularity: high
+    default_notation: informal
+    default_diagram_language: mermaid
+    techniques: ["context diagram", "use-case diagram"]
+    selection_rationale: "V&B Context column; every stakeholder row has at least overview interest except end-user (C&C/deployment) and infrastructure."
+    ciao_equivalent: "sections 2, 2.1"
+
+  - id: module-decomposition
+    name: Module Decomposition View
+    genericity: generic
+    frames_concerns: [maintainability]
+    serves_stakeholders: [member-of-development-team, maintainer, tester-and-integrator, current-and-future-architect]
+    model_kinds: [package, component]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["module decomposition diagram"]
+    selection_rationale: "V&B: decomposition applies to every system."
+    ciao_equivalent: "section 4"
+
+  - id: module-uses
+    name: Module Uses / Allowed-to-Use View
+    genericity: generic
+    frames_concerns: [maintainability, flexibility]
+    serves_stakeholders: [member-of-development-team, maintainer, current-and-future-architect, tester-and-integrator]
+    model_kinds: [dependency-graph]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["uses diagram", "layering check"]
+    selection_rationale: "V&B: uses applies to every system. Absent from CIAO; enables drift detection."
+    ciao_equivalent: null
+
+  - id: module-generalization
+    name: Module Generalization View
+    genericity: conditional
+    frames_concerns: [maintainability, flexibility]
+    serves_stakeholders: [member-of-development-team, maintainer, tester-and-integrator]
+    model_kinds: [class]
+    view_type: class_view
+    default_granularity: low
+    default_notation: formal
+    default_diagram_language: plantuml
+    techniques: ["inheritance / generalization diagram"]
+    selection_rationale: "V&B generalization style; applies when the module viewtype uses is-a relations."
+
+  - id: module-layered
+    name: Layered Module View
+    genericity: conditional
+    frames_concerns: [maintainability, flexibility]
+    serves_stakeholders: [member-of-development-team, maintainer, tester-and-integrator, current-and-future-architect]
+    model_kinds: [layered]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["layered diagram"]
+    selection_rationale: "V&B: layered only applies to systems designed in that style."
+
+  - id: cnc-runtime
+    name: Component-and-Connector Runtime View
+    genericity: generic
+    frames_concerns: [connectivity, performance]
+    serves_stakeholders: [member-of-development-team, maintainer, current-and-future-architect, tester-and-integrator]
+    model_kinds: [component-and-connector]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["C&C diagram", "C4 container/component"]
+    selection_rationale: "V&B C&C viewtype; CIAO sections 3 / 3.1."
+    ciao_equivalent: "sections 3, 3.1"
+
+  - id: allocation-deployment
+    name: Deployment / Allocation View
+    genericity: conditional
+    frames_concerns: [deployment, reliability]
+    serves_stakeholders: [infrastructure-support-personnel, analyst, member-of-development-team, project-manager]
+    model_kinds: [deployment]
+    view_type: deployment_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["UML deployment", "C4 deployment"]
+    on_missing_evidence: declare-gap
+    selection_rationale: "V&B allocation/deployment. Conditional: CIAO generated this unconditionally and it was the #2 complaint."
+    ciao_equivalent: "sections 8, 8.1"
+
+  - id: code-mapping
+    name: Code / Implementation Mapping View
+    genericity: generic
+    frames_concerns: [maintainability, traceability]
+    serves_stakeholders: [tester-and-integrator, member-of-development-team, maintainer]
+    model_kinds: [table, class]
+    view_type: class_view
+    default_granularity: low
+    default_notation: formal
+    default_diagram_language: plantuml
+    techniques: ["element-to-file table", "class diagram"]
+    selection_rationale: "V&B Implementation column."
+    ciao_equivalent: "sections 5, 5.1"
+
+  - id: api-contract
+    name: Interface / API Contract View
+    genericity: conditional
+    frames_concerns: [compatibility, connectivity]
+    serves_stakeholders: [tester-and-integrator, designer-of-other-systems, member-of-development-team]
+    model_kinds: [interface]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: formal
+    default_diagram_language: mermaid
+    techniques: ["interface specification", "sequence of API calls"]
+    selection_rationale: "V&B Interface Spec column."
+
+  - id: build-work-assignment
+    name: Work Assignment View
+    genericity: generic
+    frames_concerns: [maintainability]
+    serves_stakeholders: [project-manager, current-and-future-architect]
+    model_kinds: [allocation]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: informal
+    default_diagram_language: mermaid
+    techniques: ["work assignment overlay on decomposition"]
+    selection_rationale: "V&B: work assignment applies to every system."
+
+  - id: control-flow
+    name: Control Flow View
+    genericity: conditional
+    frames_concerns: [control-flow, functional-suitability]
+    serves_stakeholders: [tester-and-integrator, member-of-development-team, maintainer]
+    model_kinds: [activity, sequence]
+    view_type: sequence_view
+    default_granularity: medium
+    default_notation: formal
+    default_diagram_language: plantuml
+    techniques: ["activity diagram", "call-chain overlay"]
+    selection_rationale: >
+      Not a Table 9.1 column. Added because it is 26% of coded real-world views
+      (Migliorini) and the most reliably generated concern (ArchView), and CIAO
+      has no slot for it.
+    ciao_equivalent: null
+
+  - id: scenario
+    name: Scenario / Sequence View
+    genericity: conditional
+    frames_concerns: [functional-suitability, control-flow]
+    serves_stakeholders: [tester-and-integrator, customer, end-user, member-of-development-team]
+    model_kinds: [sequence]
+    view_type: sequence_view
+    default_granularity: component_or_service_level
+    default_notation: formal
+    default_diagram_language: plantuml
+    techniques: ["UML sequence diagram"]
+    selection_rationale: >
+      Behavioural projection of a C&C/control-flow view onto one task.
+      Chosen when the task names a request, flow, or test scenario.
+
+  - id: data-flow
+    name: Data Flow View
+    genericity: conditional
+    frames_concerns: [data-flow, data-protection]
+    serves_stakeholders: [analyst, maintainer]
+    model_kinds: [data-flow]
+    view_type: dataflow_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: mermaid
+    techniques: ["data-flow diagram"]
+    selection_rationale: "Second-best generatable concern in ArchView; absent from CIAO."
+
+  - id: data-model
+    name: Data Model View
+    genericity: conditional
+    frames_concerns: [compatibility, data-protection]
+    serves_stakeholders: [member-of-development-team, designer-of-other-systems]
+    model_kinds: [data-model]
+    view_type: class_view
+    default_granularity: medium
+    default_notation: formal
+    default_diagram_language: plantuml
+    techniques: ["ER / JPA entity diagram"]
+    selection_rationale: "SEI data-model style; Rozanski & Woods Information viewpoint."
+
+  - id: concurrency
+    name: Concurrency / Process View
+    genericity: conditional
+    frames_concerns: [performance, reliability]
+    serves_stakeholders: [infrastructure-support-personnel, current-and-future-architect]
+    model_kinds: [process]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["process / thread diagram"]
+    selection_rationale: "Kruchten process view; V&B communicating-processes style."
+
+  - id: trust-boundary
+    name: Trust Boundary / Attack Surface View
+    genericity: specific
+    frames_concerns: [security, data-protection]
+    serves_stakeholders: [analyst]
+    model_kinds: [data-flow-with-boundaries]
+    view_type: dataflow_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: d2
+    techniques: ["trust-zone overlay on data flow"]
+    on_missing_evidence: declare-gap
+    selection_rationale: "Specific: stakeholder holds security concern AND evidence of auth/listeners exists."
+
+  - id: failure-resilience
+    name: Failure and Resilience View
+    genericity: specific
+    frames_concerns: [reliability]
+    serves_stakeholders: [infrastructure-support-personnel]
+    model_kinds: [component-and-connector]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: d2
+    techniques: ["failure-propagation overlay"]
+    on_missing_evidence: declare-gap
+    selection_rationale: "Specific to operators; declare-gap when no retry/health/supervision evidence."
+
+  - id: onboarding-path
+    name: Onboarding Path View
+    genericity: specific
+    frames_concerns: [maintainability, general]
+    serves_stakeholders: [new-stakeholder]
+    model_kinds: [reduced-module]
+    view_type: component_view
+    default_granularity: high
+    default_notation: informal
+    default_diagram_language: mermaid
+    techniques: ["reduced module view of top-centrality modules"]
+    selection_rationale: "Same model as module-decomposition, different projection for newcomers."
+
+  - id: decision-record
+    name: Architecture Decision Record View
+    genericity: specific
+    frames_concerns: [flexibility, general]
+    serves_stakeholders: [current-and-future-architect, analyst]
+    model_kinds: [table]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: informal
+    default_diagram_language: mermaid
+    techniques: ["ADR list", "rationale catalog"]
+    selection_rationale: "V&B documentation-beyond-views § rationale; CIAO §7 as structured ADRs."
+    beyond_views: true
