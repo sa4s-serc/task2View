@@ -1,0 +1,168 @@
+{
+  "request_id": "REQ-IS-001",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [
+    {
+      "id": "G1",
+      "name": "Boundary Layer",
+      "kind": "layer",
+      "contains": [
+        "E7"
+      ]
+    },
+    {
+      "id": "G2",
+      "name": "Controller Layer",
+      "kind": "layer",
+      "contains": [
+        "E1",
+        "E2",
+        "E3",
+        "E5"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "LibraryFacade",
+      "kind": "component",
+      "role": "Central controller and entry point for domain operations (module that owns modify/reservations/rooms)",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+        "symbol": "AuthenticationController",
+        "excerpt": "return LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "NotificationManager",
+      "kind": "component",
+      "role": "Manages and dispatches email/system notifications",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationConfiguration.java",
+        "symbol": "NotificationConfiguration",
+        "excerpt": "NotificationManager.getInstance().setNotificationService(new NotificationServiceAdapter());"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "ReservationManager",
+      "kind": "component",
+      "role": "Handles reservation workflows and state transitions",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "private final ReservationManager reservationManager = ReservationManager.getInstance();"
+      },
+      "support": "inferred",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "StudyRoomManager",
+      "kind": "component",
+      "role": "Manages study rooms, areas, and availability",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "private final StudyRoomManager studyRoomManager = StudyRoomManager.getInstance();"
+      },
+      "support": "inferred",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "UserManager",
+      "kind": "component",
+      "role": "Manages users and authentication",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "private final UserManager userManager = UserManager.getInstance();"
+      },
+      "support": "inferred",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "depends",
+      "label": "notificationManager",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "LibraryFacade [it] deg=30 uses-> NotificationManager, ReservationManager, ReservationRequestDTO, StudyRoomCreationDTO, StudyRoomManager, UserManager"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E1",
+      "to": "E3",
+      "kind": "depends",
+      "label": "reservationManager",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "LibraryFacade [it] deg=30 uses-> NotificationManager, ReservationManager, ReservationRequestDTO, StudyRoomCreationDTO, StudyRoomManager, UserManager"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E1",
+      "to": "E5",
+      "kind": "depends",
+      "label": "studyRoomManager",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "LibraryFacade [it] deg=30 uses-> NotificationManager, ReservationManager, ReservationRequestDTO, StudyRoomCreationDTO, StudyRoomManager, UserManager"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E1",
+      "to": "E7",
+      "kind": "depends",
+      "label": "userManager",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "LibraryFacade [it] deg=30 uses-> NotificationManager, ReservationManager, ReservationRequestDTO, StudyRoomCreationDTO, StudyRoomManager, UserManager"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "RI-1: Top-level modules include Boundary (REST and Swing UI), Controller Facade, and specialized core managers (ReservationManager, StudyRoomManager, UserManager, NotificationManager).",
+    "RI-2: Containment hierarchy links user interfaces through controllers down to domain managers.",
+    "RI-3: LibraryFacade and the underlying managers (ReservationManager, StudyRoomManager) own the modification, creation, and state-transition logic.",
+    "removed 2 unresolved elements",
+    "removed 2 unsupported relations"
+  ]
+}

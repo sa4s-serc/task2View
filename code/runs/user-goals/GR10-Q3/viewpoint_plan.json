@@ -1,0 +1,97 @@
+{
+  "views": [
+    {
+      "id": "V1",
+      "viewpoint_id": "module-decomposition",
+      "view_type": "component_view",
+      "notation": "Component Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Identify modules and components that own and encapsulate the persistence layer for municipal reports.",
+      "addresses": [
+        "AQ1",
+        "AQ2"
+      ],
+      "required_evidence": [
+        "modules",
+        "responsibilities",
+        "containment"
+      ],
+      "deferred": false
+    },
+    {
+      "id": "V2",
+      "viewpoint_id": "module-uses",
+      "view_type": "component_view",
+      "notation": "Component Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Determine relationships and package boundary crossings between business logic and persistence layer components.",
+      "addresses": [
+        "AQ3"
+      ],
+      "required_evidence": [
+        "allowed-to-use relations",
+        "package boundary crossings"
+      ],
+      "deferred": true
+    },
+    {
+      "id": "V3",
+      "viewpoint_id": "code-mapping",
+      "view_type": "class_view",
+      "notation": "Class Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "class_or_code_level",
+      "purpose": "Locate specific types, classes, and ORM mappings that implement data entities and manage their lifecycle.",
+      "addresses": [
+        "AQ4"
+      ],
+      "required_evidence": [
+        "types",
+        "classes",
+        "ORM mappings"
+      ],
+      "deferred": true
+    },
+    {
+      "id": "V4",
+      "viewpoint_id": "control-flow",
+      "view_type": "sequence_view",
+      "notation": "UML Sequence Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Trace the call chain and control flow when report states change and internal notes or notifications are persisted.",
+      "addresses": [
+        "AQ5"
+      ],
+      "required_evidence": [
+        "call chain",
+        "control flow"
+      ],
+      "deferred": true
+    },
+    {
+      "id": "V5",
+      "viewpoint_id": "data-model",
+      "view_type": "class_view",
+      "notation": "Class Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Detail the main data entities, their relationships, and persisted information throughout a report's lifecycle.",
+      "addresses": [
+        "AQ1",
+        "AQ4"
+      ],
+      "required_evidence": [
+        "data entities",
+        "relationships",
+        "persistence lifecycle"
+      ],
+      "deferred": true
+    }
+  ],
+  "notes": [
+    "Selected viewpoints map directly to the architectural questions regarding persistence, entity relationships, module ownership, and control flow."
+  ]
+}

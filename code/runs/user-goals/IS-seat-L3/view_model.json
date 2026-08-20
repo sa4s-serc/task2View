@@ -1,0 +1,234 @@
+{
+  "request_id": "IS-seat-L3",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [
+    {
+      "id": "G1",
+      "name": "ControllerBoundary",
+      "kind": "package",
+      "contains": [
+        "E1",
+        "E2",
+        "E3",
+        "E8"
+      ]
+    },
+    {
+      "id": "G2",
+      "name": "EntityBoundary",
+      "kind": "package",
+      "contains": [
+        "E4",
+        "E5",
+        "E6"
+      ]
+    },
+    {
+      "id": "G3",
+      "name": "DatabaseBoundary",
+      "kind": "package",
+      "contains": [
+        "E7"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Reservation",
+      "kind": "class",
+      "role": "Manages reservation entity states and business logic operations such as cancellation, check-in, and rule validations.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "public class Reservation extends Subject {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Seat",
+      "kind": "class",
+      "role": "Encapsulates seat availability check logic against reservation registry.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "public class Seat {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "LibraryFacade",
+      "kind": "component",
+      "role": "Top-level controller facade coordinating user management, study rooms, reservations, and notifications.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public class LibraryFacade {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "NotificationManager",
+      "kind": "component",
+      "role": "Manages reminders and notification delivery.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public void sendReminders() {\n        NotificationManager.getInstance().sendReminders();\n    }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "PersistenceManager",
+      "kind": "component",
+      "role": "Handles database interactions and persistence operations using JPA.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "PersistenceManager",
+        "excerpt": "public class PersistenceManager {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "ReservationManager",
+      "kind": "component",
+      "role": "Owns seat booking functionality, reservations, check-ins, cancellations, and statistics.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public ReservationDTO makeReservation(ReservationRequestDTO request) {\n        return ReservationManager.getInstance().makeReservation(request);\n    }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "ReservationRegistry",
+      "kind": "component",
+      "role": "Manages and queries stored seat reservations via persistence.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+        "symbol": "ReservationRegistry",
+        "excerpt": "public class ReservationRegistry {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "StudyRoomManager",
+      "kind": "component",
+      "role": "Manages study rooms, area details, and available time slots and availability checking.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public List<StudyRoomDTO> getAvailableStudyRooms(LocalDate date) {\n        return StudyRoomManager.getInstance().getAvailableStudyRooms(date);\n    }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E3",
+      "to": "E6",
+      "kind": "call",
+      "label": "makeReservation",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public ReservationDTO makeReservation(ReservationRequestDTO request) {\n        return ReservationManager.getInstance().makeReservation(request);\n    }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E3",
+      "to": "E8",
+      "kind": "call",
+      "label": "getAvailableStudyRooms",
+      "order": 2,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public List<StudyRoomDTO> getAvailableStudyRooms(LocalDate date) {\n        return StudyRoomManager.getInstance().getAvailableStudyRooms(date);\n    }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E1",
+      "to": "E7",
+      "kind": "depends",
+      "label": "ReservationRegistry",
+      "order": 3,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "Student",
+        "excerpt": "ReservationRegistry registry = ReservationRegistry.getInstance();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E7",
+      "to": "E5",
+      "kind": "depends",
+      "label": "PersistenceManager",
+      "order": 4,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+        "symbol": "ReservationRegistry",
+        "excerpt": "private final PersistenceManager persistenceManager;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E2",
+      "to": "E7",
+      "kind": "call",
+      "label": "findReservationsBySeat",
+      "order": 5,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "for (Reservation p : registry.findReservationsBySeat(id, date, timeSlot.getId())) {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [
+    "AQ3",
+    "AQ5"
+  ],
+  "notes": [
+    "Runtime call chain starting from booking request down to notification and external notification adapter details (AQ3, AQ5) are partially unanswered due to lack of explicit method implementation excerpts for NotificationManager internal calls in the provided files."
+  ]
+}

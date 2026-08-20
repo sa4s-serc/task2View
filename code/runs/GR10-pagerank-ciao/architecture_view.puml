@@ -1,0 +1,18 @@
+@startuml
+package "BoundaryLayer" {
+  [UserService] as E5
+}
+package "ControlLayer" {
+  [SystemServicesController] as E1
+  [PersistenceService] as E4
+}
+package "EntityServiceLayer" {
+  [UserRegistrationController] as E2
+}
+package "DatabaseLayer" {
+  [UserRegistrationGUI] as E3
+}
+E1 --> E2 : requestRegistrationUser
+E3 --> E1 : registerUser
+E5 --> E4 : save
+@enduml

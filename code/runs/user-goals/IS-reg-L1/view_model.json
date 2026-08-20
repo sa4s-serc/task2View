@@ -1,0 +1,161 @@
+{
+  "request_id": "IS-reg-L1",
+  "view_type": "sequence_view",
+  "granularity": "component_or_service_level",
+  "groups": [
+    {
+      "id": "G1",
+      "name": "RegistrationBoundary",
+      "kind": "package",
+      "contains": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "PersistenceManager",
+      "kind": "component",
+      "role": "Database persistence manager",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "PersistenceManager",
+        "excerpt": "public class PersistenceManager {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Registration",
+      "kind": "component",
+      "role": "Entry point for user registration functionality",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public UserDTO register(String role, String name, String surname, String email, String password, String identifier) {\n        return UserManager.getInstance().register(role, name, surname, email, password, identifier);\n    }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "UserManager",
+      "kind": "component",
+      "role": "Domain service responsible for user registration functionality",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "UserManager",
+        "excerpt": "public UserDTO register(String role, String name, String surname,\n                                String email, String password, String identifier) {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "UserRegistry",
+      "kind": "component",
+      "role": "Persistence interaction for users",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "UserRegistry",
+        "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "LibraryFacade",
+      "kind": "service",
+      "role": "Orchestration/dispatch component for requests",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public class LibraryFacade {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E5",
+      "to": "E3",
+      "kind": "call",
+      "label": "register",
+      "order": 2,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "return UserManager.getInstance().register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E5",
+      "kind": "call",
+      "label": "register",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public UserDTO register(String role, String name, String surname,\n                                   String email, String password, String identifier) {\n        return UserManager.getInstance().register(role, name, surname, email, password, identifier);\n    }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E4",
+      "kind": "call",
+      "label": "registerUser",
+      "order": 3,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "UserManager",
+        "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E4",
+      "to": "E1",
+      "kind": "call",
+      "label": "save",
+      "order": 4,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "PersistenceManager",
+        "excerpt": "public boolean save(Object object) {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "AQ1: The primary entry point is LibraryFacade.register().",
+    "AQ2: The complete call chain goes from Registration -> LibraryFacade -> UserManager -> UserRegistry -> PersistenceManager.",
+    "AQ3: Interaction happens via direct method invocations between the controller, domain manager, registry, and persistence layer.",
+    "AQ4: UserManager implements validation and business logic, while PersistenceManager handles database interactions.",
+    "AQ5: Observable validation responses include IllegalArgumentException for malformed emails, short passwords, or duplicated emails/identifiers."
+  ]
+}

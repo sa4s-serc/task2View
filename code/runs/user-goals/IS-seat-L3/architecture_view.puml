@@ -1,0 +1,21 @@
+@startuml
+package "ControllerBoundary" {
+  [Reservation] as E1
+  [Seat] as E2
+  [LibraryFacade] as E3
+  [StudyRoomManager] as E8
+}
+package "EntityBoundary" {
+  [NotificationManager] as E4
+  [PersistenceManager] as E5
+  [ReservationManager] as E6
+}
+package "DatabaseBoundary" {
+  [ReservationRegistry] as E7
+}
+E3 --> E6 : makeReservation
+E3 --> E8 : getAvailableStudyRooms
+E1 --> E7 : ReservationRegistry
+E7 --> E5 : PersistenceManager
+E2 --> E7 : findReservationsBySeat
+@enduml

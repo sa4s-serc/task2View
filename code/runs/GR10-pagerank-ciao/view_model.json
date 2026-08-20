@@ -1,0 +1,164 @@
+{
+  "request_id": "GR10-pagerank-ciao",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [
+    {
+      "id": "G1",
+      "name": "BoundaryLayer",
+      "kind": "package",
+      "contains": [
+        "E5"
+      ]
+    },
+    {
+      "id": "G2",
+      "name": "ControlLayer",
+      "kind": "package",
+      "contains": [
+        "E1",
+        "E4"
+      ]
+    },
+    {
+      "id": "G3",
+      "name": "EntityServiceLayer",
+      "kind": "package",
+      "contains": [
+        "E2"
+      ]
+    },
+    {
+      "id": "G4",
+      "name": "DatabaseLayer",
+      "kind": "package",
+      "contains": [
+        "E3"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "SystemServicesController",
+      "kind": "class",
+      "role": "Central controller delegating operations to specific service controllers",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/SystemServicesController.java",
+        "symbol": "SystemServicesController",
+        "excerpt": "public class SystemServicesController {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "UserRegistrationController",
+      "kind": "class",
+      "role": "Orchestrates user registration business logic",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/SystemServicesController.java",
+        "symbol": "UserRegistrationController",
+        "excerpt": "private UserRegistrationController controllerRegistrationUser;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "UserRegistrationGUI",
+      "kind": "component",
+      "role": "Graphical interface for collecting user registration details",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserRegistrationGUI.java",
+        "symbol": "UserRegistrationGUI",
+        "excerpt": "public class UserRegistrationGUI {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "PersistenceService",
+      "kind": "datastore",
+      "role": "Manages database persistence using JPA entity manager",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Database/PersistenceService.java",
+        "symbol": "PersistenceService",
+        "excerpt": "public class PersistenceService {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "UserService",
+      "kind": "service",
+      "role": "Handles user data validation, creation, and retrieval in persistence",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/UserService.java",
+        "symbol": "UserService",
+        "excerpt": "public class UserService {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "call",
+      "label": "requestRegistrationUser",
+      "order": 2,
+      "evidence": {
+        "file": "src/main/java/Control/SystemServicesController.java",
+        "symbol": "SystemServicesController",
+        "excerpt": "Long registeredUserId = controllerRegistrationUser.requestRegistrationUser(registrationData);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E3",
+      "to": "E1",
+      "kind": "call",
+      "label": "registerUser",
+      "order": 1,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserRegistrationGUI.java",
+        "symbol": "UserRegistrationGUI",
+        "excerpt": "boolean registrationSucceeded = systemServicesController.registerUser(registrationData);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E5",
+      "to": "E4",
+      "kind": "call",
+      "label": "save",
+      "order": 3,
+      "evidence": {
+        "file": "src/main/java/Entity/UserService.java",
+        "symbol": "UserService",
+        "excerpt": "persistenceService.save(user);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "The application is a desktop Swing/JPA system rather than a standard REST API service; therefore, REST endpoint and HTTP methods are not explicitly defined in the source code. GUI inputs act as the entry point.",
+    "RI-3 is realized via UserRegistrationGUI -> SystemServicesController -> UserRegistrationController -> UserService -> PersistenceService."
+  ]
+}

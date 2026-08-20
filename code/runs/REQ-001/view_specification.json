@@ -1,0 +1,255 @@
+{
+  "request_id": "REQ-001",
+  "stakeholder": "tester-and-integrator",
+  "task_summary": "I need to understand how a user registration request is processed so I can design integration tests for it",
+  "architectural_concerns": [
+    "functional-suitability",
+    "control-flow",
+    "connectivity"
+  ],
+  "selected_view": {
+    "view_type": "sequence_view",
+    "notation": "UML Sequence Diagram",
+    "diagram_language": "plantuml",
+    "granularity": "component_or_service_level",
+    "purpose": "Scenario / Sequence View: show the information the Tester and integrator needs about user registration.",
+    "viewpoint_id": "scenario"
+  },
+  "required_information": [
+    {
+      "id": "RI-1",
+      "need": "entry point for user registration"
+    },
+    {
+      "id": "RI-2",
+      "need": "orchestration/dispatch component"
+    },
+    {
+      "id": "RI-3",
+      "need": "domain service responsible for user registration"
+    },
+    {
+      "id": "RI-4",
+      "need": "persistence interaction"
+    },
+    {
+      "id": "RI-5",
+      "need": "ordered calls between participants"
+    },
+    {
+      "id": "RI-6",
+      "need": "observable validation and failure paths"
+    }
+  ],
+  "declared_gaps": [],
+  "selection_trace": {
+    "method": "views-and-beyond-steps-1-3",
+    "vb_candidates": [
+      {
+        "column": "decomposition",
+        "vb_name": "Decomposition",
+        "viewpoint_id": "module-decomposition",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "uses",
+        "vb_name": "Uses",
+        "viewpoint_id": "module-uses",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "generalization",
+        "vb_name": "Generalization",
+        "viewpoint_id": "module-generalization",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "layered",
+        "vb_name": "Layered",
+        "viewpoint_id": "module-layered",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "cnc",
+        "vb_name": "C&C (various)",
+        "viewpoint_id": "cnc-runtime",
+        "level": "s",
+        "rank": 2,
+        "beyond_views": false
+      },
+      {
+        "column": "deployment",
+        "vb_name": "Deployment",
+        "viewpoint_id": "allocation-deployment",
+        "level": "s",
+        "rank": 2,
+        "beyond_views": false
+      },
+      {
+        "column": "implementation",
+        "vb_name": "Implementation",
+        "viewpoint_id": "code-mapping",
+        "level": "s",
+        "rank": 2,
+        "beyond_views": false
+      },
+      {
+        "column": "interface-spec",
+        "vb_name": "Interface Spec",
+        "viewpoint_id": "api-contract",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "context",
+        "vb_name": "Context",
+        "viewpoint_id": "context",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      }
+    ],
+    "task_concerns": [
+      "control-flow",
+      "functional-suitability"
+    ],
+    "preferred_viewpoints": [
+      "scenario",
+      "control-flow"
+    ],
+    "ranked": [
+      {
+        "viewpoint_id": "scenario",
+        "view_type": "sequence_view",
+        "vb_column": null,
+        "vb_level": null,
+        "score": 9.0,
+        "reasons": [
+          "task-cue preferred viewpoint",
+          "stakeholder required viewpoint",
+          "frames task concerns: functional-suitability, control-flow"
+        ]
+      },
+      {
+        "viewpoint_id": "control-flow",
+        "view_type": "sequence_view",
+        "vb_column": null,
+        "vb_level": null,
+        "score": 9.0,
+        "reasons": [
+          "task-cue preferred viewpoint",
+          "stakeholder required viewpoint",
+          "frames task concerns: control-flow, functional-suitability"
+        ]
+      },
+      {
+        "viewpoint_id": "api-contract",
+        "view_type": "component_view",
+        "vb_column": "interface-spec",
+        "vb_level": "d",
+        "score": 5.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "stakeholder required viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "code-mapping",
+        "view_type": "class_view",
+        "vb_column": "implementation",
+        "vb_level": "s",
+        "score": 4.0,
+        "reasons": [
+          "V&B detail rank 2",
+          "stakeholder required viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "context",
+        "view_type": "context_view",
+        "vb_column": "context",
+        "vb_level": "d",
+        "score": 4.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "stakeholder optional viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "module-uses",
+        "view_type": "component_view",
+        "vb_column": "uses",
+        "vb_level": "d",
+        "score": 4.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "stakeholder optional viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "module-decomposition",
+        "view_type": "component_view",
+        "vb_column": "decomposition",
+        "vb_level": "d",
+        "score": 3.0,
+        "reasons": [
+          "V&B detail rank 3"
+        ]
+      },
+      {
+        "viewpoint_id": "module-generalization",
+        "view_type": "class_view",
+        "vb_column": "generalization",
+        "vb_level": "d",
+        "score": 3.0,
+        "reasons": [
+          "V&B detail rank 3"
+        ]
+      },
+      {
+        "viewpoint_id": "module-layered",
+        "view_type": "component_view",
+        "vb_column": "layered",
+        "vb_level": "d",
+        "score": 3.0,
+        "reasons": [
+          "V&B detail rank 3"
+        ]
+      },
+      {
+        "viewpoint_id": "allocation-deployment",
+        "view_type": "deployment_view",
+        "vb_column": "deployment",
+        "vb_level": "s",
+        "score": 2.0,
+        "reasons": [
+          "V&B detail rank 2"
+        ]
+      },
+      {
+        "viewpoint_id": "cnc-runtime",
+        "view_type": "component_view",
+        "vb_column": "cnc",
+        "vb_level": "s",
+        "score": 2.0,
+        "reasons": [
+          "V&B detail rank 2"
+        ]
+      }
+    ],
+    "dropped_beyond_views": [
+      "mapping-between-views",
+      "variability",
+      "rationale"
+    ]
+  }
+}

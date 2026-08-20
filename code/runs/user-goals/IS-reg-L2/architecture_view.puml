@@ -1,0 +1,14 @@
+@startuml
+package "User Registration Component View" {
+  [UserDTO] as E1
+  [LibraryFacade] as E2
+  [JpaUtil] as E3
+  [PersistenceManager] as E4
+  [UserManager] as E5
+  [UserRegistry] as E6
+}
+E2 --> E5 : register
+E4 --> E3 : getEntityManager
+E5 --> E6 : registerUser / findStudentByStudentNumber
+E6 --> E4 : save
+@enduml

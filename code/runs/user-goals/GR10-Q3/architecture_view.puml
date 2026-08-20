@@ -1,0 +1,25 @@
+@startuml
+package "Database Layer" {
+  [Citizen] as E1
+  [Credentials] as E2
+}
+package "Business Logic and Entities" {
+  [InternalNote] as E3
+  [Location] as E4
+  [MunicipalOperator] as E5
+  [Notification] as E6
+  [Report] as E7
+  [ReportCategory] as E8
+  [ReportStatus] as E9
+  [User] as E10
+  [JpaUtil] as E11
+  [PersistenceService] as E12
+  [ReportService] as E13
+  [UserService] as E14
+}
+E12 --> E11 : getInstance
+E13 --> E12 : persistenceService
+E13 --> E7 : findById
+E14 --> E12 : persistenceService
+E14 --> E10 : findByFields
+@enduml
