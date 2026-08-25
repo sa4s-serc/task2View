@@ -29,3 +29,15 @@ def test_every_vb_viewpoint_exists_in_catalog():
         if vid and vid not in kb.viewpoints:
             missing.append(vid)
     assert missing == []
+
+
+def test_view_projection_is_view_type_keyed():
+    kb = load_knowledge()
+    assert kb.edge_insertion_mode("sequence_view") == "none"
+    assert kb.edge_insertion_mode("component_view") == "inter_group"
+    assert kb.edge_insertion_mode("class_view") == "all_selected"
+    assert "system" in kb.keep_without_graph()
+    assert "actor" in kb.keep_without_graph()
+    cap = kb.max_elements_for("analyst", "context_view", "system_or_context_level")
+    assert cap is not None and cap <= 12
+

@@ -39,14 +39,19 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--out", required=True, help="Output directory for artifacts")
     run.add_argument("--request-id")
     run.add_argument(
+        "--config",
+        help="YAML run profile selecting scoper/extractor/diagram_language (CLI flags override)",
+    )
+    run.add_argument(
         "--diagram-language",
+        default=None,
         help="Notation adapter: plantuml, mermaid, d2, c4plantuml, structurizr, graphviz, nomnoml, excalidraw, bpmn",
     )
     run.add_argument("--max-views", type=int, default=1)
     run.add_argument("--scope-token-budget", type=int, default=120_000)
     run.add_argument(
         "--scope-strategy",
-        default="composite",
+        default=None,
         help=(
             "Phase 4 scoper plug-in: composite (default), graph1, locagent, central, "
             "pagerank, layer, grep, lexical, dataflow, full"
@@ -54,7 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument(
         "--extract-backend",
-        default="gemini",
+        default=None,
         help="Phase 5 extractor plug-in: gemini (default), archagent, ciao",
     )
     run.add_argument(
@@ -74,6 +79,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stop after scoping (no extractor / diagram)",
     )
     run.add_argument(
+        "--skip-critic",
+        action="store_true",
+        help="Skip the completeness critic (package regrouping still runs)",
+    )
+    run.add_argument(
         "--legacy",
         action="store_true",
         help="Regex Phase 1–2 instead of interpretation/question/viewpoint agents",
@@ -82,7 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--extract-workers",
         type=int,
         default=2,
-        help="Unused on the default path (kept for the retired ReAct extract agents)",
+        help="Unused on the default path",
     )
     run.add_argument(
         "--render-formats",
@@ -173,9 +183,21 @@ def main(argv: list[str] | None = None) -> int:
             gemini_model=args.gemini_model,
             samples=args.samples,
             skip_extract=args.skip_extract,
+            skip_critic=args.skip_critic,
             legacy=args.legacy,
             extract_workers=args.extract_workers,
+            config=args.config,
         )
+        if raw.config:
+            from task2view.config import apply_pipeline_config, load_pipeline_config
+
+            raw = apply_pipeline_config(raw, load_pipeline_config(raw.config))
+            if args.scope_strategy:
+                raw.scope_strategy = args.scope_strategy
+            if args.extract_backend:
+                raw.extract_backend = args.extract_backend
+            if args.diagram_language:
+                raw.diagram_language = args.diagram_language
         result = run_pipeline(raw)
         out = Path(args.out)
         render_formats = [] if args.skip_render or args.skip_extract else parse_formats(args.render_formats)

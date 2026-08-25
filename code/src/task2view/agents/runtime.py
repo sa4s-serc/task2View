@@ -36,6 +36,10 @@ class AgentRuntime:
             '{"tool":"search","args":{"pattern":"Reservation","glob":".java"}}\n'
             '{"tool":"read","args":{"path":"relative/file.java","max_chars":8000}}\n'
             '{"tool":"graph_query","args":{"name":"TypeName"}}\n'
+            '{"tool":"traverse_graph","args":{"name":"TypeName","hops":1}}\n'
+            '{"tool":"edges_among","args":{"names":["A","B"]}}\n'
+            '{"tool":"missing_neighbors","args":{"names":["A","B"]}}\n'
+            '{"tool":"package_of","args":{"name":"TypeName"}}\n'
             '{"final": { ... the output object required above ... }}\n'
             "When you have enough evidence, return final. Do not invent files or types.\n"
         )

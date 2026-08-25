@@ -1,4 +1,9 @@
-"""Typed repository graph from source. Java uses javalang (LocAgent/RepoGraph style)."""
+"""Filesystem architecture graph: kept files, parent directories, import-like edges.
+
+The core does not parse a language AST. A node is a kept file (keyed by stem).
+``layer`` is the parent directory name. Uses/calls come from import-like lines
+and identifier mentions that resolve to other kept files.
+"""
 
 from __future__ import annotations
 
@@ -9,66 +14,32 @@ from pathlib import Path
 
 from task2view.contracts.models import CleanedCorpus
 
-INSTANCEOF_PATTERN = re.compile(
-    r"\binstanceof\s+((?:final\s+)?[A-Za-z_$][\w$.]*(?:\s*<[^<>()]*(?:<[^<>()]*>)?[^<>()]*>)?)"
-    r"\s+([a-z_$][\w$]*)\b"
+_IDENT = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]{2,})\b")
+_IMPORT_LINE = re.compile(
+    r"""(?mx)
+    ^\s*(?:
+        import\s+(?:static\s+)?(?P<java>[\w.]+)\s*;?
+      | from\s+(?P<pyfrom>[\w.]+)\s+import
+      | import\s+(?P<pyimp>[\w.]+)
+      | (?:from|import)\s+['"](?P<modpath>[^'"]+)['"]
+      | require\(\s*['"](?P<req>[^'"]+)['"]
+      | \#include\s+[<'"](?P<inc>[^>'"]+)[>'"]
+      | using\s+(?P<using>[\w.]+)
+    )
+    """
 )
-
-
-def _matching(src: str, open_idx: int, open_ch: str, close_ch: str) -> int:
-    depth = 0
-    for idx in range(open_idx, len(src)):
-        ch = src[idx]
-        if ch == open_ch:
-            depth += 1
-        elif ch == close_ch:
-            depth -= 1
-            if depth == 0:
-                return idx
-    return -1
-
-
-def _elide_switch_expressions(src: str) -> str:
-    """javalang cannot parse Java 14 switch expressions (`case x ->`)."""
-    result = src
-    changed = True
-    while changed:
-        changed = False
-        cursor = 0
-        while True:
-            match = re.search(r"\bswitch\s*\(", result[cursor:])
-            if not match:
-                break
-            abs_start = cursor + match.start()
-            paren_open = cursor + match.end() - 1
-            paren_close = _matching(result, paren_open, "(", ")")
-            if paren_close < 0:
-                break
-            brace_open = paren_close + 1
-            while brace_open < len(result) and result[brace_open].isspace():
-                brace_open += 1
-            if brace_open >= len(result) or result[brace_open] != "{":
-                cursor = paren_close + 1
-                continue
-            brace_close = _matching(result, brace_open, "{", "}")
-            if brace_close < 0:
-                break
-            body = result[brace_open : brace_close + 1]
-            if "->" not in body:
-                cursor = brace_close + 1
-                continue
-            prefix = result[:abs_start]
-            ret = re.search(r"return\s+$", prefix)
-            start = ret.start() if ret else abs_start
-            replacement = "return null;" if ret else "null"
-            result = result[:start] + replacement + result[brace_close + 1 :]
-            changed = True
-            cursor = start + len(replacement)
-    return result
-
-
-def _normalize_java(src: str) -> str:
-    return _elide_switch_expressions(INSTANCEOF_PATTERN.sub(r"instanceof \1", src))
+_SKIP_IDENTS = {
+    "class", "interface", "enum", "record", "public", "private", "protected",
+    "static", "final", "void", "return", "import", "package", "extends",
+    "implements", "throws", "this", "super", "null", "true", "false",
+    "else", "for", "while", "switch", "case", "break", "continue",
+    "try", "catch", "finally", "throw", "from", "with",
+    "not", "and", "lambda", "self", "none",
+    "function", "const", "let", "var", "export", "default", "typeof",
+    "string", "int", "long", "boolean", "float", "double", "object", "list",
+    "map", "set", "optional", "override", "system", "java", "javax",
+    "the", "that",
+}
 
 
 @dataclass
@@ -76,7 +47,7 @@ class RepoNode:
     name: str
     path: str
     layer: str
-    kind: str = "class"
+    kind: str = "file"
 
 
 @dataclass
@@ -87,6 +58,19 @@ class RepositoryGraph:
     extends: dict[str, str] = field(default_factory=dict)
     parse_failures: list[str] = field(default_factory=list)
     path_to_types: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    aliases: dict[str, str] = field(default_factory=dict)
+
+    def resolve(self, name: str) -> str | None:
+        if name in self.nodes:
+            return name
+        if name in self.aliases:
+            return self.aliases[name]
+        folded = {n.casefold(): n for n in self.nodes}
+        hit = folded.get(name.casefold())
+        if hit:
+            return hit
+        path_folded = {n.path.casefold(): n.name for n in self.nodes.values()}
+        return path_folded.get(name.casefold().replace("\\", "/"))
 
     def degree(self, name: str) -> int:
         inbound = sum(1 for dsts in self.uses.values() if name in dsts)
@@ -99,14 +83,29 @@ class RepositoryGraph:
                 out.add(src)
         return out
 
+    def call_neighbors(self, name: str) -> set[str]:
+        out = {target for target, _ in self.calls.get(name, ())}
+        for src, calls in self.calls.items():
+            if any(target == name for target, _ in calls):
+                out.add(src)
+        return out or self.neighbors(name)
+
     def known(self, name: str) -> bool:
-        return name in self.nodes
+        return self.resolve(name) is not None
 
     def has_edge(self, a: str, b: str) -> bool:
-        return b in self.uses.get(a, ()) or a in self.uses.get(b, ())
+        src, dst = self.resolve(a), self.resolve(b)
+        if not src or not dst:
+            return False
+        return dst in self.uses.get(src, ()) or src in self.uses.get(dst, ())
 
     def has_call(self, a: str, b: str) -> bool:
-        return any(t == b for t, _ in self.calls.get(a, ()))
+        src, dst = self.resolve(a), self.resolve(b)
+        if not src or not dst:
+            return False
+        if any(t == dst for t, _ in self.calls.get(src, ())):
+            return True
+        return self.has_edge(src, dst)
 
     def pagerank(
         self,
@@ -115,11 +114,6 @@ class RepositoryGraph:
         max_iter: int = 100,
         tol: float = 1.0e-6,
     ) -> dict[str, float]:
-        """Weighted PageRank (Aider RepoMap: ``nx.pagerank(..., weight='weight')``, α=0.85).
-
-        Edges: uses weight 1.0; each call adds 0.5 (Aider uses sqrt of ref counts).
-        Dangling mass is redistributed using the personalization vector.
-        """
         names = list(self.nodes)
         n = len(names)
         if n == 0:
@@ -158,15 +152,8 @@ class RepositoryGraph:
                 break
         return rank
 
-    def call_neighbors(self, name: str) -> set[str]:
-        out = {target for target, _ in self.calls.get(name, ())}
-        for src, calls in self.calls.items():
-            if any(target == name for target, _ in calls):
-                out.add(src)
-        return out
-
     def hop_from(self, seeds: set[str], hops: int) -> set[str]:
-        seen = {s for s in seeds if s in self.nodes}
+        seen = {s for s in (self.resolve(x) or x for x in seeds) if s in self.nodes}
         frontier = set(seen)
         for _ in range(max(0, hops)):
             nxt: set[str] = set()
@@ -177,105 +164,101 @@ class RepositoryGraph:
             frontier = nxt
         return seen
 
-    def summary(self, limit: int = 80) -> str:
+    def summary(self, limit: int = 80, prefer: list[str] | None = None) -> str:
         lines = [
-            f"types={len(self.nodes)} uses_edges={sum(len(v) for v in self.uses.values())}"
+            f"files={len(self.nodes)} uses_edges={sum(len(v) for v in self.uses.values())}",
+            "Nodes are kept source files. [dir] is the parent directory, not a style layer.",
+            "Uses edges come from import-like lines and identifier mentions of other kept files.",
         ]
-        ranked = sorted(self.nodes.items(), key=lambda kv: -self.degree(kv[0]))
-        for name, node in ranked[:limit]:
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for name in prefer or []:
+            resolved = self.resolve(name)
+            if resolved and resolved not in seen:
+                ordered.append(resolved)
+                seen.add(resolved)
+        for name in sorted(self.nodes, key=lambda n: -self.degree(n)):
+            if len(ordered) >= max(limit, len(seen)):
+                break
+            if name not in seen:
+                ordered.append(name)
+                seen.add(name)
+        for name in ordered:
+            node = self.nodes[name]
             dst = ", ".join(sorted(self.uses.get(name, ()))[:8])
-            lines.append(f"{name} [{node.layer}] deg={self.degree(name)} uses-> {dst}")
+            lines.append(f"{name} [dir={node.layer}] path={node.path} deg={self.degree(name)} uses-> {dst}")
+        omitted = max(0, len(self.nodes) - len(ordered))
+        if omitted:
+            lines.append(f"omitted_from_listing={omitted}")
         if self.parse_failures:
-            lines.append("parse_failures: " + ", ".join(self.parse_failures[:10]))
+            lines.append("unreadable: " + ", ".join(self.parse_failures[:10]))
         return "\n".join(lines)
 
 
-def _layer_of(rel: str) -> str:
-    parts = Path(rel).parts
-    for marker in ("java", "kotlin", "scala"):
-        if marker in parts:
-            idx = parts.index(marker)
-            if idx + 1 < len(parts) - 1:
-                return parts[idx + 1]
-    if len(parts) >= 2:
-        return parts[-2]
-    return "default"
+def _parent_dir(rel: str) -> str:
+    parent = Path(rel).parent
+    if not parent.parts or str(parent) in {".", ""}:
+        return "root"
+    return parent.name
 
 
-def _parse_java(root: Path, rel: str, graph: RepositoryGraph) -> None:
-    import javalang
+def _stem_key(rel: str, taken: set[str]) -> str:
+    stem = Path(rel).stem
+    if stem and stem not in taken:
+        return stem
+    return rel.replace("\\", "/")
 
-    path = root / rel
-    src = _normalize_java(path.read_text(encoding="utf-8", errors="replace"))
-    try:
-        tree = javalang.parse.parse(src)
-    except Exception:
-        graph.parse_failures.append(rel)
-        stem = Path(rel).stem
-        graph.nodes[stem] = RepoNode(name=stem, path=rel, layer=_layer_of(rel), kind="class")
-        graph.path_to_types[rel].append(stem)
-        return
-    for _, node in tree.filter(javalang.tree.TypeDeclaration):
-        name = node.name
-        graph.nodes[name] = RepoNode(
-            name=name, path=rel, layer=_layer_of(rel), kind=type(node).__name__
-        )
-        graph.path_to_types[rel].append(name)
-        ext = getattr(node, "extends", None)
-        if ext is not None:
-            base = ext[0].name if isinstance(ext, list) else ext.name
-            graph.extends[name] = base
-            graph.uses[name].add(base)
-        for impl in getattr(node, "implements", None) or []:
-            graph.uses[name].add(impl.name)
-        for kind in (javalang.tree.FieldDeclaration, javalang.tree.LocalVariableDeclaration):
-            for _, decl in node.filter(kind):
-                t = getattr(decl.type, "name", None)
-                if t:
-                    graph.uses[name].add(t)
-        for _, param in node.filter(javalang.tree.FormalParameter):
-            t = getattr(param.type, "name", None)
-            if t:
-                graph.uses[name].add(t)
-        for _, creator in node.filter(javalang.tree.ClassCreator):
-            t = getattr(creator.type, "name", None)
-            if t:
-                graph.uses[name].add(t)
-        var_types: dict[str, str] = {}
-        for kind in (
-            javalang.tree.FieldDeclaration,
-            javalang.tree.LocalVariableDeclaration,
-            javalang.tree.FormalParameter,
-        ):
-            for _, decl in node.filter(kind):
-                t = getattr(decl.type, "name", None)
-                decls = getattr(decl, "declarators", None) or [decl]
-                for dec in decls:
-                    if getattr(dec, "name", None) and t:
-                        var_types[dec.name] = t
-        for _, inv in node.filter(javalang.tree.MethodInvocation):
-            recv = inv.qualifier
-            if not recv:
-                continue
-            target = var_types.get(recv, recv)
-            graph.calls[name].add((target, inv.member))
-            graph.uses[name].add(target)
+
+def _tokens_from_import(match: re.Match[str]) -> list[str]:
+    raw = next((g for g in match.groups() if g), "")
+    if not raw:
+        return []
+    cleaned = raw.replace("\\", "/").split(" as ")[0].strip()
+    parts = re.split(r"[./\\\\]", cleaned)
+    return [p for p in parts if p and p not in {"*", ""}]
 
 
 def build_graph(repo_root: str | Path, corpus: CleanedCorpus) -> RepositoryGraph:
     root = Path(repo_root)
     graph = RepositoryGraph()
+    taken: set[str] = set()
+    files: list[tuple[str, str]] = []
     for item in corpus.kept:
-        rel = item.path
-        if rel.endswith(".java"):
-            _parse_java(root, rel, graph)
-        else:
-            stem = Path(rel).stem
-            graph.nodes[stem] = RepoNode(name=stem, path=rel, layer=_layer_of(rel), kind="file")
-            graph.path_to_types[rel].append(stem)
+        rel = item.path.replace("\\", "/")
+        key = _stem_key(rel, taken)
+        taken.add(key)
+        layer = _parent_dir(rel)
+        graph.nodes[key] = RepoNode(name=key, path=rel, layer=layer, kind="file")
+        graph.path_to_types[rel].append(key)
+        graph.aliases[rel] = key
+        graph.aliases[Path(rel).name] = key
+        files.append((key, rel))
+
+    stem_index = {n.casefold(): n for n in graph.nodes}
+
+    for key, rel in files:
+        path = root / rel
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            graph.parse_failures.append(rel)
+            continue
+        for match in _IMPORT_LINE.finditer(text):
+            for token in _tokens_from_import(match):
+                target = stem_index.get(token.casefold())
+                if target and target != key:
+                    graph.uses[key].add(target)
+        for ident in _IDENT.findall(text):
+            if ident.casefold() in _SKIP_IDENTS:
+                continue
+            target = stem_index.get(ident.casefold())
+            if target and target != key:
+                graph.uses[key].add(target)
+                graph.calls[key].add((target, ident))
+
     project = set(graph.nodes)
-    for src_name, dsts in list(graph.uses.items()):
-        graph.uses[src_name] = {d for d in dsts if d in project and d != src_name}
-    for src_name, calls in list(graph.calls.items()):
-        graph.calls[src_name] = {(t, m) for t, m in calls if t in project and t != src_name}
+    for src, dsts in list(graph.uses.items()):
+        graph.uses[src] = {d for d in dsts if d in project and d != src}
+    for src, calls in list(graph.calls.items()):
+        graph.calls[src] = {(t, m) for t, m in calls if t in project and t != src}
     return graph

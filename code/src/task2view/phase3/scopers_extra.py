@@ -8,7 +8,7 @@ from task2view.contracts.models import CleanedCorpus, RepositoryScope, ScopeCand
 from task2view.phase3.graph import RepositoryGraph
 from task2view.phase3.protocol import register_scoper
 from task2view.phase3.select import budget_select
-from task2view.phase3.scopers_composite import _task_seed_names
+from task2view.phase3.seeds import forced_seed_candidates, task_seed_names as _task_seed_names
 from task2view.phase3.scopers_lexical import keywords
 from task2view.phase3.scopers_sota import _require
 
@@ -36,8 +36,10 @@ class LocAgentScoper:
         corpus, graph = _require(corpus, graph)
         seeds = _task_seed_names(view_spec, graph)
         reached = graph.hop_from(set(seeds), hops)
-        cands: list[ScopeCandidate] = []
-        seen: set[str] = set()
+        cands: list[ScopeCandidate] = list(
+            forced_seed_candidates(view_spec, repo_root, corpus, graph)
+        )
+        seen: set[str] = {c.path for c in cands}
         for name, serves in seeds.items():
             node = graph.nodes[name]
             if node.path in seen:
@@ -74,6 +76,7 @@ class LocAgentScoper:
             strategy="locagent",
             corpus=corpus,
             graph=graph,
+            expansion_depth=hops,
         )
 
 
@@ -95,12 +98,19 @@ class PageRankScoper:
     ) -> RepositoryScope:
         corpus, graph = _require(corpus, graph)
         seeds = _task_seed_names(view_spec, graph)
-        pers = {name: 10.0 for name in seeds} or None
-        ranked = graph.pagerank(personalization=pers)
+        forced = forced_seed_candidates(view_spec, repo_root, corpus, graph)
+        pers = {name: 10.0 for name in seeds}
+        for cand in forced:
+            for name, node in graph.nodes.items():
+                if node.path == cand.path:
+                    pers[name] = max(pers.get(name, 0.0), 12.0)
+        ranked = graph.pagerank(personalization=pers or None)
         ordered = sorted(ranked.items(), key=lambda kv: -kv[1])
-        cands: list[ScopeCandidate] = []
-        seen: set[str] = set()
-        for name, score in ordered[:top_k]:
+        cands: list[ScopeCandidate] = list(forced)
+        seen: set[str] = {c.path for c in forced}
+        for name, score in ordered:
+            if len(cands) >= top_k:
+                break
             node = graph.nodes[name]
             if node.path in seen:
                 continue
@@ -109,7 +119,7 @@ class PageRankScoper:
                     path=node.path,
                     serves=seeds.get(name, []),
                     origin="pagerank_seed",
-                    score=min(0.99, 0.5 + score),
+                    score=min(0.98, 0.5 + score),
                     reason=f"PageRank {score:.4f} ({name})",
                 )
             )
@@ -122,6 +132,7 @@ class PageRankScoper:
             strategy="pagerank",
             corpus=corpus,
             graph=graph,
+            file_cap=top_k,
         )
 
 
@@ -199,8 +210,10 @@ class DataflowScoper:
         names = set(seeds)
         for seed in list(seeds):
             names |= graph.call_neighbors(seed)
-        cands: list[ScopeCandidate] = []
-        seen: set[str] = set()
+        cands: list[ScopeCandidate] = list(
+            forced_seed_candidates(view_spec, repo_root, corpus, graph)
+        )
+        seen: set[str] = {c.path for c in cands}
         for name, serves in seeds.items():
             node = graph.nodes[name]
             if node.path in seen:
@@ -237,4 +250,5 @@ class DataflowScoper:
             strategy="dataflow",
             corpus=corpus,
             graph=graph,
+            expansion_depth=1,
         )

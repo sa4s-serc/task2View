@@ -2,32 +2,13 @@
 
 from __future__ import annotations
 
-import re
 from collections import defaultdict
 
 from task2view.contracts.models import CleanedCorpus, RepositoryScope, ScopeCandidate, ViewSpecification
 from task2view.phase3.graph import RepositoryGraph
 from task2view.phase3.protocol import register_scoper
 from task2view.phase3.select import budget_select
-from task2view.phase3.scopers_lexical import keywords
-
-_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9]{2,}")
-
-
-def _task_seed_names(view_spec: ViewSpecification, graph: RepositoryGraph) -> dict[str, list[str]]:
-    cues = keywords(view_spec)
-    hits: dict[str, list[str]] = {}
-    for name, node in graph.nodes.items():
-        hay = f"{name} {node.path}".lower()
-        matched = [c for c in cues if c in hay]
-        if matched:
-            serves = [
-                ri.id
-                for ri in view_spec.required_information
-                if any(c in ri.need.lower() or c in hay for c in matched)
-            ]
-            hits[name] = serves or [view_spec.required_information[0].id]
-    return hits
+from task2view.phase3.seeds import forced_seed_candidates, task_seed_names as _task_seed_names
 
 
 @register_scoper
@@ -62,6 +43,9 @@ class CompositeScoper:
         for name, serves in task_hits.items():
             node = graph.nodes[name]
             add(node.path, "task_seed", 0.94, f"name/path match for {name}", serves)
+
+        for cand in forced_seed_candidates(view_spec, repo_root, corpus, graph):
+            add(cand.path, cand.origin, cand.score, cand.reason, cand.serves)
 
         ranked = sorted(graph.nodes.values(), key=lambda n: -graph.degree(n.name))
         for node in ranked[:12]:
@@ -107,4 +91,5 @@ class CompositeScoper:
             strategy="composite",
             corpus=corpus,
             graph=graph,
+            expansion_depth=1,
         )

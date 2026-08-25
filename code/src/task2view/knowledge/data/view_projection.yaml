@@ -1,0 +1,273 @@
+# How a ViewModel is projected from the repository graph onto a published
+# architecture view. Keys are view_type / viewpoint_id / element kind — never
+# repository, package, or type names. Applies to every corpus.
+
+keep_without_graph:
+  - actor
+  - datastore
+  - external_system
+  - deployment_node
+  - system
+
+# Graph edges to *insert* after the extractor. Extractor relations are always kept.
+#   none         — no graph fill (behavioural traces)
+#   inter_group  — only edges that cross parent-directory / layer groups
+#   all_selected — every uses/calls edge among selected types (typed data models)
+edge_insertion:
+  default: inter_group
+  sequence_view: none
+  state_view: none
+  class_view: all_selected
+  component_view: inter_group
+  context_view: inter_group
+  deployment_view: inter_group
+  dataflow_view: inter_group
+
+# Context views that the extractor reduced to actors still need a system
+# boundary and one representative per source directory (from the scoped graph).
+context:
+  ensure_system: true
+  min_internal_elements: 1
+  representatives_per_directory: 1
+  max_representatives: 8
+  actor_to_system_kind: uses
+
+# Generic source-layout segments ignored when naming the system from paths.
+source_root_segments:
+  - src
+  - source
+  - sources
+  - main
+  - app
+  - lib
+  - java
+  - kotlin
+  - scala
+  - python
+  - py
+  - javascript
+  - typescript
+  - js
+  - ts
+  - csharp
+  - cs
+  - go
+  - rust
+  - cpp
+  - c
+  - include
+  - headers
+  - resources
+  - test
+  - tests
+  - code
+
+max_elements:
+  by_view_type:
+    context_view: 12
+    deployment_view: 12
+    sequence_view: 16
+    component_view: 20
+    dataflow_view: 20
+    class_view: 30
+    state_view: 20
+  by_granularity:
+    high: 12
+    system_or_context_level: 12
+    medium: 20
+    component_or_service_level: 20
+    low: 36
+  keep_one_per_group: true
+  context_one_per_group: true
+
+# If the viewpoint agent picks a behavioural view but the questions/evidence
+# ask for structure, retarget to a module view (catalog ids only).
+viewpoint_tiebreak:
+  behavioural_ids:
+    - scenario
+    - control-flow
+  structural_ids:
+    - module-decomposition
+    - module-uses
+    - module-layered
+    - context
+    - api-contract
+  structural_tokens:
+    - containment
+    - module
+    - package
+    - layer
+    - hierarch
+    - decompos
+    - organiz
+    - responsibilit
+    - subsystem
+    - structure
+    - component
+  behavioural_tokens:
+    - call chain
+    - sequence
+    - execution order
+    - processed
+    - processing
+    - how a request
+    - when a
+  fallback_viewpoint: module-decomposition
+
+# Files that must enter the scoped subset because they match required-information
+# / goal cues. Ranking (PageRank, degree) fills remaining slots. No type names.
+forced_seeds:
+  max_files: 8
+  max_document_fraction: 0.25
+  min_token_length: 4
+  body_chars: 80000
+  max_body_hits_per_cue: 3
+  extra_stopwords:
+    - this
+    - that
+    - with
+    - from
+    - into
+    - which
+    - their
+    - them
+    - than
+    - then
+    - when
+    - what
+    - such
+    - also
+    - each
+    - other
+    - about
+    - after
+    - before
+    - through
+    - should
+    - would
+    - could
+    - must
+    - main
+    - involved
+    - identify
+    - understand
+    - functionality
+    - functionalities
+    - information
+    - required
+    - responsible
+    - responsibilities
+    - interaction
+    - interactions
+    - dependency
+    - dependencies
+    - component
+    - components
+    - module
+    - modules
+    - among
+    - using
+    - onto
+    - high
+    - level
+    - newly
+    - created
+    - selected
+    - specific
+    - available
+    - expected
+    - different
+    - related
+    - provide
+    - provided
+    - supporting
+    - modify
+    - modifying
+    - changes
+    - changing
+    - future
+    - planning
+    - design
+    - tester
+    - developer
+    - engineer
+    - analyst
+    - architect
+    - handle
+    - handles
+    - handling
+    - applying
+    - checking
+    - storing
+    - like
+    - help
+    - will
+    - need
+    - needs
+    - without
+    - between
+    - these
+    - those
+    - they
+    - have
+    - been
+    - being
+    - were
+    - does
+    - make
+    - making
+    - parts
+    - affected
+    - introduce
+    - introducing
+    - already
+    - existing
+    - covered
+    - exercised
+    - defining
+    - prepare
+    - preparing
+    - communicate
+    - technologies
+    - throughout
+    - overall
+    - organisation
+    - organization
+    - decomposed
+    - separated
+    - collaborate
+    - review
+    - evolution
+    - achieve
+    - people
+    - where
+    - itself
+    - owns
+    - declared
+    - allowed
+    - implementing
+    - realises
+    - realizes
+    - visible
+    - operations
+    - participants
+    - observable
+    - ordered
+    - containment
+    - hierarchy
+    - mapping
+    - reachable
+    - downstream
+    - onboarding
+    - overview
+    - contributor
+    - stakeholder
+    - codebase
+    - repository
+    - show
+    - software
+    - application
+    - architecture
+    - architectural
+    - process
+    - system

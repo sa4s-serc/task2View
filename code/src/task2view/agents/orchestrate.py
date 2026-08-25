@@ -20,7 +20,7 @@ from task2view.contracts.models import (
 from task2view.knowledge.loader import load_knowledge
 from task2view.phase0.clean import clean_repository
 from task2view.phase1.intake import new_request_id, resolve_repository
-from task2view.phase2.selector import _instantiate_required_information, _task_summary
+from task2view.phase2.selector import _instantiate_required_information
 from task2view.phase3 import get_scoper
 from task2view.phase3.graph import build_graph
 from task2view.phase4 import get_adapter, get_extractor
@@ -49,6 +49,8 @@ def _normalized(raw: UserRequest, profile, knowledge, corpus) -> NormalizedReque
             max_views=raw.max_views,
             scope_token_budget=raw.scope_token_budget,
         ),
+        environment=profile.environment or None,
+        concerns=list(profile.concerns),
         corpus={
             "kept": corpus.counts["kept"],
             "dropped": corpus.counts["dropped"],
@@ -67,11 +69,20 @@ def _view_spec(request, profile, questions, view, knowledge) -> ViewSpecificatio
     for q in questions.questions:
         if q.id not in have:
             required.append(RequiredInformation(id=q.id, need=q.text))
+    catalog = knowledge.catalog_concerns()
+    concerns = [c for c in (profile.concerns or []) if c in catalog]
+    for extra in questions.concerns:
+        if extra in catalog and extra not in concerns:
+            concerns.append(extra)
+    framed = set(knowledge.viewpoint(view.viewpoint_id).get("frames_concerns") or [])
+    unanswered = [c for c in concerns if c not in framed and c != "general"]
     return ViewSpecification(
         request_id=request.request_id,
         stakeholder=request.stakeholder.role,
-        task_summary=_task_summary(profile.task),
-        architectural_concerns=questions.concerns,
+        task_summary=" | ".join(
+            p for p in (profile.source_goal, profile.task, profile.target, profile.goal) if p
+        ),
+        architectural_concerns=concerns,
         selected_view=SelectedView(
             view_type=view.view_type,
             notation=view.notation or view.view_type,
@@ -81,6 +92,8 @@ def _view_spec(request, profile, questions, view, knowledge) -> ViewSpecificatio
             viewpoint_id=view.viewpoint_id,
         ),
         required_information=required,
+        unanswered_concerns=unanswered,
+        declared_gaps=list(unanswered),
     )
 
 
@@ -88,6 +101,10 @@ def run_agentic(raw: UserRequest, *, generate=None):
     from task2view.pipeline import PipelineResult
 
     knowledge = load_knowledge()
+    if raw.config:
+        from task2view.config import apply_pipeline_config, load_pipeline_config
+
+        raw = apply_pipeline_config(raw, load_pipeline_config(raw.config))
     raw.request_id = raw.request_id or new_request_id()
     runtime = AgentRuntime(generate=generate, model=raw.gemini_model)
     corpus = clean_repository(raw.code or raw.repository or "", request_id=raw.request_id)
@@ -142,6 +159,11 @@ def run_agentic(raw: UserRequest, *, generate=None):
     if generate is not None:
         extract_kw["generate"] = generate
     view_model = extractor.extract(spec, scope, graph, repo, **extract_kw)
+    from task2view.agents.phase6_critic import refine_extracted_view
+    view_model, structure_report = refine_extracted_view(
+        view_model, spec, scope, graph, runtime, skip_critic=raw.skip_critic
+    )
+    extras["structure_report.json"] = structure_report
     notation = spec.selected_view.diagram_language
     adapter = get_adapter(notation)
     source = adapter.emit(view_model)

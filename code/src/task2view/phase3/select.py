@@ -21,17 +21,28 @@ def budget_select(
     strategy: str,
     corpus: CleanedCorpus,
     graph: RepositoryGraph | None,
+    expansion_depth: int = 0,
+    file_cap: int | None = None,
 ) -> RepositoryScope:
     best: dict[str, ScopeCandidate] = {}
     for cand in candidates:
         prev = best.get(cand.path)
         if prev is None or cand.score > prev.score:
             best[cand.path] = cand
-    ordered = sorted(best.values(), key=lambda c: (-c.score, c.path))
+        elif prev is not None:
+            prev.serves = sorted(set(prev.serves) | set(cand.serves))
+    forced = [c for c in best.values() if c.origin == "ri_forced"]
+    rest = [c for c in best.values() if c.origin != "ri_forced"]
+    forced.sort(key=lambda c: (-c.score, -len(c.serves), c.path))
+    rest.sort(key=lambda c: (-c.score, c.path))
+    ordered = forced + rest
     selected: list[ScopeCandidate] = []
     tokens = 0
     excluded = 0
     for cand in ordered:
+        if file_cap is not None and len(selected) >= file_cap:
+            excluded += 1
+            continue
         cost = file_tokens(repo_root, cand.path)
         if selected and tokens + cost > budget:
             excluded += 1
@@ -56,7 +67,7 @@ def budget_select(
         graph=graph_meta,
         candidate_areas=selected,
         scope_constraints={
-            "expansion_depth": 1,
+            "expansion_depth": expansion_depth,
             "token_budget": budget,
             "tokens_selected": tokens,
             "budget_forced_exclusions": excluded,

@@ -17,6 +17,8 @@ from task2view.contracts.models import (
     ViewModel,
     ViewRelation,
     ViewSpecification,
+    canonical_element_kind,
+    canonical_relation_kind,
 )
 from task2view.phase3.graph import RepositoryGraph
 from task2view.phase4.gemini import DEFAULT_MODEL, generate_json
@@ -27,20 +29,22 @@ Rules:
 - Use ONLY the provided files and the repository graph. Do not invent types.
 - Every non-external element must have evidence.file and evidence.symbol that exist in the files.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
-- Prefer the types named in the graph. Actors/users may be external.
+- Prefer the types named in the graph listing. Actors, datastores, and external systems may be external.
 - Keep the view at the requested granularity. Do not dump every class if granularity is component_or_service_level.
 - Answer each required_information id or list it in unanswered.
+- Put each non-external element in the group that matches the parent directory of evidence.file. Do not invent layer names.
+- Include a relation for every uses/calls edge among selected files that the graph listing shows.
 
 Return this shape:
 {{
-  "elements": [{{"id":"E1","name":"...","kind":"component|class|actor|service|datastore|external_system","role":"...","external":false,
-    "evidence":{{"file":"relative/path.java","symbol":"TypeName","excerpt":"..."}},
+  "elements": [{{"id":"E1","name":"...","kind":"component|module|actor|datastore|external_system","role":"...","external":false,
+    "evidence":{{"file":"relative/path","symbol":"Name","excerpt":"..."}},
     "support":"observed"}}],
-  "relations": [{{"id":"R1","from":"E1","to":"E2","kind":"call|depends|inherits|implements|dataflow",
+  "relations": [{{"id":"R1","from":"E1","to":"E2","kind":"uses|calls|dataflow|contains|deploys|transition",
     "label":"methodName","order":1,
     "evidence":{{"file":"...","symbol":"...","excerpt":"..."}},
     "support":"observed"}}],
-  "groups": [{{"id":"G1","name":"Boundary","kind":"layer|package|boundary","contains":["E1"]}}],
+  "groups": [{{"id":"G1","name":"directory-name","kind":"package|layer|boundary","contains":["E1"]}}],
   "unanswered": ["RI-6"],
   "notes": []
 }}
@@ -51,7 +55,7 @@ purpose: {purpose}
 required_information:
 {required}
 
-REPOSITORY GRAPH (ground truth structure):
+FILE/DIRECTORY GRAPH (kept files; parent directory in [dir]; import-like uses edges; scoped files first):
 {graph}
 
 SOURCE FILES:
@@ -59,31 +63,38 @@ SOURCE FILES:
 """
 
 
-def _pack_files(repo_root: str, scope: RepositoryScope, limit_chars: int = 180_000) -> str:
-    chunks: list[str] = []
-    used = 0
+def _pack_files(repo_root: str, scope: RepositoryScope, per_file: int = 12_000) -> str:
+    """Include every scoped path. Truncate a file if huge; never drop later files."""
     root = Path(repo_root)
+    chunks: list[str] = []
+    truncated: list[str] = []
+    unread: list[str] = []
     for cand in scope.candidate_areas:
         path = root / cand.path
         try:
             text = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
+            unread.append(cand.path)
+            chunks.append(f"### FILE: {cand.path}\n/* unreadable */\n")
             continue
-        if len(text) > 12_000:
-            text = text[:12_000] + "\n/* truncated */\n"
-        block = f"### FILE: {cand.path}\n{text}\n"
-        if used + len(block) > limit_chars:
-            break
-        chunks.append(block)
-        used += len(block)
-    return "\n".join(chunks)
+        if len(text) > per_file:
+            text = text[:per_file] + "\n/* truncated */\n"
+            truncated.append(cand.path)
+        chunks.append(f"### FILE: {cand.path}\n{text}\n")
+    header = (
+        f"PACKED {len(scope.candidate_areas)} scoped files; omitted=0; "
+        f"truncated={len(truncated)}; unread={len(unread)}\n"
+    )
+    if truncated:
+        header += "truncated_paths: " + ", ".join(truncated) + "\n"
+    if unread:
+        header += "unread_paths: " + ", ".join(unread) + "\n"
+    return header + "\n".join(chunks)
 
 
 def _as_element(raw: dict, idx: int) -> ViewElement:
     ev = raw.get("evidence") or {}
-    kind = str(raw.get("kind") or "component")
-    if kind not in ALLOWED_ELEMENT_KINDS:
-        kind = "component"
+    kind = canonical_element_kind(str(raw.get("kind") or "component"))
     return ViewElement(
         id=str(raw.get("id") or f"E{idx}"),
         name=str(raw.get("name") or "").strip(),
@@ -103,9 +114,7 @@ def _as_element(raw: dict, idx: int) -> ViewElement:
 
 def _as_relation(raw: dict, idx: int) -> ViewRelation:
     ev = raw.get("evidence") or {}
-    kind = str(raw.get("kind") or "call")
-    if kind not in ALLOWED_RELATION_KINDS:
-        kind = "call"
+    kind = canonical_relation_kind(str(raw.get("kind") or "uses"))
     return ViewRelation(
         id=str(raw.get("id") or f"R{idx}"),
         frm=str(raw.get("from") or raw.get("frm") or ""),
@@ -132,7 +141,7 @@ def _as_group(raw: dict, idx: int) -> ViewGroup:
         id=str(raw.get("id") or f"G{idx}"),
         name=str(raw.get("name") or ""),
         kind=kind,
-        contains=[str(x) for x in raw.get("contains") or []],
+        contains=[str(x) for x in (raw.get("contains") or raw.get("contains") or [])],
     )
 
 
@@ -144,7 +153,8 @@ def merge_samples(samples: list[ViewModel], request_id: str, view_spec: ViewSpec
     n = max(1, len(samples))
     el_votes: dict[str, list[ViewElement]] = defaultdict(list)
     rel_votes: dict[tuple, list[ViewRelation]] = defaultdict(list)
-    groups: dict[str, ViewGroup] = {}
+    group_members: dict[str, set[str]] = defaultdict(set)
+    group_meta: dict[str, ViewGroup] = {}
     unanswered: dict[str, int] = defaultdict(int)
     notes: list[str] = []
     for vm in samples:
@@ -157,7 +167,10 @@ def merge_samples(samples: list[ViewModel], request_id: str, view_spec: ViewSpec
             to = id_to_name.get(rel.to, rel.to)
             rel_votes[(frm.casefold(), to.casefold(), rel.kind, (rel.label or "").casefold())].append(rel)
         for g in vm.groups:
-            groups.setdefault(g.name, g)
+            group_meta.setdefault(g.name, g)
+            for eid in g.contains:
+                if eid in id_to_name:
+                    group_members[g.name].add(id_to_name[eid])
         for u in vm.unanswered:
             unanswered[u] += 1
         notes.extend(vm.notes)
@@ -194,11 +207,20 @@ def merge_samples(samples: list[ViewModel], request_id: str, view_spec: ViewSpec
             )
         )
 
+    remapped_groups: list[ViewGroup] = []
+    for i, (gname, names) in enumerate(group_members.items(), start=1):
+        meta = group_meta[gname]
+        contains = [name_to_id[n.casefold()] for n in names if n.casefold() in name_to_id]
+        if contains:
+            remapped_groups.append(
+                ViewGroup(id=f"G{i}", name=gname, kind=meta.kind, contains=contains)
+            )
+
     return ViewModel(
         request_id=request_id,
         view_type=view_spec.selected_view.view_type,
         granularity=view_spec.selected_view.granularity,
-        groups=list(groups.values()),
+        groups=remapped_groups,
         elements=elements,
         relations=rebuilt,
         unanswered=[k for k, c in unanswered.items() if c >= max(1, n // 2)],
@@ -241,12 +263,15 @@ def extract_view(
     if not scope.candidate_areas:
         raise PipelineError("scope is empty; cannot extract a view")
     required = "\n".join(f"- {i.id}: {i.need}" for i in view_spec.required_information)
+    prefer: list[str] = []
+    for cand in scope.candidate_areas:
+        prefer.extend(graph.path_to_types.get(cand.path, []))
     prompt = prompt_template.format(
         view_type=view_spec.selected_view.view_type,
         granularity=view_spec.selected_view.granularity,
         purpose=view_spec.selected_view.purpose,
         required=required,
-        graph=graph.summary(),
+        graph=graph.summary(prefer=prefer),
         files=_pack_files(repo_root, scope),
     )
     built: list[ViewModel] = []
@@ -256,3 +281,4 @@ def extract_view(
             raw = {k: v for k, v in raw.items() if not str(k).startswith("_")}
         built.append(_model_from_dict(raw, view_spec.request_id, view_spec))
     return merge_samples(built, view_spec.request_id, view_spec)
+

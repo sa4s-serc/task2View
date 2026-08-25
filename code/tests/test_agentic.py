@@ -40,6 +40,8 @@ def _scripted(prompt: str, *, model=None):
             ],
         }
     if "Knowledge-Grounded Viewpoint Planning Agent" in prompt:
+        assert "TASK CUES" in prompt
+        assert "task_cues.yaml" in prompt
         return {
             "views": [
                 {
@@ -51,7 +53,7 @@ def _scripted(prompt: str, *, model=None):
                 }
             ]
         }
-    if "You extract an architecture view from source code" in prompt or "REPOSITORY GRAPH" in prompt or "AST REFERENCE GRAPH" in prompt:
+    if "You extract an architecture view from source code" in prompt or "TYPED USES/CALLS GRAPH" in prompt:
         return {
             "elements": [
                 {
@@ -95,6 +97,8 @@ def _scripted(prompt: str, *, model=None):
             "groups": [],
             "unanswered": [],
         }
+    if "Completeness Critic" in prompt or "Structure Completeness Critic" in prompt:
+        return {"add": [], "notes": ["scripted"]}
     raise AssertionError("unexpected prompt:\n" + prompt[:400])
 
 
@@ -109,6 +113,7 @@ def test_agentic_pipeline_with_scripted_agents(tmp_path: Path):
         generate=_scripted,
     )
     assert result.spec.selected_view.viewpoint_id == "module-decomposition"
+    assert "seat booking" in result.spec.task_summary.lower()
     assert result.scope.scope_strategy == "composite"
     assert result.view_model is not None
     names = {e.name for e in result.view_model.elements}
@@ -122,6 +127,7 @@ def test_agentic_pipeline_with_scripted_agents(tmp_path: Path):
     assert (tmp_path / "view_model.json").exists()
     assert not (tmp_path / "repository_analysis_plan.json").exists()
     assert (tmp_path / "architecture_view.puml").exists()
+    assert (tmp_path / "structure_report.json").exists()
 
 
 def test_agentic_stop_after_scope():

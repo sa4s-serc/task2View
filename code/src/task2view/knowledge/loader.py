@@ -27,6 +27,37 @@ class KnowledgeBase:
     notations: dict[str, Any]
     required_information: dict[str, list[dict[str, str]]]
     corpus_rules: dict[str, Any]
+    architectural_styles: dict[str, Any]
+    view_projection: dict[str, Any]
+
+    def keep_without_graph(self) -> frozenset[str]:
+        raw = self.view_projection.get("keep_without_graph") or []
+        return frozenset(str(x) for x in raw)
+
+    def edge_insertion_mode(self, view_type: str) -> str:
+        modes = self.view_projection.get("edge_insertion") or {}
+        return str(modes.get(view_type) or modes.get("default") or "inter_group")
+
+    def max_elements_for(
+        self,
+        role_id: str | None,
+        view_type: str,
+        granularity: str,
+    ) -> int | None:
+        caps = self.view_projection.get("max_elements") or {}
+        candidates: list[int] = []
+        by_view = (caps.get("by_view_type") or {}).get(view_type)
+        if by_view:
+            candidates.append(int(by_view))
+        by_gran = (caps.get("by_granularity") or {}).get(granularity)
+        if by_gran:
+            candidates.append(int(by_gran))
+        if role_id and role_id in self.stakeholders:
+            pres = (self.stakeholders[role_id].get("presentation") or {})
+            raw = pres.get("max_elements_per_view")
+            if raw:
+                candidates.append(int(raw))
+        return min(candidates) if candidates else None
 
     def resolve_role(self, raw: str) -> str:
         key = " ".join(raw.strip().lower().replace("_", " ").replace("/", " ").split())
@@ -60,21 +91,66 @@ class KnowledgeBase:
             return False
         return view_type in spec.get("view_types", [])
 
+    def catalog_concerns(self) -> set[str]:
+        ids: set[str] = set()
+        for row in self.stakeholders.values():
+            for item in row.get("concerns") or []:
+                cid = item["id"] if isinstance(item, dict) else str(item)
+                ids.add(cid)
+        for cue in self.task_cues:
+            ids.update(cue.get("concerns") or [])
+        for viewpoint in self.viewpoints.values():
+            ids.update(viewpoint.get("frames_concerns") or [])
+        return ids
+
+    def detect_language(self, text: str | None) -> str | None:
+        if not text:
+            return None
+        blob = text.casefold()
+        languages = list(self.notations.get("languages", {}))
+        aliases = {"c4": "c4plantuml", "c4-plantuml": "c4plantuml", "plant uml": "plantuml"}
+        for alias, name in aliases.items():
+            if alias in blob and name in self.notations.get("languages", {}):
+                return name
+        for name in sorted(languages, key=len, reverse=True):
+            if name.casefold() in blob:
+                return name
+        return None
+
+    def bind_concerns(self, role_id: str | None, text: str) -> list[str]:
+        ordered: list[str] = []
+        catalog = self.catalog_concerns()
+        if role_id and role_id in self.stakeholders:
+            for item in self.stakeholders[role_id].get("concerns") or []:
+                cid = item["id"] if isinstance(item, dict) else str(item)
+                if cid in catalog and cid not in ordered:
+                    ordered.append(cid)
+        lowered = (text or "").lower()
+        for cue in self.task_cues:
+            if any(phrase in lowered for phrase in cue.get("phrases") or []):
+                for cid in cue.get("concerns") or []:
+                    if cid in catalog and cid not in ordered:
+                        ordered.append(cid)
+        return ordered
+
     def choose_language(
         self,
         view_type: str,
         *,
         preferred: str | None,
         formality: str,
+        viewpoint_default: str | None = None,
     ) -> str:
-        if preferred:
-            if preferred not in self.notations.get("languages", {}):
-                raise PipelineError(f"Unknown diagram_language {preferred!r}")
-            if not self.notation_supports(preferred, view_type):
+        for candidate in (preferred, viewpoint_default):
+            if not candidate:
+                continue
+            if candidate not in self.notations.get("languages", {}):
+                raise PipelineError(f"Unknown diagram_language {candidate!r}")
+            if not self.notation_supports(candidate, view_type):
                 raise PipelineError(
-                    f"{preferred} does not declare support for view_type {view_type}"
+                    f"{candidate} does not declare support for view_type {view_type}"
                 )
-            return preferred
+            return candidate
         order = self.notations.get("preference_order", {}).get(formality, [])
         for language in order:
             if self.notation_supports(language, view_type):
@@ -103,4 +179,6 @@ def load_knowledge() -> KnowledgeBase:
         notations=_load_yaml("notations.yaml"),
         required_information=ri_doc["templates"],
         corpus_rules=_load_yaml("corpus.yaml"),
+        architectural_styles=_load_yaml("architectural_styles.yaml"),
+        view_projection=_load_yaml("view_projection.yaml"),
     )

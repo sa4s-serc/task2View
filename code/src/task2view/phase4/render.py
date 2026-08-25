@@ -57,9 +57,10 @@ class PlantUMLAdapter:
         grouped = {eid for g in vm.groups for eid in g.contains}
         for el in vm.elements:
             if el.id not in grouped:
-                shape = "actor" if el.kind == "actor" or el.external else "component"
-                if shape == "actor":
+                if el.kind == "actor" or (el.external and el.kind not in {"system", "datastore"}):
                     lines.append(f'actor "{el.name}" as {el.id}')
+                elif el.kind == "datastore":
+                    lines.append(f'database "{el.name}" as {el.id}')
                 else:
                     lines.append(f'[{el.name}] as {el.id}')
         for rel in vm.relations:
@@ -92,8 +93,17 @@ class MermaidAdapter:
                 lines.append(f"    {rel.frm}->>{rel.to}: {label}")
             return "\n".join(lines) + "\n"
         lines = ["flowchart LR"]
+        grouped = {eid for g in vm.groups for eid in g.contains}
+        names = _ids(vm)
+        for g in vm.groups:
+            lines.append(f'    subgraph {g.id}["{g.name}"]')
+            for eid in g.contains:
+                if eid in names:
+                    lines.append(f'        {eid}["{names[eid]}"]')
+            lines.append("    end")
         for el in vm.elements:
-            lines.append(f'    {el.id}["{el.name}"]')
+            if el.id not in grouped:
+                lines.append(f'    {el.id}["{el.name}"]')
         for rel in vm.relations:
             label = f"|{rel.label}|" if rel.label else ""
             lines.append(f"    {rel.frm} -->{label} {rel.to}")
@@ -183,7 +193,7 @@ def _c4_node(el, *, indent: str) -> list[str]:
         return [f'{indent}Person({el.id}, "{name}")']
     if el.kind == "datastore":
         return [f'{indent}ContainerDb({el.id}, "{name}", "store")']
-    if el.kind in {"service", "component"}:
+    if el.kind in {"service", "component", "module"}:
         return [f'{indent}Component({el.id}, "{name}", "{el.kind}")']
     return [f'{indent}Container({el.id}, "{name}", "{el.kind}")']
 

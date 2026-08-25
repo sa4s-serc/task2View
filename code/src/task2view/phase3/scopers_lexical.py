@@ -16,8 +16,7 @@ _STOP = {
 def keywords(view_spec: ViewSpecification) -> list[str]:
     blob = view_spec.task_summary
     for item in view_spec.required_information:
-        if str(item.id).upper().startswith("AQ"):
-            blob += " " + item.need
+        blob += " " + item.need
     found = []
     for tok in _TOKEN.findall(blob.lower()):
         if tok in _STOP or tok in found:

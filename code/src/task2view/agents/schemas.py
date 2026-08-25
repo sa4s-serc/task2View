@@ -18,6 +18,8 @@ class StakeholderTaskProfile(BaseModel):
     constraints: list[str] = Field(default_factory=list)
     confidence: float | None = None
     source_goal: str = ""
+    concerns: list[str] = Field(default_factory=list)
+    environment: str = ""
 
 
 class ArchitecturalQuestion(BaseModel):

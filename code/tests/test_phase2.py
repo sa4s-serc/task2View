@@ -57,6 +57,15 @@ def test_new_contributor_overview_selects_context_or_onboarding():
     assert spec.selected_view.view_type in {"component_view", "context_view"}
 
 
+def test_goal_mermaid_selects_mermaid_adapter():
+    spec = _spec(
+        stakeholder="Tester",
+        task="Show the registration flow as a mermaid sequence diagram so I can design tests.",
+    )
+    assert spec.selected_view.diagram_language == "mermaid"
+    assert spec.selected_view.viewpoint_id in {"scenario", "control-flow"}
+
+
 def test_unknown_notation_is_rejected():
     with pytest.raises(PipelineError, match="Unknown diagram_language"):
         _spec(diagram_language="not-a-notation")

@@ -8,7 +8,7 @@ from task2view.contracts.models import CleanedCorpus, RepositoryScope, ScopeCand
 from task2view.phase3.graph import RepositoryGraph
 from task2view.phase3.protocol import register_scoper
 from task2view.phase3.select import budget_select
-from task2view.phase3.scopers_composite import _task_seed_names
+from task2view.phase3.seeds import forced_seed_candidates, task_seed_names as _task_seed_names
 
 
 def _require(corpus: CleanedCorpus | None, graph: RepositoryGraph | None) -> tuple[CleanedCorpus, RepositoryGraph]:
@@ -33,9 +33,11 @@ class Graph1Scoper:
         graph: RepositoryGraph | None = None,
     ) -> RepositoryScope:
         corpus, graph = _require(corpus, graph)
-        cands: list[ScopeCandidate] = []
+        cands: list[ScopeCandidate] = list(
+            forced_seed_candidates(view_spec, repo_root, corpus, graph)
+        )
         seeds = _task_seed_names(view_spec, graph)
-        seen: set[str] = set()
+        seen: set[str] = {c.path for c in cands}
         for name, serves in seeds.items():
             node = graph.nodes[name]
             if node.path not in seen:
@@ -71,6 +73,7 @@ class Graph1Scoper:
             strategy="graph1",
             corpus=corpus,
             graph=graph,
+            expansion_depth=1,
         )
 
 
@@ -91,17 +94,25 @@ class CentralScoper:
         top_k: int = 12,
     ) -> RepositoryScope:
         corpus, graph = _require(corpus, graph)
+        forced = forced_seed_candidates(view_spec, repo_root, corpus, graph)
         ranked = sorted(graph.nodes.values(), key=lambda n: -graph.degree(n.name))
-        cands = [
-            ScopeCandidate(
-                path=node.path,
-                serves=[],
-                origin="centrality_seed",
-                score=0.88,
-                reason=f"degree centrality {graph.degree(node.name)} ({node.name})",
+        cands = list(forced)
+        seen = {c.path for c in forced}
+        for node in ranked:
+            if len(cands) >= top_k:
+                break
+            if node.path in seen:
+                continue
+            cands.append(
+                ScopeCandidate(
+                    path=node.path,
+                    serves=[],
+                    origin="centrality_seed",
+                    score=0.88,
+                    reason=f"degree centrality {graph.degree(node.name)} ({node.name})",
+                )
             )
-            for node in ranked[:top_k]
-        ]
+            seen.add(node.path)
         return budget_select(
             cands,
             view_spec=view_spec,
@@ -110,6 +121,7 @@ class CentralScoper:
             strategy="central",
             corpus=corpus,
             graph=graph,
+            file_cap=top_k,
         )
 
 
@@ -130,13 +142,18 @@ class LayerScoper:
         per_layer: int = 2,
     ) -> RepositoryScope:
         corpus, graph = _require(corpus, graph)
+        cands: list[ScopeCandidate] = list(
+            forced_seed_candidates(view_spec, repo_root, corpus, graph)
+        )
+        seen = {c.path for c in cands}
         by_layer: dict[str, list] = defaultdict(list)
         for node in graph.nodes.values():
             by_layer[node.layer].append(node)
-        cands: list[ScopeCandidate] = []
         for layer, nodes in by_layer.items():
             top = sorted(nodes, key=lambda n: -graph.degree(n.name))[:per_layer]
             for node in top:
+                if node.path in seen:
+                    continue
                 cands.append(
                     ScopeCandidate(
                         path=node.path,
@@ -146,6 +163,7 @@ class LayerScoper:
                         reason=f"top-{min(per_layer, len(nodes))} in layer {layer} ({node.name})",
                     )
                 )
+                seen.add(node.path)
         return budget_select(
             cands,
             view_spec=view_spec,

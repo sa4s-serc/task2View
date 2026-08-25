@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
+from importlib.resources import files
 from typing import Any, Protocol, runtime_checkable
 
-from task2view.contracts.models import RepositoryScope, ViewModel, ViewSpecification
+from task2view.contracts.models import PipelineError, RepositoryScope, ViewModel, ViewSpecification
 from task2view.phase3.graph import RepositoryGraph
 from task2view.phase4.extract import EXTRACT_PROMPT, extract_view
 from task2view.phase4.gemini import generate_json
@@ -44,28 +46,32 @@ def get_extractor(name: str) -> Extractor:
 
 ARCHAGENT_PROMPT = """You extract an architecture view from source code. Output JSON only.
 
-You follow ArchAgent: static analysis produces an AST-derived reference graph;
-the language model only synthesizes a view from that graph plus the source
-chunks. Do not invent types that are absent from the graph. Actors/users may
-be external.
+This is the ArchAgent *shape*, not the ArchAgent system: Task2View already
+built a filesystem graph (files, directories, import-like uses) and attached
+that summary plus source chunks. There is no separate ArchAgent analysis loop.
+Synthesize the view only from those two attachments. Do not invent types
+that are absent from the graph listing and the files. Actors, datastores,
+and external systems may be external.
 
 Rules:
-- Use ONLY the provided files and the repository graph.
+- Use ONLY the provided files and the repository graph listing.
 - Every non-external element must have evidence.file and evidence.symbol that exist in the files.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
 - Keep the view at the requested granularity.
 - Answer each required_information id or list it in unanswered.
+- Group elements by the parent directory of evidence.file. Do not invent layer names.
+- Emit a relation for every uses/calls edge among selected files shown in the graph listing.
 
 Return this shape:
 {{
-  "elements": [{{"id":"E1","name":"...","kind":"component|class|actor|service|datastore|external_system","role":"...","external":false,
-    "evidence":{{"file":"relative/path.java","symbol":"TypeName","excerpt":"..."}},
+  "elements": [{{"id":"E1","name":"...","kind":"component|module|actor|datastore|external_system","role":"...","external":false,
+    "evidence":{{"file":"relative/path","symbol":"Name","excerpt":"..."}},
     "support":"observed"}}],
-  "relations": [{{"id":"R1","from":"E1","to":"E2","kind":"call|depends|inherits|implements|dataflow",
+  "relations": [{{"id":"R1","from":"E1","to":"E2","kind":"uses|calls|dataflow|contains|deploys|transition",
     "label":"methodName","order":1,
     "evidence":{{"file":"...","symbol":"...","excerpt":"..."}},
     "support":"observed"}}],
-  "groups": [{{"id":"G1","name":"Boundary","kind":"layer|package|boundary","contains":["E1"]}}],
+  "groups": [{{"id":"G1","name":"directory-name","kind":"package|layer|boundary","contains":["E1"]}}],
   "unanswered": ["RI-6"],
   "notes": []
 }}
@@ -76,7 +82,7 @@ purpose: {purpose}
 required_information:
 {required}
 
-AST REFERENCE GRAPH (ground truth structure; prefer these type names):
+FILE/DIRECTORY GRAPH (kept files; parent directory in [dir]; import-like uses):
 {graph}
 
 SOURCE FILES:
@@ -84,35 +90,50 @@ SOURCE FILES:
 """
 
 
-CIAO_PROMPT = """You extract an architecture view from source code. Output JSON only.
+CIAO_PROMPT_JSON = "ciao_prompt.json"
 
-You follow CIAO grounding rules from CIAO-system/prompt.json:
-- Examine the provided source to understand components, responsibilities, and
-  dependencies. The documentation must reflect the real implementation.
-- Reflect practical decisions and architectural choices evident in the files.
-- Do not invent types, files, or calls that are not in the graph or excerpts.
-- Prefer a complete list of the in-scope components rather than a partial sample.
+CIAO_PROMPT_PREFIX = """You extract an architecture view from source code. Output JSON only.
 
-Rules:
-- Use ONLY the provided files and the repository graph.
+OVERRIDE — these instructions beat anything in the JSON block below:
+- The JSON is CIAO's documentation prompt, included verbatim so you have its
+  grounding_policy and mapping_rules. It was written for a full-repo flatten
+  that emits markdown + PlantUML. That is NOT this pipeline.
+- Ignore markdown, ISO section templates, "no JSON", "examine every line of
+  the repository", and "do not skip any part of the code".
+- The scoped files below ARE the entire corpus for this call. Do not try to
+  open CIAO-system/prompt.json or any other path.
+- Apply only the grounding / do-not-invent / mapping_rules that match the
+  requested view_type. Then return the ViewModel JSON schema after the JSON
+  block. Do not write markdown.
+
+----- BEGIN CIAO prompt.json -----
+"""
+
+CIAO_PROMPT_SUFFIX = """
+----- END CIAO prompt.json -----
+
+Pipeline output (JSON only, not CIAO markdown). Ignore the JSON's markdown
+and PlantUML templates:
+{{
+  "elements": [{{"id":"E1","name":"...","kind":"component|module|actor|datastore|external_system","role":"...","external":false,
+    "evidence":{{"file":"relative/path","symbol":"Name","excerpt":"..."}},
+    "support":"observed"}}],
+  "relations": [{{"id":"R1","from":"E1","to":"E2","kind":"uses|calls|dataflow|contains|deploys|transition",
+    "label":"methodName","order":1,
+    "evidence":{{"file":"...","symbol":"...","excerpt":"..."}},
+    "support":"observed"}}],
+  "groups": [{{"id":"G1","name":"directory-name","kind":"package|layer|boundary","contains":["E1"]}}],
+  "unanswered": ["RI-6"],
+  "notes": []
+}}
+
+Additional Task2View rules:
 - Every non-external element must have evidence.file and evidence.symbol that exist in the files.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
 - Keep the view at the requested granularity.
 - Answer each required_information id or list it in unanswered.
-
-Return this shape:
-{{
-  "elements": [{{"id":"E1","name":"...","kind":"component|class|actor|service|datastore|external_system","role":"...","external":false,
-    "evidence":{{"file":"relative/path.java","symbol":"TypeName","excerpt":"..."}},
-    "support":"observed"}}],
-  "relations": [{{"id":"R1","from":"E1","to":"E2","kind":"call|depends|inherits|implements|dataflow",
-    "label":"methodName","order":1,
-    "evidence":{{"file":"...","symbol":"...","excerpt":"..."}},
-    "support":"observed"}}],
-  "groups": [{{"id":"G1","name":"Boundary","kind":"layer|package|boundary","contains":["E1"]}}],
-  "unanswered": ["RI-6"],
-  "notes": []
-}}
+- Group elements by the parent directory of evidence.file. Do not invent layer names.
+- Emit a relation for every uses/calls edge among selected files shown in the graph listing.
 
 view_type: {view_type}
 granularity: {granularity}
@@ -120,12 +141,28 @@ purpose: {purpose}
 required_information:
 {required}
 
-REPOSITORY GRAPH (ground truth structure):
+FILE/DIRECTORY GRAPH (kept files; parent directory in [dir]; scoped files first):
 {graph}
 
 SOURCE FILES:
 {files}
 """
+
+
+@lru_cache(maxsize=1)
+def load_ciao_prompt_json() -> str:
+    """Return the vendored CIAO-system/prompt.json text."""
+    path = files("task2view.knowledge.data").joinpath(CIAO_PROMPT_JSON)
+    try:
+        return path.read_text(encoding="utf-8")
+    except (FileNotFoundError, OSError) as exc:
+        raise PipelineError(f"CIAO prompt file missing: {CIAO_PROMPT_JSON}") from exc
+
+
+def ciao_prompt_template() -> str:
+    """Prompt sent to Gemini: verbatim CIAO prompt.json plus ViewModel schema."""
+    body = load_ciao_prompt_json().replace("{", "{{").replace("}", "}}")
+    return CIAO_PROMPT_PREFIX + body + CIAO_PROMPT_SUFFIX
 
 
 def _run(
@@ -172,7 +209,7 @@ class GeminiExtractor:
 
 @register_extractor
 class ArchAgentExtractor:
-    """ArchAgent shape: AST reference graph in the prompt; LLM synthesizes the view."""
+    """ArchAgent-shaped prompt over Task2View's filesystem graph + scoped files."""
 
     name = "archagent"
 
@@ -191,7 +228,7 @@ class ArchAgentExtractor:
 
 @register_extractor
 class CiaoExtractor:
-    """CIAO prompt.json grounding rules on the scoped corpus (not a full-repo flatten)."""
+    """Inject the vendored CIAO prompt.json into the extract call (scoped files only)."""
 
     name = "ciao"
 
@@ -204,5 +241,5 @@ class CiaoExtractor:
             model=model,
             samples=samples,
             generate=generate,
-            prompt_template=CIAO_PROMPT,
+            prompt_template=ciao_prompt_template(),
         )

@@ -116,6 +116,8 @@ def test_semantic_gate_drops_unresolved_and_rewrites():
 
 
 def _fake_generate(prompt: str, *, model=None):
+    if "Completeness Critic" in prompt:
+        return {"add": [], "notes": []}
     assert "SOURCE FILES" in prompt
     assert "GRAPH" in prompt
     return {
@@ -177,8 +179,39 @@ def test_extract_with_mocked_gemini_then_gate(tmp_path: Path):
     assert (tmp_path / "validation_report.json").exists()
 
 
+def test_ciao_prompt_inlines_verbatim_prompt_json():
+    from task2view.phase4.extractors import ciao_prompt_template, load_ciao_prompt_json
+
+    body = load_ciao_prompt_json()
+    assert "ISO/IEC/IEEE 42010" in body
+    assert "Do not invent actors, use cases, or relations not present in the repository." in body
+    template = ciao_prompt_template()
+    filled = template.format(
+        view_type="component_view",
+        granularity="component_or_service_level",
+        purpose="test",
+        required="- AQ1: x",
+        graph="GRAPH",
+        files="SOURCE FILES",
+    )
+    assert "----- BEGIN CIAO prompt.json -----" in filled
+    assert "ISO/IEC/IEEE 42010" in filled
+    assert "grounding_policy" in filled
+    assert "OVERRIDE" in filled
+    assert "Ignore markdown" in filled
+    assert "You follow CIAO grounding rules from CIAO-system/prompt.json" not in filled
+    assert "static analysis produces an AST-derived reference graph" not in filled
+
+
 def test_extract_archagent_and_ciao_backends(tmp_path: Path):
     for backend in ("archagent", "ciao"):
+        captured: dict[str, str] = {}
+
+        def generate(prompt: str, *, model=None, _backend=backend, _cap=captured):
+            if "SOURCE FILES" in prompt or "TYPED USES" in prompt:
+                _cap["prompt"] = prompt
+            return _fake_generate(prompt, model=model)
+
         result = run_legacy_pipeline(
             UserRequest(
                 code=str(GR10),
@@ -188,11 +221,21 @@ def test_extract_archagent_and_ciao_backends(tmp_path: Path):
                 diagram_language="mermaid",
                 legacy=True,
             ),
-            generate=_fake_generate,
+            generate=generate,
         )
         assert result.view_model is not None
         assert "UserRegistrationGUI" in {e.name for e in result.view_model.elements}
         assert result.diagram_source and result.diagram_source.startswith("sequenceDiagram")
+        if backend == "ciao":
+            assert "BEGIN CIAO prompt.json" in captured["prompt"]
+            assert "OVERRIDE" in captured["prompt"]
+            assert "ISO/IEC/IEEE 42010" in captured["prompt"]
+            assert "SOURCE FILES" in captured["prompt"]
+            assert "omitted=0" in captured["prompt"]
+        if backend == "archagent":
+            assert "not the ArchAgent system" in captured["prompt"]
+            assert "static analysis produces an AST-derived reference graph" not in captured["prompt"]
+            assert "FILE/DIRECTORY GRAPH" in captured["prompt"] or "filesystem graph" in captured["prompt"].lower()
         write_result(tmp_path / backend, result)
         assert (tmp_path / backend / "architecture_view.mmd").exists()
 
@@ -210,3 +253,92 @@ def test_extract_view_injectable_generate():
     )
     assert any(e.name == "UserRegistrationGUI" for e in vm.elements)
     assert any(e.name == "HallucinatedMailer" for e in vm.elements)
+
+
+def test_pack_files_never_omits_scoped_paths(tmp_path: Path):
+    from task2view.phase4.extract import _pack_files
+
+    result = run_legacy_pipeline(
+        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
+    )
+    packed = _pack_files(str(GR10), result.scope)
+    assert "omitted=0" in packed.split("\n", 1)[0]
+    for cand in result.scope.candidate_areas:
+        assert f"### FILE: {cand.path}" in packed
+
+
+def test_graph_summary_includes_scoped_types():
+    result = run_legacy_pipeline(
+        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
+    )
+    prefer = []
+    for cand in result.scope.candidate_areas:
+        prefer.extend(result.graph.path_to_types.get(cand.path, []))
+    text = result.graph.summary(limit=5, prefer=prefer)
+    assert "java_ast=" not in text
+    assert "javalang" not in text.lower()
+    assert "files=" in text or "parent directory" in text.lower()
+    for name in prefer:
+        assert name in text
+
+
+def test_gate_keeps_datastore_and_resolves_via_symbol():
+    from task2view.contracts.models import Evidence, ViewElement, ViewRelation
+
+    result = run_legacy_pipeline(
+        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
+    )
+    vm = ViewModel(
+        request_id="REQ-001",
+        view_type="deployment_view",
+        granularity="component_or_service_level",
+        elements=[
+            ViewElement(id="E1", name="App", kind="component", evidence=Evidence(symbol="UserRegistrationGUI")),
+            ViewElement(id="E2", name="Relational Database Engine", kind="datastore"),
+            ViewElement(id="E3", name="MadeUpService", kind="component"),
+        ],
+        relations=[
+            ViewRelation(id="R1", frm="E1", to="E2", kind="depends", label="JDBC"),
+            ViewRelation(id="R2", frm="E1", to="E3", kind="call", label="ghost"),
+        ],
+    )
+    cleaned, report = validate_view(
+        vm, result.spec, result.scope, result.graph, "@startuml\n@enduml\n", "plantuml"
+    )
+    names = {e.name for e in cleaned.elements}
+    assert "UserRegistrationGUI" in names
+    assert "Relational Database Engine" in names
+    assert "MadeUpService" not in names
+    assert any(r.label == "JDBC" for r in cleaned.relations)
+    assert not any(r.label == "ghost" for r in cleaned.relations)
+    assert report.verdict == "pass_with_corrections"
+
+
+def test_gate_keeps_system_boundary():
+    result = run_legacy_pipeline(
+        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
+    )
+    vm = ViewModel(
+        request_id="REQ-001",
+        view_type="context_view",
+        granularity="system_or_context_level",
+        elements=[
+            ViewElement(id="E1", name="Citizen", kind="actor", external=True),
+            ViewElement(id="E2", name="MunicipalReports", kind="system", support="inferred"),
+            ViewElement(id="E3", name="MadeUpService", kind="component"),
+        ],
+        relations=[
+            ViewRelation(id="R1", frm="E1", to="E2", kind="uses"),
+        ],
+    )
+    cleaned, _report = validate_view(
+        vm, result.spec, result.scope, result.graph, "@startuml\n@enduml\n", "plantuml"
+    )
+    names = {e.name for e in cleaned.elements}
+    kinds = {e.kind for e in cleaned.elements}
+    assert "Citizen" in names
+    assert "MunicipalReports" in names
+    assert "system" in kinds
+    assert "MadeUpService" not in names
+    assert any(r.frm == "E1" and r.to == "E2" for r in cleaned.relations)
+

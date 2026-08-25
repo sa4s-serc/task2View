@@ -98,6 +98,18 @@ def run_legacy_pipeline(raw: UserRequest, *, generate=None) -> PipelineResult:
         samples=raw.samples,
         generate=generate,
     )
+    from task2view.agents.phase6_critic import refine_extracted_view
+    from task2view.agents.runtime import AgentRuntime
+    runtime = None if raw.skip_critic else AgentRuntime(generate=generate, model=raw.gemini_model)
+    result.view_model, structure_report = refine_extracted_view(
+        result.view_model,
+        result.spec,
+        result.scope,
+        result.graph,
+        runtime,
+        skip_critic=raw.skip_critic,
+    )
+    result.extras["structure_report.json"] = structure_report
     notation = result.spec.selected_view.diagram_language
     adapter = get_adapter(notation)
     source = adapter.emit(result.view_model)
@@ -116,6 +128,10 @@ def run_legacy_pipeline(raw: UserRequest, *, generate=None) -> PipelineResult:
 
 
 def run_pipeline(raw: UserRequest, *, generate=None) -> PipelineResult:
+    if raw.config:
+        from task2view.config import apply_pipeline_config, load_pipeline_config
+
+        raw = apply_pipeline_config(raw, load_pipeline_config(raw.config))
     if raw.legacy:
         return run_legacy_pipeline(raw, generate=generate)
     from task2view.agents.orchestrate import run_agentic

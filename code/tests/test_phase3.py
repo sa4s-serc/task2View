@@ -1,10 +1,19 @@
 from pathlib import Path
 
-from task2view.contracts.models import UserRequest
+from task2view.contracts.models import (
+    CleanedCorpus,
+    CleanedFile,
+    RequiredInformation,
+    SelectedView,
+    UserRequest,
+    ViewSpecification,
+)
 from task2view.phase0.clean import clean_repository
 from task2view.phase1.intake import normalize_request
 from task2view.phase2.selector import identify_view
 from task2view.phase3 import build_graph, get_scoper
+from task2view.phase3.graph import RepoNode, RepositoryGraph
+from task2view.phase3.seeds import cue_forms, forced_seed_candidates
 
 
 def _gr10() -> Path:
@@ -50,12 +59,13 @@ def test_full_keeps_cleaned_corpus():
     assert graph.has_edge("UserService", "PersistenceService")
 
 
-def test_lexical_misses_persistence_and_facade():
+def test_lexical_hits_registration_from_task_and_ri_tokens():
     _, _, scope = _scope("lexical")
     paths = _paths(scope)
     assert any("UserRegistration" in p for p in paths)
-    assert not any(p.endswith("PersistenceService.java") for p in paths)
-    assert not any(p.endswith("SystemServicesController.java") for p in paths)
+    # required_information text is now part of the keyword blob, so persistence
+    # can appear when the RI templates mention stored/persisted data.
+    assert paths
 
 
 def test_composite_recovers_registration_facade_and_persistence():
@@ -80,6 +90,15 @@ def test_locagent_covers_graph1_and_may_expand_further():
     _, _, hop1 = _scope("graph1")
     _, _, hop2 = _scope("locagent")
     assert _paths(hop1) <= _paths(hop2)
+
+
+def test_locagent_records_expansion_depth_2():
+    _, _, hop1 = _scope("graph1")
+    _, _, hop2 = _scope("locagent")
+    _, _, pagerank = _scope("pagerank")
+    assert hop1.scope_constraints["expansion_depth"] == 1
+    assert hop2.scope_constraints["expansion_depth"] == 2
+    assert pagerank.scope_constraints["expansion_depth"] == 0
 
 
 def test_pagerank_scoper_includes_high_rank_types():
@@ -118,3 +137,68 @@ def test_registered_plugin_names():
         "bpmn",
     ):
         assert notation in names["notations"]
+
+
+def test_cue_forms_strip_plural():
+    assert "notification" in cue_forms("notifications")
+    assert "category" in cue_forms("categories")
+
+
+def test_pagerank_forced_seeds_keep_registration_files():
+    _, _, scope = _scope("pagerank")
+    paths = _paths(scope)
+    assert any("UserRegistration" in p for p in paths)
+    assert any(c.origin == "ri_forced" for c in scope.candidate_areas)
+
+
+def test_forced_seeds_prefer_rare_ri_file_over_hub(tmp_path: Path):
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "Hub.java").write_text("class Hub { Spoke s; }\n", encoding="utf-8")
+    (src / "Spoke.java").write_text("class Spoke { Hub h; }\n", encoding="utf-8")
+    (src / "NotificationService.java").write_text("class NotificationService { void send() {} }\n", encoding="utf-8")
+    graph = RepositoryGraph()
+    graph.nodes["Hub"] = RepoNode("Hub", "src/Hub.java", "src")
+    graph.nodes["Spoke"] = RepoNode("Spoke", "src/Spoke.java", "src")
+    graph.nodes["NotificationService"] = RepoNode(
+        "NotificationService", "src/NotificationService.java", "src"
+    )
+    graph.uses["Hub"].add("Spoke")
+    graph.uses["Spoke"].add("Hub")
+    corpus = CleanedCorpus(
+        request_id="REQ-SEED",
+        repository=str(tmp_path),
+        kept=[
+            CleanedFile(path="src/Hub.java", language="java", bytes=20),
+            CleanedFile(path="src/Spoke.java", language="java", bytes=20),
+            CleanedFile(path="src/NotificationService.java", language="java", bytes=40),
+        ],
+        counts={"kept": 3},
+    )
+    spec = ViewSpecification(
+        request_id="REQ-SEED",
+        stakeholder="member-of-development-team",
+        task_summary="modify the notification service used after booking",
+        architectural_concerns=["maintainability"],
+        selected_view=SelectedView(
+            view_type="component_view",
+            notation="Component Diagram",
+            diagram_language="plantuml",
+            granularity="component_or_service_level",
+            purpose="structure",
+            viewpoint_id="module-decomposition",
+        ),
+        required_information=[
+            RequiredInformation(id="RI-1", need="module that owns notification service"),
+        ],
+    )
+    forced = forced_seed_candidates(spec, str(tmp_path), corpus, graph)
+    paths = {c.path for c in forced}
+    assert any("NotificationService" in p for p in paths)
+    assert "src/Hub.java" not in paths
+
+    scope = get_scoper("pagerank").scope(spec, str(tmp_path), 120_000, corpus=corpus, graph=graph)
+    scoped = {c.path for c in scope.candidate_areas}
+    assert any("NotificationService" in p for p in scoped)
+    assert any(c.origin == "ri_forced" for c in scope.candidate_areas)
+

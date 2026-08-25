@@ -58,6 +58,8 @@ class NormalizedRequest(BaseModel):
     goal: str
     preferences: Preferences
     corpus: dict[str, Any] | None = None
+    environment: str | None = None
+    concerns: list[str] = Field(default_factory=list)
 
 
 class RequiredInformation(BaseModel):
@@ -100,6 +102,7 @@ class ViewSpecification(BaseModel):
     selected_view: SelectedView
     required_information: list[RequiredInformation]
     declared_gaps: list[str] = Field(default_factory=list)
+    unanswered_concerns: list[str] = Field(default_factory=list)
     selection_trace: SelectionTrace | None = None
 
 
@@ -185,15 +188,19 @@ class PipelineError(ValueError):
 ALLOWED_ELEMENT_KINDS = {
     "actor",
     "component",
+    "module",
     "class",
     "service",
     "datastore",
     "external_system",
     "deployment_node",
     "state",
+    "system",
 }
 
 ALLOWED_RELATION_KINDS = {
+    "uses",
+    "calls",
     "call",
     "return",
     "depends",
@@ -204,6 +211,30 @@ ALLOWED_RELATION_KINDS = {
     "deploys",
     "transition",
 }
+
+ELEMENT_KIND_ALIASES = {
+    "class": "module",
+    "service": "component",
+    "entity": "module",
+}
+
+RELATION_KIND_ALIASES = {
+    "call": "calls",
+    "depends": "uses",
+    "inherits": "uses",
+    "implements": "uses",
+    "return": "calls",
+}
+
+
+def canonical_element_kind(kind: str) -> str:
+    mapped = ELEMENT_KIND_ALIASES.get(kind, kind)
+    return mapped if mapped in ALLOWED_ELEMENT_KINDS else "component"
+
+
+def canonical_relation_kind(kind: str) -> str:
+    mapped = RELATION_KIND_ALIASES.get(kind, kind)
+    return mapped if mapped in ALLOWED_RELATION_KINDS else "uses"
 
 ALLOWED_GROUP_KINDS = {"layer", "package", "boundary", "node", "subsystem"}
 ALLOWED_VIEW_TYPES = {
@@ -232,13 +263,15 @@ class UserRequest(BaseModel):
     diagram_language: str | None = None
     max_views: int = 1
     scope_token_budget: int = 120_000
-    scope_strategy: str = "composite"
+    scope_strategy: str | None = None
     gemini_model: str | None = None
     samples: int = 1
     skip_extract: bool = False
     legacy: bool = False
     extract_workers: int = 2
-    extract_backend: str = "gemini"
+    extract_backend: str | None = None
+    skip_critic: bool = False
+    config: str | None = None
 
     @model_validator(mode="after")
     def require_code_and_goal(self) -> Self:

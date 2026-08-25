@@ -34,7 +34,24 @@ class RepoTools:
             return self.read(str(args.get("path") or ""), int(args.get("max_chars") or 8000))
         if name == "graph_query":
             return self.graph_query(str(args.get("name") or ""))
-        return f"unknown tool {name!r}. Use list_tree, search, read, graph_query."
+        if name == "traverse_graph":
+            return self.traverse_graph(str(args.get("name") or ""), int(args.get("hops") or 1))
+        if name == "edges_among":
+            names = args.get("names") or args.get("name") or ""
+            if isinstance(names, str):
+                names = [n.strip() for n in names.replace(",", " ").split() if n.strip()]
+            return self.edges_among(names)
+        if name == "missing_neighbors":
+            names = args.get("names") or args.get("name") or ""
+            if isinstance(names, str):
+                names = [n.strip() for n in names.replace(",", " ").split() if n.strip()]
+            return self.missing_neighbors(names)
+        if name == "package_of":
+            return self.package_of(str(args.get("name") or ""))
+        return (
+            f"unknown tool {name!r}. Use list_tree, search, read, graph_query, "
+            "traverse_graph, edges_among, missing_neighbors, package_of."
+        )
 
     def _resolve(self, rel: str) -> Path | str:
         rel = rel.strip().lstrip("/")
@@ -148,3 +165,72 @@ class RepoTools:
             f"{name} path={node.path} layer={node.layer} deg={self.graph.degree(name)}\n"
             f"uses: {uses or '(none)'}\nneighbors: {nbs or '(none)'}"
         )
+
+    def traverse_graph(self, name: str, hops: int = 1) -> str:
+        if self.graph is None:
+            return "graph unavailable"
+        if not name:
+            return "name required"
+        folded = {n.casefold(): n for n in self.graph.nodes}
+        resolved = name if name in self.graph.nodes else folded.get(name.casefold())
+        if resolved is None:
+            return f"unknown type {name}"
+        found = self.graph.hop_from({resolved}, max(1, min(hops, 3)))
+        lines = [f"{resolved} hops={hops} size={len(found)}"]
+        for n in sorted(found, key=lambda x: -self.graph.degree(x))[:40]:
+            node = self.graph.nodes[n]
+            lines.append(f"{n} layer={node.layer} deg={self.graph.degree(n)} path={node.path}")
+        return "\n".join(lines)
+
+    def edges_among(self, names: list[str]) -> str:
+        if self.graph is None:
+            return "graph unavailable"
+        folded = {n.casefold(): n for n in self.graph.nodes}
+        resolved = []
+        for raw in names:
+            hit = raw if raw in self.graph.nodes else folded.get(raw.casefold())
+            if hit:
+                resolved.append(hit)
+        want = set(resolved)
+        lines = []
+        for src in resolved:
+            for dst in sorted(self.graph.uses.get(src, ())):
+                if dst in want:
+                    kind = "calls" if self.graph.has_call(src, dst) else "uses"
+                    lines.append(f"{src} -{kind}-> {dst}")
+        return "\n".join(lines) or "no edges among those types"
+
+    def missing_neighbors(self, names: list[str]) -> str:
+        if self.graph is None:
+            return "graph unavailable"
+        folded = {n.casefold(): n for n in self.graph.nodes}
+        selected = set()
+        for raw in names:
+            hit = raw if raw in self.graph.nodes else folded.get(raw.casefold())
+            if hit:
+                selected.add(hit)
+        seen = set()
+        rows = []
+        for src in selected:
+            for nb in self.graph.neighbors(src):
+                if nb in selected or nb in seen:
+                    continue
+                seen.add(nb)
+                node = self.graph.nodes[nb]
+                rows.append((self.graph.degree(nb), nb, node.layer, src, node.path))
+        rows.sort(reverse=True)
+        lines = [f"{n} layer={layer} deg={deg} via={via} path={path}" for deg, n, layer, via, path in rows[:25]]
+        return "\n".join(lines) or "no missing neighbours"
+
+    def package_of(self, name: str) -> str:
+        if self.graph is None:
+            return "graph unavailable"
+        if not name:
+            return "name required"
+        folded = {n.casefold(): n for n in self.graph.nodes}
+        resolved = name if name in self.graph.nodes else folded.get(name.casefold())
+        if resolved is None:
+            return f"unknown type {name}"
+        node = self.graph.nodes[resolved]
+        return f"{resolved} layer={node.layer} path={node.path} deg={self.graph.degree(resolved)}"
+

@@ -287,10 +287,12 @@ def identify_view(
         raise PipelineError(f"Viewpoint {winner.viewpoint_id} has unknown view_type {view_type}")
 
     formality = profile.get("presentation", {}).get("notation") or viewpoint.get("default_notation") or "semi-formal"
+    from_goal = knowledge.detect_language(request.goal)
     language = knowledge.choose_language(
         view_type,
-        preferred=request.preferences.diagram_language or viewpoint.get("default_diagram_language"),
+        preferred=request.preferences.diagram_language or from_goal,
         formality=formality,
+        viewpoint_default=viewpoint.get("default_diagram_language"),
     )
     granularity = _granularity(viewpoint, profile)
     purpose = (
@@ -304,6 +306,9 @@ def identify_view(
     for concern in task_concerns:
         if concern not in concerns:
             concerns.append(concern)
+
+    framed = set(viewpoint.get("frames_concerns") or [])
+    unanswered_concerns = [c for c in concerns if c not in framed and c != "general"]
 
     spec = ViewSpecification(
         request_id=request.request_id,
@@ -319,6 +324,8 @@ def identify_view(
             viewpoint_id=winner.viewpoint_id,
         ),
         required_information=_instantiate_required_information(winner.viewpoint_id, focus, knowledge),
+        unanswered_concerns=unanswered_concerns,
+        declared_gaps=list(unanswered_concerns),
         selection_trace=SelectionTrace(
             vb_candidates=vb_rows,
             task_concerns=task_concerns,

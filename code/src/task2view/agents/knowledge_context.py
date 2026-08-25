@@ -15,6 +15,18 @@ def role_catalog(knowledge: KnowledgeBase) -> str:
     return "\n".join(lines)
 
 
+def task_cue_block(concerns: list[str], preferred: list[str], phrases: list[str]) -> str:
+    if not phrases and not preferred:
+        return "No phrases from task_cues.yaml matched the profile text."
+    return (
+        f"matched phrases: {phrases}\n"
+        f"concerns: {concerns}\n"
+        f"prefer_viewpoints: {preferred}\n"
+        "If prefer_viewpoints is non-empty, pick from that list unless the "
+        "questions cannot be answered by those viewpoints."
+    )
+
+
 def viewpoint_catalog(knowledge: KnowledgeBase) -> str:
     lines = ["Viewpoint catalog (id | view_type | granularity | concerns):"]
     for vid, vp in knowledge.viewpoints.items():
@@ -40,6 +52,17 @@ def stakeholder_view_hints(knowledge: KnowledgeBase, role_id: str | None) -> str
         f"optional viewpoints: {vp.get('optional')}\n"
         f"Table 9.1 row: {knowledge.vb_table.get('rows', {}).get(role_id)}"
     )
+
+
+def style_catalog(knowledge: KnowledgeBase) -> str:
+    layers = (knowledge.architectural_styles or {}).get("layers") or []
+    if not layers:
+        return "No architectural style aliases loaded."
+    lines = ["Architectural layer aliases (group names must match these packages):"]
+    for layer in layers:
+        aliases = ", ".join(layer.get("aliases") or [])
+        lines.append(f"- {layer.get('name')}: aliases=[{aliases}]")
+    return "\n".join(lines)
 
 
 def question_templates(knowledge: KnowledgeBase, viewpoint_ids: list[str], focus: str) -> str:

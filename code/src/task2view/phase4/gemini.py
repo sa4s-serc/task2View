@@ -10,8 +10,37 @@ import json
 import os
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 from task2view.contracts.models import PipelineError
+
+
+def _load_dotenv() -> None:
+    """Load GEMINI_API_KEY from a local .env if the process env is empty."""
+    if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+        return
+    here = Path(__file__).resolve()
+    candidates = [
+        Path.cwd() / ".env",
+        here.parents[3] / ".env",  # Task2View/code/.env
+        here.parents[4] / ".env",  # Task2View/.env
+    ]
+    for path in candidates:
+        if not path.is_file():
+            continue
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            name, _, value = line.partition("=")
+            name = name.strip()
+            value = value.strip().strip("'").strip('"')
+            if name and name not in os.environ:
+                os.environ[name] = value
+        break
+
+
+_load_dotenv()
 
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 FALLBACK_MODELS = [

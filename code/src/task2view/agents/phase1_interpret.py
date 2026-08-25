@@ -53,6 +53,11 @@ def interpret_stakeholder_task(
         except Exception:
             canonical = None
     task = str(raw.get("task") or goal).strip()
+    environment = str(raw.get("environment") or "").strip()
+    blob = " ".join(
+        p for p in (goal, task, str(raw.get("target") or ""), str(raw.get("goal") or "")) if p
+    )
+    concerns = knowledge.bind_concerns(canonical, blob)
     return StakeholderTaskProfile(
         stakeholder=canonical or label,
         canonical_role=canonical,
@@ -64,4 +69,6 @@ def interpret_stakeholder_task(
         constraints=[str(x) for x in raw.get("constraints") or []],
         confidence=raw.get("confidence"),
         source_goal=goal.strip(),
+        concerns=concerns,
+        environment=environment,
     )

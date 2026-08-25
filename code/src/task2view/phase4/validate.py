@@ -12,7 +12,12 @@ from task2view.contracts.models import (
     ViewModel,
     ViewSpecification,
 )
+from task2view.knowledge.loader import load_knowledge
 from task2view.phase3.graph import RepositoryGraph
+
+
+def _keep_without_graph() -> frozenset[str]:
+    return load_knowledge().keep_without_graph()
 
 
 def _names(vm: ViewModel) -> dict[str, ViewElement]:
@@ -20,10 +25,27 @@ def _names(vm: ViewModel) -> dict[str, ViewElement]:
 
 
 def _resolve_type(name: str, graph: RepositoryGraph) -> str | None:
-    if name in graph.nodes:
-        return name
-    folded = {n.casefold(): n for n in graph.nodes}
-    return folded.get(name.casefold())
+    return graph.resolve(name)
+
+
+def _resolve_element(el: ViewElement, graph: RepositoryGraph) -> str | None:
+    if el.external or el.kind in _keep_without_graph():
+        return el.name
+    match = _resolve_type(el.name, graph)
+    if match:
+        return match
+    if el.evidence and el.evidence.symbol:
+        match = _resolve_type(el.evidence.symbol, graph)
+        if match:
+            return match
+    if el.evidence and el.evidence.file:
+        return _resolve_type(el.evidence.file, graph)
+    return None
+
+
+def _misplaced_groups(vm: ViewModel, graph: RepositoryGraph) -> list[dict]:
+    from task2view.agents.structure import diagnose_structure
+    return diagnose_structure(vm, graph).get("misplaced_groups") or []
 
 
 def validate_view(
@@ -41,20 +63,17 @@ def validate_view(
     kept_elements: list[ViewElement] = []
     id_map: dict[str, str] = {}
     for el in vm.elements:
-        if el.external or el.kind == "actor":
-            kept_elements.append(el)
-            resolved_e += 1
-            continue
-        match = _resolve_type(el.name, graph)
-        if match:
-            el.name = match
-            if el.evidence and el.evidence.file and el.evidence.file not in scoped:
-                el.evidence.file = graph.nodes[match].path
-            kept_elements.append(el)
-            resolved_e += 1
-        else:
+        match = _resolve_element(el, graph)
+        if match is None:
             unresolved_e.append(el.name)
             id_map[el.id] = ""
+            continue
+        if not (el.external or el.kind in _keep_without_graph()):
+            el.name = match
+            if el.evidence and el.evidence.file and el.evidence.file not in scoped and match in graph.nodes:
+                el.evidence.file = graph.nodes[match].path
+        kept_elements.append(el)
+        resolved_e += 1
 
     kept_ids = {e.id for e in kept_elements}
     resolved_r = 0
@@ -71,8 +90,8 @@ def validate_view(
         if (
             src.external
             or dst.external
-            or src.kind == "actor"
-            or dst.kind == "actor"
+            or             src.kind in _keep_without_graph()
+            or dst.kind in _keep_without_graph()
             or rel.kind == "return"
         ):
             kept_rels.append(rel)
@@ -82,12 +101,12 @@ def validate_view(
         dst_t = _resolve_type(dst.name, graph)
         ok = False
         if src_t and dst_t:
-            if rel.kind in {"call"}:
+            if rel.kind in {"calls", "call"}:
                 ok = graph.has_call(src_t, dst_t) or graph.has_edge(src_t, dst_t)
-            elif rel.kind in {"depends", "dataflow"}:
+            elif rel.kind in {"uses", "depends", "dataflow"}:
                 ok = graph.has_edge(src_t, dst_t)
-            elif rel.kind == "inherits":
-                ok = graph.extends.get(src_t) == dst_t
+            elif rel.kind == "contains":
+                ok = True
             else:
                 ok = graph.has_edge(src_t, dst_t) or graph.has_call(src_t, dst_t)
         if ok:
@@ -161,8 +180,10 @@ def validate_view(
         for ri in view_spec.required_information
         if ri.id in (vm.unanswered or [])
     ]
+    uncovered = list(view_spec.unanswered_concerns or [])
+    cleaned.unanswered = list(dict.fromkeys(list(cleaned.unanswered) + unanswered + uncovered))
     verdict = "pass"
-    if unsupported or unresolved_e or unanswered:
+    if unsupported or unresolved_e or unanswered or uncovered:
         verdict = "pass_with_corrections"
     if syntax.get("status") == "fail" or not cleaned.elements:
         verdict = "fail"
@@ -178,7 +199,9 @@ def validate_view(
             "unresolved_elements": unresolved_e,
             "granularity_violations": [],
             "unanswered_information": unanswered,
+            "unanswered_concerns": uncovered,
             "scope_files": len(scoped),
+            "misplaced_groups": _misplaced_groups(cleaned, graph),
         },
         verdict=verdict,
     )
