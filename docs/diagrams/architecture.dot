@@ -1,0 +1,87 @@
+digraph current_architecture {
+  graph [
+    rankdir=TB
+    splines=spline
+    nodesep=0.4
+    ranksep=0.55
+    fontname="Helvetica"
+    fontsize=12
+    bgcolor="white"
+    label="Task2View — stakeholder × concerns × task → viewpoint → grain → view (ISO 42010 / ADR-005)"
+    labelloc=t
+    fontcolor="#0f172a"
+  ];
+  node [fontname="Helvetica", fontsize=10, shape=box, style="rounded,filled", color="#475569", fillcolor="#e2e8f0"];
+  edge [color="#64748b", arrowsize=0.7];
+
+  subgraph cluster_in {
+    label="inputs";
+    fontsize=11;
+    color="#334155";
+    style=rounded;
+    code [label="code\n--code repository"];
+    goal [label="goal\n--goal stakeholder task"];
+  }
+
+  kb [shape=cylinder, fillcolor="#fef9c3", color="#ca8a04", label="YAML catalogs\nstakeholders · concerns · viewpoints\npublished_grain · task cues · RI"];
+
+  subgraph cluster_42010 {
+    label="42010 correspondence";
+    fontsize=11;
+    color="#2563eb";
+    style=rounded;
+    p1 [fillcolor="#dbeafe", color="#2563eb", label="1 interpret\nGemini · catalog role"];
+    corr [fillcolor="#ffedd5", color="#ea580c", label="correspondence (no LLM)\nrank viewpoint + bind grain"];
+    p2 [fillcolor="#dbeafe", color="#2563eb", label="2 questions\nat selected grain"];
+    p3 [fillcolor="#dbeafe", color="#2563eb", label="3 viewpoint confirm\nranked catalog ids only"];
+    p1 -> corr -> p2 -> p3;
+  }
+
+  subgraph cluster_repo {
+    label="repository analysis";
+    fontsize=11;
+    color="#ea580c";
+    style=rounded;
+    p0 [fillcolor="#ffedd5", color="#ea580c", label="0 clean\nkeep source files"];
+    g [fillcolor="#ffedd5", color="#ea580c", label="filesystem graph\nfiles · uses / calls"];
+    sc [fillcolor="#e0e7ff", color="#4f46e5", label="4 scoper\ncomposite / pagerank / …"];
+    ex [fillcolor="#e0e7ff", color="#4f46e5", label="5 extractor\ngemini / ciao / archagent\nVIEWPOINT GRAIN"];
+    p0 -> g -> sc -> ex;
+  }
+
+  subgraph cluster_out {
+    label="project, gate, draw";
+    fontsize=11;
+    color="#16a34a";
+    style=rounded;
+    facts [fillcolor="#ffedd5", color="#ea580c", label="apply_facts\ngrain unit · no folder-lift"];
+    cr [fillcolor="#dbeafe", color="#2563eb", label="critic (optional)\nnotes only"];
+    ad [fillcolor="#ffedd5", color="#ea580c", label="notation adapter"];
+    gate [fillcolor="#ffedd5", color="#ea580c", label="gate\nkeep published names"];
+    c [fillcolor="#ffedd5", color="#ea580c", label="compile\nSVG / PNG / JPEG"];
+    facts -> cr -> ad -> gate -> c;
+  }
+
+  a1 [shape=note, fillcolor="#dcfce7", color="#16a34a", label="profile.json"];
+  ac [shape=note, fillcolor="#dcfce7", color="#16a34a", label="correspondence.json"];
+  a3 [shape=note, fillcolor="#dcfce7", color="#16a34a", label="view_specification.json"];
+  a4 [shape=note, fillcolor="#dcfce7", color="#16a34a", label="repository_scope.json"];
+  out [shape=note, fillcolor="#dcfce7", color="#16a34a", label="view_model.json\narchitecture_view.*"];
+
+  goal -> p1;
+  code -> p0;
+  kb -> corr [style=dashed];
+  kb -> p2 [style=dashed];
+  kb -> p3 [style=dashed];
+  kb -> ex [style=dashed];
+  p1 -> a1;
+  corr -> ac;
+  p3 -> a3;
+  a3 -> sc;
+  g -> ex [style=dashed];
+  g -> facts [style=dashed];
+  sc -> a4 -> ex;
+  ex -> facts;
+  gate -> out;
+  c -> out;
+}

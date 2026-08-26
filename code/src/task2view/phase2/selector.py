@@ -17,13 +17,9 @@ import re
 from typing import Any
 
 from task2view.contracts.models import (
-    ALLOWED_VIEW_TYPES,
     NormalizedRequest,
     PipelineError,
-    RankedCandidate,
     RequiredInformation,
-    SelectedView,
-    SelectionTrace,
     ViewSpecification,
 )
 from task2view.contracts.validate import validate_artifact
@@ -179,13 +175,18 @@ def _score(
     preferred: list[str],
     task_concerns: list[str],
     frames: list[str],
+    preferred_weights: dict[str, float] | None = None,
 ) -> tuple[float, list[str]]:
     reasons: list[str] = []
     score = float(vb_rank)
     if vb_rank:
         reasons.append(f"V&B detail rank {vb_rank}")
-    if viewpoint_id in preferred:
-        score += 5
+    weights = preferred_weights or {}
+    boost = weights.get(viewpoint_id)
+    if boost is None and viewpoint_id in preferred:
+        boost = 5.0
+    if boost:
+        score += float(boost)
         reasons.append("task-cue preferred viewpoint")
     if viewpoint_id in profile_required:
         score += 2
@@ -198,6 +199,19 @@ def _score(
         score += len(overlap)
         reasons.append("frames task concerns: " + ", ".join(overlap))
     return score, reasons
+
+
+def cue_preference_weights(task: str, knowledge: KnowledgeBase) -> dict[str, float]:
+    """Max weight among cues that prefer each viewpoint. Specific cues outrank 'modify'."""
+    lowered = task.lower()
+    weights: dict[str, float] = {}
+    for cue in knowledge.task_cues:
+        if not any(phrase in lowered for phrase in cue.get("phrases") or []):
+            continue
+        weight = float(cue.get("weight") or 5)
+        for viewpoint in cue.get("prefer_viewpoints") or []:
+            weights[viewpoint] = max(weights.get(viewpoint, 0.0), weight)
+    return weights
 
 
 def _granularity(viewpoint: dict[str, Any], profile: dict[str, Any]) -> str:
@@ -231,109 +245,18 @@ def identify_view(
     *,
     knowledge: KnowledgeBase | None = None,
 ) -> ViewSpecification:
+    from task2view.knowledge.correspondence import select_correspondence, spec_from_correspondence
+
     knowledge = knowledge or load_knowledge()
-    role_id = request.stakeholder.role
-    profile = knowledge.stakeholder(role_id)
-    task = request.task.description
-    task_concerns, preferred, phrases = match_task_cues(task, knowledge)
-    if not task_concerns:
-        task_concerns = [c["id"] for c in profile.get("concerns", [])]
-    focus = task_focus(task, phrases)
-
-    vb_rows, dropped = _vb_candidates(role_id, knowledge)
-    vb_by_viewpoint = {row["viewpoint_id"]: row for row in vb_rows if row["viewpoint_id"]}
-
-    required = set(profile.get("viewpoints", {}).get("required", []))
-    optional = set(profile.get("viewpoints", {}).get("optional", []))
-    pool = set(vb_by_viewpoint) | required | optional | set(preferred)
-
-    ranked: list[RankedCandidate] = []
-    for viewpoint_id in pool:
-        viewpoint = knowledge.viewpoint(viewpoint_id)
-        vb = vb_by_viewpoint.get(viewpoint_id)
-        score, reasons = _score(
-            viewpoint_id,
-            vb_rank=int(vb["rank"]) if vb else 0,
-            profile_required=required,
-            profile_optional=optional,
-            preferred=preferred,
-            task_concerns=task_concerns,
-            frames=list(viewpoint.get("frames_concerns") or []),
-        )
-        ranked.append(
-            RankedCandidate(
-                viewpoint_id=viewpoint_id,
-                view_type=viewpoint["view_type"],
-                vb_column=vb["column"] if vb else None,
-                vb_level=vb["level"] if vb else None,
-                score=score,
-                reasons=reasons,
-            )
-        )
-    ranked.sort(
-        key=lambda item: (
-            -item.score,
-            preferred.index(item.viewpoint_id) if item.viewpoint_id in preferred else 99,
-            item.viewpoint_id,
-        )
+    correspondence = select_correspondence(
+        request.stakeholder.role,
+        request.task.description,
+        knowledge,
+        goal=request.goal,
+        extra_concerns=list(request.concerns or []),
+        preferred_language=request.preferences.diagram_language,
     )
-    if not ranked:
-        raise PipelineError(f"No candidate viewpoints for stakeholder {role_id}")
-
-    winner = ranked[0]
-    viewpoint = knowledge.viewpoint(winner.viewpoint_id)
-    view_type = viewpoint["view_type"]
-    if view_type not in ALLOWED_VIEW_TYPES:
-        raise PipelineError(f"Viewpoint {winner.viewpoint_id} has unknown view_type {view_type}")
-
-    formality = profile.get("presentation", {}).get("notation") or viewpoint.get("default_notation") or "semi-formal"
-    from_goal = knowledge.detect_language(request.goal)
-    language = knowledge.choose_language(
-        view_type,
-        preferred=request.preferences.diagram_language or from_goal,
-        formality=formality,
-        viewpoint_default=viewpoint.get("default_diagram_language"),
-    )
-    granularity = _granularity(viewpoint, profile)
-    purpose = (
-        f"{viewpoint['name']}: show the information the {profile['name']} needs "
-        f"about {focus}."
-    )
-    concerns = []
-    for item in profile.get("concerns", []):
-        if item["id"] not in concerns:
-            concerns.append(item["id"])
-    for concern in task_concerns:
-        if concern not in concerns:
-            concerns.append(concern)
-
-    framed = set(viewpoint.get("frames_concerns") or [])
-    unanswered_concerns = [c for c in concerns if c not in framed and c != "general"]
-
-    spec = ViewSpecification(
-        request_id=request.request_id,
-        stakeholder=role_id,
-        task_summary=_task_summary(task),
-        architectural_concerns=concerns,
-        selected_view=SelectedView(
-            view_type=view_type,
-            notation=_NOTATION_LABEL.get(view_type, viewpoint["name"]),
-            diagram_language=language,
-            granularity=granularity,
-            purpose=purpose,
-            viewpoint_id=winner.viewpoint_id,
-        ),
-        required_information=_instantiate_required_information(winner.viewpoint_id, focus, knowledge),
-        unanswered_concerns=unanswered_concerns,
-        declared_gaps=list(unanswered_concerns),
-        selection_trace=SelectionTrace(
-            vb_candidates=vb_rows,
-            task_concerns=task_concerns,
-            preferred_viewpoints=preferred,
-            ranked=ranked,
-            dropped_beyond_views=dropped,
-        ),
-    )
+    spec = spec_from_correspondence(request, correspondence, knowledge)
     validate_artifact("view_specification", spec)
     if not knowledge.notation_supports(spec.selected_view.diagram_language, spec.selected_view.view_type):
         raise PipelineError("selected diagram_language does not support view_type")

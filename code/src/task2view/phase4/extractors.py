@@ -50,33 +50,36 @@ This is the ArchAgent *shape*, not the ArchAgent system: Task2View already
 built a filesystem graph (files, directories, import-like uses) and attached
 that summary plus source chunks. There is no separate ArchAgent analysis loop.
 Synthesize the view only from those two attachments. Do not invent types
-that are absent from the graph listing and the files. Actors, datastores,
-and external systems may be external.
+that are absent from the graph listing and the files.
 
-Rules:
-- Use ONLY the provided files and the repository graph listing.
-- Every non-external element must have evidence.file and evidence.symbol that exist in the files.
+Follow this catalog grain. Do not invent a different diagram kind.
+{grain}
+
+Shared grounding:
+- evidence.file must exist in SOURCE FILES. evidence.symbol is optional.
+  Keep the published name unless grain unit is type.
+- Never dump every class unless grain unit is type. Never draw parent-directory
+  boxes as the model unless the grain is layers.
+- Actors, datastores, and external systems may be external.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
-- Keep the view at the requested granularity.
 - Answer each required_information id or list it in unanswered.
-- Group elements by the parent directory of evidence.file. Do not invent layer names.
-- Emit a relation for every uses/calls edge among selected files shown in the graph listing.
 
 Return this shape:
 {{
-  "elements": [{{"id":"E1","name":"...","kind":"component|module|actor|datastore|external_system","role":"...","external":false,
+  "elements": [{{"id":"E1","name":"...","kind":"component|module|actor|datastore|external_system|class","role":"...","external":false,
     "evidence":{{"file":"relative/path","symbol":"Name","excerpt":"..."}},
     "support":"observed"}}],
   "relations": [{{"id":"R1","from":"E1","to":"E2","kind":"uses|calls|dataflow|contains|deploys|transition",
     "label":"methodName","order":1,
     "evidence":{{"file":"...","symbol":"...","excerpt":"..."}},
     "support":"observed"}}],
-  "groups": [{{"id":"G1","name":"directory-name","kind":"package|layer|boundary","contains":["E1"]}}],
+  "groups": [],
   "unanswered": ["RI-6"],
   "notes": []
 }}
 
 view_type: {view_type}
+viewpoint_id: {viewpoint_id}
 granularity: {granularity}
 purpose: {purpose}
 required_information:
@@ -122,20 +125,22 @@ and PlantUML templates:
     "label":"methodName","order":1,
     "evidence":{{"file":"...","symbol":"...","excerpt":"..."}},
     "support":"observed"}}],
-  "groups": [{{"id":"G1","name":"directory-name","kind":"package|layer|boundary","contains":["E1"]}}],
+  "groups": [],
   "unanswered": ["RI-6"],
   "notes": []
 }}
 
 Additional Task2View rules:
-- Every non-external element must have evidence.file and evidence.symbol that exist in the files.
+Follow this catalog grain. Do not invent a different diagram kind.
+{grain}
+- evidence.file must exist in SOURCE FILES. evidence.symbol is optional.
+  Keep the published name unless grain unit is type.
+- Never dump every class unless grain unit is type.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
-- Keep the view at the requested granularity.
 - Answer each required_information id or list it in unanswered.
-- Group elements by the parent directory of evidence.file. Do not invent layer names.
-- Emit a relation for every uses/calls edge among selected files shown in the graph listing.
 
 view_type: {view_type}
+viewpoint_id: {viewpoint_id}
 granularity: {granularity}
 purpose: {purpose}
 required_information:

@@ -25,31 +25,36 @@ from task2view.phase4.gemini import DEFAULT_MODEL, generate_json
 
 EXTRACT_PROMPT = """You extract an architecture view from source code. Output JSON only.
 
-Rules:
-- Use ONLY the provided files and the repository graph. Do not invent types.
-- Every non-external element must have evidence.file and evidence.symbol that exist in the files.
+Follow this catalog grain. Do not invent a different diagram kind.
+{grain}
+
+Shared grounding:
+- Use ONLY the provided files and the repository graph. Do not invent types or files.
+- evidence.file must exist in SOURCE FILES (a representative owner type is enough).
+  evidence.symbol is optional. Keep the published name; do not rename it to the class stem
+  unless the grain unit is type.
+- Never dump every class unless grain unit is type. Never draw parent-directory boxes
+  as the model unless the grain is layers.
+- Actors, datastores, and external systems may be external.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
-- Prefer the types named in the graph listing. Actors, datastores, and external systems may be external.
-- Keep the view at the requested granularity. Do not dump every class if granularity is component_or_service_level.
 - Answer each required_information id or list it in unanswered.
-- Put each non-external element in the group that matches the parent directory of evidence.file. Do not invent layer names.
-- Include a relation for every uses/calls edge among selected files that the graph listing shows.
 
 Return this shape:
 {{
-  "elements": [{{"id":"E1","name":"...","kind":"component|module|actor|datastore|external_system","role":"...","external":false,
+  "elements": [{{"id":"E1","name":"...","kind":"component|module|actor|datastore|external_system|class","role":"...","external":false,
     "evidence":{{"file":"relative/path","symbol":"Name","excerpt":"..."}},
     "support":"observed"}}],
   "relations": [{{"id":"R1","from":"E1","to":"E2","kind":"uses|calls|dataflow|contains|deploys|transition",
     "label":"methodName","order":1,
     "evidence":{{"file":"...","symbol":"...","excerpt":"..."}},
     "support":"observed"}}],
-  "groups": [{{"id":"G1","name":"directory-name","kind":"package|layer|boundary","contains":["E1"]}}],
+  "groups": [],
   "unanswered": ["RI-6"],
   "notes": []
 }}
 
 view_type: {view_type}
+viewpoint_id: {viewpoint_id}
 granularity: {granularity}
 purpose: {purpose}
 required_information:
@@ -260,14 +265,22 @@ def extract_view(
     generate=generate_json,
     prompt_template: str = EXTRACT_PROMPT,
 ) -> ViewModel:
+    from task2view.knowledge.loader import load_knowledge
+
     if not scope.candidate_areas:
         raise PipelineError("scope is empty; cannot extract a view")
     required = "\n".join(f"- {i.id}: {i.need}" for i in view_spec.required_information)
     prefer: list[str] = []
     for cand in scope.candidate_areas:
         prefer.extend(graph.path_to_types.get(cand.path, []))
+    kb = load_knowledge()
     prompt = prompt_template.format(
         view_type=view_spec.selected_view.view_type,
+        viewpoint_id=view_spec.selected_view.viewpoint_id or "",
+        grain=kb.grain_prompt(
+            view_spec.selected_view.viewpoint_id,
+            view_spec.selected_view.view_type,
+        ),
         granularity=view_spec.selected_view.granularity,
         purpose=view_spec.selected_view.purpose,
         required=required,

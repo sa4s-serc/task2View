@@ -10,6 +10,25 @@ def _ids(vm: ViewModel) -> dict[str, str]:
     return {e.id: e.name for e in vm.elements}
 
 
+def _module_types(el) -> list[str]:
+    return [p.strip() for p in (el.role or "").split(",") if p.strip()]
+
+
+def _plantuml_module(el, indent: str = "") -> list[str]:
+    types = _module_types(el)
+    if not types:
+        return [f'{indent}component "{el.name}" as {el.id}']
+    lines = [f"{indent}component {el.id} [", f"{indent}  {el.name}", f"{indent}  ----"]
+    lines.extend(f"{indent}  {name}" for name in types)
+    lines.append(f"{indent}]")
+    return lines
+
+
+def _architecture_boxes(vm: ViewModel) -> bool:
+    """Draw packages and uses, not class lifelines, when the view is modules."""
+    return any(el.kind == "module" for el in vm.elements)
+
+
 def _ordered_rels(vm: ViewModel) -> list[ViewRelation]:
     rels = list(vm.relations)
     if any(r.order is not None for r in rels):
@@ -33,7 +52,7 @@ class PlantUMLAdapter:
 
     def emit(self, vm: ViewModel) -> str:
         names = _ids(vm)
-        if vm.view_type == "sequence_view":
+        if vm.view_type == "sequence_view" and not _architecture_boxes(vm):
             lines = ["@startuml", "hide footbox"]
             for el in vm.elements:
                 if el.kind == "actor" or el.external:
@@ -52,7 +71,11 @@ class PlantUMLAdapter:
             lines.append(f'package "{g.name}" {{')
             for eid in g.contains:
                 if eid in names:
-                    lines.append(f'  [{names[eid]}] as {eid}')
+                    el = next((x for x in vm.elements if x.id == eid), None)
+                    if el and el.kind == "module":
+                        lines.extend(_plantuml_module(el, indent="  "))
+                    else:
+                        lines.append(f'  [{names[eid]}] as {eid}')
             lines.append("}")
         grouped = {eid for g in vm.groups for eid in g.contains}
         for el in vm.elements:
@@ -61,6 +84,8 @@ class PlantUMLAdapter:
                     lines.append(f'actor "{el.name}" as {el.id}')
                 elif el.kind == "datastore":
                     lines.append(f'database "{el.name}" as {el.id}')
+                elif el.kind == "module":
+                    lines.extend(_plantuml_module(el))
                 else:
                     lines.append(f'[{el.name}] as {el.id}')
         for rel in vm.relations:
@@ -84,7 +109,7 @@ class MermaidAdapter:
     formats = {"svg", "png"}
 
     def emit(self, vm: ViewModel) -> str:
-        if vm.view_type == "sequence_view":
+        if vm.view_type == "sequence_view" and not _architecture_boxes(vm):
             lines = ["sequenceDiagram"]
             for el in vm.elements:
                 lines.append(f"    participant {el.id} as {el.name}")
@@ -103,7 +128,12 @@ class MermaidAdapter:
             lines.append("    end")
         for el in vm.elements:
             if el.id not in grouped:
-                lines.append(f'    {el.id}["{el.name}"]')
+                types = _module_types(el)
+                if el.kind == "module" and types:
+                    inner = "<br/>".join([el.name, *types])
+                    lines.append(f'    {el.id}["{inner}"]')
+                else:
+                    lines.append(f'    {el.id}["{el.name}"]')
         for rel in vm.relations:
             label = f"|{rel.label}|" if rel.label else ""
             lines.append(f"    {rel.frm} -->{label} {rel.to}")

@@ -74,6 +74,7 @@ class SelectedView(BaseModel):
     granularity: str
     purpose: str
     viewpoint_id: str | None = None
+    grain_unit: str | None = None
 
 
 class RankedCandidate(BaseModel):

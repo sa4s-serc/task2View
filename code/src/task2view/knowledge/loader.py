@@ -38,26 +38,34 @@ class KnowledgeBase:
         modes = self.view_projection.get("edge_insertion") or {}
         return str(modes.get(view_type) or modes.get("default") or "inter_group")
 
-    def max_elements_for(
+    def published_grain(
         self,
-        role_id: str | None,
-        view_type: str,
-        granularity: str,
-    ) -> int | None:
-        caps = self.view_projection.get("max_elements") or {}
-        candidates: list[int] = []
-        by_view = (caps.get("by_view_type") or {}).get(view_type)
-        if by_view:
-            candidates.append(int(by_view))
-        by_gran = (caps.get("by_granularity") or {}).get(granularity)
-        if by_gran:
-            candidates.append(int(by_gran))
-        if role_id and role_id in self.stakeholders:
-            pres = (self.stakeholders[role_id].get("presentation") or {})
-            raw = pres.get("max_elements_per_view")
-            if raw:
-                candidates.append(int(raw))
-        return min(candidates) if candidates else None
+        viewpoint_id: str | None = None,
+        view_type: str | None = None,
+    ) -> dict[str, Any]:
+        grains = self.view_projection.get("published_grain") or {}
+        if viewpoint_id and viewpoint_id in grains:
+            return dict(grains[viewpoint_id] or {})
+        if view_type and view_type in grains:
+            return dict(grains[view_type] or {})
+        return dict(grains.get("default") or {})
+
+    def grain_prompt(self, viewpoint_id: str | None, view_type: str | None) -> str:
+        grain = self.published_grain(viewpoint_id, view_type)
+        label = viewpoint_id or view_type or "default"
+        return (
+            f"VIEWPOINT GRAIN ({label}), unit={grain.get('unit')}:\n"
+            f"- nodes: {grain.get('nodes')}\n"
+            f"- relations: {grain.get('relations')}\n"
+            f"- do not: {grain.get('forbid')}"
+        )
+
+    def view_unit(self, view_type: str, viewpoint_id: str | None = None) -> str:
+        grain = self.published_grain(viewpoint_id, view_type)
+        if grain.get("unit"):
+            return str(grain["unit"])
+        units = self.view_projection.get("view_unit") or {}
+        return str(units.get(view_type) or units.get("default") or "component")
 
     def resolve_role(self, raw: str) -> str:
         key = " ".join(raw.strip().lower().replace("_", " ").replace("/", " ").split())

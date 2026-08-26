@@ -34,10 +34,19 @@ def test_every_vb_viewpoint_exists_in_catalog():
 def test_view_projection_is_view_type_keyed():
     kb = load_knowledge()
     assert kb.edge_insertion_mode("sequence_view") == "none"
-    assert kb.edge_insertion_mode("component_view") == "inter_group"
+    assert kb.edge_insertion_mode("component_view") == "none"
     assert kb.edge_insertion_mode("class_view") == "all_selected"
     assert "system" in kb.keep_without_graph()
     assert "actor" in kb.keep_without_graph()
-    cap = kb.max_elements_for("analyst", "context_view", "system_or_context_level")
-    assert cap is not None and cap <= 12
+    assert kb.view_unit("component_view") == "component"
+    assert kb.view_unit("class_view") == "type"
+    assert kb.view_unit("sequence_view") == "component"
+    assert kb.view_unit("context_view") == "context"
+    assert kb.published_grain("context")["unit"] == "context"
+    assert kb.published_grain("data-model")["unit"] == "type"
+    assert kb.published_grain("scenario")["unit"] == "component"
+    assert kb.view_unit("class_view", "data-model") == "type"
+    assert kb.view_unit("component_view", "module-decomposition") == "component"
+    missing = [vid for vid in kb.viewpoints if vid not in (kb.view_projection.get("published_grain") or {})]
+    assert missing == []
 

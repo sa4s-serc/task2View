@@ -1,9 +1,11 @@
 # Inspectable task → concern / viewpoint cues. Phase 2 uses these to boost
 # Table 9.1 candidates; it does not invent new viewpoints.
 # Longer cue phrases are matched before shorter ones.
+# weight: specific domain cues outrank generic verbs such as "modify".
 
 cues:
   - id: behavioural-flow
+    weight: 6
     phrases:
       - integration test
       - integration tests
@@ -23,6 +25,7 @@ cues:
     prefer_viewpoints: [scenario, control-flow]
 
   - id: structural-change
+    weight: 4
     phrases:
       - where do i change
       - which module
@@ -35,8 +38,11 @@ cues:
     prefer_viewpoints: [module-decomposition, module-uses, code-mapping]
 
   - id: layering
+    weight: 6
     phrases:
-      - layer
+      - layers
+      - layered
+      - layering
       - allowed to use
       - dependency rule
       - bced
@@ -44,6 +50,7 @@ cues:
     prefer_viewpoints: [module-layered, module-uses]
 
   - id: deployment
+    weight: 8
     phrases:
       - deploy
       - dockerfile
@@ -55,6 +62,7 @@ cues:
     prefer_viewpoints: [allocation-deployment, failure-resilience]
 
   - id: security
+    weight: 8
     phrases:
       - attack surface
       - trust boundary
@@ -65,6 +73,7 @@ cues:
     prefer_viewpoints: [trust-boundary, data-flow, context]
 
   - id: api
+    weight: 7
     phrases:
       - api
       - interface
@@ -75,6 +84,7 @@ cues:
     prefer_viewpoints: [api-contract, context]
 
   - id: data
+    weight: 8
     phrases:
       - schema
       - persistence
@@ -85,6 +95,7 @@ cues:
     prefer_viewpoints: [data-model, data-flow]
 
   - id: onboarding
+    weight: 6
     phrases:
       - new to the codebase
       - get started
@@ -93,7 +104,20 @@ cues:
     concerns: [general, maintainability]
     prefer_viewpoints: [context, onboarding-path, module-decomposition]
 
+  - id: system-context
+    weight: 8
+    phrases:
+      - types of users
+      - user roles
+      - functionalities available
+      - expected to work
+      - at a high level
+      - business analyst
+    concerns: [general, interaction-capability, connectivity]
+    prefer_viewpoints: [context]
+
   - id: architectural-structure
+    weight: 6
     phrases:
       - organization of the system
       - main architectural components

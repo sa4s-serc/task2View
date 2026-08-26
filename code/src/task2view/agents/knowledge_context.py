@@ -28,15 +28,25 @@ def task_cue_block(concerns: list[str], preferred: list[str], phrases: list[str]
 
 
 def viewpoint_catalog(knowledge: KnowledgeBase) -> str:
-    lines = ["Viewpoint catalog (id | view_type | granularity | concerns):"]
+    lines = ["Viewpoint catalog (id | view_type | grain unit | concerns):"]
     for vid, vp in knowledge.viewpoints.items():
         concerns = ", ".join(vp.get("frames_concerns") or [])
+        grain = knowledge.published_grain(vid, vp.get("view_type"))
         lines.append(
             f"- {vid}: view_type={vp.get('view_type')} "
-            f"granularity={vp.get('default_granularity')} "
+            f"unit={grain.get('unit')} "
+            f"nodes={grain.get('nodes')} "
             f"diagram={vp.get('default_diagram_language')} concerns=[{concerns}]"
         )
     return "\n".join(lines)
+
+
+def grain_summaries(knowledge: KnowledgeBase, viewpoint_ids: list[str]) -> str:
+    lines = ["Published grain for this stakeholder's catalog viewpoints:"]
+    for vid in viewpoint_ids:
+        lines.append(knowledge.grain_prompt(vid, None))
+        lines.append("")
+    return "\n".join(lines).rstrip()
 
 
 def stakeholder_view_hints(knowledge: KnowledgeBase, role_id: str | None) -> str:

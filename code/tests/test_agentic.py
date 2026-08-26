@@ -42,6 +42,8 @@ def _scripted(prompt: str, *, model=None):
     if "Knowledge-Grounded Viewpoint Planning Agent" in prompt:
         assert "TASK CUES" in prompt
         assert "task_cues.yaml" in prompt
+        assert "RANKED CANDIDATES" in prompt
+        assert "DEFAULT GRAIN" in prompt
         return {
             "views": [
                 {
@@ -58,8 +60,9 @@ def _scripted(prompt: str, *, model=None):
             "elements": [
                 {
                     "id": "E1",
-                    "name": "UserRegistrationGUI",
+                    "name": "Registration UI",
                     "kind": "component",
+                    "role": "Accepts registration requests",
                     "evidence": {
                         "file": "src/main/java/Boundary/UserRegistrationGUI.java",
                         "symbol": "UserRegistrationGUI",
@@ -69,8 +72,9 @@ def _scripted(prompt: str, *, model=None):
                 },
                 {
                     "id": "E2",
-                    "name": "SystemServicesController",
+                    "name": "Registration service",
                     "kind": "component",
+                    "role": "Creates the user account",
                     "evidence": {
                         "file": "src/main/java/Control/SystemServicesController.java",
                         "symbol": "SystemServicesController",
@@ -113,16 +117,18 @@ def test_agentic_pipeline_with_scripted_agents(tmp_path: Path):
         generate=_scripted,
     )
     assert result.spec.selected_view.viewpoint_id == "module-decomposition"
+    assert result.spec.selected_view.grain_unit == "component"
     assert "seat booking" in result.spec.task_summary.lower()
     assert result.scope.scope_strategy == "composite"
     assert result.view_model is not None
     names = {e.name for e in result.view_model.elements}
-    assert "UserRegistrationGUI" in names
-    assert "SystemServicesController" in names
+    assert names == {"Registration UI", "Registration service"}
+    assert {e.kind for e in result.view_model.elements} == {"component"}
     write_result(tmp_path, result)
     assert (tmp_path / "stakeholder_task_profile.json").exists()
     assert (tmp_path / "architectural_questions.json").exists()
     assert (tmp_path / "viewpoint_plan.json").exists()
+    assert (tmp_path / "correspondence.json").exists()
     assert (tmp_path / "repository_scope.json").exists()
     assert (tmp_path / "view_model.json").exists()
     assert not (tmp_path / "repository_analysis_plan.json").exists()

@@ -10,17 +10,18 @@ from task2view.contracts.models import (
     Preferences,
     NormalizedRequest,
     PipelineError,
-    RequiredInformation,
-    SelectedView,
     StakeholderRef,
     TaskRef,
     UserRequest,
-    ViewSpecification,
+)
+from task2view.knowledge.correspondence import (
+    select_correspondence,
+    spec_from_correspondence,
+    with_viewpoint,
 )
 from task2view.knowledge.loader import load_knowledge
 from task2view.phase0.clean import clean_repository
 from task2view.phase1.intake import new_request_id, resolve_repository
-from task2view.phase2.selector import _instantiate_required_information
 from task2view.phase3 import get_scoper
 from task2view.phase3.graph import build_graph
 from task2view.phase4 import get_adapter, get_extractor
@@ -59,41 +60,24 @@ def _normalized(raw: UserRequest, profile, knowledge, corpus) -> NormalizedReque
     )
 
 
-def _view_spec(request, profile, questions, view, knowledge) -> ViewSpecification:
-    focus = profile.target or profile.task
-    try:
-        required = _instantiate_required_information(view.viewpoint_id, focus, knowledge)
-    except PipelineError:
-        required = []
-    have = {item.id for item in required}
-    for q in questions.questions:
-        if q.id not in have:
-            required.append(RequiredInformation(id=q.id, need=q.text))
+def _merge_question_concerns(spec, questions, knowledge) -> None:
     catalog = knowledge.catalog_concerns()
-    concerns = [c for c in (profile.concerns or []) if c in catalog]
+    concerns = list(spec.architectural_concerns)
     for extra in questions.concerns:
         if extra in catalog and extra not in concerns:
             concerns.append(extra)
-    framed = set(knowledge.viewpoint(view.viewpoint_id).get("frames_concerns") or [])
+    framed = set(knowledge.viewpoint(spec.selected_view.viewpoint_id).get("frames_concerns") or [])
     unanswered = [c for c in concerns if c not in framed and c != "general"]
-    return ViewSpecification(
-        request_id=request.request_id,
-        stakeholder=request.stakeholder.role,
-        task_summary=" | ".join(
-            p for p in (profile.source_goal, profile.task, profile.target, profile.goal) if p
-        ),
-        architectural_concerns=concerns,
-        selected_view=SelectedView(
-            view_type=view.view_type,
-            notation=view.notation or view.view_type,
-            diagram_language=view.diagram_language,
-            granularity=view.granularity,
-            purpose=view.purpose,
-            viewpoint_id=view.viewpoint_id,
-        ),
-        required_information=required,
-        unanswered_concerns=unanswered,
-        declared_gaps=list(unanswered),
+    spec.architectural_concerns = concerns
+    spec.unanswered_concerns = unanswered
+    spec.declared_gaps = list(unanswered)
+
+
+def _profile_blob(profile) -> str:
+    return " ".join(
+        p
+        for p in (profile.source_goal, profile.task, profile.target, profile.goal)
+        if p
     )
 
 
@@ -110,7 +94,17 @@ def run_agentic(raw: UserRequest, *, generate=None):
     corpus = clean_repository(raw.code or raw.repository or "", request_id=raw.request_id)
     profile = interpret_stakeholder_task(raw.goal or "", runtime, knowledge=knowledge)
     request = _normalized(raw, profile, knowledge, corpus)
-    questions = derive_questions(profile, runtime, knowledge=knowledge)
+    correspondence = select_correspondence(
+        request.stakeholder.role,
+        _profile_blob(profile) or request.task.description,
+        knowledge,
+        goal=profile.source_goal or profile.task,
+        extra_concerns=list(profile.concerns),
+        preferred_language=raw.diagram_language,
+    )
+    questions = derive_questions(
+        profile, runtime, knowledge=knowledge, correspondence=correspondence
+    )
     viewpoint_plan = plan_viewpoints(
         profile,
         questions,
@@ -118,11 +112,29 @@ def run_agentic(raw: UserRequest, *, generate=None):
         knowledge=knowledge,
         max_views=raw.max_views,
         preferred_language=raw.diagram_language,
+        correspondence=correspondence,
     )
     active = next((v for v in viewpoint_plan.views if not v.deferred), None)
     if active is None:
         raise PipelineError("no active view in the viewpoint plan")
-    spec = _view_spec(request, profile, questions, active, knowledge)
+    if active.viewpoint_id != correspondence.viewpoint_id:
+        correspondence = with_viewpoint(
+            correspondence,
+            active.viewpoint_id,
+            knowledge,
+            preferred_language=raw.diagram_language,
+            goal=profile.source_goal or profile.task,
+        )
+    spec = spec_from_correspondence(request, correspondence, knowledge)
+    spec.task_summary = " | ".join(
+        p for p in (profile.source_goal, profile.task, profile.target, profile.goal) if p
+    )
+    if active.purpose:
+        spec.selected_view.purpose = active.purpose
+    spec.selected_view.diagram_language = active.diagram_language
+    spec.selected_view.notation = active.notation or spec.selected_view.notation
+    spec.selected_view.granularity = active.granularity or spec.selected_view.granularity
+    _merge_question_concerns(spec, questions, knowledge)
     repo = request.repository.location
     graph = build_graph(repo, corpus)
     strategy = raw.scope_strategy or "composite"
@@ -140,6 +152,7 @@ def run_agentic(raw: UserRequest, *, generate=None):
         "stakeholder_task_profile.json": profile.model_dump(mode="json"),
         "architectural_questions.json": questions.model_dump(mode="json"),
         "viewpoint_plan.json": viewpoint_plan.model_dump(mode="json"),
+        "correspondence.json": correspondence.as_dict(),
     }
     result = PipelineResult(
         corpus=corpus,

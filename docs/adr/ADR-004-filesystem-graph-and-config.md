@@ -1,9 +1,10 @@
 # ADR-004 — Filesystem graph, directory groups, config-selected plug-ins
 
-- **Status:** accepted
+- **Status:** accepted (D2 superseded by [ADR-005](ADR-005-correspondence-and-published-grain.md))
 - **Date:** 2026-08-24
 - **Supersedes:** [ADR-003](ADR-003-structure-grounding.md) D1 grouping and D4 as *core* behaviour
 - **Extends:** [ADR-002](ADR-002-sota-plugins.md) (plug-in catalogs remain)
+- **Superseded in part by:** [ADR-005](ADR-005-correspondence-and-published-grain.md) (directory groups are not the published architecture; grain is viewpoint-keyed)
 
 ## Context
 
@@ -17,9 +18,9 @@ ISO/IEC/IEEE 42010 already separates identifying stakeholders/concerns, selectin
 
 Nodes are kept files (stem keys, path aliases). `layer` is the **parent directory name**. Uses/calls come from import-like lines and identifier mentions that resolve to other kept files. No language AST in the core.
 
-### D2. `apply_facts` regroups by directory
+### D2. `apply_facts` regroups by directory *(superseded)*
 
-After any extractor, `apply_facts` rewrites evidence paths, completes uses/calls among selected elements, and groups by parent directory (`kind: package`). Architectural-style names from `architectural_styles.yaml` apply **only** when the selected viewpoint is layered.
+ADR-004 grouped selected elements by parent directory. That published folder names (`Boundary` / `Control` / `Entity`) as the architecture. [ADR-005](ADR-005-correspondence-and-published-grain.md) keeps the filesystem graph (D1) but projects with **viewpoint grain**: component names stay, type edges only when `unit` is type, context is actors + system, no folder-lift.
 
 ### D3. 42010 artefacts are first-class
 

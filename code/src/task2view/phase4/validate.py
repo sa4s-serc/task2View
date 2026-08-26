@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from task2view.contracts.models import (
+    Evidence,
     RepositoryScope,
     ValidationReport,
     ViewElement,
@@ -28,19 +29,22 @@ def _resolve_type(name: str, graph: RepositoryGraph) -> str | None:
     return graph.resolve(name)
 
 
-def _resolve_element(el: ViewElement, graph: RepositoryGraph) -> str | None:
-    if el.external or el.kind in _keep_without_graph():
-        return el.name
-    match = _resolve_type(el.name, graph)
-    if match:
-        return match
+def _owner_type(el: ViewElement, graph: RepositoryGraph) -> str | None:
     if el.evidence and el.evidence.symbol:
         match = _resolve_type(el.evidence.symbol, graph)
         if match:
             return match
     if el.evidence and el.evidence.file:
-        return _resolve_type(el.evidence.file, graph)
-    return None
+        match = _resolve_type(el.evidence.file, graph)
+        if match:
+            return match
+    return _resolve_type(el.name, graph)
+
+
+def _resolve_element(el: ViewElement, graph: RepositoryGraph) -> str | None:
+    if el.external or el.kind in _keep_without_graph():
+        return el.name
+    return _owner_type(el, graph)
 
 
 def _misplaced_groups(vm: ViewModel, graph: RepositoryGraph) -> list[dict]:
@@ -68,10 +72,18 @@ def validate_view(
             unresolved_e.append(el.name)
             id_map[el.id] = ""
             continue
-        if not (el.external or el.kind in _keep_without_graph()):
+        if el.kind not in {"component", "module"} and not (
+            el.external or el.kind in _keep_without_graph()
+        ):
             el.name = match
             if el.evidence and el.evidence.file and el.evidence.file not in scoped and match in graph.nodes:
                 el.evidence.file = graph.nodes[match].path
+        elif el.kind in {"component", "module"} and match in graph.nodes:
+            if el.evidence is None:
+                el.evidence = Evidence(file=graph.nodes[match].path, symbol=match)
+            else:
+                el.evidence.file = el.evidence.file or graph.nodes[match].path
+                el.evidence.symbol = el.evidence.symbol or match
         kept_elements.append(el)
         resolved_e += 1
 
@@ -97,8 +109,8 @@ def validate_view(
             kept_rels.append(rel)
             resolved_r += 1
             continue
-        src_t = _resolve_type(src.name, graph)
-        dst_t = _resolve_type(dst.name, graph)
+        src_t = _owner_type(src, graph)
+        dst_t = _owner_type(dst, graph)
         ok = False
         if src_t and dst_t:
             if rel.kind in {"calls", "call"}:

@@ -9,27 +9,156 @@ keep_without_graph:
   - deployment_node
   - system
 
-# Graph edges to *insert* after the extractor. Extractor relations are always kept.
-#   none         — no graph fill (behavioural traces)
-#   inter_group  — only edges that cross parent-directory / layer groups
-#   all_selected — every uses/calls edge among selected types (typed data models)
+# Grain of the published view. Keyed by viewpoint_id, then view_type, then default.
+# Independent of any repository's folder or type names. ISO 42010: the viewpoint
+# decides the model; this block is what agents and the extractor must obey.
+published_grain:
+  default:
+    unit: component
+    nodes: task-relevant architectural components named by responsibility, not every class
+    relations: uses among those components
+    forbid: one box per class; parent-directory boxes; full call graph
+  context:
+    unit: context
+    nodes: actors, the system, external systems, datastores at the boundary
+    relations: actor-to-system uses
+    forbid: internal classes, GUIs, or packages as the system
+  context_view:
+    unit: context
+    nodes: actors, the system, external systems, datastores at the boundary
+    relations: actor-to-system uses
+    forbid: internal classes and GUIs
+  module-decomposition:
+    unit: component
+    nodes: modules or subsystems that own the task, named by responsibility
+    relations: containment or uses
+    forbid: one box per source file; class inventory
+  module-uses:
+    unit: component
+    nodes: modules
+    relations: allowed-to-use among modules
+    forbid: method-level call graphs
+  module-layered:
+    unit: component
+    nodes: layers
+    relations: allowed dependencies between layers
+    forbid: classes as nodes
+  module-generalization:
+    unit: type
+    nodes: types in the generalization hierarchy for the task
+    relations: generalization
+    forbid: unrelated types
+  cnc-runtime:
+    unit: component
+    nodes: runtime components and connectors
+    relations: connectors and communication
+    forbid: source packages drawn as runtime nodes
+  allocation-deployment:
+    unit: component
+    nodes: deployable artifacts, execution nodes, datastores
+    relations: deploys or communicates
+    forbid: classes as deployment nodes
+  deployment_view:
+    unit: component
+    nodes: deployable artifacts, execution nodes, datastores
+    relations: deploys or communicates
+    forbid: classes as deployment nodes
+  code-mapping:
+    unit: type
+    nodes: architecture elements mapped to implementing types
+    relations: implements or located-in
+    forbid: entire-repository class dump
+  api-contract:
+    unit: component
+    nodes: externally visible operations and the components that offer them
+    relations: calls on those operations
+    forbid: internal helpers as API
+  build-work-assignment:
+    unit: component
+    nodes: modules overlaid with owning unit
+    relations: assignment or contains
+    forbid: class inventory
+  control-flow:
+    unit: component
+    nodes: entry, orchestration, domain, persistence participants
+    relations: ordered control-flow calls
+    forbid: every class on the call graph
+  scenario:
+    unit: component
+    nodes: participants at component grain for the scenario
+    relations: ordered calls among participants
+    forbid: every GUI or widget as a lifeline
+  sequence_view:
+    unit: component
+    nodes: participants at component grain
+    relations: ordered calls
+    forbid: every class as a lifeline
+  data-flow:
+    unit: component
+    nodes: stores and processing components
+    relations: dataflow
+    forbid: every method
+  dataflow_view:
+    unit: component
+    nodes: stores and processing components
+    relations: dataflow
+    forbid: every method
+  data-model:
+    unit: type
+    nodes: persistent entities involved in the task
+    relations: relations among those entities
+    forbid: UI and controllers as entities
+  class_view:
+    unit: type
+    nodes: types required by the selected viewpoint
+    relations: type relations
+    forbid: dumping the whole type graph
+  concurrency:
+    unit: component
+    nodes: concurrent units (processes, threads, actors)
+    relations: synchronisation or communication
+    forbid: ordinary classes as processes
+  trust-boundary:
+    unit: component
+    nodes: entry points and trust zones
+    relations: crossings
+    forbid: internal class dump
+  failure-resilience:
+    unit: component
+    nodes: runtime components whose failure matters
+    relations: failure propagation
+    forbid: class inventory
+  onboarding-path:
+    unit: component
+    nodes: entry points and largest subsystems
+    relations: uses or contains
+    forbid: class inventory
+  decision-record:
+    unit: component
+    nodes: components affected by recorded decisions
+    relations: depends
+    forbid: inventing decisions not in the repo
+
+# Fallback if a viewpoint is missing from published_grain.
+view_unit:
+  default: component
+  context_view: context
+  class_view: type
+
+# Type-level graph edges only when grain unit is type.
 edge_insertion:
-  default: inter_group
+  default: none
   sequence_view: none
   state_view: none
   class_view: all_selected
-  component_view: inter_group
-  context_view: inter_group
-  deployment_view: inter_group
-  dataflow_view: inter_group
+  component_view: none
+  context_view: none
+  deployment_view: none
+  dataflow_view: none
 
-# Context views that the extractor reduced to actors still need a system
-# boundary and one representative per source directory (from the scoped graph).
+# Context views: actors and the system, not internal classes.
 context:
   ensure_system: true
-  min_internal_elements: 1
-  representatives_per_directory: 1
-  max_representatives: 8
   actor_to_system_kind: uses
 
 # Generic source-layout segments ignored when naming the system from paths.
@@ -58,27 +187,10 @@ source_root_segments:
   - include
   - headers
   - resources
+  - static
   - test
   - tests
   - code
-
-max_elements:
-  by_view_type:
-    context_view: 12
-    deployment_view: 12
-    sequence_view: 16
-    component_view: 20
-    dataflow_view: 20
-    class_view: 30
-    state_view: 20
-  by_granularity:
-    high: 12
-    system_or_context_level: 12
-    medium: 20
-    component_or_service_level: 20
-    low: 36
-  keep_one_per_group: true
-  context_one_per_group: true
 
 # If the viewpoint agent picks a behavioural view but the questions/evidence
 # ask for structure, retarget to a module view (catalog ids only).

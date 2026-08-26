@@ -66,15 +66,16 @@ goal + code
     │
     ├─► 0 clean          keep source files, drop binaries / UML dumps
     ├─► 1 interpret      Gemini → stakeholder-task profile
-    ├─► 2 questions      Gemini → architectural questions
-    ├─► 3 viewpoint      Gemini → catalog viewpoint (never invents an id)
+    ├─► correspondence   catalog rank: role × concerns × task → viewpoint + grain
+    ├─► 2 questions      Gemini → architectural questions at that grain
+    ├─► 3 viewpoint      Gemini may only pick among ranked catalog ids
     ├─► instantiate RI   required_information.yaml for that viewpoint
     ├─► filesystem graph uses / calls / parent directory
     ├─► scoper           default composite; pagerank + RI-forced seeds is the usual experiment
     ├─► extractor        default gemini; ciao packs scoped files with the CIAO prompt
-    ├─► project          directory groups, inter-package edges, view-type caps
-    ├─► critic           optional Gemini completeness pass (cap 4 extra types)
-    ├─► adapter + gate   PlantUML / Mermaid / … then drop invented types
+    ├─► project          ground evidence; grain from selected viewpoint (not always components)
+    ├─► critic           optional notes; does not add class neighbours
+    ├─► adapter + gate   PlantUML / Mermaid / …; keep published names; drop unsupported boxes
     └─► compile          SVG / PNG / JPEG
 ```
 
@@ -102,6 +103,7 @@ There is no vector store and no memory across runs. `code/runs/` is write-only o
 
 | File | Contents |
 |---|---|
+| `correspondence.json` | Ranked viewpoints + published grain (agentic path) |
 | `stakeholder_task_profile.json` | Interpreted role, task, target |
 | `architectural_questions.json` | Questions the view should answer |
 | `viewpoint_plan.json` | Chosen catalog viewpoint |
@@ -120,7 +122,7 @@ code/src/task2view/   pipeline, agents, knowledge, CLI
 code/tests/           pytest
 code/scripts/         batch runner + compile helper
 docs/architecture.md  stage-by-stage description
-docs/adr/             design decisions ADR-001 … ADR-004
+docs/adr/             design decisions ADR-001 … ADR-005
 input_example_task2view.txt
 ```
 

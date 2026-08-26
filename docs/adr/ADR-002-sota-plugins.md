@@ -26,13 +26,16 @@ Whole-repo copies of LocAgent, Aider, ArchAgent, and CIAO are not drop-in (diffe
 ```
 0 clean
 1 interpret agent
-2 questions agent
-3 viewpoint-planning agent
+  correspondence (catalog; no LLM)  → correspondence.json
+2 questions agent (grain of selected viewpoint)
+3 viewpoint-planning agent (ranked catalog ids only)
 4 Scoper plug-in          → repository_scope.json
-5 Extractor plug-in       → view_model.json
+5 Extractor plug-in       → view_model.json  (VIEWPOINT GRAIN)
 7 NotationAdapter         → architecture_view.<ext>
 8 semantic + syntax gate  → validation_report.json
 ```
+
+Viewpoint selection and grain are [ADR-005](ADR-005-correspondence-and-published-grain.md). Plug-in catalogs for scoper / extractor / notation are unchanged.
 
 There is **no Phase 6 agent**. The rule “do not present unsupported views as fact” stays in the extractor (`unanswered`) and in the Phase 8 gate (empty view fails; unanswered AQs → `pass_with_corrections`).
 

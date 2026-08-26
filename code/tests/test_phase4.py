@@ -125,8 +125,9 @@ def _fake_generate(prompt: str, *, model=None):
             {"id": "E0", "name": "User", "kind": "actor", "external": True},
             {
                 "id": "E1",
-                "name": "UserRegistrationGUI",
+                "name": "Registration UI",
                 "kind": "component",
+                "role": "Accepts registration requests",
                 "evidence": {
                     "file": "src/main/java/Boundary/UserRegistrationGUI.java",
                     "symbol": "UserRegistrationGUI",
@@ -134,8 +135,9 @@ def _fake_generate(prompt: str, *, model=None):
             },
             {
                 "id": "E2",
-                "name": "SystemServicesController",
+                "name": "Registration service",
                 "kind": "component",
+                "role": "Creates the user account",
                 "evidence": {
                     "file": "src/main/java/Control/SystemServicesController.java",
                     "symbol": "SystemServicesController",
@@ -169,7 +171,9 @@ def test_extract_with_mocked_gemini_then_gate(tmp_path: Path):
     assert result.view_model is not None
     names = {e.name for e in result.view_model.elements}
     assert "HallucinatedMailer" not in names
-    assert "UserRegistrationGUI" in names
+    assert "Registration UI" in names
+    assert "Registration service" in names
+    assert "UserRegistrationGUI" not in names
     assert result.diagram_source and "@startuml" in result.diagram_source
     assert result.validation is not None
     write_result(tmp_path, result)
@@ -188,6 +192,8 @@ def test_ciao_prompt_inlines_verbatim_prompt_json():
     template = ciao_prompt_template()
     filled = template.format(
         view_type="component_view",
+        viewpoint_id="module-decomposition",
+        grain="VIEWPOINT GRAIN (module-decomposition), unit=component",
         granularity="component_or_service_level",
         purpose="test",
         required="- AQ1: x",
@@ -201,6 +207,11 @@ def test_ciao_prompt_inlines_verbatim_prompt_json():
     assert "Ignore markdown" in filled
     assert "You follow CIAO grounding rules from CIAO-system/prompt.json" not in filled
     assert "static analysis produces an AST-derived reference graph" not in filled
+    assert "evidence.symbol is optional" in filled
+    assert "catalog grain" in filled
+    assert "VIEWPOINT GRAIN" in filled
+    assert "Every non-external element must have evidence.file and evidence.symbol" not in filled
+    assert "Emit a relation for every uses/calls edge" not in filled
 
 
 def test_extract_archagent_and_ciao_backends(tmp_path: Path):
@@ -224,8 +235,15 @@ def test_extract_archagent_and_ciao_backends(tmp_path: Path):
             generate=generate,
         )
         assert result.view_model is not None
-        assert "UserRegistrationGUI" in {e.name for e in result.view_model.elements}
-        assert result.diagram_source and result.diagram_source.startswith("sequenceDiagram")
+        names = {e.name for e in result.view_model.elements}
+        assert "UserRegistrationGUI" not in names
+        assert "Registration UI" in names
+        assert "Registration service" in names
+        assert result.diagram_source and (
+            result.diagram_source.startswith("flowchart")
+            or "Registration UI" in result.diagram_source
+            or "sequenceDiagram" in result.diagram_source
+        )
         if backend == "ciao":
             assert "BEGIN CIAO prompt.json" in captured["prompt"]
             assert "OVERRIDE" in captured["prompt"]
@@ -251,7 +269,7 @@ def test_extract_view_injectable_generate():
         str(GR10),
         generate=_fake_generate,
     )
-    assert any(e.name == "UserRegistrationGUI" for e in vm.elements)
+    assert any(e.name == "Registration UI" for e in vm.elements)
     assert any(e.name == "HallucinatedMailer" for e in vm.elements)
 
 
@@ -306,7 +324,8 @@ def test_gate_keeps_datastore_and_resolves_via_symbol():
         vm, result.spec, result.scope, result.graph, "@startuml\n@enduml\n", "plantuml"
     )
     names = {e.name for e in cleaned.elements}
-    assert "UserRegistrationGUI" in names
+    assert "App" in names
+    assert "UserRegistrationGUI" not in names
     assert "Relational Database Engine" in names
     assert "MadeUpService" not in names
     assert any(r.label == "JDBC" for r in cleaned.relations)

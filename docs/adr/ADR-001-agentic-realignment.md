@@ -45,7 +45,7 @@ Free-text is valid (`I am a software developer. I need…`). The agent emits a S
 
 ### D3. Phase 2 must emit architectural questions
 
-Questions are the bridge between the task and viewpoint selection. YAML `required_information` templates **seed** the agent; they do not replace it.
+Questions are the bridge between the **selected** viewpoint’s grain and the extractor. YAML `required_information` templates seed the agent; they do not replace it. [ADR-005](ADR-005-correspondence-and-published-grain.md) selects the viewpoint **before** this agent so questions stay at that grain.
 
 ### D4. Phase 3 (PDF) uses the knowledge base through an agent
 
