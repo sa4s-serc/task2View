@@ -18,7 +18,16 @@ def test_developer_modify_booking_is_module_components():
     assert corr.view_type == "component_view"
 
 
-def test_tester_registration_is_scenario():
+def test_tester_l2_registration_stays_scenario():
+    corr = _corr(
+        "tester-and-integrator",
+        "I am an integration tester. I need to design integration tests for the user "
+        "registration functionality. Before defining the tests, I need to understand the "
+        "main components involved in registration, their responsibilities, and how they "
+        "interact when a new user creates an account.",
+    )
+    assert corr.viewpoint_id == "scenario"
+    assert corr.view_type == "sequence_view"
     corr = _corr(
         "tester-and-integrator",
         "I am an integration tester. I need to test the user registration functionality "

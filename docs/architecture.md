@@ -1,75 +1,78 @@
-# Current pipeline
+# Pipeline and research-plan phases
 
-![Current architecture](diagrams/architecture.svg)
+![Task2View eight research-plan phases](diagrams/architecture.svg)
 
-Source: [`diagrams/architecture.dot`](diagrams/architecture.dot).
+Source: [`diagrams/architecture.dot`](diagrams/architecture.dot) · raster: [`diagrams/architecture.png`](diagrams/architecture.png).
 
-Two inputs: a code repository (`--code`) and a stakeholder goal (`--goal`). Output: one catalog viewpoint’s view (notation-neutral `ViewModel` + diagram).
+This is the **same pipeline** as the research plan *From Stakeholder Tasks to Architecture Views* (Figure 1). The boxes keep the plan’s eight phase names. The second line in each box is what `run_agentic` actually runs today.
 
-Grounding: **ISO/IEC/IEEE 42010** (stakeholders, concerns, viewpoints, views) and **Views and Beyond** YAML under `code/src/task2view/knowledge/data/`.
+Two inputs: `--goal` (free-text stakeholder/task) and `--code` (repository). One output: a viewpoint-selected view (`view_model.json` + diagram).
 
-The reusable contract is correspondence, not a diagram kind:
+## Plan phase → current implementation
 
-**stakeholder × concerns × task → catalog viewpoint → published grain → extract / gate / draw**
-
-## Stages
-
-| Stage | Code | LLM? | What it consumes |
+| Plan | What the plan specified | What runs today | Artifact |
 |---|---|---|---|
-| 0 clean | `phase0/clean.py` | no | Repo files; keeps source, drops binaries |
-| 1 interpret | `agents/phase1_interpret.py` | yes | Goal + stakeholder catalog |
-| correspondence | `knowledge/correspondence.py` | no | Role × concerns × task cues → viewpoint + `published_grain` |
-| 2 questions | `agents/phase2_questions.py` | yes | Profile + grain of the **selected** viewpoint |
-| 3 viewpoint | `agents/phase3_viewpoint.py` | yes | Ranked catalog candidates only; cannot invent a diagram kind |
-| spec + RI | `knowledge/correspondence.py` | no | Instantiates `required_information.yaml` |
-| graph | `phase3/graph.py` | no | uses / calls / parent directory among cleaned files |
-| scoper | `phase3/` + `phase3/seeds.py` | no | Default `composite`. PageRank can force RI-matched files, then fill |
-| extract | `phase4/extractors.py` | yes | `VIEWPOINT GRAIN` from the correspondence. Default `gemini`; `ciao` packs scoped files |
-| project | `agents/structure.py` | no | Grounds evidence; unit from grain. Context: actors and the system |
-| critic | `agents/phase6_critic.py` | yes | Notes only. Does not add class neighbours. `--skip-critic` |
-| gate + render | `phase4/validate.py`, `render.py` | no | Drops unsupported boxes; keeps published names; emits notation |
-| compile | `phase4/compile.py` | no | Kroki (or local fallback) → SVG/PNG/JPEG |
+| **1** Stakeholder-Task Interpretation | Interpretation Agent | Gemini interpret agent; role checked against `aliases.yaml` | `stakeholder_task_profile.json` |
+| **2** Concern and Architectural Questions | Question Agent | Gemini questions agent, seeded from the **selected** viewpoint’s required-information templates | `architectural_questions.json` |
+| **3** Knowledge-Grounded Viewpoint Planning | Viewpoint agent + knowledge base | Catalog ranks viewpoints from role × concerns × task cues (no LLM), then the viewpoint agent may only confirm a ranked id | `viewpoint_plan.json`, `view_specification.json` |
+| **4** Repository Analysis | Analysis plan: where to look | Drop binaries; file graph (uses/calls); scoper plug-in (`composite`, `pagerank`, …) | `repository_scope.json` |
+| **5** Evidence Extraction and Grounding | Extraction agents → evidence model | Extractor plug-in (`gemini`, `ciao`, `archagent`) over scoped files; claims grounded to paths | `view_model.json` |
+| **6** Need–Evidence Reconciliation | Rewrite the plan if evidence is missing | Critic writes notes only; it does not change the viewpoint | `structure_report.json` |
+| **7** Specialized View Generation | Per-view generators | Notation adapter (`plantuml`, `mermaid`, …) | `architecture_view.puml` |
+| **8** Validation and Consistency | Validation agent | Semantic gate (names need evidence) + compile | `validation_report.json`, SVG/PNG/JPEG |
 
-Default orchestrator: `agents/orchestrate.py` `run_agentic`. Gemini agents on that path: interpret, questions, viewpoint, extractor, critic. They call `complete_json` only — no repository tool loop. Correspondence itself is not an LLM.
+Default orchestrator: `agents/orchestrate.py`. `--legacy` skips the Phase 1–3 agents and uses regex intake, then the same catalog rank. `--skip-extract` stops after Phase 4. `--skip-critic` skips only Phase 6.
 
-`--legacy` skips agents 1–3 and uses regex intake, then the **same** correspondence kernel (`identify_view`).
+Phase 4 and Phase 5 stay separate on purpose: the scoper is the analysis plan (candidate files); the extractor is the only stage that claims what the architecture contains.
 
-## Correspondence and grain
-
-`select_correspondence` ranks every catalog viewpoint the stakeholder may use (V&B Table 9.1 ∪ profile required/optional ∪ task-cue preferences). Cue **weights** let persistence, deployment, security, and context outrank a generic “modify”.
-
-The winner binds one row of `published_grain` in `view_projection.yaml`. That row is what questions, purpose, extractors, `apply_facts`, and the gate must obey.
-
-| If the goal looks like… | Viewpoint | Grain `unit` | What the view may be |
-|---|---|---|---|
-| who talks to this system? | `context` | context | actors + system + externals |
-| where do I change X? | `module-decomposition` / `module-uses` | component | subsystems and uses — not every class |
-| how is a request processed? | `scenario` / `control-flow` | component | a few participants and ordered calls |
-| what is stored? | `data-model` | type | persistent entities |
-| where does it run? | `allocation-deployment` | component | artifacts, nodes, datastores |
-| attack surface / trust | `trust-boundary` | component | entry points and zone crossings |
-| I’m new here | `onboarding-path` | component | entry + largest subsystems |
-
-Quality attributes are concerns on the stakeholder profile, boosted by `task_cues.yaml`, then framed by `viewpoints.yaml` (`frames_concerns`). Security does not become a component dump; it prefers `trust-boundary`.
-
-Adding a stakeholder or concern is catalog work: a row in stakeholders / cues / viewpoints plus a `published_grain` row. Extractor code does not get a new special case.
-
-## Graph and projection
-
-- Graph node = kept file (stem key; path aliases). Language-neutral (ADR-004 D1).
-- Extractor, questions, and viewpoint purpose consume `VIEWPOINT GRAIN`. A tester scenario stays at component participants + ordered calls; a DBA data-model may name entities; a context view is actors + system.
-- Gate keeps published names. Structure adds uses among owner files when unit is component; type-level edges only when unit is type. No folder-lift, no dumping the class graph unless the grain says type.
-
-## Config
-
-`code/pipeline.example.yaml` selects `scoper` / `extractor` / `diagram_language`. CLI flags override.
-
-Typical evaluation command (PageRank scope + CIAO extract):
+Typical evaluation command:
 
 ```bash
 task2view run --code /path/to/repo --goal "…" --out runs/demo \
   --scope-strategy pagerank --extract-backend ciao
 ```
+
+## What the current runs get right — and what they get wrong
+
+On `pagerank` + `ciao` against the two evaluation repos, **viewpoint choice is often right** and **the drawn boxes are often wrong**.
+
+| Goal | Viewpoint chosen | What was drawn | Problem |
+|---|---|---|---|
+| Tester L1 (registration) | scenario | LibraryFacade, UserManager, UserRegistry, … | This is the one that looks like a view |
+| Tester L2 / L3 | module-decomposition / module-uses | L2: `boundary`, `controller`, `dto`, `entity`. L3: 17 boxes / 50 edges | “main components involved” in the goal text beats “integration test”; L3 dumps classes |
+| Developer seat L1–L3 | module-decomposition | `Boundary` / `Controller` / `DTO` / `Entity` (packages) | Goal asked for booking, availability, rules, reservations, notification — those types exist (`ReservationManager`, `LibraryFacade`) and were not used as names |
+| Architect GR10-Q1 | module-decomposition | Boundary / Control / Database / Entity subsystems | Same package-lift, one lonely edge |
+| DevOps GR10-Q2 | allocation-deployment | app container + database | Right kind of view; too thin |
+| DBA GR10-Q3 | data-model | Citizen, Report, Location, … | Right kind of view |
+| Analyst GR10-Q4 | context | Citizen, Municipal Operator, **Boundary**, Database | System named after a package |
+
+The critic on seat L3 then **endorsed** the package boxes as fully answering “top-level modules and their responsibilities”. Phase 6 is not catching the failure.
+
+So the pipeline shape is the research plan. The remaining defect is not “we picked the wrong diagram kind for DBA/DevOps”. It is: **when the viewpoint is a module view, Phase 5 still publishes folder names, and Phase 6 believes them.**
+
+## What to do next
+
+Items 1–4 below are now in the code (catalog rank, allowed names, folder rebuild, uses arrows, cap, context rename). Remaining:
+
+- **Phase 4** still keeps 16 PageRank files. Force files matching the goal nouns (booking, reservation, registration, notification) before centrality fill.
+- **Phase 6** can still praise a weak view. Fail leftover package-shaped names and re-extract once.
+- **Deployment views** are still thin (app + database). Seed from Docker/compose/SQL as well as Java.
+
+## Which view for which task
+
+The knowledge base maps stakeholder, task, and concerns to a viewpoint (Phase 3). Examples:
+
+| If the goal looks like… | Viewpoint | What the view should show |
+|---|---|---|
+| who talks to this system? | context | actors, the system, externals |
+| where do I change X? | module decomposition / uses | subsystems named by **responsibility**, and uses |
+| how is a request processed? | scenario / control flow | participants and ordered interactions |
+| what is stored? | data model | persistent entities |
+| where does it run? | allocation / deployment | artifacts, nodes, datastores |
+| attack surface / trust | trust boundary | entry points and zone crossings |
+| I’m new here | onboarding path | entry and main subsystems |
+
+Adding a stakeholder or concern is catalog work under `code/src/task2view/knowledge/data/`.
 
 ## Architecture decisions
 

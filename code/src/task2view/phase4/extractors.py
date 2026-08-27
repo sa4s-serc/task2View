@@ -60,6 +60,9 @@ Shared grounding:
   Keep the published name unless grain unit is type.
 - Never dump every class unless grain unit is type. Never draw parent-directory
   boxes as the model unless the grain is layers.
+- For component, module, or sequence views, every non-actor box MUST be one of
+  ALLOWED NAMES. Never name a box Boundary, Entity, DTO, Controller, Database,
+  a Java package, or the [dir] value from the graph.
 - Actors, datastores, and external systems may be external.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
 - Answer each required_information id or list it in unanswered.
@@ -84,6 +87,9 @@ granularity: {granularity}
 purpose: {purpose}
 required_information:
 {required}
+
+ALLOWED NAMES (file stems; use these as box/lifeline labels):
+{allowed}
 
 FILE/DIRECTORY GRAPH (kept files; parent directory in [dir]; import-like uses):
 {graph}
@@ -136,6 +142,9 @@ Follow this catalog grain. Do not invent a different diagram kind.
 - evidence.file must exist in SOURCE FILES. evidence.symbol is optional.
   Keep the published name unless grain unit is type.
 - Never dump every class unless grain unit is type.
+- For component, module, or sequence views, every non-actor box MUST be one of
+  ALLOWED NAMES. Never name a box Boundary, Entity, DTO, Controller, Database,
+  a Java package, or the [dir] value from the graph.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
 - Answer each required_information id or list it in unanswered.
 
@@ -145,6 +154,9 @@ granularity: {granularity}
 purpose: {purpose}
 required_information:
 {required}
+
+ALLOWED NAMES (file stems; use these as box/lifeline labels):
+{allowed}
 
 FILE/DIRECTORY GRAPH (kept files; parent directory in [dir]; scoped files first):
 {graph}

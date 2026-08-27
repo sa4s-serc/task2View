@@ -452,4 +452,49 @@ def test_data_model_purpose_may_mention_entities():
     assert "entities" in view.purpose.casefold()
 
 
+def test_folder_named_boxes_become_types_with_uses():
+    vm = ViewModel(
+        request_id="REQ-FOLDERS",
+        view_type="component_view",
+        granularity="component_or_service_level",
+        elements=[
+            ViewElement(id="E1", name="Boundary Module", kind="component"),
+            ViewElement(id="E2", name="Control Subsystem", kind="component"),
+            ViewElement(id="E3", name="Entity", kind="component"),
+        ],
+        relations=[],
+    )
+    grounded, report = ground_view_model(vm, _graph(), _spec("component_view"))
+    names = {e.name for e in grounded.elements}
+    assert "Boundary Module" not in names
+    assert "Entity" not in names
+    assert "HomePageGUI" in names
+    assert "ReportService" in names
+    by_id = {e.id: e.name for e in grounded.elements}
+    pairs = {(by_id[r.frm], by_id[r.to]) for r in grounded.relations}
+    assert pairs
+    assert report["relations_added"] >= 1
+
+
+def test_context_renames_folder_system():
+    g = _graph()
+    vm = ViewModel(
+        request_id="REQ-CTX",
+        view_type="context_view",
+        granularity="system_or_context_level",
+        elements=[
+            ViewElement(id="E1", name="Citizen", kind="actor"),
+            ViewElement(id="E2", name="Boundary", kind="system"),
+        ],
+        relations=[],
+    )
+    grounded, _ = ground_view_model(vm, g, _spec("context_view", "context"))
+    names = {e.name for e in grounded.elements}
+    assert "Boundary" not in names
+    assert any(e.kind == "system" for e in grounded.elements)
+    assert any(e.kind == "actor" for e in grounded.elements)
+    assert grounded.relations
+
+
+
 

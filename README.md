@@ -59,27 +59,26 @@ Generated artifacts go to `code/runs/` (gitignored).
 
 ## What the pipeline does
 
+The eight phases are those of the research plan (Figure 1). What each phase runs: [`docs/architecture.md`](docs/architecture.md).
+
 Default path is `run_agentic` in `code/src/task2view/agents/orchestrate.py`.
 
 ```
-goal + code
+Input 1  stakeholder / task description
     │
-    ├─► 0 clean          keep source files, drop binaries / UML dumps
-    ├─► 1 interpret      Gemini → stakeholder-task profile
-    ├─► correspondence   catalog rank: role × concerns × task → viewpoint + grain
-    ├─► 2 questions      Gemini → architectural questions at that grain
-    ├─► 3 viewpoint      Gemini may only pick among ranked catalog ids
-    ├─► instantiate RI   required_information.yaml for that viewpoint
-    ├─► filesystem graph uses / calls / parent directory
-    ├─► scoper           default composite; pagerank + RI-forced seeds is the usual experiment
-    ├─► extractor        default gemini; ciao packs scoped files with the CIAO prompt
-    ├─► project          ground evidence; grain from selected viewpoint (not always components)
-    ├─► critic           optional notes; does not add class neighbours
-    ├─► adapter + gate   PlantUML / Mermaid / …; keep published names; drop unsupported boxes
-    └─► compile          SVG / PNG / JPEG
+    ├─► 1  Stakeholder-Task Interpretation      Gemini → catalog role
+    ├─► 2  Concern and Architectural Questions  Gemini, seeded from the viewpoint
+    ├─► 3  Knowledge-Grounded Viewpoint Planning catalog rank, then agent confirms
+Input 2  software repository
+    │
+    └─► 4  Repository Analysis                  graph + scoper (pagerank / composite / …)
+        5  Evidence Extraction and Grounding    gemini / ciao / archagent on scoped files
+        6  Need–Evidence Reconciliation         critic notes only
+        7  Specialized View Generation          PlantUML / Mermaid / …
+        8  Validation and Consistency           evidence gate + compile
 ```
 
-`--legacy` skips agents 1–3 and uses regex intake. `--skip-critic` skips only the critic. `--skip-extract` stops after scoping.
+`--legacy` skips Phases 1–3 agents and uses regex intake. `--skip-critic` skips only Phase 6. `--skip-extract` stops after Phase 4.
 
 ## Plug-ins
 
@@ -103,7 +102,7 @@ There is no vector store and no memory across runs. `code/runs/` is write-only o
 
 | File | Contents |
 |---|---|
-| `correspondence.json` | Ranked viewpoints + published grain (agentic path) |
+| `correspondence.json` | Ranked viewpoints for this run |
 | `stakeholder_task_profile.json` | Interpreted role, task, target |
 | `architectural_questions.json` | Questions the view should answer |
 | `viewpoint_plan.json` | Chosen catalog viewpoint |

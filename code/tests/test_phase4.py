@@ -199,6 +199,7 @@ def test_ciao_prompt_inlines_verbatim_prompt_json():
         required="- AQ1: x",
         graph="GRAPH",
         files="SOURCE FILES",
+        allowed="HomePageGUI, ReportService",
     )
     assert "----- BEGIN CIAO prompt.json -----" in filled
     assert "ISO/IEC/IEEE 42010" in filled

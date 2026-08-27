@@ -35,6 +35,9 @@ Shared grounding:
   unless the grain unit is type.
 - Never dump every class unless grain unit is type. Never draw parent-directory boxes
   as the model unless the grain is layers.
+- For component, module, or sequence views, every non-actor box/lifeline MUST be one
+  of ALLOWED NAMES (file stems). Never name a box Boundary, Entity, DTO, Controller,
+  Database, a Java package, or the [dir] value from the graph.
 - Actors, datastores, and external systems may be external.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
 - Answer each required_information id or list it in unanswered.
@@ -59,6 +62,9 @@ granularity: {granularity}
 purpose: {purpose}
 required_information:
 {required}
+
+ALLOWED NAMES (file stems; use these as box/lifeline labels):
+{allowed}
 
 FILE/DIRECTORY GRAPH (kept files; parent directory in [dir]; import-like uses edges; scoped files first):
 {graph}
@@ -285,6 +291,7 @@ def extract_view(
         purpose=view_spec.selected_view.purpose,
         required=required,
         graph=graph.summary(prefer=prefer),
+        allowed=", ".join(dict.fromkeys(prefer)) or "(none in scope)",
         files=_pack_files(repo_root, scope),
     )
     built: list[ViewModel] = []

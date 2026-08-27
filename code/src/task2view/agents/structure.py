@@ -1,12 +1,14 @@
 """Deterministic grounding after extraction.
 
-Component views keep published names and add uses among owner files.
+Component views keep responsibility names when they resolve to files, otherwise
+rebuild from the file graph so boxes are types with uses arrows — not folders.
 Type views insert graph edges among selected types.
 Context views keep actors and the system. No folder-lift.
 """
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from pathlib import Path
 
@@ -25,6 +27,14 @@ from task2view.phase3.graph import RepositoryGraph
 _DEFAULT_KEEP = frozenset(
     {"actor", "datastore", "external_system", "deployment_node", "system", "module"}
 )
+_DECORATION = re.compile(
+    r"\b(modules?|subsystems?|packages?|layers?|components?)\b", re.I
+)
+_EXTRA_FOLDER_LABELS = frozenset(
+    {"dto", "dtos", "swing", "factory", "factories", "util", "utils", "common"}
+)
+_COMPONENT_CAP = 8
+_RUNTIME_VIEWS = frozenset({"deployment_view"})
 
 
 def _alias_map(knowledge: KnowledgeBase) -> dict[str, str]:
@@ -253,6 +263,17 @@ def _complete_context(
             notes.append("added system boundary from source-root path")
 
     system = next((e for e in elements if e.kind == "system"), None)
+    if system and folder_like_name(system.name, graph, knowledge):
+        paths = [n.path for n in graph.nodes.values() if n.path]
+        label = system_label_from_paths(paths, knowledge)
+        if label and label.casefold() not in existing:
+            existing.discard(system.name.casefold())
+            system.name = label
+            notes.append("renamed folder-shaped system box to the source-root label")
+            existing.add(label.casefold())
+        elif label:
+            system.name = label
+
     rel_kind = str(cfg.get("actor_to_system_kind") or "uses")
     if system:
         attached = {rel.frm for rel in relations} | {rel.to for rel in relations}
@@ -449,6 +470,222 @@ def _insert_owner_uses(vm: ViewModel, graph: RepositoryGraph) -> int:
     return added
 
 
+def _layer_labels(knowledge: KnowledgeBase) -> set[str]:
+    labels = set(_EXTRA_FOLDER_LABELS)
+    for layer in (knowledge.architectural_styles or {}).get("layers") or []:
+        for raw in [layer.get("id"), layer.get("name"), *(layer.get("aliases") or [])]:
+            if raw:
+                labels.add(str(raw).casefold())
+    return labels
+
+
+def _bare_label(name: str) -> str:
+    stripped = _DECORATION.sub(" ", name)
+    return re.sub(r"[._/\-]+", " ", stripped).strip()
+
+
+def folder_like_name(
+    name: str,
+    graph: RepositoryGraph,
+    knowledge: KnowledgeBase | None = None,
+) -> bool:
+    """True when a box is a directory, layer, or package — not a component."""
+    knowledge = knowledge or load_knowledge()
+    if not name or not name.strip():
+        return True
+    if resolve_type(name, graph):
+        return False
+    bare = _bare_label(name)
+    if not bare:
+        return True
+    labels = _layer_labels(knowledge)
+    tokens = [t for t in bare.casefold().split() if t]
+    if tokens and all(t in labels for t in tokens):
+        return True
+    last = name.replace("\\", "/").rstrip("/").split("/")[-1].split(".")[-1]
+    if _DECORATION.sub("", last).strip().casefold() in labels:
+        return True
+    dirs = {Path(node.path).parent.name.casefold() for node in graph.nodes.values() if node.path}
+    if bare.casefold() in dirs or last.casefold() in dirs:
+        return True
+    return False
+
+
+def _scoped_names(graph: RepositoryGraph, scope: RepositoryScope | None) -> list[str]:
+    if scope is None:
+        return list(graph.nodes)
+    paths = {c.path for c in scope.candidate_areas}
+    names = [n for n, node in graph.nodes.items() if node.path in paths]
+    return names or list(graph.nodes)
+
+
+def _connected_types(
+    graph: RepositoryGraph,
+    *,
+    prefer: list[str],
+    scope: RepositoryScope | None,
+    cap: int = _COMPONENT_CAP,
+) -> list[str]:
+    pool = _scoped_names(graph, scope)
+    pool_set = set(pool)
+    ranked = sorted(pool, key=lambda n: (-graph.degree(n), n))
+    selected: list[str] = []
+    seen: set[str] = set()
+    for name in prefer:
+        match = resolve_type(name, graph)
+        if match and match in pool_set and match not in seen:
+            selected.append(match)
+            seen.add(match)
+        if len(selected) >= cap:
+            return selected
+    if not selected and ranked:
+        selected.append(ranked[0])
+        seen.add(ranked[0])
+    changed = True
+    while len(selected) < cap and changed:
+        changed = False
+        for name in ranked:
+            if name in seen:
+                continue
+            linked = any(
+                name in graph.uses.get(s, ()) or s in graph.uses.get(name, ())
+                for s in selected
+            )
+            if not linked and selected:
+                continue
+            selected.append(name)
+            seen.add(name)
+            changed = True
+            if len(selected) >= cap:
+                return selected
+    for name in ranked:
+        if len(selected) >= cap:
+            break
+        if name not in seen:
+            selected.append(name)
+            seen.add(name)
+    return selected
+
+
+def _replace_internals(
+    vm: ViewModel,
+    names: list[str],
+    graph: RepositoryGraph,
+) -> None:
+    keep = [e for e in vm.elements if e.external or e.kind in {"actor", "system", "datastore", "external_system", "deployment_node"}]
+    used = {e.name.casefold() for e in keep}
+    next_i = 1
+    internals: list[ViewElement] = []
+    for name in names:
+        if name.casefold() in used:
+            continue
+        node = graph.nodes.get(name)
+        if node is None:
+            continue
+        internals.append(
+            ViewElement(
+                id=f"E{next_i}",
+                name=name,
+                kind="component",
+                role=node.layer,
+                evidence=Evidence(file=node.path, symbol=name, excerpt=f"{name} [{node.layer}]"),
+                support="observed",
+            )
+        )
+        used.add(name.casefold())
+        next_i += 1
+    for el in keep:
+        el.id = f"E{next_i}"
+        next_i += 1
+    vm.elements = internals + keep
+    vm.relations = []
+    vm.groups = []
+    vm.notes = list(dict.fromkeys(list(vm.notes) + ["rebuilt boxes from file-graph types, not directories"]))
+
+
+def _insert_owner_calls(vm: ViewModel, graph: RepositoryGraph) -> int:
+    owners = {e.id: owner_type(e, graph) for e in vm.elements}
+    have: set[tuple[str, str]] = {(rel.frm, rel.to) for rel in vm.relations}
+    ids = [e.id for e in vm.elements if not e.external and e.kind not in {"actor", "system", "datastore"}]
+    added = 0
+    extra = 0
+    relations = list(vm.relations)
+    order = max((r.order or 0 for r in relations), default=0)
+    for src_id in ids:
+        src_t = owners.get(src_id)
+        if not src_t:
+            continue
+        for dst_t, method in sorted(graph.calls.get(src_t, ())):
+            dst_id = next((i for i in ids if owners.get(i) == dst_t), None)
+            if not dst_id or (src_id, dst_id) in have:
+                continue
+            order += 1
+            have.add((src_id, dst_id))
+            node = graph.nodes.get(src_t)
+            relations.append(
+                ViewRelation(
+                    id=_next_relation_id(relations, extra),
+                    frm=src_id,
+                    to=dst_id,
+                    kind="calls",
+                    label=method or "calls",
+                    order=order,
+                    evidence=Evidence(
+                        file=node.path if node else None,
+                        symbol=src_t,
+                        excerpt=f"{src_t} calls {dst_t}.{method}",
+                    ),
+                    support="observed",
+                )
+            )
+            extra += 1
+            added += 1
+    vm.relations = relations
+    return added
+
+
+def _recover_architecture(
+    vm: ViewModel,
+    graph: RepositoryGraph,
+    spec: ViewSpecification | None,
+    scope: RepositoryScope | None,
+    knowledge: KnowledgeBase,
+) -> int:
+    """Replace directory boxes with connected file-graph types and fill uses/calls."""
+    vtype = _view_type(vm, spec)
+    if vtype in _RUNTIME_VIEWS:
+        return _insert_owner_uses(vm, graph)
+    internals = [
+        e
+        for e in vm.elements
+        if not e.external and e.kind not in {"actor", "system", "datastore", "external_system", "deployment_node"}
+    ]
+    prefer = [e.name for e in internals if not folder_like_name(e.name, graph, knowledge)]
+    bad = [e for e in internals if folder_like_name(e.name, graph, knowledge)]
+    need_rebuild = (not internals) or (len(bad) >= max(1, (len(internals) + 1) // 2))
+    if need_rebuild:
+        names = _connected_types(graph, prefer=prefer, scope=scope)
+        _replace_internals(vm, names, graph)
+    elif len(internals) > _COMPONENT_CAP:
+        ranked = sorted(
+            internals,
+            key=lambda e: -(graph.degree(owner_type(e, graph) or e.name) if owner_type(e, graph) else 0),
+        )
+        keep_ids = {e.id for e in ranked[:_COMPONENT_CAP]}
+        keep_ids |= {
+            e.id
+            for e in vm.elements
+            if e.external or e.kind in {"actor", "system", "datastore", "external_system"}
+        }
+        vm.elements = [e for e in vm.elements if e.id in keep_ids]
+        vm.relations = [r for r in vm.relations if r.frm in keep_ids and r.to in keep_ids]
+        vm.notes = list(dict.fromkeys(list(vm.notes) + [f"kept {_COMPONENT_CAP} highest-degree components"]))
+    added = _insert_owner_uses(vm, graph)
+    if vtype == "sequence_view":
+        added += _insert_owner_calls(vm, graph)
+    return added
+
+
 def apply_facts(
     vm: ViewModel,
     graph: RepositoryGraph,
@@ -491,7 +728,7 @@ def apply_facts(
     elif unit == "type":
         added_rels = _insert_type_edges(vm, graph, spec, knowledge, keep)
     else:
-        added_rels = _insert_owner_uses(vm, graph)
+        added_rels = _recover_architecture(vm, graph, spec, scope, knowledge)
         vm.groups = []
 
     notes = list(vm.notes)

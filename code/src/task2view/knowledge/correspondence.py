@@ -172,6 +172,19 @@ def _rank(
             item.viewpoint_id,
         )
     )
+    blob = " ".join(phrases).casefold()
+    if "integration test" in blob:
+        for row in ranked:
+            if row.viewpoint_id in {"scenario", "control-flow"}:
+                row.score += 4.0
+                row.reasons.append("integration-test task keeps a scenario view")
+        ranked.sort(
+            key=lambda item: (
+                -item.score,
+                preferred.index(item.viewpoint_id) if item.viewpoint_id in preferred else 99,
+                item.viewpoint_id,
+            )
+        )
     if not ranked:
         raise PipelineError(f"No candidate viewpoints for stakeholder {role_id}")
     return ranked, task_concerns, preferred, phrases, vb_rows, dropped
