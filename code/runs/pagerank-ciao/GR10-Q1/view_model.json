@@ -1,0 +1,357 @@
+{
+  "request_id": "GR10-Q1",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Assigned",
+      "kind": "component",
+      "role": "Represents the assigned state of a report.",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Assigned.java",
+        "symbol": "Assigned",
+        "excerpt": "public class Assigned implements ReportStatus"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Citizen",
+      "kind": "component",
+      "role": "Represents a citizen user entity.",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Citizen.java",
+        "symbol": "Citizen",
+        "excerpt": "public class Citizen extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "MunicipalOperator",
+      "kind": "component",
+      "role": "Represents a municipal operator user entity.",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/MunicipalOperator.java",
+        "symbol": "MunicipalOperator",
+        "excerpt": "public class MunicipalOperator extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "Report",
+      "kind": "component",
+      "role": "Represents municipal reports and issue tracking state.",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "Report",
+        "excerpt": "public class Report"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "Resolved",
+      "kind": "component",
+      "role": "Represents the resolved state of a report.",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Resolved.java",
+        "symbol": "Resolved",
+        "excerpt": "public class Resolved implements ReportStatus"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "User",
+      "kind": "component",
+      "role": "Represents the core user entity abstraction.",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/User.java",
+        "symbol": "User",
+        "excerpt": "public abstract class User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E11",
+      "name": "UserDashboardGUI",
+      "kind": "component",
+      "role": "Provides the user dashboard interface for citizens and municipal operators.",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "UserDashboardGUI",
+        "excerpt": "public class UserDashboardGUI"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E16",
+      "name": "UserService",
+      "kind": "component",
+      "role": "Manages business logic and persistence operations for users.",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/UserService.java",
+        "symbol": "UserService",
+        "excerpt": "public class UserService"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E2",
+      "to": "E10",
+      "kind": "uses",
+      "label": "extends",
+      "order": 7,
+      "evidence": {
+        "file": "src/main/java/Entity/Citizen.java",
+        "symbol": "Citizen",
+        "excerpt": "public class Citizen extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E5",
+      "to": "E10",
+      "kind": "uses",
+      "label": "extends",
+      "order": 6,
+      "evidence": {
+        "file": "src/main/java/Entity/MunicipalOperator.java",
+        "symbol": "MunicipalOperator",
+        "excerpt": "public class MunicipalOperator extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E1",
+      "to": "E7",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Assigned.java",
+        "symbol": "Assigned",
+        "excerpt": "Assigned uses Report"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R5",
+      "from": "E7",
+      "to": "E1",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "Report",
+        "excerpt": "Report uses Assigned"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R8",
+      "from": "E7",
+      "to": "E2",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "Report",
+        "excerpt": "Report uses Citizen"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R12",
+      "from": "E7",
+      "to": "E5",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "Report",
+        "excerpt": "Report uses MunicipalOperator"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R17",
+      "from": "E7",
+      "to": "E9",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "Report",
+        "excerpt": "Report uses Resolved"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R23",
+      "from": "E9",
+      "to": "E7",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Resolved.java",
+        "symbol": "Resolved",
+        "excerpt": "Resolved uses Report"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R30",
+      "from": "E11",
+      "to": "E2",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "UserDashboardGUI",
+        "excerpt": "UserDashboardGUI uses Citizen"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R38",
+      "from": "E11",
+      "to": "E5",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "UserDashboardGUI",
+        "excerpt": "UserDashboardGUI uses MunicipalOperator"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R47",
+      "from": "E11",
+      "to": "E7",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "UserDashboardGUI",
+        "excerpt": "UserDashboardGUI uses Report"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R57",
+      "from": "E11",
+      "to": "E10",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "UserDashboardGUI",
+        "excerpt": "UserDashboardGUI uses User"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R68",
+      "from": "E16",
+      "to": "E2",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/UserService.java",
+        "symbol": "UserService",
+        "excerpt": "UserService uses Citizen"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R80",
+      "from": "E16",
+      "to": "E5",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/UserService.java",
+        "symbol": "UserService",
+        "excerpt": "UserService uses MunicipalOperator"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R93",
+      "from": "E16",
+      "to": "E10",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/UserService.java",
+        "symbol": "UserService",
+        "excerpt": "UserService uses User"
+      },
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "RI-6",
+    "flexibility",
+    "compatibility",
+    "data-protection"
+  ],
+  "notes": [
+    "kept 8 highest-degree components",
+    "inserted 13 graph edges among selected files"
+  ]
+}

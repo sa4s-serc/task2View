@@ -1,0 +1,83 @@
+{
+  "request_id": "GR10-Q4",
+  "view_type": "context_view",
+  "granularity": "system_or_context_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Citizen",
+      "kind": "actor",
+      "role": "Primary business actor reporting issues and viewing submissions",
+      "external": true,
+      "evidence": {
+        "file": "src/main/java/Entity/Citizen.java",
+        "symbol": "Citizen",
+        "excerpt": "@Entity\n@DiscriminatorValue(\"CITIZEN\")\npublic class Citizen extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "MunicipalOperator",
+      "kind": "actor",
+      "role": "Municipal staff managing reports, updating statuses, and adding internal notes",
+      "external": true,
+      "evidence": {
+        "file": "src/main/java/Entity/MunicipalOperator.java",
+        "symbol": "MunicipalOperator",
+        "excerpt": "@Entity\n@DiscriminatorValue(\"MUNICIPAL_OPERATOR\")\npublic class MunicipalOperator extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "ActivityMonitoringGUI.java",
+      "kind": "system",
+      "role": "software system under analysis",
+      "external": false,
+      "evidence": {
+        "file": "src",
+        "symbol": null,
+        "excerpt": "repository source root"
+      },
+      "support": "inferred",
+      "agreement": null
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "inferred",
+      "agreement": null
+    },
+    {
+      "id": "R3",
+      "from": "E2",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "inferred",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "interaction-capability"
+  ],
+  "notes": [
+    "Context view mapped strictly to actors (Citizen, MunicipalOperator) interacting with the system boundary (MunicipalIssueReportingSystem) based on repository evidence.",
+    "added system boundary from source-root path",
+    "context view: actors and system only",
+    "linked 2 actors to the system boundary"
+  ]
+}

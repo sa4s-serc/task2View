@@ -1,0 +1,267 @@
+{
+  "request_id": "IS-seat-L3",
+  "stakeholder": "member-of-development-team",
+  "task_summary": "I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes. | modify the seat booking functionality to introduce new booking rules and understand the high-level architecture supporting this functionality | seat booking functionality | identify main components, their responsibilities, interactions, and dependencies to determine which parts of the system need to be modified and which components may be affected",
+  "architectural_concerns": [
+    "maintainability",
+    "control-flow",
+    "connectivity"
+  ],
+  "selected_view": {
+    "view_type": "component_view",
+    "notation": "Component Diagram",
+    "diagram_language": "plantuml",
+    "granularity": "component_or_service_level",
+    "purpose": "Identify top-level modules, subsystems, their specific responsibilities, containment hierarchy, and ownership of the seat booking functionality and reservation storage.",
+    "viewpoint_id": "module-decomposition",
+    "grain_unit": "component"
+  },
+  "required_information": [
+    {
+      "id": "RI-1",
+      "need": "top-level modules and their responsibilities"
+    },
+    {
+      "id": "RI-2",
+      "need": "containment hierarchy"
+    },
+    {
+      "id": "RI-3",
+      "need": "module that owns modify"
+    }
+  ],
+  "declared_gaps": [
+    "control-flow",
+    "connectivity"
+  ],
+  "unanswered_concerns": [
+    "control-flow",
+    "connectivity"
+  ],
+  "selection_trace": {
+    "method": "iso-42010-correspondence",
+    "vb_candidates": [
+      {
+        "column": "decomposition",
+        "vb_name": "Decomposition",
+        "viewpoint_id": "module-decomposition",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "uses",
+        "vb_name": "Uses",
+        "viewpoint_id": "module-uses",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "generalization",
+        "vb_name": "Generalization",
+        "viewpoint_id": "module-generalization",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "layered",
+        "vb_name": "Layered",
+        "viewpoint_id": "module-layered",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "cnc",
+        "vb_name": "C&C (various)",
+        "viewpoint_id": "cnc-runtime",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "deployment",
+        "vb_name": "Deployment",
+        "viewpoint_id": "allocation-deployment",
+        "level": "s",
+        "rank": 2,
+        "beyond_views": false
+      },
+      {
+        "column": "implementation",
+        "vb_name": "Implementation",
+        "viewpoint_id": "code-mapping",
+        "level": "s",
+        "rank": 2,
+        "beyond_views": false
+      },
+      {
+        "column": "interface-spec",
+        "vb_name": "Interface Spec",
+        "viewpoint_id": "api-contract",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "context",
+        "vb_name": "Context",
+        "viewpoint_id": "context",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      }
+    ],
+    "task_concerns": [
+      "maintainability"
+    ],
+    "preferred_viewpoints": [
+      "module-decomposition",
+      "module-uses",
+      "code-mapping",
+      "context"
+    ],
+    "ranked": [
+      {
+        "viewpoint_id": "module-decomposition",
+        "view_type": "component_view",
+        "vb_column": "decomposition",
+        "vb_level": "d",
+        "score": 12.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "task-cue preferred viewpoint",
+          "stakeholder required viewpoint",
+          "frames task concerns: maintainability"
+        ]
+      },
+      {
+        "viewpoint_id": "module-uses",
+        "view_type": "component_view",
+        "vb_column": "uses",
+        "vb_level": "d",
+        "score": 12.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "task-cue preferred viewpoint",
+          "stakeholder required viewpoint",
+          "frames task concerns: maintainability"
+        ]
+      },
+      {
+        "viewpoint_id": "code-mapping",
+        "view_type": "class_view",
+        "vb_column": "implementation",
+        "vb_level": "s",
+        "score": 9.0,
+        "reasons": [
+          "V&B detail rank 2",
+          "task-cue preferred viewpoint",
+          "stakeholder required viewpoint",
+          "frames task concerns: maintainability"
+        ]
+      },
+      {
+        "viewpoint_id": "context",
+        "view_type": "context_view",
+        "vb_column": "context",
+        "vb_level": "d",
+        "score": 9.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "task-cue preferred viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "cnc-runtime",
+        "view_type": "component_view",
+        "vb_column": "cnc",
+        "vb_level": "d",
+        "score": 5.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "stakeholder required viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "module-generalization",
+        "view_type": "class_view",
+        "vb_column": "generalization",
+        "vb_level": "d",
+        "score": 4.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "frames task concerns: maintainability"
+        ]
+      },
+      {
+        "viewpoint_id": "module-layered",
+        "view_type": "component_view",
+        "vb_column": "layered",
+        "vb_level": "d",
+        "score": 4.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "frames task concerns: maintainability"
+        ]
+      },
+      {
+        "viewpoint_id": "api-contract",
+        "view_type": "component_view",
+        "vb_column": "interface-spec",
+        "vb_level": "d",
+        "score": 3.0,
+        "reasons": [
+          "V&B detail rank 3"
+        ]
+      },
+      {
+        "viewpoint_id": "allocation-deployment",
+        "view_type": "deployment_view",
+        "vb_column": "deployment",
+        "vb_level": "s",
+        "score": 2.0,
+        "reasons": [
+          "V&B detail rank 2"
+        ]
+      },
+      {
+        "viewpoint_id": "control-flow",
+        "view_type": "sequence_view",
+        "vb_column": null,
+        "vb_level": null,
+        "score": 1.0,
+        "reasons": [
+          "stakeholder optional viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "data-model",
+        "view_type": "class_view",
+        "vb_column": null,
+        "vb_level": null,
+        "score": 1.0,
+        "reasons": [
+          "stakeholder optional viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "scenario",
+        "view_type": "sequence_view",
+        "vb_column": null,
+        "vb_level": null,
+        "score": 1.0,
+        "reasons": [
+          "stakeholder optional viewpoint"
+        ]
+      }
+    ],
+    "dropped_beyond_views": [
+      "mapping-between-views",
+      "variability",
+      "rationale"
+    ]
+  }
+}

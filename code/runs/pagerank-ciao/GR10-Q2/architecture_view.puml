@@ -1,0 +1,60 @@
+@startuml
+[Citizen] as E1
+[Credentials] as E2
+[InternalNote] as E3
+[InternalNoteController] as E4
+[InternalNoteGUI] as E5
+[Location] as E6
+[MunicipalOperator] as E7
+[PersistenceService] as E8
+[Report] as E9
+[ReportService] as E10
+[ReportStatus] as E11
+[Resolved] as E12
+[SystemServicesController] as E13
+[User] as E14
+[UserService] as E15
+database "JpaUtil" as E16
+component E17 [
+  ExecutionEnvironmentNode
+  ----
+  execution environment
+]
+E16 --> E17 : deployedTo
+E8 --> E17 : deployedTo
+E1 --> E14
+E3 --> E7
+E3 --> E9
+E4 --> E10
+E4 --> E15
+E5 --> E9
+E5 --> E13
+E5 --> E14
+E7 --> E14
+E9 --> E1
+E9 --> E3
+E9 --> E6
+E9 --> E7
+E9 --> E11
+E9 --> E12
+E10 --> E1
+E10 --> E3
+E10 --> E6
+E10 --> E7
+E10 --> E8
+E10 --> E9
+E10 --> E12
+E10 --> E14
+E11 --> E9
+E12 --> E9
+E12 --> E11
+E13 --> E4
+E13 --> E9
+E13 --> E14
+E14 --> E2
+E15 --> E1
+E15 --> E2
+E15 --> E7
+E15 --> E8
+E15 --> E14
+@enduml

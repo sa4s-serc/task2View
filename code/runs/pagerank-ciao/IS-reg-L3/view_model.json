@@ -1,0 +1,104 @@
+{
+  "request_id": "IS-reg-L3",
+  "view_type": "sequence_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Registration",
+      "kind": "component",
+      "role": "Integration test entry point / UI boundary for user registration",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "symbol": "Registration",
+        "excerpt": "public class Registration"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "StudentFactory",
+      "kind": "component",
+      "role": "Domain service responsible for creating student instances",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java",
+        "symbol": "StudentFactory",
+        "excerpt": "public class StudentFactory implements UserFactory"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "UserManager",
+      "kind": "component",
+      "role": "Orchestration and validation component for user operations",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "UserManager",
+        "excerpt": "public class UserManager"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "UserRegistry",
+      "kind": "datastore",
+      "role": "Persistence layer interaction for users",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "UserRegistry",
+        "excerpt": "private final UserRegistry userRegistry = UserRegistry.getInstance();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R2",
+      "from": "E3",
+      "to": "E2",
+      "kind": "calls",
+      "label": "createUser",
+      "order": 2,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory(); User newUser = factory.createUser(...);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E4",
+      "kind": "dataflow",
+      "label": "registerUser",
+      "order": 3,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [
+    "connectivity",
+    "maintainability"
+  ],
+  "notes": [
+    "Successfully mapped RI-1 through RI-6 using scoped files: Registration (RI-1), UserManager (RI-2), StudentFactory (RI-3), UserRegistry (RI-4), ordered interaction flow (RI-5), and input validation checks yielding IllegalArgumentException paths (RI-6).",
+    "removed 1 unsupported relations"
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "request_id": "IS-reg-L2",
+  "view_type": "sequence_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "LibraryFacade",
+      "kind": "component",
+      "role": "Orchestration and dispatch component for domain actions",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public class LibraryFacade"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Registration",
+      "kind": "component",
+      "role": "Swing UI boundary entry point for user registration",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "symbol": "Registration",
+        "excerpt": "public class Registration {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "UserFactory",
+      "kind": "component",
+      "role": "Factory to instantiate User subclasses (Student or Librarian)",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java",
+        "symbol": "UserFactory",
+        "excerpt": "public interface UserFactory {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "UserManager",
+      "kind": "component",
+      "role": "Domain service responsible for user registration and management",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "UserManager",
+        "excerpt": "public class UserManager {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "PersistenceManager",
+      "kind": "datastore",
+      "role": "Persistence interaction manager via JPA entity manager",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "PersistenceManager",
+        "excerpt": "public class PersistenceManager {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E4",
+      "kind": "calls",
+      "label": "register",
+      "order": 2,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "register",
+        "excerpt": "return userManager.register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E1",
+      "kind": "calls",
+      "label": "register",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "symbol": "register",
+        "excerpt": "LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E4",
+      "to": "E5",
+      "kind": "calls",
+      "label": "save",
+      "order": 4,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E4",
+      "to": "E3",
+      "kind": "calls",
+      "label": "createUser",
+      "order": 3,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "User newUser = factory.createUser(name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [
+    "connectivity",
+    "maintainability"
+  ],
+  "notes": [
+    "Sequence covers the user registration flow from Swing UI boundary, through facade and controller to persistence layer, addressing RI-1 through RI-6."
+  ]
+}

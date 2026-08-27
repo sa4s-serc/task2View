@@ -1,0 +1,386 @@
+{
+  "request_id": "IS-seat-L2",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Login",
+      "kind": "component",
+      "role": "Swing UI boundary component for user authentication",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Login.java",
+        "symbol": "Login",
+        "excerpt": "public class Login"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "Area",
+      "kind": "module",
+      "role": "Entity representing a functional section of a study room containing seats",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+        "symbol": "Area",
+        "excerpt": "@Entity\npublic class Area"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "Reservation",
+      "kind": "module",
+      "role": "Entity representing a seat booking record and state container",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "@Entity\n@Table(name = \"reservation\")\npublic class Reservation extends Subject"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "Seat",
+      "kind": "module",
+      "role": "Entity representing a physical seat within an area",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "@Entity\npublic class Seat"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E12",
+      "name": "Student",
+      "kind": "module",
+      "role": "Entity representing a student user and reservation owner",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "Student",
+        "excerpt": "@Entity\npublic class Student extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E13",
+      "name": "StudyRoom",
+      "kind": "module",
+      "role": "Entity representing a physical library study room",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java",
+        "symbol": "StudyRoom",
+        "excerpt": "@Entity\npublic class StudyRoom"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E15",
+      "name": "TimeSlot",
+      "kind": "module",
+      "role": "Entity representing reservation time intervals",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/TimeSlot.java",
+        "symbol": "TimeSlot",
+        "excerpt": "@Entity\npublic class TimeSlot"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E16",
+      "name": "User",
+      "kind": "module",
+      "role": "Abstract base entity for application users",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/User.java",
+        "symbol": "User",
+        "excerpt": "@Entity\n@Inheritance(strategy = InheritanceType.JOINED)\npublic abstract class User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E5",
+      "to": "E13",
+      "kind": "uses",
+      "label": "studyRoom",
+      "order": 4,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+        "symbol": "Area",
+        "excerpt": "private StudyRoom studyRoom;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E7",
+      "to": "E9",
+      "kind": "uses",
+      "label": "seat",
+      "order": 5,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "private Seat seat;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E7",
+      "to": "E12",
+      "kind": "uses",
+      "label": "student",
+      "order": 6,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "private Student student;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E7",
+      "to": "E15",
+      "kind": "uses",
+      "label": "timeSlot",
+      "order": 7,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "private TimeSlot timeSlot;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E9",
+      "to": "E5",
+      "kind": "uses",
+      "label": "area",
+      "order": 3,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "private Area area;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R10",
+      "from": "E12",
+      "to": "E16",
+      "kind": "uses",
+      "label": "User",
+      "order": 10,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "Student",
+        "excerpt": "public class Student extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R11",
+      "from": "E1",
+      "to": "E12",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Login.java",
+        "symbol": "Login",
+        "excerpt": "Login uses Student"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R13",
+      "from": "E5",
+      "to": "E9",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+        "symbol": "Area",
+        "excerpt": "Area uses Seat"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R16",
+      "from": "E5",
+      "to": "E15",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+        "symbol": "Area",
+        "excerpt": "Area uses TimeSlot"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R20",
+      "from": "E9",
+      "to": "E7",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "Seat uses Reservation"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R25",
+      "from": "E9",
+      "to": "E13",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "Seat uses StudyRoom"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R31",
+      "from": "E9",
+      "to": "E15",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "Seat uses TimeSlot"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R38",
+      "from": "E12",
+      "to": "E7",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "Student",
+        "excerpt": "Student uses Reservation"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R46",
+      "from": "E13",
+      "to": "E5",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java",
+        "symbol": "StudyRoom",
+        "excerpt": "StudyRoom uses Area"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R55",
+      "from": "E13",
+      "to": "E9",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java",
+        "symbol": "StudyRoom",
+        "excerpt": "StudyRoom uses Seat"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R65",
+      "from": "E13",
+      "to": "E15",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java",
+        "symbol": "StudyRoom",
+        "excerpt": "StudyRoom uses TimeSlot"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R76",
+      "from": "E16",
+      "to": "E12",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/User.java",
+        "symbol": "User",
+        "excerpt": "User uses Student"
+      },
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "control-flow",
+    "connectivity"
+  ],
+  "notes": [
+    "Module decomposition view capturing core entity, DTO, boundary, and utility components responsible for seat selection and domain rule encapsulation.",
+    "kept 8 highest-degree components",
+    "inserted 11 graph edges among selected files"
+  ]
+}

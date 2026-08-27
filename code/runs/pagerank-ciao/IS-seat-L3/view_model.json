@@ -1,0 +1,402 @@
+{
+  "request_id": "IS-seat-L3",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Area",
+      "kind": "component",
+      "role": "Represents room areas containing seats.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+        "symbol": "Area",
+        "excerpt": "public class Area"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "NotificationManager",
+      "kind": "component",
+      "role": "Manages dispatching and scheduling notifications for reservation events.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "NotificationManager",
+        "excerpt": "public class NotificationManager implements Observer"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "Reservation",
+      "kind": "component",
+      "role": "Owns modify and handles core reservation business logic, status transitions, and check-in validation.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "public class Reservation extends Subject"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "Seat",
+      "kind": "component",
+      "role": "Represents individual library seats and availability tracking.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "public class Seat"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "SeatSelection",
+      "kind": "component",
+      "role": "UI boundary component for selecting seats during reservation.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "public class SeatSelection"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "StatusEnum",
+      "kind": "component",
+      "role": "Enumerates reservation states.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/StatusEnum.java",
+        "symbol": "StatusEnum",
+        "excerpt": "public enum StatusEnum"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "Student",
+      "kind": "component",
+      "role": "Represents student actors and their associated reservations.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "Student",
+        "excerpt": "public class Student extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "TimeSlot",
+      "kind": "component",
+      "role": "Defines time slots for reservations.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/TimeSlot.java",
+        "symbol": "TimeSlot",
+        "excerpt": "public class TimeSlot"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E11",
+      "name": "ExternalEmailGateway",
+      "kind": "external_system",
+      "role": "External stub gateway for delivering emails.",
+      "external": true,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "symbol": "ExternalEmailGateway",
+        "excerpt": "public class ExternalEmailGateway"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E2",
+      "to": "E9",
+      "kind": "uses",
+      "label": "notification uses Student",
+      "order": 2,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "NotificationManager",
+        "excerpt": "Student student = reservation.getStudent();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E4",
+      "to": "E6",
+      "kind": "uses",
+      "label": "reservation links Seat",
+      "order": 5,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "private Seat seat;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E4",
+      "to": "E9",
+      "kind": "uses",
+      "label": "reservation belongs to Student",
+      "order": 4,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "private Student student;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E6",
+      "to": "E1",
+      "kind": "uses",
+      "label": "Seat belongs to Area",
+      "order": 6,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "private Area area;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E7",
+      "to": "E6",
+      "kind": "uses",
+      "label": "seat selection uses Seat",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "import it.unina.reservations.dto.SeatDTO;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E1",
+      "to": "E6",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+        "symbol": "Area",
+        "excerpt": "Area uses Seat"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R9",
+      "from": "E1",
+      "to": "E10",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+        "symbol": "Area",
+        "excerpt": "Area uses TimeSlot"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R12",
+      "from": "E2",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "NotificationManager",
+        "excerpt": "NotificationManager uses Reservation"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R16",
+      "from": "E2",
+      "to": "E8",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "NotificationManager",
+        "excerpt": "NotificationManager uses StatusEnum"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R21",
+      "from": "E4",
+      "to": "E8",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "Reservation uses StatusEnum"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R27",
+      "from": "E4",
+      "to": "E10",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "symbol": "Reservation",
+        "excerpt": "Reservation uses TimeSlot"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R34",
+      "from": "E6",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "Seat uses Reservation"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R42",
+      "from": "E6",
+      "to": "E10",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "Seat uses TimeSlot"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R51",
+      "from": "E7",
+      "to": "E1",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "SeatSelection uses Area"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R61",
+      "from": "E7",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "SeatSelection uses Reservation"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R72",
+      "from": "E7",
+      "to": "E9",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "SeatSelection uses Student"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R84",
+      "from": "E9",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "Student",
+        "excerpt": "Student uses Reservation"
+      },
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "control-flow",
+    "connectivity"
+  ],
+  "notes": [
+    "RI-1: Top-level modules identified include Boundary (Swing & Web), Controller, Entity, DTO, and State.",
+    "RI-2: Containment hierarchy observed through package structure under it.unina.reservations.",
+    "RI-3: Reservation entity and associated controllers own modify, cancel, and check-in functionality.",
+    "kept 8 highest-degree components",
+    "inserted 12 graph edges among selected files"
+  ]
+}

@@ -1,0 +1,299 @@
+{
+  "request_id": "GR10-Q3",
+  "view_type": "class_view",
+  "granularity": "component_or_service_level",
+  "groups": [
+    {
+      "id": "G1",
+      "name": "Entity",
+      "kind": "package",
+      "contains": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6",
+        "E7",
+        "E8"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Citizen",
+      "kind": "component",
+      "role": "Persistent entity subclass representing a citizen",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Citizen.java",
+        "symbol": "Citizen",
+        "excerpt": "@Entity\n@DiscriminatorValue(\"CITIZEN\")\npublic class Citizen extends User {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Credentials",
+      "kind": "component",
+      "role": "Embeddable value object for user credentials",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Credentials.java",
+        "symbol": "Credentials",
+        "excerpt": "@Embeddable\npublic class Credentials {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "InternalNote",
+      "kind": "component",
+      "role": "Persistent entity representing a note attached to a report",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "internalNotes",
+        "excerpt": "@OneToMany(\n\t\tmappedBy = \"report\",\n\t\tcascade = CascadeType.ALL,\n\t\tfetch = FetchType.EAGER,\n\t\torphanRemoval = true\n\t)\n\tprivate List<InternalNote> internalNotes = new ArrayList<>();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "Location",
+      "kind": "component",
+      "role": "Embeddable value object for report location",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "location",
+        "excerpt": "@Embedded\n\tprivate Location location;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "MunicipalOperator",
+      "kind": "component",
+      "role": "Persistent entity subclass representing a municipal operator",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/MunicipalOperator.java",
+        "symbol": "MunicipalOperator",
+        "excerpt": "@Entity\n@DiscriminatorValue(\"MUNICIPAL_OPERATOR\")\npublic class MunicipalOperator extends User {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "Report",
+      "kind": "component",
+      "role": "Persistent entity representing a municipal issue report",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "Report",
+        "excerpt": "@Entity\n@Table(name = \"reports\")\npublic class Report {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "StatusUpdate",
+      "kind": "component",
+      "role": "Persistent entity tracking status update history for a report",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "statusUpdates",
+        "excerpt": "@OneToMany(mappedBy = \"report\", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)\n\tprivate List<StatusUpdate> statusUpdates = new ArrayList<>();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "User",
+      "kind": "component",
+      "role": "Persistent base entity for system users",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/User.java",
+        "symbol": "User",
+        "excerpt": "@Entity\n@Table(name = \"users\")\n@Inheritance(strategy = InheritanceType.SINGLE_TABLE)\npublic abstract class User {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E8",
+      "kind": "uses",
+      "label": "extends",
+      "order": 1,
+      "evidence": {
+        "file": "src/main/java/Entity/Citizen.java",
+        "symbol": "Citizen",
+        "excerpt": "public class Citizen extends User {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E5",
+      "to": "E8",
+      "kind": "uses",
+      "label": "extends",
+      "order": 2,
+      "evidence": {
+        "file": "src/main/java/Entity/MunicipalOperator.java",
+        "symbol": "MunicipalOperator",
+        "excerpt": "public class MunicipalOperator extends User {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E6",
+      "to": "E1",
+      "kind": "uses",
+      "label": "citizenReporting",
+      "order": 4,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "citizenReporting",
+        "excerpt": "@ManyToOne(fetch = FetchType.LAZY)\n\t@JoinColumn(name = \"citizen_id\", nullable = false)\n\tprivate Citizen citizenReporting;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E6",
+      "to": "E3",
+      "kind": "contains",
+      "label": "internalNotes",
+      "order": 7,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "internalNotes",
+        "excerpt": "private List<InternalNote> internalNotes = new ArrayList<>();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E6",
+      "to": "E4",
+      "kind": "contains",
+      "label": "location",
+      "order": 6,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "location",
+        "excerpt": "@Embedded\n\tprivate Location location;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E6",
+      "to": "E5",
+      "kind": "uses",
+      "label": "operator",
+      "order": 5,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "operator",
+        "excerpt": "@ManyToOne(fetch = FetchType.LAZY)\n\t@JoinColumn(name = \"operator_id\")\n\tprivate MunicipalOperator operator;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E6",
+      "to": "E7",
+      "kind": "contains",
+      "label": "statusUpdates",
+      "order": 8,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "statusUpdates",
+        "excerpt": "private List<StatusUpdate> statusUpdates = new ArrayList<>();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E8",
+      "to": "E2",
+      "kind": "contains",
+      "label": "credentials",
+      "order": 3,
+      "evidence": {
+        "file": "src/main/java/Entity/User.java",
+        "symbol": "credentials",
+        "excerpt": "private Credentials credentials;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E3",
+      "to": "E5",
+      "kind": "calls",
+      "label": "MunicipalOperator",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/InternalNote.java",
+        "symbol": "InternalNote",
+        "excerpt": "InternalNote calls MunicipalOperator (repository graph)"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R14",
+      "from": "E7",
+      "to": "E5",
+      "kind": "calls",
+      "label": "MunicipalOperator",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/StatusUpdate.java",
+        "symbol": "StatusUpdate",
+        "excerpt": "StatusUpdate calls MunicipalOperator (repository graph)"
+      },
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "security",
+    "connectivity",
+    "deployment",
+    "maintainability"
+  ],
+  "notes": [
+    "Identified all persistent entities and embedded objects defined in the domain model packages.",
+    "inserted 4 graph edges among selected files",
+    "removed 2 unsupported relations"
+  ]
+}

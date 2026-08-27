@@ -1,0 +1,186 @@
+{
+  "role_id": "analyst",
+  "stakeholder_name": "Analyst",
+  "viewpoint_id": "data-model",
+  "view_type": "class_view",
+  "task_focus": "database",
+  "concerns": [
+    "security",
+    "data-protection",
+    "connectivity",
+    "deployment",
+    "maintainability",
+    "compatibility"
+  ],
+  "task_concerns": [
+    "maintainability",
+    "compatibility",
+    "data-protection"
+  ],
+  "preferred_viewpoints": [
+    "module-decomposition",
+    "module-uses",
+    "code-mapping",
+    "data-model",
+    "data-flow"
+  ],
+  "phrases": [
+    "modify",
+    "persistence",
+    "database"
+  ],
+  "task": "I am a database engineer. I need to modify the persistence layer to support future changes to the management of municipal reports. Before modifying the database, I need to understand the main data entities stored by the system, the relationships among them, and which information must be persisted throughout the lifecycle of a report. In particular, I need to understand how users, reports, locations, categories, states, state changes, internal notes, and notifications are related, and which parts of the application depend on this persisted information. modify the persistence layer to support future changes to the management of municipal reports persistence layer understand the main data entities, their relationships, persisted information throughout the lifecycle of a report, and application dependencies on this persisted information",
+  "purpose": "Data Model View for database: persistent entities involved in the task. Relations: relations among those entities. Do not: UI and controllers as entities.",
+  "unanswered_concerns": [
+    "security",
+    "connectivity",
+    "deployment",
+    "maintainability"
+  ],
+  "grain": {
+    "viewpoint_id": "data-model",
+    "unit": "type",
+    "nodes": "persistent entities involved in the task",
+    "relations": "relations among those entities",
+    "forbid": "UI and controllers as entities"
+  },
+  "ranked": [
+    {
+      "viewpoint_id": "data-model",
+      "view_type": "class_view",
+      "vb_column": null,
+      "vb_level": null,
+      "score": 11.0,
+      "reasons": [
+        "task-cue preferred viewpoint",
+        "stakeholder optional viewpoint",
+        "frames task concerns: compatibility, data-protection"
+      ]
+    },
+    {
+      "viewpoint_id": "data-flow",
+      "view_type": "dataflow_view",
+      "vb_column": null,
+      "vb_level": null,
+      "score": 11.0,
+      "reasons": [
+        "task-cue preferred viewpoint",
+        "stakeholder required viewpoint",
+        "frames task concerns: data-protection"
+      ]
+    },
+    {
+      "viewpoint_id": "module-uses",
+      "view_type": "component_view",
+      "vb_column": "uses",
+      "vb_level": "d",
+      "score": 9.0,
+      "reasons": [
+        "V&B detail rank 3",
+        "task-cue preferred viewpoint",
+        "stakeholder optional viewpoint",
+        "frames task concerns: maintainability"
+      ]
+    },
+    {
+      "viewpoint_id": "module-decomposition",
+      "view_type": "component_view",
+      "vb_column": "decomposition",
+      "vb_level": "d",
+      "score": 8.0,
+      "reasons": [
+        "V&B detail rank 3",
+        "task-cue preferred viewpoint",
+        "frames task concerns: maintainability"
+      ]
+    },
+    {
+      "viewpoint_id": "code-mapping",
+      "view_type": "class_view",
+      "vb_column": null,
+      "vb_level": null,
+      "score": 5.0,
+      "reasons": [
+        "task-cue preferred viewpoint",
+        "frames task concerns: maintainability"
+      ]
+    },
+    {
+      "viewpoint_id": "allocation-deployment",
+      "view_type": "deployment_view",
+      "vb_column": "deployment",
+      "vb_level": "d",
+      "score": 5.0,
+      "reasons": [
+        "V&B detail rank 3",
+        "stakeholder required viewpoint"
+      ]
+    },
+    {
+      "viewpoint_id": "api-contract",
+      "view_type": "component_view",
+      "vb_column": "interface-spec",
+      "vb_level": "d",
+      "score": 5.0,
+      "reasons": [
+        "V&B detail rank 3",
+        "stakeholder optional viewpoint",
+        "frames task concerns: compatibility"
+      ]
+    },
+    {
+      "viewpoint_id": "context",
+      "view_type": "context_view",
+      "vb_column": "context",
+      "vb_level": "d",
+      "score": 5.0,
+      "reasons": [
+        "V&B detail rank 3",
+        "stakeholder required viewpoint"
+      ]
+    },
+    {
+      "viewpoint_id": "module-layered",
+      "view_type": "component_view",
+      "vb_column": "layered",
+      "vb_level": "d",
+      "score": 4.0,
+      "reasons": [
+        "V&B detail rank 3",
+        "frames task concerns: maintainability"
+      ]
+    },
+    {
+      "viewpoint_id": "module-generalization",
+      "view_type": "class_view",
+      "vb_column": "generalization",
+      "vb_level": "s",
+      "score": 3.0,
+      "reasons": [
+        "V&B detail rank 2",
+        "frames task concerns: maintainability"
+      ]
+    },
+    {
+      "viewpoint_id": "trust-boundary",
+      "view_type": "dataflow_view",
+      "vb_column": null,
+      "vb_level": null,
+      "score": 3.0,
+      "reasons": [
+        "stakeholder required viewpoint",
+        "frames task concerns: data-protection"
+      ]
+    },
+    {
+      "viewpoint_id": "cnc-runtime",
+      "view_type": "component_view",
+      "vb_column": "cnc",
+      "vb_level": "s",
+      "score": 2.0,
+      "reasons": [
+        "V&B detail rank 2"
+      ]
+    }
+  ]
+}

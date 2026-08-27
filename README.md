@@ -55,7 +55,7 @@ cd code
   --diagram-language plantuml
 ```
 
-Generated artifacts go to `code/runs/` (gitignored).
+Generated artifacts go to `code/runs/`. The current `pagerank-ciao` evaluation batch is in git; other run folders stay gitignored.
 
 ## What the pipeline does
 

@@ -1,0 +1,28 @@
+@startuml
+[Area] as E1
+[NotificationManager] as E2
+[Reservation] as E4
+[Seat] as E6
+[SeatSelection] as E7
+[StatusEnum] as E8
+[Student] as E9
+[TimeSlot] as E10
+actor "ExternalEmailGateway" as E11
+E2 --> E9 : notification uses Student
+E4 --> E6 : reservation links Seat
+E4 --> E9 : reservation belongs to Student
+E6 --> E1 : Seat belongs to Area
+E7 --> E6 : seat selection uses Seat
+E1 --> E6
+E1 --> E10
+E2 --> E4
+E2 --> E8
+E4 --> E8
+E4 --> E10
+E6 --> E4
+E6 --> E10
+E7 --> E1
+E7 --> E4
+E7 --> E9
+E9 --> E4
+@enduml

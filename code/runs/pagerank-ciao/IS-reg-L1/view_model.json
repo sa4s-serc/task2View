@@ -1,0 +1,161 @@
+{
+  "request_id": "IS-reg-L1",
+  "view_type": "sequence_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "PersistenceManager",
+      "kind": "component",
+      "role": "Database persistence manager using JPA",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "PersistenceManager",
+        "excerpt": "public class PersistenceManager"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Registration",
+      "kind": "component",
+      "role": "GUI entry point for user registration",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "symbol": "Registration",
+        "excerpt": "public class Registration"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "UserDTO",
+      "kind": "component",
+      "role": "Data Transfer Object for user data representation",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/dto/UserDTO.java",
+        "symbol": "UserDTO",
+        "excerpt": "public class UserDTO"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "UserFactory",
+      "kind": "component",
+      "role": "Factory responsible for creating user instances",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java",
+        "symbol": "UserFactory",
+        "excerpt": "public interface UserFactory"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "UserManager",
+      "kind": "component",
+      "role": "Orchestrates user registration and validation logic",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "UserManager",
+        "excerpt": "public class UserManager"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "UserRegistry",
+      "kind": "component",
+      "role": "Domain registry handling persistence interaction for users",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "symbol": "UserRegistry",
+        "excerpt": "public class UserRegistry"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R2",
+      "from": "E5",
+      "to": "E3",
+      "kind": "uses",
+      "label": "toDTO",
+      "order": 5,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "return toDTO(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E5",
+      "to": "E4",
+      "kind": "uses",
+      "label": "createUser",
+      "order": 2,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory(); User newUser = factory.createUser(...);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E5",
+      "to": "E6",
+      "kind": "calls",
+      "label": "registerUser",
+      "order": 3,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E6",
+      "to": "E1",
+      "kind": "calls",
+      "label": "save",
+      "order": 4,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "symbol": "registerUser",
+        "excerpt": "return persistenceManager.save(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [
+    "connectivity"
+  ],
+  "notes": [
+    "All required information points RI-1 through RI-6 for the user registration scenario have been fully resolved from the codebase.",
+    "removed 1 unsupported relations"
+  ]
+}

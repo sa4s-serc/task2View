@@ -1,0 +1,22 @@
+@startuml
+package "Entity" {
+  [Citizen] as E1
+  [Credentials] as E2
+  [InternalNote] as E3
+  [Location] as E4
+  [MunicipalOperator] as E5
+  [Report] as E6
+  [StatusUpdate] as E7
+  [User] as E8
+}
+E1 --> E8 : extends
+E5 --> E8 : extends
+E6 --> E1 : citizenReporting
+E6 --> E3 : internalNotes
+E6 --> E4 : location
+E6 --> E5 : operator
+E6 --> E7 : statusUpdates
+E8 --> E2 : credentials
+E3 --> E5 : MunicipalOperator
+E7 --> E5 : MunicipalOperator
+@enduml

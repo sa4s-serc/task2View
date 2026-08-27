@@ -1,0 +1,55 @@
+@startuml
+[Login] as E1
+component E5 [
+  Area
+  ----
+  Entity representing a functional section of a study room containing seats
+]
+component E7 [
+  Reservation
+  ----
+  Entity representing a seat booking record and state container
+]
+component E9 [
+  Seat
+  ----
+  Entity representing a physical seat within an area
+]
+component E12 [
+  Student
+  ----
+  Entity representing a student user and reservation owner
+]
+component E13 [
+  StudyRoom
+  ----
+  Entity representing a physical library study room
+]
+component E15 [
+  TimeSlot
+  ----
+  Entity representing reservation time intervals
+]
+component E16 [
+  User
+  ----
+  Abstract base entity for application users
+]
+E5 --> E13 : studyRoom
+E7 --> E9 : seat
+E7 --> E12 : student
+E7 --> E15 : timeSlot
+E9 --> E5 : area
+E12 --> E16 : User
+E1 --> E12
+E5 --> E9
+E5 --> E15
+E9 --> E7
+E9 --> E13
+E9 --> E15
+E12 --> E7
+E13 --> E5
+E13 --> E9
+E13 --> E15
+E16 --> E12
+@enduml

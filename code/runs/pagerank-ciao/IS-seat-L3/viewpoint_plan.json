@@ -1,0 +1,76 @@
+{
+  "views": [
+    {
+      "id": "V1",
+      "viewpoint_id": "module-decomposition",
+      "view_type": "component_view",
+      "notation": "Component Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Identify top-level modules, subsystems, their specific responsibilities, containment hierarchy, and ownership of the seat booking functionality and reservation storage.",
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3"
+      ],
+      "required_evidence": [
+        "modules or subsystems that own the task, named by responsibility",
+        "containment hierarchy"
+      ],
+      "deferred": false
+    },
+    {
+      "id": "V2",
+      "viewpoint_id": "module-uses",
+      "view_type": "component_view",
+      "notation": "Component Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Determine dependencies between modules to understand which components are directly dependent on the reservation storage module and might be affected by modifications to booking rules.",
+      "addresses": [
+        "AQ6"
+      ],
+      "required_evidence": [
+        "modules",
+        "dependencies"
+      ],
+      "deferred": true
+    },
+    {
+      "id": "V3",
+      "viewpoint_id": "cnc-runtime",
+      "view_type": "component_view",
+      "notation": "Component Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Map runtime components and connectors to analyze control-flow interactions between the booking request handler and seat availability checker, as well as connections to external notification services.",
+      "addresses": [
+        "AQ4",
+        "AQ5"
+      ],
+      "required_evidence": [
+        "runtime components and connectors",
+        "control-flow interactions",
+        "external connections"
+      ],
+      "deferred": true
+    },
+    {
+      "id": "V4",
+      "viewpoint_id": "code-mapping",
+      "view_type": "class_view",
+      "notation": "Class Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "class_or_code_level",
+      "purpose": "Bridge the architectural components and the implementing types to prepare for modifying the seat booking code.",
+      "addresses": [
+        "AQ3"
+      ],
+      "required_evidence": [
+        "architecture elements mapped to implementing types"
+      ],
+      "deferred": true
+    }
+  ],
+  "notes": []
+}

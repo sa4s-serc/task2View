@@ -1,0 +1,81 @@
+{
+  "views": [
+    {
+      "id": "V1",
+      "viewpoint_id": "scenario",
+      "view_type": "sequence_view",
+      "notation": "UML Sequence Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Illustrate the component-level collaboration, message exchanges, and failure paths during successful and invalid user registration scenarios.",
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3"
+      ],
+      "required_evidence": [
+        "participants at component grain for the scenario",
+        "ordered sequence of interactions during registration attempts"
+      ],
+      "deferred": false
+    },
+    {
+      "id": "V2",
+      "viewpoint_id": "control-flow",
+      "view_type": "sequence_view",
+      "notation": "UML Sequence Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Detail the exact sequence and control flow of calls across entry points, orchestration services, domain logic, and persistence components.",
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3",
+        "AQ4"
+      ],
+      "required_evidence": [
+        "entry, orchestration, domain, persistence participants",
+        "control flow between API controller, validation service, domain logic, and persistence components"
+      ],
+      "deferred": true
+    },
+    {
+      "id": "V3",
+      "viewpoint_id": "module-decomposition",
+      "view_type": "component_view",
+      "notation": "Component Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Identify the main modules and subsystems responsible for the registration process, their structural containment, and their explicit responsibilities.",
+      "addresses": [
+        "AQ1",
+        "AQ4",
+        "AQ5"
+      ],
+      "required_evidence": [
+        "modules or subsystems that own the task",
+        "responsibilities of components handling registration and persistence"
+      ],
+      "deferred": true
+    },
+    {
+      "id": "V4",
+      "viewpoint_id": "api-contract",
+      "view_type": "component_view",
+      "notation": "Component Diagram",
+      "diagram_language": "plantuml",
+      "granularity": "component_or_service_level",
+      "purpose": "Define the interface contracts, dependencies, and observable error responses provided by registration and validation endpoints.",
+      "addresses": [
+        "AQ3",
+        "AQ5"
+      ],
+      "required_evidence": [
+        "externally visible operations",
+        "components that offer them and interface contracts"
+      ],
+      "deferred": true
+    }
+  ],
+  "notes": []
+}
