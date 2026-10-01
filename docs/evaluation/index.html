@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task2View pilot evaluation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4F46E5"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .diagram {
+      max-height: 68vh;
+      width: 100%;
+      object-fit: contain;
+      background: white;
+      cursor: zoom-in;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased h-screen overflow-hidden">
+  <div class="flex h-screen">
+    <aside class="w-72 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+      <div class="px-4 py-4 border-b border-slate-200">
+        <p class="text-xs font-semibold tracking-wide text-primary uppercase">Task2View</p>
+        <h1 class="text-lg font-semibold leading-snug mt-1">Pilot evaluation</h1>
+        <p class="text-xs text-slate-500 mt-2">Ten goals, three approaches, Marco’s reviews of the two agent conditions.</p>
+      </div>
+      <nav id="nav" class="overflow-y-auto flex-1 py-2"></nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto">
+      <header class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur border-b border-slate-200 px-6 py-4 flex items-start justify-between gap-4">
+        <div>
+          <p id="kicker" class="text-xs font-medium text-slate-500"></p>
+          <h2 id="title" class="text-xl font-semibold mt-0.5"></h2>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button id="prev" type="button" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 bg-white hover:bg-slate-100">Previous</button>
+          <button id="next" type="button" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 bg-white hover:bg-slate-100">Next</button>
+        </div>
+      </header>
+
+      <div class="px-6 py-5 max-w-[1600px]">
+        <section class="bg-white border border-slate-200 rounded-lg p-4">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Prompt</h3>
+          <p id="prompt" class="mt-2 text-sm leading-relaxed whitespace-pre-wrap"></p>
+        </section>
+
+        <section id="columns" class="mt-4 grid grid-cols-1 min-[1100px]:grid-cols-3 gap-4"></section>
+      </div>
+    </main>
+  </div>
+
+  <div id="lightbox" class="hidden fixed inset-0 z-50 bg-slate-900/80 p-6" role="dialog" aria-modal="true">
+    <button id="lightbox-close" type="button" class="absolute top-4 right-4 text-white text-sm px-3 py-1.5 rounded-md bg-slate-800">Close</button>
+    <img id="lightbox-img" alt="" class="max-w-full max-h-full mx-auto object-contain" />
+  </div>
+
+  <script>
+    const APPROACHES = [
+      { key: "skill", name: "Agent + skill", model: "Cursor agent, Task2View skill", folder: "Folder 1" },
+      { key: "plain", name: "Plain agent", model: "Cursor agent, goal and repository", folder: "Folder 2" },
+      { key: "pipeline", name: "Pipeline", model: "Gemini 2.5 Flash, temperature 0.2", folder: "Folder 3" }
+    ];
+
+    let cases = [];
+    let index = 0;
+
+    function groupLabel(item) {
+      return item.system;
+    }
+
+    function renderNav() {
+      const nav = document.getElementById("nav");
+      nav.innerHTML = "";
+      let last = "";
+      cases.forEach((item, i) => {
+        if (item.system !== last) {
+          last = item.system;
+          const heading = document.createElement("p");
+          heading.className = "px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400";
+          heading.textContent = item.system;
+          nav.appendChild(heading);
+        }
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "w-full text-left px-4 py-2 text-sm hover:bg-slate-50 " +
+          (i === index ? "bg-indigo-50 text-primary font-medium border-r-2 border-primary" : "text-slate-700");
+        button.textContent = item.title;
+        button.addEventListener("click", () => show(i));
+        nav.appendChild(button);
+      });
+    }
+
+    function reviewBlock(approach, item) {
+      const review = item.reviews[approach.key];
+      const wrap = document.createElement("div");
+      wrap.className = "mt-3 text-sm leading-relaxed text-slate-700";
+      const label = document.createElement("h4");
+      label.className = "text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1";
+      label.textContent = "Marco’s review";
+      wrap.appendChild(label);
+      if (!review) {
+        const p = document.createElement("p");
+        p.className = "text-slate-500";
+        p.textContent = "The pipeline diagrams were not part of this review.";
+        wrap.appendChild(p);
+        return wrap;
+      }
+      if (review.note) {
+        const note = document.createElement("p");
+        note.className = "text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2";
+        note.textContent = review.note;
+        wrap.appendChild(note);
+      }
+      const body = document.createElement("p");
+      body.className = "whitespace-pre-wrap";
+      body.textContent = review.text;
+      wrap.appendChild(body);
+      return wrap;
+    }
+
+    function show(i) {
+      index = (i + cases.length) % cases.length;
+      const item = cases[index];
+      document.getElementById("kicker").textContent = item.system + " · " + item.stakeholder;
+      document.getElementById("title").textContent = item.title;
+      document.getElementById("prompt").textContent = item.prompt;
+      const columns = document.getElementById("columns");
+      columns.innerHTML = "";
+      APPROACHES.forEach((approach) => {
+        const card = document.createElement("article");
+        card.className = "bg-white border border-slate-200 rounded-lg p-3 flex flex-col";
+        const head = document.createElement("div");
+        head.innerHTML =
+          '<p class="text-xs text-slate-500">' + approach.folder + "</p>" +
+          '<h3 class="font-semibold">' + approach.name + "</h3>" +
+          '<p class="text-xs text-slate-500 mt-0.5">' + approach.model + "</p>";
+        card.appendChild(head);
+        const img = document.createElement("img");
+        img.src = item.images[approach.key];
+        img.alt = approach.name + " diagram for " + item.title;
+        img.className = "diagram mt-3 border border-slate-100 rounded";
+        img.addEventListener("click", () => openLightbox(img.src, img.alt));
+        card.appendChild(img);
+        card.appendChild(reviewBlock(approach, item));
+        columns.appendChild(card);
+      });
+      renderNav();
+      document.querySelector("main").scrollTop = 0;
+      history.replaceState(null, "", "#" + item.id);
+    }
+
+    function openLightbox(src, alt) {
+      const box = document.getElementById("lightbox");
+      const img = document.getElementById("lightbox-img");
+      img.src = src;
+      img.alt = alt;
+      box.classList.remove("hidden");
+      box.classList.add("flex", "items-center", "justify-center");
+    }
+
+    function closeLightbox() {
+      const box = document.getElementById("lightbox");
+      box.classList.add("hidden");
+      box.classList.remove("flex", "items-center", "justify-center");
+    }
+
+    document.getElementById("lightbox").addEventListener("click", (event) => {
+      if (event.target.id === "lightbox" || event.target.id === "lightbox-close") closeLightbox();
+    });
+    document.getElementById("prev").addEventListener("click", () => show(index - 1));
+    document.getElementById("next").addEventListener("click", () => show(index + 1));
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeLightbox();
+      if (event.key === "ArrowLeft") show(index - 1);
+      if (event.key === "ArrowRight") show(index + 1);
+    });
+
+    fetch("cases.json")
+      .then((response) => response.json())
+      .then((data) => {
+        cases = data;
+        const hash = location.hash.replace("#", "");
+        const start = Math.max(0, cases.findIndex((item) => item.id === hash));
+        show(start);
+      });
+  </script>
+</body>
+</html>
