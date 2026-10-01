@@ -54,8 +54,8 @@
 
       <div class="px-6 py-5 max-w-[1600px]">
         <section class="bg-white border border-slate-200 rounded-lg p-4">
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Prompt</h3>
-          <p id="prompt" class="mt-2 text-sm leading-relaxed whitespace-pre-wrap"></p>
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Stakeholder query</h3>
+          <p id="query" class="mt-2 text-sm leading-relaxed whitespace-pre-wrap"></p>
         </section>
 
         <section id="columns" class="mt-4 grid grid-cols-1 min-[1100px]:grid-cols-3 gap-4"></section>
@@ -72,7 +72,7 @@
     const APPROACHES = [
       { key: "skill", name: "Agent + skill", model: "Cursor agent, Task2View skill", folder: "Folder 1" },
       { key: "plain", name: "Plain agent", model: "Cursor agent, goal and repository", folder: "Folder 2" },
-      { key: "pipeline", name: "Pipeline", model: "Gemini 2.5 Flash, temperature 0.2", folder: "Folder 3" }
+      { key: "task2view", name: "Task2View", model: "Gemini 2.5 Flash, temperature 0.2", folder: "Folder 3" }
     ];
 
     let cases = [];
@@ -115,7 +115,7 @@
       if (!review) {
         const p = document.createElement("p");
         p.className = "text-slate-500";
-        p.textContent = "The pipeline diagrams were not part of this review.";
+        p.textContent = "The Task2View diagrams were not part of this review.";
         wrap.appendChild(p);
         return wrap;
       }
@@ -137,7 +137,7 @@
       const item = cases[index];
       document.getElementById("kicker").textContent = item.system + " · " + item.stakeholder;
       document.getElementById("title").textContent = item.title;
-      document.getElementById("prompt").textContent = item.prompt;
+      document.getElementById("query").textContent = item.query;
       const columns = document.getElementById("columns");
       columns.innerHTML = "";
       APPROACHES.forEach((approach) => {
