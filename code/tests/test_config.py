@@ -2,8 +2,8 @@ from pathlib import Path
 
 from task2view.config import apply_pipeline_config, load_pipeline_config
 from task2view.contracts.models import UserRequest
-from task2view.phase3 import SCOPERS
-from task2view.phase4 import EXTRACTORS
+from task2view.phase4 import SCOPERS
+from task2view.phase5 import EXTRACTORS
 
 
 def test_yaml_config_selects_plugins(tmp_path: Path):

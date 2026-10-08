@@ -2,8 +2,9 @@
 
 stakeholder × concerns × task → catalog viewpoint → published grain.
 
-No LLM. No repository. Both the legacy selector and the agentic path call
-this so grain cannot drift between them.
+No LLM. No repository. The agentic path calls this so grain is looked up
+from the catalog after a viewpoint is chosen. With no viewpoint id, the
+same rank chooses.
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from task2view.contracts.models import (
     ViewSpecification,
 )
 from task2view.knowledge.loader import KnowledgeBase
-from task2view.phase2.selector import (
+from task2view.knowledge.selector import (
     _NOTATION_LABEL,
     _granularity,
     _instantiate_required_information,
@@ -65,6 +66,7 @@ class Correspondence:
     view_type: str
     notation: str
     diagram_language: str
+    diagram_language_rule: str
     granularity: str
     purpose: str
     grain: Grain
@@ -72,6 +74,7 @@ class Correspondence:
     vb_candidates: list[dict[str, Any]]
     dropped_beyond_views: list[str]
     unanswered_concerns: list[str]
+    decided_by: str = "catalog"
 
     def as_dict(self) -> dict[str, Any]:
         payload = {
@@ -86,7 +89,10 @@ class Correspondence:
             "phrases": list(self.phrases),
             "task": self.task,
             "purpose": self.purpose,
+            "diagram_language": self.diagram_language,
+            "diagram_language_rule": self.diagram_language_rule,
             "unanswered_concerns": list(self.unanswered_concerns),
+            "decided_by": self.decided_by,
             "grain": asdict(self.grain),
             "ranked": [row.model_dump(mode="json") for row in self.ranked[:12]],
         }
@@ -126,6 +132,35 @@ def _purpose(viewpoint: dict[str, Any], grain: Grain, focus: str) -> str:
     )
 
 
+def viewpoints_for_concerns(
+    knowledge: KnowledgeBase,
+    concerns: list[str],
+) -> tuple[list[str], bool]:
+    """Viewpoints that frame the concerns the model chose.
+
+    Sorted by how many of those concerns they frame, then by how tightly
+    they match, then by catalog order. Phrase cues are not consulted.
+    The second value is False when no viewpoint frames any chosen concern;
+    the full catalog is returned in that case.
+    """
+    chosen = [concern for concern in concerns if concern and concern != "general"]
+    if not chosen:
+        chosen = [concern for concern in concerns if concern]
+    order = {viewpoint_id: index for index, viewpoint_id in enumerate(knowledge.viewpoints)}
+    scored: list[tuple[int, int, int, str]] = []
+    for viewpoint_id, viewpoint in knowledge.viewpoints.items():
+        frames = [str(item) for item in viewpoint.get("frames_concerns") or []]
+        overlap = [concern for concern in chosen if concern in frames]
+        if not overlap:
+            continue
+        extra = len(set(frames) - set(chosen))
+        scored.append((len(overlap), -extra, -order[viewpoint_id], viewpoint_id))
+    if not scored:
+        return list(knowledge.viewpoints), False
+    scored.sort(reverse=True)
+    return [viewpoint_id for _, _, _, viewpoint_id in scored], True
+
+
 def _rank(
     role_id: str,
     task: str,
@@ -135,7 +170,7 @@ def _rank(
     task_concerns, preferred, phrases = match_task_cues(task, knowledge)
     weights = cue_preference_weights(task, knowledge)
     if not task_concerns:
-        task_concerns = [c["id"] for c in profile.get("concerns", [])]
+        task_concerns = knowledge.primary_concern(role_id)
     vb_rows, dropped = _vb_candidates(role_id, knowledge)
     vb_by_viewpoint = {row["viewpoint_id"]: row for row in vb_rows if row["viewpoint_id"]}
     required = set(profile.get("viewpoints", {}).get("required", []))
@@ -175,9 +210,9 @@ def _rank(
     blob = " ".join(phrases).casefold()
     if "integration test" in blob:
         for row in ranked:
-            if row.viewpoint_id in {"scenario", "control-flow"}:
+            if row.viewpoint_id == "cnc-runtime":
                 row.score += 4.0
-                row.reasons.append("integration-test task keeps a scenario view")
+                row.reasons.append("integration-test task keeps a C&C runtime view")
         ranked.sort(
             key=lambda item: (
                 -item.score,
@@ -200,13 +235,22 @@ def select_correspondence(
     preferred_language: str | None = None,
     viewpoint_id: str | None = None,
 ) -> Correspondence:
-    """Rank catalog viewpoints and bind the winner's published grain."""
+    """Bind a viewpoint's published grain.
+
+    With no viewpoint_id, the catalog rank chooses.
+    A viewpoint_id that exists in the catalog is the caller's choice and wins
+    even when that id was not the rank winner.
+    When `extra_concerns` is given, that list is the concern set (the
+    interpretation agent's choice). Cue phrases are not added on top.
+    With no `extra_concerns`, cue matches on `task` are the concern set.
+    """
     profile = knowledge.stakeholder(role_id)
     ranked, task_concerns, preferred, phrases, vb_rows, dropped = _rank(role_id, task, knowledge)
-    allowed = {row.viewpoint_id for row in ranked}
     winner_id = ranked[0].viewpoint_id
-    if viewpoint_id and viewpoint_id in allowed:
+    decided_by = "catalog"
+    if viewpoint_id and viewpoint_id in knowledge.viewpoints:
         winner_id = viewpoint_id
+        decided_by = "model"
     viewpoint = knowledge.viewpoint(winner_id)
     view_type = viewpoint["view_type"]
     if view_type not in ALLOWED_VIEW_TYPES:
@@ -216,23 +260,32 @@ def select_correspondence(
         or viewpoint.get("default_notation")
         or "semi-formal"
     )
-    from_goal = knowledge.detect_language(goal or task)
-    language = knowledge.choose_language(
+    if preferred_language:
+        preferred_name, preferred_source = preferred_language, "request"
+    else:
+        preferred_name, preferred_source = None, None
+    language_decision = knowledge.explain_language(
         view_type,
-        preferred=preferred_language or from_goal,
+        preferred=preferred_name,
+        preferred_source=preferred_source,
         formality=formality,
         viewpoint_default=viewpoint.get("default_diagram_language"),
     )
+    language = language_decision["language"]
     focus = task_focus(task, phrases)
     grain = bind_grain(knowledge, winner_id, view_type)
-    concerns: list[str] = []
-    for item in profile.get("concerns", []):
-        cid = item["id"] if isinstance(item, dict) else str(item)
-        if cid not in concerns:
-            concerns.append(cid)
-    for concern in list(task_concerns) + list(extra_concerns or []):
-        if concern not in concerns:
-            concerns.append(concern)
+    catalog = knowledge.catalog_concerns()
+    if extra_concerns is not None:
+        concerns = []
+        for concern in extra_concerns:
+            if concern in catalog and concern not in concerns:
+                concerns.append(concern)
+        task_concerns = list(concerns)
+    else:
+        concerns = [concern for concern in task_concerns if concern in catalog]
+    if not concerns:
+        concerns = knowledge.primary_concern(role_id)
+        task_concerns = list(concerns)
     framed = set(viewpoint.get("frames_concerns") or [])
     unanswered = [c for c in concerns if c not in framed and c != "general"]
     return Correspondence(
@@ -248,6 +301,7 @@ def select_correspondence(
         view_type=view_type,
         notation=_NOTATION_LABEL.get(view_type, str(viewpoint["name"])),
         diagram_language=language,
+        diagram_language_rule=language_decision["rule"],
         granularity=_granularity(viewpoint, profile),
         purpose=_purpose(viewpoint, grain, focus),
         grain=grain,
@@ -255,6 +309,7 @@ def select_correspondence(
         vb_candidates=vb_rows,
         dropped_beyond_views=dropped,
         unanswered_concerns=unanswered,
+        decided_by=decided_by,
     )
 
 
@@ -266,7 +321,7 @@ def with_viewpoint(
     preferred_language: str | None = None,
     goal: str | None = None,
 ) -> Correspondence:
-    """Keep the ranked pool; switch grain if viewpoint_id is a ranked candidate."""
+    """Switch to viewpoint_id when it is a catalog id. Unknown ids stay put."""
     if viewpoint_id == correspondence.viewpoint_id:
         return correspondence
     return select_correspondence(
@@ -299,6 +354,7 @@ def spec_from_correspondence(
             view_type=correspondence.view_type,
             notation=correspondence.notation,
             diagram_language=correspondence.diagram_language,
+            diagram_language_rule=correspondence.diagram_language_rule,
             granularity=correspondence.granularity,
             purpose=correspondence.purpose,
             viewpoint_id=correspondence.viewpoint_id,
@@ -308,7 +364,11 @@ def spec_from_correspondence(
         unanswered_concerns=correspondence.unanswered_concerns,
         declared_gaps=list(correspondence.unanswered_concerns),
         selection_trace=SelectionTrace(
-            method="iso-42010-correspondence",
+            method=(
+                "model-viewpoint"
+                if correspondence.decided_by == "model"
+                else "iso-42010-correspondence"
+            ),
             vb_candidates=correspondence.vb_candidates,
             task_concerns=correspondence.task_concerns,
             preferred_viewpoints=correspondence.preferred_viewpoints,

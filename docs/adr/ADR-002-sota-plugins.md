@@ -39,7 +39,7 @@ Viewpoint selection and grain are [ADR-005](ADR-005-correspondence-and-published
 
 There is **no Phase 6 agent**. The rule “do not present unsupported views as fact” stays in the extractor (`unanswered`) and in the Phase 8 gate (empty view fails; unanswered AQs → `pass_with_corrections`).
 
-`--legacy` remains the regex Phase 1–2 path with the same Phase 4–8 plug-ins.
+The regex Phase 1–2 path has been removed. Phase 4–8 plug-ins run after the interpretation agents.
 
 `--skip-extract` stops after the scoper.
 

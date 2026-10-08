@@ -1,4 +1,4 @@
-"""Phase 4a — extract a notation-neutral view model. LLM + repository graph."""
+"""Phase 5. Extract a notation-neutral view model from the scoped files and the graph."""
 
 from __future__ import annotations
 
@@ -20,8 +20,46 @@ from task2view.contracts.models import (
     canonical_element_kind,
     canonical_relation_kind,
 )
-from task2view.phase3.graph import RepositoryGraph
-from task2view.phase4.gemini import DEFAULT_MODEL, generate_json
+from task2view.phase4.graph import RepositoryGraph
+from task2view.llm.gemini import DEFAULT_MODEL, generate_json
+
+_VIEWTYPE_VIEWPOINT = {
+    "context_view": "context",
+    "class_view": "code-mapping",
+    "deployment_view": "allocation-deployment",
+}
+
+
+def ciao_grounding_rules(viewpoint_id: str | None = None, view_type: str | None = None) -> str:
+    """CIAO mapping rules for this viewpoint. Empty when the viewpoint is unknown."""
+    from importlib.resources import files
+    import json
+
+    try:
+        raw = files("task2view.knowledge.data").joinpath("ciao_prompt.json").read_text(encoding="utf-8")
+        doc = json.loads(raw)
+    except (FileNotFoundError, OSError, json.JSONDecodeError):
+        return ""
+    vid = (viewpoint_id or "").strip() or _VIEWTYPE_VIEWPOINT.get(view_type or "", "")
+    block = (doc.get("viewpoints") or {}).get(vid)
+    if not isinstance(block, dict):
+        return ""
+    title = block.get("title") or vid
+    lines = [
+        f"CIAO mapping_rules for {vid} ({title}). One view; ViewModel JSON only.",
+    ]
+    guidelines = doc.get("global_guidelines") or {}
+    objective = guidelines.get("objective")
+    if isinstance(objective, str) and objective.strip():
+        lines.append(objective.strip())
+    for key in ("coverage", "naming", "grounding"):
+        for item in guidelines.get(key) or []:
+            lines.append(f"- {item}")
+    for rule in block.get("mapping_rules") or []:
+        lines.append(f"- {rule}")
+    for forbidden in block.get("forbidden_inferences") or []:
+        lines.append(f"- do not infer: {forbidden}")
+    return "\n".join(lines)
 
 EXTRACT_PROMPT = """You extract an architecture view from source code. Output JSON only.
 
@@ -29,16 +67,17 @@ Follow this catalog grain. Do not invent a different diagram kind.
 {grain}
 
 Shared grounding:
-- Use ONLY the provided files and the repository graph. Do not invent types or files.
-- evidence.file must exist in SOURCE FILES (a representative owner type is enough).
-  evidence.symbol is optional. Keep the published name; do not rename it to the class stem
-  unless the grain unit is type.
-- Never dump every class unless grain unit is type. Never draw parent-directory boxes
-  as the model unless the grain is layers.
-- For component, module, or sequence views, every non-actor box/lifeline MUST be one
-  of ALLOWED NAMES (file stems). Never name a box Boundary, Entity, DTO, Controller,
-  Database, a Java package, or the [dir] value from the graph.
+- Use ONLY the scoped SOURCE FILES and the scoped file graph below. Do not invent types or files.
+- Publish the smallest model that answers the ANALYSIS PLAN. Do not
+  draw one box per scoped file. A file that no task names is not a box.
+- evidence.file must be a path in SOURCE FILES. evidence.symbol is optional and must be
+  a groundable file stem when present.
+- If grain unit is type, published names may be those file stems. Otherwise name boxes
+  by responsibility; ground each to one stem. Never rename a responsibility box to a
+  folder, package, or [dir] value.
+- Never name a box Boundary, Entity, DTO, Controller, Database, or a Java package.
 - Actors, datastores, and external systems may be external.
+- Do not try to answer DECLARED GAPS in this view. List them in unanswered if asked.
 - support is "observed" if a file excerpt shows it, otherwise "inferred".
 - Answer each required_information id or list it in unanswered.
 
@@ -60,17 +99,29 @@ view_type: {view_type}
 viewpoint_id: {viewpoint_id}
 granularity: {granularity}
 purpose: {purpose}
+
+ANALYSIS PLAN (answer these tasks from the files they name):
+{plan}
+
+QUESTIONS this view must answer:
+{questions}
+
 required_information:
 {required}
 
-ALLOWED NAMES (file stems; use these as box/lifeline labels):
+DECLARED GAPS (other viewpoints; do not add boxes to cover these):
+{gaps}
+
+GROUNDABLE FILE STEMS (evidence only; not a list of boxes to draw):
 {allowed}
 
-FILE/DIRECTORY GRAPH (kept files; parent directory in [dir]; import-like uses edges; scoped files first):
+SCOPED FILE GRAPH (scoped files only; [dir] is the parent directory, not a box):
 {graph}
 
 SOURCE FILES:
 {files}
+
+{ciao_grounding}
 """
 
 
@@ -260,6 +311,25 @@ def _model_from_dict(raw: dict, request_id: str, view_spec: ViewSpecification) -
     )
 
 
+def _plan_text(analysis_plan) -> str:
+    if analysis_plan is None or not getattr(analysis_plan, "analysis_tasks", None):
+        return "(none. Answer the questions from the scoped files.)"
+    lines = [
+        f"goal: {analysis_plan.analysis_goal}",
+        f"viewpoint: {analysis_plan.target_view}",
+        f"granularity: {analysis_plan.target_granularity}",
+        "constraints: " + ("; ".join(analysis_plan.constraints or []) or "(none)"),
+    ]
+    for task in analysis_plan.analysis_tasks:
+        lines.append(
+            f"- {task.id} answers {', '.join(task.addresses) or '?'}: {task.goal}"
+        )
+        lines.append("  starting points: " + ", ".join(task.starting_points) or "(none)")
+        lines.append("  files: " + ", ".join(task.candidate_locations) or "(none)")
+        lines.append("  evidence: " + "; ".join(task.expected_evidence) or "(none)")
+    return "\n".join(lines)
+
+
 def extract_view(
     view_spec: ViewSpecification,
     scope: RepositoryScope,
@@ -270,13 +340,19 @@ def extract_view(
     samples: int = 1,
     generate=generate_json,
     prompt_template: str = EXTRACT_PROMPT,
+    analysis_plan=None,
 ) -> ViewModel:
     from task2view.knowledge.loader import load_knowledge
 
     if not scope.candidate_areas:
         raise PipelineError("scope is empty; cannot extract a view")
     required = "\n".join(f"- {i.id}: {i.need}" for i in view_spec.required_information)
+    questions = "\n".join(
+        f"- {q.id}: {q.text}" for q in (view_spec.architectural_questions or [])
+    ) or "(none; answer required_information only)"
+    gaps = ", ".join(view_spec.unanswered_concerns or view_spec.declared_gaps or []) or "(none)"
     prefer: list[str] = []
+    scoped_paths = {cand.path for cand in scope.candidate_areas}
     for cand in scope.candidate_areas:
         prefer.extend(graph.path_to_types.get(cand.path, []))
     kb = load_knowledge()
@@ -289,10 +365,17 @@ def extract_view(
         ),
         granularity=view_spec.selected_view.granularity,
         purpose=view_spec.selected_view.purpose,
+        plan=_plan_text(analysis_plan),
+        questions=questions,
         required=required,
-        graph=graph.summary(prefer=prefer),
+        gaps=gaps,
+        graph=graph.summary(prefer=prefer, only_paths=scoped_paths),
         allowed=", ".join(dict.fromkeys(prefer)) or "(none in scope)",
         files=_pack_files(repo_root, scope),
+        ciao_grounding=ciao_grounding_rules(
+            view_spec.selected_view.viewpoint_id,
+            view_spec.selected_view.view_type,
+        ),
     )
     built: list[ViewModel] = []
     for _ in range(max(1, samples)):

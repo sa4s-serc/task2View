@@ -5,6 +5,9 @@
 # Extra profiles that V&B folds into a coarser row (security analyst → Analyst,
 # SRE → Infrastructure support) keep the V&B row id as `vb_row` and add
 # concern/task specialisation on top.
+#
+# Viewpoint lists are CIAO-aligned (context, cnc-runtime, module-decomposition,
+# code-mapping, decision-record, allocation-deployment).
 
 defaults: &defaults
   presentation:
@@ -52,8 +55,8 @@ stakeholders:
       allow_inference: false
       on_missing_evidence: declare-gap
     viewpoints:
-      required: [scenario, control-flow, code-mapping, api-contract]
-      optional: [module-uses, context]
+      required: [code-mapping]
+      optional: [context]
 
   - id: member-of-development-team
     <<: *defaults
@@ -73,8 +76,8 @@ stakeholders:
           every module named in the change description resolves to a directory
           or file present in the repository
     viewpoints:
-      required: [module-decomposition, module-uses, cnc-runtime, code-mapping]
-      optional: [control-flow, data-model, scenario]
+      required: [module-decomposition, cnc-runtime, code-mapping]
+      optional: []
 
   - id: maintainer
     <<: *defaults
@@ -94,8 +97,8 @@ stakeholders:
       vocabulary: implementation
       include_rationale: true
     viewpoints:
-      required: [module-decomposition, module-uses, cnc-runtime, code-mapping]
-      optional: [control-flow, decision-record]
+      required: [module-decomposition, cnc-runtime, code-mapping]
+      optional: [decision-record]
 
   - id: current-and-future-architect
     <<: *defaults
@@ -119,8 +122,8 @@ stakeholders:
       allow_inference: false
       on_missing_evidence: declare-gap
     viewpoints:
-      required: [module-uses, cnc-runtime, decision-record, context]
-      optional: [allocation-deployment, module-layered]
+      required: [cnc-runtime, decision-record, context]
+      optional: [allocation-deployment]
 
   - id: new-stakeholder
     <<: *defaults
@@ -143,7 +146,7 @@ stakeholders:
       allow_inference: true
       on_missing_evidence: omit
     viewpoints:
-      required: [context, module-decomposition, onboarding-path]
+      required: [context, module-decomposition]
       optional: []
 
   - id: project-manager
@@ -163,7 +166,7 @@ stakeholders:
       vocabulary: domain
       include_rationale: true
     viewpoints:
-      required: [context, allocation-deployment, build-work-assignment]
+      required: [context, allocation-deployment]
       optional: [module-decomposition]
 
   - id: analyst
@@ -193,8 +196,8 @@ stakeholders:
       grounding_rate_min: 0.90
       correspondence_violations_max: 0
     viewpoints:
-      required: [context, trust-boundary, data-flow, allocation-deployment]
-      optional: [data-model, api-contract, module-uses]
+      required: [context, allocation-deployment]
+      optional: []
 
   - id: infrastructure-support-personnel
     <<: *defaults
@@ -212,8 +215,8 @@ stakeholders:
       allow_inference: false
       on_missing_evidence: declare-gap
     viewpoints:
-      required: [allocation-deployment, failure-resilience, cnc-runtime]
-      optional: [concurrency, code-mapping]
+      required: [allocation-deployment, cnc-runtime]
+      optional: [code-mapping]
 
   - id: customer
     <<: *defaults
@@ -236,7 +239,7 @@ stakeholders:
       allow_inference: true
       on_missing_evidence: omit
     viewpoints:
-      required: [context, scenario]
+      required: [context]
       optional: []
 
   - id: end-user
@@ -260,7 +263,7 @@ stakeholders:
       allow_inference: true
       on_missing_evidence: omit
     viewpoints:
-      required: [context, scenario]
+      required: [context]
       optional: [cnc-runtime]
 
   - id: designer-of-other-systems
@@ -274,8 +277,8 @@ stakeholders:
       - {id: compatibility, priority: 1}
       - {id: connectivity,  priority: 2}
     viewpoints:
-      required: [api-contract, context]
-      optional: [data-model]
+      required: [context]
+      optional: []
 
   - id: product-line-application-builder
     <<: *defaults
@@ -288,5 +291,5 @@ stakeholders:
       - {id: flexibility,     priority: 1}
       - {id: maintainability, priority: 2}
     viewpoints:
-      required: [module-decomposition, module-uses, context]
+      required: [module-decomposition, context]
       optional: [cnc-runtime, code-mapping]

@@ -5,15 +5,13 @@ from task2view.contracts.models import (
     CleanedFile,
     RequiredInformation,
     SelectedView,
-    UserRequest,
+    SpecQuestion,
     ViewSpecification,
 )
-from task2view.phase0.clean import clean_repository
-from task2view.phase1.intake import normalize_request
-from task2view.phase2.selector import identify_view
-from task2view.phase3 import build_graph, get_scoper
-from task2view.phase3.graph import RepoNode, RepositoryGraph
-from task2view.phase3.seeds import cue_forms, forced_seed_candidates
+from task2view.phase4 import get_scoper
+from tests.support import catalog_scope
+from task2view.phase4.graph import RepoNode, RepositoryGraph
+from task2view.phase4.seeds import cue_forms, forced_seed_candidates
 
 
 def _gr10() -> Path:
@@ -32,15 +30,8 @@ GOAL = (
 
 
 def _scope(strategy: str):
-    corpus = clean_repository(GR10, request_id="REQ-001")
-    spec = identify_view(
-        normalize_request(UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001"))
-    )
-    graph = build_graph(GR10, corpus)
-    scope = get_scoper(strategy).scope(
-        spec, str(GR10), 120_000, corpus=corpus, graph=graph
-    )
-    return corpus, graph, scope
+    result = catalog_scope(GR10, GOAL, stakeholder="Tester", request_id="REQ-001", scope_strategy=strategy)
+    return result.corpus, result.graph, result.scope
 
 
 def _paths(scope) -> set[str]:
@@ -57,6 +48,21 @@ def test_full_keeps_cleaned_corpus():
     assert graph.has_edge("UserRegistrationGUI", "SystemServicesController")
     assert graph.has_edge("UserRegistrationController", "UserService")
     assert graph.has_edge("UserService", "PersistenceService")
+
+
+def test_question_text_seeds_files_the_task_sentence_misses():
+    corpus, graph, _scope_unused = _scope("lexical")
+    from tests.support import catalog_spec
+
+    _request, spec = catalog_spec(GR10, "Show the modules.", stakeholder="Tester", request_id="REQ-001")
+    spec.task_summary = "Show the modules."
+    spec.required_information = [RequiredInformation(id="RI-1", need="top-level modules and their responsibilities")]
+    spec.architectural_questions = [
+        SpecQuestion(id="AQ1", text="Which type implements user registration?", concern="maintainability")
+    ]
+    spec.selected_view.purpose = "modules named by responsibility"
+    scope = get_scoper("lexical").scope(spec, str(GR10), 120_000, corpus=corpus, graph=graph)
+    assert any("UserRegistration" in path for path in _paths(scope))
 
 
 def test_lexical_hits_registration_from_task_and_ri_tokens():

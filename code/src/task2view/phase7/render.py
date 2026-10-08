@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from task2view.contracts.models import ViewModel, ViewRelation
-from task2view.phase4.protocol import register_adapter
+from task2view.phase7.protocol import register_adapter
 
 
 def _ids(vm: ViewModel) -> dict[str, str]:

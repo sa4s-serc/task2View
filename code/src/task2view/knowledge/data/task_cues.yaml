@@ -2,6 +2,7 @@
 # Table 9.1 candidates; it does not invent new viewpoints.
 # Longer cue phrases are matched before shorter ones.
 # weight: specific domain cues outrank generic verbs such as "modify".
+# prefer_viewpoints use CIAO-aligned catalog ids only.
 
 cues:
   - id: behavioural-flow
@@ -22,7 +23,7 @@ cues:
       - request is
       - execution order
     concerns: [control-flow, functional-suitability]
-    prefer_viewpoints: [scenario, control-flow]
+    prefer_viewpoints: [cnc-runtime]
 
   - id: structural-change
     weight: 4
@@ -35,7 +36,7 @@ cues:
       - decomposition
       - package
     concerns: [maintainability]
-    prefer_viewpoints: [module-decomposition, module-uses, code-mapping]
+    prefer_viewpoints: [module-decomposition, code-mapping]
 
   - id: layering
     weight: 6
@@ -47,7 +48,7 @@ cues:
       - dependency rule
       - bced
     concerns: [maintainability, flexibility]
-    prefer_viewpoints: [module-layered, module-uses]
+    prefer_viewpoints: [module-decomposition]
 
   - id: deployment
     weight: 8
@@ -59,7 +60,7 @@ cues:
       - where does it run
       - blast radius
     concerns: [deployment, reliability]
-    prefer_viewpoints: [allocation-deployment, failure-resilience]
+    prefer_viewpoints: [allocation-deployment]
 
   - id: security
     weight: 8
@@ -70,7 +71,7 @@ cues:
       - authorization
       - security
     concerns: [security, data-protection]
-    prefer_viewpoints: [trust-boundary, data-flow, context]
+    prefer_viewpoints: [context]
 
   - id: api
     weight: 7
@@ -81,7 +82,7 @@ cues:
       - contract
       - endpoint
     concerns: [compatibility, connectivity]
-    prefer_viewpoints: [api-contract, context]
+    prefer_viewpoints: [context]
 
   - id: data
     weight: 8
@@ -92,7 +93,7 @@ cues:
       - entity
       - data model
     concerns: [compatibility, data-protection]
-    prefer_viewpoints: [data-model, data-flow]
+    prefer_viewpoints: [code-mapping]
 
   - id: onboarding
     weight: 6
@@ -102,7 +103,7 @@ cues:
       - overview
       - onboarding
     concerns: [general, maintainability]
-    prefer_viewpoints: [context, onboarding-path, module-decomposition]
+    prefer_viewpoints: [context, module-decomposition]
 
   - id: system-context
     weight: 8
@@ -129,4 +130,4 @@ cues:
       - decomposed
       - packages
     concerns: [maintainability]
-    prefer_viewpoints: [module-decomposition, module-uses, context]
+    prefer_viewpoints: [module-decomposition]

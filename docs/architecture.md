@@ -10,20 +10,20 @@ Two inputs: `--goal` (free-text stakeholder/task) and `--code` (repository). One
 
 ## Plan phase → current implementation
 
-| Plan | What the plan specified | What runs today | Artifact |
+| Plan | Code | What runs today | Artifact |
 |---|---|---|---|
-| **1** Stakeholder-Task Interpretation | Interpretation Agent | Gemini interpret agent; role checked against `aliases.yaml` | `stakeholder_task_profile.json` |
-| **2** Concern and Architectural Questions | Question Agent | Gemini questions agent, seeded from the **selected** viewpoint’s required-information templates | `architectural_questions.json` |
-| **3** Knowledge-Grounded Viewpoint Planning | Viewpoint agent + knowledge base | Catalog ranks viewpoints from role × concerns × task cues (no LLM), then the viewpoint agent may only confirm a ranked id | `viewpoint_plan.json`, `view_specification.json` |
-| **4** Repository Analysis | Analysis plan: where to look | Drop binaries; file graph (uses/calls); scoper plug-in (`composite`, `pagerank`, …) | `repository_scope.json` |
-| **5** Evidence Extraction and Grounding | Extraction agents → evidence model | Extractor plug-in (`gemini`, `ciao`, `archagent`) over scoped files; claims grounded to paths | `view_model.json` |
-| **6** Need–Evidence Reconciliation | Rewrite the plan if evidence is missing | Critic writes notes only; it does not change the viewpoint | `structure_report.json` |
-| **7** Specialized View Generation | Per-view generators | Notation adapter (`plantuml`, `mermaid`, …) | `architecture_view.puml` |
-| **8** Validation and Consistency | Validation agent | Semantic gate (names need evidence) + compile | `validation_report.json`, SVG/PNG/JPEG |
+| **1** Stakeholder-Task Interpretation | `phase1/interpret.py` | Gemini; role checked against `aliases.yaml`. Concerns are not chosen here. | `stakeholder_task_profile.json` |
+| **2** Concern and Architectural Questions | `phase2/questions.py` | Gemini writes concerns and questions from the profile. No viewpoint yet. | `architectural_questions.json` |
+| **3** Knowledge-Grounded Viewpoint Planning | `phase3/viewpoint.py` | Gemini chooses one catalog id that can answer those questions, and the diagram language from the registered languages. Grain is looked up afterwards. | `viewpoint_plan.json`, `view_specification.json` |
+| **4** Repository Analysis | `phase4/` | File graph and a scoper propose files. The analysis agent writes one task per question, with starting points, candidate files, evidence, grain, and constraints. | `repository_analysis_plan.json`, `repository_scope.json` |
+| **5** Evidence Extraction and Grounding | `phase5/evidence.py` | One model call per analysis task that names files. Claims that cite another file are dropped and merged. | `architecture_evidence_model.json`, `view_model.json` |
+| **6** Need–Evidence Reconciliation | `phase6/reconcile.py` | Compares each question with the claims and records support, limitations, and unanswered questions. The view is not changed. The diagram language rule is copied onto this plan. | `evidence_aware_plan.json` |
+| **7** Specialized View Generation | `phase7/generate.py` | One agent publishes a view using only the recorded evidence, then a notation adapter writes the diagram. | `architecture_view.puml` |
+| **8** Validation and Consistency | `phase8/validate.py` | Checks faithfulness, question coverage, and consistency with the grain and the diagram language. Names with no backing are removed. | `validation_report.json`, SVG/PNG/JPEG |
 
-Default orchestrator: `agents/orchestrate.py`. `--legacy` skips the Phase 1–3 agents and uses regex intake, then the same catalog rank. `--skip-extract` stops after Phase 4. `--skip-critic` skips only Phase 6.
+Default orchestrator: `agents/orchestrate.py`. `--skip-extract` stops after Phase 4. `--skip-critic` skips only Phase 6.
 
-Phase 4 and Phase 5 stay separate on purpose: the scoper is the analysis plan (candidate files); the extractor is the only stage that claims what the architecture contains.
+Phase 4 writes the analysis plan. The scoper only proposes files. Phase 5 is the only stage that claims what the architecture contains. Phase 3 records why the diagram language was chosen: an explicit request setting, the viewpoint agent's choice, the viewpoint default when the agent names nothing legal, or the formality ladder. A language word in the goal is not scanned.
 
 Typical evaluation command:
 
@@ -34,7 +34,7 @@ task2view run --code /path/to/repo --goal "…" --out runs/demo \
 
 ## What the current runs get right — and what they get wrong
 
-On `pagerank` + `ciao` against the two evaluation repos, **viewpoint choice is often right** and **the drawn boxes are often wrong**.
+On `pagerank` + `ciao` against the two evaluation repos, **viewpoint choice is often right** and **the drawn boxes are often wrong**. The rows below record those runs, including viewpoints (`scenario`, `module-uses`, `data-model`) that are being removed from the catalog. The catalog that remains is the CIAO section set: `context`, `cnc-runtime`, `module-decomposition`, `code-mapping`, `decision-record`, `allocation-deployment`.
 
 | Goal | Viewpoint chosen | What was drawn | Problem |
 |---|---|---|---|
@@ -65,12 +65,11 @@ The knowledge base maps stakeholder, task, and concerns to a viewpoint (Phase 3)
 | If the goal looks like… | Viewpoint | What the view should show |
 |---|---|---|
 | who talks to this system? | context | actors, the system, externals |
-| where do I change X? | module decomposition / uses | subsystems named by **responsibility**, and uses |
-| how is a request processed? | scenario / control flow | participants and ordered interactions |
-| what is stored? | data model | persistent entities |
+| where do I change X? | module decomposition | subsystems named by **responsibility** |
+| how do the runtime parts connect? | component-and-connector | containers and connectors |
+| what is stored / which types implement it? | code mapping | implementation types and files |
 | where does it run? | allocation / deployment | artifacts, nodes, datastores |
-| attack surface / trust | trust boundary | entry points and zone crossings |
-| I’m new here | onboarding path | entry and main subsystems |
+| why was it built this way? | decision record | quality attributes and rationale |
 
 Adding a stakeholder or concern is catalog work under `code/src/task2view/knowledge/data/`.
 

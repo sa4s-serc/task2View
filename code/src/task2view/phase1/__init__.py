@@ -1,3 +1,5 @@
-from task2view.phase1.intake import normalize_request
+"""Phase 1. Stakeholder-task interpretation. Writes the profile, not the questions."""
 
-__all__ = ["normalize_request"]
+from task2view.phase1.interpret import interpret_stakeholder_task
+
+__all__ = ["interpret_stakeholder_task"]

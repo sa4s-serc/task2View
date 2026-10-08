@@ -1,11 +1,8 @@
-from task2view.agents.phase1_interpret import interpret_stakeholder_task
-from task2view.agents.phase2_questions import derive_questions
-from task2view.agents.phase3_viewpoint import plan_viewpoints
+"""Shared agent runtime, schemas, and the orchestrator.
+
+The phase agents live in phase1, phase2, phase3, and phase6.
+"""
+
 from task2view.agents.runtime import AgentRuntime
 
-__all__ = [
-    "AgentRuntime",
-    "derive_questions",
-    "interpret_stakeholder_task",
-    "plan_viewpoints",
-]
+__all__ = ["AgentRuntime"]

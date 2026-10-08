@@ -1,14 +1,8 @@
-"""Phase 2: automate V&B 'Choosing the Views' (steps 1–3).
+"""Catalog helpers for the correspondence kernel.
 
-Step 1 — Candidate view list from Table 9.1.
-Step 2 — Combine: drop documentation-beyond-views; union with the
-          stakeholder profile's required viewpoints (task-specific
-          additions such as scenario/control-flow, which Table 9.1
-          does not list as columns).
-Step 3 — Prioritize: rank by V&B detail, profile requirement, and
-          inspectable task cues. Cap at preferences.max_views.
-
-No repository is read. Conditional applicability is recorded, not evaluated.
+Cue matching, grain labels, and required-information templates.
+The question agent is phase2. The viewpoint agent is phase3.
+No repository is read.
 """
 
 from __future__ import annotations
@@ -16,14 +10,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from task2view.contracts.models import (
-    NormalizedRequest,
-    PipelineError,
-    RequiredInformation,
-    ViewSpecification,
-)
-from task2view.contracts.validate import validate_artifact
-from task2view.knowledge.loader import KnowledgeBase, load_knowledge
+from task2view.contracts.models import PipelineError, RequiredInformation
+from task2view.knowledge.loader import KnowledgeBase
 
 _TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9_-]*")
 _STOP = {
@@ -238,26 +226,3 @@ def _instantiate_required_information(
             )
         )
     return items
-
-
-def identify_view(
-    request: NormalizedRequest,
-    *,
-    knowledge: KnowledgeBase | None = None,
-) -> ViewSpecification:
-    from task2view.knowledge.correspondence import select_correspondence, spec_from_correspondence
-
-    knowledge = knowledge or load_knowledge()
-    correspondence = select_correspondence(
-        request.stakeholder.role,
-        request.task.description,
-        knowledge,
-        goal=request.goal,
-        extra_concerns=list(request.concerns or []),
-        preferred_language=request.preferences.diagram_language,
-    )
-    spec = spec_from_correspondence(request, correspondence, knowledge)
-    validate_artifact("view_specification", spec)
-    if not knowledge.notation_supports(spec.selected_view.diagram_language, spec.selected_view.view_type):
-        raise PipelineError("selected diagram_language does not support view_type")
-    return spec

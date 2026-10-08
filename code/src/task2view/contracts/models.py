@@ -67,6 +67,12 @@ class RequiredInformation(BaseModel):
     need: str
 
 
+class SpecQuestion(BaseModel):
+    id: str
+    text: str
+    concern: str | None = None
+
+
 class SelectedView(BaseModel):
     view_type: str
     notation: str
@@ -75,6 +81,7 @@ class SelectedView(BaseModel):
     purpose: str
     viewpoint_id: str | None = None
     grain_unit: str | None = None
+    diagram_language_rule: str | None = None
 
 
 class RankedCandidate(BaseModel):
@@ -102,6 +109,7 @@ class ViewSpecification(BaseModel):
     architectural_concerns: list[str]
     selected_view: SelectedView
     required_information: list[RequiredInformation]
+    architectural_questions: list[SpecQuestion] = Field(default_factory=list)
     declared_gaps: list[str] = Field(default_factory=list)
     unanswered_concerns: list[str] = Field(default_factory=list)
     selection_trace: SelectionTrace | None = None
@@ -268,7 +276,6 @@ class UserRequest(BaseModel):
     gemini_model: str | None = None
     samples: int = 1
     skip_extract: bool = False
-    legacy: bool = False
     extract_workers: int = 2
     extract_backend: str | None = None
     skip_critic: bool = False

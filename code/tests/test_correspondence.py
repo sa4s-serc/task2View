@@ -1,4 +1,4 @@
-from task2view.knowledge.correspondence import select_correspondence, with_viewpoint
+from task2view.knowledge.correspondence import select_correspondence, viewpoints_for_concerns, with_viewpoint
 from task2view.knowledge.loader import load_knowledge
 
 
@@ -16,9 +16,12 @@ def test_developer_modify_booking_is_module_components():
     assert corr.viewpoint_id == "module-decomposition"
     assert corr.grain.unit == "component"
     assert corr.view_type == "component_view"
+    assert corr.concerns == ["maintainability"]
+    assert "control-flow" not in corr.concerns
+    assert "connectivity" not in corr.concerns
 
 
-def test_tester_l2_registration_stays_scenario():
+def test_tester_l2_registration_stays_cnc_runtime():
     corr = _corr(
         "tester-and-integrator",
         "I am an integration tester. I need to design integration tests for the user "
@@ -26,16 +29,16 @@ def test_tester_l2_registration_stays_scenario():
         "main components involved in registration, their responsibilities, and how they "
         "interact when a new user creates an account.",
     )
-    assert corr.viewpoint_id == "scenario"
-    assert corr.view_type == "sequence_view"
+    assert corr.viewpoint_id == "cnc-runtime"
+    assert corr.view_type == "component_view"
     corr = _corr(
         "tester-and-integrator",
         "I am an integration tester. I need to test the user registration functionality "
         "and understand which system components are involved and how they interact.",
     )
-    assert corr.viewpoint_id == "scenario"
+    assert corr.viewpoint_id == "cnc-runtime"
     assert corr.grain.unit == "component"
-    assert corr.view_type == "sequence_view"
+    assert corr.view_type == "component_view"
 
 
 def test_architect_organization_stays_module_grain():
@@ -46,11 +49,7 @@ def test_architect_organization_stays_module_grain():
         "architectural components, their responsibilities, how the system is decomposed "
         "into different layers or subsystems, and the main dependencies among them.",
     )
-    assert corr.viewpoint_id in {
-        "module-decomposition",
-        "module-uses",
-        "module-layered",
-    }
+    assert corr.viewpoint_id == "module-decomposition"
     assert corr.grain.unit == "component"
 
 
@@ -66,7 +65,7 @@ def test_devops_deploy_is_allocation():
     assert corr.view_type == "deployment_view"
 
 
-def test_database_engineer_is_data_model_types():
+def test_database_engineer_is_code_mapping_types():
     corr = _corr(
         "analyst",
         "I am a database engineer. I need to modify the persistence layer to support "
@@ -74,7 +73,7 @@ def test_database_engineer_is_data_model_types():
         "database, I need to understand the main data entities stored by the system "
         "and the relationships among them.",
     )
-    assert corr.viewpoint_id == "data-model"
+    assert corr.viewpoint_id == "code-mapping"
     assert corr.grain.unit == "type"
     assert corr.view_type == "class_view"
 
@@ -91,15 +90,54 @@ def test_business_analyst_is_context():
     assert corr.view_type == "context_view"
 
 
-def test_with_viewpoint_ignores_ids_outside_the_ranked_pool():
+def test_viewpoints_follow_chosen_concerns_not_phrases():
+    kb = load_knowledge()
+    ids, framed = viewpoints_for_concerns(
+        kb,
+        ["maintainability"],
+    )
+    assert framed is True
+    assert ids[0] == "module-decomposition"
+    assert "cnc-runtime" not in ids
+    text = (
+        "I need to design integration tests for the user registration functionality "
+        "and understand how a request is processed."
+    )
+    opened, covered = viewpoints_for_concerns(kb, ["control-flow"])
+    assert covered is False
+    assert "cnc-runtime" in opened
+    assert "module-decomposition" in opened
+    ranked = select_correspondence("tester-and-integrator", text, kb)
+    assert ranked.viewpoint_id == "cnc-runtime"
+
+
+def test_given_concerns_replace_cue_matches():
+    kb = load_knowledge()
+    corr = select_correspondence(
+        "member-of-development-team",
+        "I need to modify the seat booking functionality and understand the main components involved.",
+        kb,
+        extra_concerns=["deployment", "not-a-concern"],
+    )
+    assert corr.concerns == ["deployment"]
+    assert "maintainability" not in corr.concerns
+
+
+def test_model_viewpoint_overrides_catalog_rank():
     kb = load_knowledge()
     corr = select_correspondence(
         "member-of-development-team",
         "modify seat booking and understand the main components involved",
         kb,
     )
-    same = with_viewpoint(corr, "trust-boundary", kb)
-    assert same.viewpoint_id == corr.viewpoint_id
+    assert corr.viewpoint_id == "module-decomposition"
+    assert corr.decided_by == "catalog"
+    chosen = with_viewpoint(corr, "allocation-deployment", kb)
+    assert chosen.viewpoint_id == "allocation-deployment"
+    assert chosen.decided_by == "model"
+    unknown = with_viewpoint(corr, "trust-boundary", kb)
+    assert unknown.viewpoint_id == corr.viewpoint_id
+    assert unknown.decided_by == "catalog"
 
 
 def test_aliases_for_evaluation_roles():

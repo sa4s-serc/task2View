@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from task2view.contracts.models import CleanedFile, CleanedCorpus
-from task2view.phase3.graph import build_graph
+from task2view.phase4.graph import build_graph
 
 
 def test_python_fixture_uses_directories_not_bced(tmp_path: Path):

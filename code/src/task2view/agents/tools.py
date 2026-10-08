@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from task2view.phase3.graph import RepositoryGraph
+from task2view.phase4.graph import RepositoryGraph
 
 BLOCKED_DIRS = {
     ".git", ".hg", ".svn", ".idea", ".vscode", ".venv", "venv",

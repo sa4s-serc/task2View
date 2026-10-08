@@ -164,20 +164,30 @@ class RepositoryGraph:
             frontier = nxt
         return seen
 
-    def summary(self, limit: int = 80, prefer: list[str] | None = None) -> str:
+    def summary(
+        self,
+        limit: int = 80,
+        prefer: list[str] | None = None,
+        only_paths: set[str] | frozenset[str] | None = None,
+    ) -> str:
+        allowed: set[str] | None = None
+        if only_paths is not None:
+            allowed = {name for name, node in self.nodes.items() if node.path in only_paths}
+        pool = allowed if allowed is not None else set(self.nodes)
         lines = [
-            f"files={len(self.nodes)} uses_edges={sum(len(v) for v in self.uses.values())}",
-            "Nodes are kept source files. [dir] is the parent directory, not a style layer.",
+            f"scoped_files={len(pool)} repo_files={len(self.nodes)} "
+            f"uses_edges={sum(len(v) for v in self.uses.values())}",
+            "Nodes are scoped source files only. [dir] is the parent directory, not a box.",
             "Uses edges come from import-like lines and identifier mentions of other kept files.",
         ]
         seen: set[str] = set()
         ordered: list[str] = []
         for name in prefer or []:
             resolved = self.resolve(name)
-            if resolved and resolved not in seen:
+            if resolved and resolved in pool and resolved not in seen:
                 ordered.append(resolved)
                 seen.add(resolved)
-        for name in sorted(self.nodes, key=lambda n: -self.degree(n)):
+        for name in sorted(pool, key=lambda n: -self.degree(n)):
             if len(ordered) >= max(limit, len(seen)):
                 break
             if name not in seen:
@@ -185,9 +195,9 @@ class RepositoryGraph:
                 seen.add(name)
         for name in ordered:
             node = self.nodes[name]
-            dst = ", ".join(sorted(self.uses.get(name, ()))[:8])
+            dst = ", ".join(sorted(t for t in self.uses.get(name, ()) if t in pool)[:8])
             lines.append(f"{name} [dir={node.layer}] path={node.path} deg={self.degree(name)} uses-> {dst}")
-        omitted = max(0, len(self.nodes) - len(ordered))
+        omitted = max(0, len(pool) - len(ordered))
         if omitted:
             lines.append(f"omitted_from_listing={omitted}")
         if self.parse_failures:

@@ -1,18 +1,20 @@
-from task2view.phase4.protocol import ADAPTERS, NotationAdapter, get_adapter, register_adapter
-from task2view.phase4 import extractors as _extractors  # noqa: F401
-from task2view.phase4 import render  # noqa: F401
-from task2view.phase4.extractors import EXTRACTORS, Extractor, get_extractor, register_extractor
-from task2view.phase4.compile import compile_diagram, compile_run_dir
+"""Phase 4. Repository analysis: file graph, scoper, then the analysis plan."""
+
+from task2view.phase4.graph import RepositoryGraph, build_graph
+from task2view.phase4.protocol import SCOPERS, Scoper, get_scoper, register_scoper
+from task2view.phase4 import (  # noqa: F401
+    scopers_composite,
+    scopers_extra,
+    scopers_full,
+    scopers_lexical,
+    scopers_sota,
+)
 
 __all__ = [
-    "ADAPTERS",
-    "EXTRACTORS",
-    "Extractor",
-    "NotationAdapter",
-    "compile_diagram",
-    "compile_run_dir",
-    "get_adapter",
-    "get_extractor",
-    "register_adapter",
-    "register_extractor",
+    "SCOPERS",
+    "Scoper",
+    "RepositoryGraph",
+    "build_graph",
+    "get_scoper",
+    "register_scoper",
 ]

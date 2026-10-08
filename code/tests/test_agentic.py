@@ -35,20 +35,21 @@ def _scripted(prompt: str, *, model=None):
         return {
             "concerns": ["maintainability", "control-flow"],
             "questions": [
-                {"id": "AQ1", "text": "Which components participate in seat booking?", "priority": 1},
-                {"id": "AQ2", "text": "How do those components interact?", "priority": 2},
+                {"id": "AQ1", "text": "Which components participate in seat booking?"},
+                {"id": "AQ2", "text": "How do those components interact?"},
             ],
         }
-    if "Knowledge-Grounded Viewpoint Planning Agent" in prompt:
-        assert "TASK CUES" in prompt
-        assert "task_cues.yaml" in prompt
-        assert "RANKED CANDIDATES" in prompt
-        assert "DEFAULT GRAIN" in prompt
+    if "Viewpoint Planning Agent" in prompt:
+        assert "RANKED CANDIDATES" not in prompt
+        assert "module-decomposition" in prompt
+        assert "AQ1" in prompt
         return {
             "views": [
                 {
                     "id": "V1",
                     "viewpoint_id": "module-decomposition",
+                    "diagram_language": "plantuml",
+                    "language_reason": "the questions ask for components and how they interact",
                     "addresses": ["AQ1", "AQ2"],
                     "required_evidence": ["modules", "dependencies"],
                     "purpose": "show booking components",
@@ -101,6 +102,52 @@ def _scripted(prompt: str, *, model=None):
             "groups": [],
             "unanswered": [],
         }
+    if "Repository Analysis Agent" in prompt:
+        return {
+            "analysis_goal": "find the modules for seat booking",
+            "target_view": "module-decomposition",
+            "target_granularity": "component",
+            "constraints": ["booking-related code"],
+            "analysis_tasks": [
+                {
+                    "id": "AT1",
+                    "goal": "Which components participate in seat booking?",
+                    "addresses": ["AQ1"],
+                    "starting_points": [],
+                    "candidate_locations": [],
+                    "expected_evidence": ["modules that own booking"],
+                },
+                {
+                    "id": "AT2",
+                    "goal": "How do those components interact?",
+                    "addresses": ["AQ2"],
+                    "starting_points": [],
+                    "candidate_locations": [],
+                    "expected_evidence": ["calls between those modules"],
+                },
+            ],
+        }
+    if "Need-Evidence Reconciliation Agent" in prompt:
+        return {
+            "questions": [
+                {"id": "AQ1", "support": "partial", "rationale": "modules are named, calls are not shown"},
+                {"id": "AQ2", "support": "unsupported", "rationale": "no claim shows a call"},
+            ],
+            "unanswered": ["AQ2"],
+            "limitations": ["the plan named no file"],
+            "rationale": "plantuml is the viewpoint default; the evidence does not show calls",
+        }
+    if "View Generation Agent" in prompt:
+        return {
+            "elements": [
+                {"name": "Registration UI", "kind": "component", "role": "Accepts registration requests"},
+                {"name": "Registration service", "kind": "component", "role": "Creates the user account"},
+            ],
+            "relations": [
+                {"from": "Registration UI", "to": "Registration service", "kind": "calls", "label": "registerUser"}
+            ],
+            "notes": ["scripted view"],
+        }
     if "Completeness Critic" in prompt or "Structure Completeness Critic" in prompt:
         return {"add": [], "notes": ["scripted"]}
     raise AssertionError("unexpected prompt:\n" + prompt[:400])
@@ -117,6 +164,8 @@ def test_agentic_pipeline_with_scripted_agents(tmp_path: Path):
         generate=_scripted,
     )
     assert result.spec.selected_view.viewpoint_id == "module-decomposition"
+    assert result.spec.selection_trace.method == "model-viewpoint"
+    assert result.extras["correspondence.json"]["decided_by"] == "model"
     assert result.spec.selected_view.grain_unit == "component"
     assert "seat booking" in result.spec.task_summary.lower()
     assert result.scope.scope_strategy == "composite"
@@ -131,9 +180,17 @@ def test_agentic_pipeline_with_scripted_agents(tmp_path: Path):
     assert (tmp_path / "correspondence.json").exists()
     assert (tmp_path / "repository_scope.json").exists()
     assert (tmp_path / "view_model.json").exists()
-    assert not (tmp_path / "repository_analysis_plan.json").exists()
+    assert (tmp_path / "repository_analysis_plan.json").exists()
     assert (tmp_path / "architecture_view.puml").exists()
     assert (tmp_path / "structure_report.json").exists()
+    assert (tmp_path / "evidence_aware_plan.json").exists()
+    aware = result.extras["evidence_aware_plan.json"]
+    assert aware["diagram_language"] == "plantuml"
+    assert aware["diagram_language_rule"].startswith("viewpoint agent chose plantuml")
+    assert {row["id"]: row["support"] for row in aware["questions"]} == {
+        "AQ1": "partial",
+        "AQ2": "unsupported",
+    }
 
 
 def test_agentic_stop_after_scope():
@@ -149,4 +206,4 @@ def test_agentic_stop_after_scope():
     assert result.view_model is None
     assert result.scope.candidate_areas
     assert "viewpoint_plan.json" in result.extras
-    assert "repository_analysis_plan.json" not in result.extras
+    assert result.extras["repository_analysis_plan.json"]["analysis_tasks"]

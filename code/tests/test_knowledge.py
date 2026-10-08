@@ -43,9 +43,9 @@ def test_view_projection_is_view_type_keyed():
     assert kb.view_unit("sequence_view") == "component"
     assert kb.view_unit("context_view") == "context"
     assert kb.published_grain("context")["unit"] == "context"
-    assert kb.published_grain("data-model")["unit"] == "type"
-    assert kb.published_grain("scenario")["unit"] == "component"
-    assert kb.view_unit("class_view", "data-model") == "type"
+    assert kb.published_grain("code-mapping")["unit"] == "type"
+    assert kb.published_grain("cnc-runtime")["unit"] == "component"
+    assert kb.view_unit("class_view", "code-mapping") == "type"
     assert kb.view_unit("component_view", "module-decomposition") == "component"
     missing = [vid for vid in kb.viewpoints if vid not in (kb.view_projection.get("published_grain") or {})]
     assert missing == []

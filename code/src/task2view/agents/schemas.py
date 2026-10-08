@@ -26,7 +26,6 @@ class ArchitecturalQuestion(BaseModel):
     id: str
     text: str
     concern: str | None = None
-    priority: int = 1
 
 
 class QuestionSet(BaseModel):
@@ -44,6 +43,7 @@ class PlannedView(BaseModel):
     purpose: str = ""
     addresses: list[str] = Field(default_factory=list)
     required_evidence: list[str] = Field(default_factory=list)
+    diagram_language_rule: str = ""
     deferred: bool = False
 
 
@@ -55,6 +55,7 @@ class ViewpointPlan(BaseModel):
 class AnalysisTask(BaseModel):
     id: str
     goal: str
+    starting_points: list[str] = Field(default_factory=list)
     candidate_locations: list[str] = Field(default_factory=list)
     expected_evidence: list[str] = Field(default_factory=list)
     addresses: list[str] = Field(default_factory=list)
@@ -88,7 +89,10 @@ class ArchitectureEvidenceModel(BaseModel):
 
 
 class EvidenceAwarePlan(BaseModel):
-    views: list[dict[str, Any]] = Field(default_factory=list)
+    viewpoint_id: str | None = None
+    diagram_language: str | None = None
+    diagram_language_rule: str = ""
     questions: list[dict[str, Any]] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
     unanswered: list[str] = Field(default_factory=list)
+    rationale: str = ""

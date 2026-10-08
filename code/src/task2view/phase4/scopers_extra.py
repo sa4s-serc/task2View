@@ -5,12 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from task2view.contracts.models import CleanedCorpus, RepositoryScope, ScopeCandidate, ViewSpecification
-from task2view.phase3.graph import RepositoryGraph
-from task2view.phase3.protocol import register_scoper
-from task2view.phase3.select import budget_select
-from task2view.phase3.seeds import forced_seed_candidates, task_seed_names as _task_seed_names
-from task2view.phase3.scopers_lexical import keywords
-from task2view.phase3.scopers_sota import _require
+from task2view.phase4.graph import RepositoryGraph
+from task2view.phase4.protocol import register_scoper
+from task2view.phase4.select import budget_select
+from task2view.phase4.seeds import forced_seed_candidates, task_seed_names as _task_seed_names
+from task2view.phase4.scopers_lexical import keywords
+from task2view.phase4.scopers_sota import _require
 
 
 @register_scoper

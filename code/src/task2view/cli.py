@@ -6,13 +6,14 @@ import sys
 from pathlib import Path
 
 from task2view.contracts.models import PipelineError, UserRequest
-from task2view.phase4.compile import compile_file, compile_run_dir, parse_formats
+from task2view.phase7.compile import compile_file, compile_run_dir, parse_formats
 from task2view.pipeline import run_pipeline, write_result
 
 
 def _plugin_names() -> dict[str, list[str]]:
-    from task2view.phase3 import SCOPERS
-    from task2view.phase4 import ADAPTERS, EXTRACTORS
+    from task2view.phase4 import SCOPERS
+    from task2view.phase5 import EXTRACTORS
+    from task2view.phase7 import ADAPTERS
 
     return {
         "scopers": sorted(SCOPERS),
@@ -82,11 +83,6 @@ def build_parser() -> argparse.ArgumentParser:
         "--skip-critic",
         action="store_true",
         help="Skip the completeness critic (package regrouping still runs)",
-    )
-    run.add_argument(
-        "--legacy",
-        action="store_true",
-        help="Regex Phase 1–2 instead of interpretation/question/viewpoint agents",
     )
     run.add_argument(
         "--extract-workers",
@@ -184,7 +180,6 @@ def main(argv: list[str] | None = None) -> int:
             samples=args.samples,
             skip_extract=args.skip_extract,
             skip_critic=args.skip_critic,
-            legacy=args.legacy,
             extract_workers=args.extract_workers,
             config=args.config,
         )

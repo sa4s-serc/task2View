@@ -22,7 +22,7 @@ The two documents disagree on LLM-only vs parsers. Feasibility notes record that
 
 ### D1. Default run path is agentic (research-plan phases)
 
-`task2view run` executes the eight plan phases. The previous regex/graph-scoper pipeline remains as `--legacy` so old tests and ablations still work.
+`task2view run` executes the eight plan phases. The regex intake path that this ADR kept as `--legacy` has since been removed.
 
 Numbering in **code** (to keep existing artifact names) vs **PDF**:
 
@@ -95,7 +95,7 @@ Future architecture choices go in `docs/adr/` as new ADRs. Do not silently rewri
 - Natural-language Input 1 no longer depends on a brittle `As a …, I need` regex for the default path.
 - View type is justified by derived questions + knowledge base, not only the word “modify”.
 - Extraction cost and latency rise (several model calls). Free-tier runs should use `--extract-workers 1` if they hit 429.
-- `--legacy` remains for the measured heuristic scoper (composite/lexical/full) until an ablation says otherwise.
+- The regex `--legacy` intake has been removed. Scoper plug-ins (`composite`, `lexical`, `full`, and the rest) still run in Phase 4.
 - Spec v2 JSON contracts are kept where they still fit (`view_specification.json`, `view_model.json`, `validation_report.json`) and extended with plan/evidence artifacts.
 
 ## Out of scope for this change

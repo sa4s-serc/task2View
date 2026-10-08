@@ -125,14 +125,10 @@ class KnowledgeBase:
                 return name
         return None
 
-    def bind_concerns(self, role_id: str | None, text: str) -> list[str]:
-        ordered: list[str] = []
+    def matched_concerns(self, text: str) -> list[str]:
+        """Concerns whose cue phrases appear in `text`. The role profile is not consulted."""
         catalog = self.catalog_concerns()
-        if role_id and role_id in self.stakeholders:
-            for item in self.stakeholders[role_id].get("concerns") or []:
-                cid = item["id"] if isinstance(item, dict) else str(item)
-                if cid in catalog and cid not in ordered:
-                    ordered.append(cid)
+        ordered: list[str] = []
         lowered = (text or "").lower()
         for cue in self.task_cues:
             if any(phrase in lowered for phrase in cue.get("phrases") or []):
@@ -140,6 +136,40 @@ class KnowledgeBase:
                     if cid in catalog and cid not in ordered:
                         ordered.append(cid)
         return ordered
+
+    def primary_concern(self, role_id: str | None) -> list[str]:
+        """Highest-priority concern on the role, used only when the goal matches no cue."""
+        if not role_id or role_id not in self.stakeholders:
+            return []
+        items = self.stakeholders[role_id].get("concerns") or []
+        if not items:
+            return []
+
+        def priority(item: Any) -> int:
+            if isinstance(item, dict):
+                try:
+                    return int(item.get("priority") or 99)
+                except (TypeError, ValueError):
+                    return 99
+            return 99
+
+        first = min(items, key=priority)
+        cid = first["id"] if isinstance(first, dict) else str(first)
+        if cid in self.catalog_concerns():
+            return [cid]
+        return []
+
+    def bind_concerns(self, role_id: str | None, text: str) -> list[str]:
+        """Concerns this goal actually triggers.
+
+        A stakeholder row lists every concern that role might care about.
+        Those are not copied onto the task. Cue phrases in the user's text
+        bind concerns. If none match, only the role's top-priority concern is kept.
+        """
+        matched = self.matched_concerns(text)
+        if matched:
+            return matched
+        return self.primary_concern(role_id)
 
     def choose_language(
         self,
@@ -167,6 +197,50 @@ class KnowledgeBase:
             if self.notation_supports(language, view_type):
                 return language
         raise PipelineError(f"No registered notation supports {view_type}")
+
+    def explain_language(
+        self,
+        view_type: str,
+        *,
+        preferred: str | None,
+        preferred_source: str | None,
+        formality: str,
+        viewpoint_default: str | None = None,
+    ) -> dict[str, str]:
+        """Same order as choose_language. The rule string is what a run can show."""
+        if preferred:
+            language = self.choose_language(
+                view_type,
+                preferred=preferred,
+                formality=formality,
+                viewpoint_default=None,
+            )
+            source = preferred_source or "request"
+            return {
+                "language": language,
+                "rule": f"{source} named {language}",
+            }
+        if viewpoint_default:
+            language = self.choose_language(
+                view_type,
+                preferred=None,
+                formality=formality,
+                viewpoint_default=viewpoint_default,
+            )
+            return {
+                "language": language,
+                "rule": f"viewpoint default: {language}",
+            }
+        language = self.choose_language(
+            view_type,
+            preferred=None,
+            formality=formality,
+            viewpoint_default=None,
+        )
+        return {
+            "language": language,
+            "rule": f"formality {formality} prefers {language}",
+        }
 
 
 @lru_cache(maxsize=1)

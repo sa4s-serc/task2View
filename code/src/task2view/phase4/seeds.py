@@ -1,6 +1,7 @@
 """Required-information forced seeds for every scoper.
 
-Cues come from the goal and required_information text. Files match by type
+Cues come from the task, the questions, the viewpoint purpose, the concerns,
+and the required_information text. Files match by type
 name, path, or (for rare cues) file body. Tokens that hit too many files are
 skipped so a shared package segment cannot force the whole corpus. No
 repository or type names are hard-coded.
@@ -12,8 +13,8 @@ from pathlib import Path
 
 from task2view.contracts.models import CleanedCorpus, ScopeCandidate, ViewSpecification
 from task2view.knowledge.loader import KnowledgeBase, load_knowledge
-from task2view.phase3.graph import RepositoryGraph
-from task2view.phase3.scopers_lexical import keywords
+from task2view.phase4.graph import RepositoryGraph
+from task2view.phase4.scopers_lexical import keywords
 
 _DEFAULTS = {
     "max_files": 8,

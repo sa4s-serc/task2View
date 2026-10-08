@@ -2,15 +2,15 @@ from pathlib import Path
 
 from task2view.contracts.models import (
     Evidence,
-    UserRequest,
     ViewElement,
     ViewModel,
     ViewRelation,
 )
-from task2view.phase4 import get_adapter
-from task2view.phase4.extract import extract_view
-from task2view.phase4.validate import validate_view
-from task2view.pipeline import run_legacy_pipeline, write_result
+from task2view.phase7 import get_adapter
+from task2view.phase5.extract import extract_view
+from task2view.phase8.validate import validate_view
+from task2view.pipeline import write_result
+from tests.support import catalog_scope, complete_extract
 
 
 def _gr10() -> Path:
@@ -73,7 +73,7 @@ def test_plantuml_and_mermaid_emit_sequence():
 
 def test_every_registered_notation_emits_source():
     vm = _fixture_vm()
-    from task2view.phase4 import ADAPTERS
+    from task2view.phase7 import ADAPTERS
 
     markers = {
         "plantuml": "@startuml",
@@ -93,9 +93,7 @@ def test_every_registered_notation_emits_source():
 
 
 def test_semantic_gate_drops_unresolved_and_rewrites():
-    result = run_legacy_pipeline(
-        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
-    )
+    result = catalog_scope(GR10, GOAL, stakeholder="Tester", request_id="REQ-001")
     cleaned, report = validate_view(
         _fixture_vm(),
         result.spec,
@@ -157,16 +155,9 @@ def _fake_generate(prompt: str, *, model=None):
 
 
 def test_extract_with_mocked_gemini_then_gate(tmp_path: Path):
-    result = run_legacy_pipeline(
-        UserRequest(
-            code=str(GR10),
-            goal=GOAL,
-            request_id="REQ-001",
-            scope_strategy="composite",
-            samples=1,
-            legacy=True,
-        ),
-        generate=_fake_generate,
+    result = complete_extract(
+        catalog_scope(GR10, GOAL, stakeholder="Tester", request_id="REQ-001", scope_strategy="composite"),
+        _fake_generate,
     )
     assert result.view_model is not None
     names = {e.name for e in result.view_model.elements}
@@ -183,12 +174,14 @@ def test_extract_with_mocked_gemini_then_gate(tmp_path: Path):
     assert (tmp_path / "validation_report.json").exists()
 
 
-def test_ciao_prompt_inlines_verbatim_prompt_json():
-    from task2view.phase4.extractors import ciao_prompt_template, load_ciao_prompt_json
+def test_ciao_prompt_uses_mapping_rules_not_full_doc():
+    from task2view.phase5.extract import ciao_grounding_rules
+    from task2view.phase5.extractors import ciao_prompt_template, load_ciao_prompt_json
 
     body = load_ciao_prompt_json()
     assert "ISO/IEC/IEEE 42010" in body
-    assert "Do not invent actors, use cases, or relations not present in the repository." in body
+    assert "Examine every line of source code" not in body
+    assert "crucial NO JSON" not in body
     template = ciao_prompt_template()
     filled = template.format(
         view_type="component_view",
@@ -196,23 +189,35 @@ def test_ciao_prompt_inlines_verbatim_prompt_json():
         grain="VIEWPOINT GRAIN (module-decomposition), unit=component",
         granularity="component_or_service_level",
         purpose="test",
-        required="- AQ1: x",
+        questions="- AQ1: x",
+        required="- RI-1: x",
+        gaps="(none)",
         graph="GRAPH",
         files="SOURCE FILES",
+        plan="(none)",
         allowed="HomePageGUI, ReportService",
+        ciao_grounding=ciao_grounding_rules("module-decomposition"),
     )
-    assert "----- BEGIN CIAO prompt.json -----" in filled
-    assert "ISO/IEC/IEEE 42010" in filled
-    assert "grounding_policy" in filled
-    assert "OVERRIDE" in filled
-    assert "Ignore markdown" in filled
-    assert "You follow CIAO grounding rules from CIAO-system/prompt.json" not in filled
-    assert "static analysis produces an AST-derived reference graph" not in filled
-    assert "evidence.symbol is optional" in filled
+    assert "----- BEGIN CIAO prompt.json -----" not in filled
+    assert "Examine every line of source code" not in filled
+    assert "crucial NO JSON" not in filled
+    assert "mapping_rules for module-decomposition" in filled
+    assert "Do not use folder or package names" in filled
+    assert "Do not invent nodes, interfaces, or relationships" not in filled
+    runtime = ciao_grounding_rules("cnc-runtime")
+    assert "mapping_rules for cnc-runtime" in runtime
+    assert "Do not invent nodes, interfaces, or relationships" in runtime
+    assert "exactly one system box" in ciao_grounding_rules("context")
+    assert "Do not invent architecture decision records" in ciao_grounding_rules("decision-record")
+    assert ciao_grounding_rules("component_view") == ""
+    assert ciao_grounding_rules(view_type="deployment_view").startswith(
+        "CIAO mapping_rules for allocation-deployment"
+    )
+    assert "GROUNDABLE FILE STEMS" in filled
+    assert "use these as box/lifeline labels" not in filled
     assert "catalog grain" in filled
     assert "VIEWPOINT GRAIN" in filled
-    assert "Every non-external element must have evidence.file and evidence.symbol" not in filled
-    assert "Emit a relation for every uses/calls edge" not in filled
+    assert "QUESTIONS this view must answer" in filled
 
 
 def test_extract_archagent_and_ciao_backends(tmp_path: Path):
@@ -224,16 +229,16 @@ def test_extract_archagent_and_ciao_backends(tmp_path: Path):
                 _cap["prompt"] = prompt
             return _fake_generate(prompt, model=model)
 
-        result = run_legacy_pipeline(
-            UserRequest(
-                code=str(GR10),
-                goal=GOAL,
+        result = complete_extract(
+            catalog_scope(
+                GR10,
+                GOAL,
+                stakeholder="Tester",
                 request_id=f"REQ-{backend}",
-                extract_backend=backend,
                 diagram_language="mermaid",
-                legacy=True,
             ),
-            generate=generate,
+            generate,
+            backend=backend,
         )
         assert result.view_model is not None
         names = {e.name for e in result.view_model.elements}
@@ -246,23 +251,23 @@ def test_extract_archagent_and_ciao_backends(tmp_path: Path):
             or "sequenceDiagram" in result.diagram_source
         )
         if backend == "ciao":
-            assert "BEGIN CIAO prompt.json" in captured["prompt"]
-            assert "OVERRIDE" in captured["prompt"]
-            assert "ISO/IEC/IEEE 42010" in captured["prompt"]
+            assert "BEGIN CIAO prompt.json" not in captured["prompt"]
+            assert "Examine every line of source code" not in captured["prompt"]
+            assert "CIAO extractor" in captured["prompt"]
+            assert "mapping_rules for cnc-runtime" in captured["prompt"]
             assert "SOURCE FILES" in captured["prompt"]
             assert "omitted=0" in captured["prompt"]
+            assert "GROUNDABLE FILE STEMS" in captured["prompt"]
         if backend == "archagent":
             assert "not the ArchAgent system" in captured["prompt"]
             assert "static analysis produces an AST-derived reference graph" not in captured["prompt"]
-            assert "FILE/DIRECTORY GRAPH" in captured["prompt"] or "filesystem graph" in captured["prompt"].lower()
+            assert "SCOPED FILE GRAPH" in captured["prompt"] or "filesystem graph" in captured["prompt"].lower()
         write_result(tmp_path / backend, result)
         assert (tmp_path / backend / "architecture_view.mmd").exists()
 
 
 def test_extract_view_injectable_generate():
-    result = run_legacy_pipeline(
-        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
-    )
+    result = catalog_scope(GR10, GOAL, stakeholder="Tester", request_id="REQ-001")
     vm = extract_view(
         result.spec,
         result.scope,
@@ -275,11 +280,9 @@ def test_extract_view_injectable_generate():
 
 
 def test_pack_files_never_omits_scoped_paths(tmp_path: Path):
-    from task2view.phase4.extract import _pack_files
+    from task2view.phase5.extract import _pack_files
 
-    result = run_legacy_pipeline(
-        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
-    )
+    result = catalog_scope(GR10, GOAL, stakeholder="Tester", request_id="REQ-001")
     packed = _pack_files(str(GR10), result.scope)
     assert "omitted=0" in packed.split("\n", 1)[0]
     for cand in result.scope.candidate_areas:
@@ -287,26 +290,28 @@ def test_pack_files_never_omits_scoped_paths(tmp_path: Path):
 
 
 def test_graph_summary_includes_scoped_types():
-    result = run_legacy_pipeline(
-        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
-    )
+    result = catalog_scope(GR10, GOAL, stakeholder="Tester", request_id="REQ-001")
     prefer = []
     for cand in result.scope.candidate_areas:
         prefer.extend(result.graph.path_to_types.get(cand.path, []))
-    text = result.graph.summary(limit=5, prefer=prefer)
+    scoped = {c.path for c in result.scope.candidate_areas}
+    text = result.graph.summary(limit=5, prefer=prefer, only_paths=scoped)
     assert "java_ast=" not in text
     assert "javalang" not in text.lower()
-    assert "files=" in text or "parent directory" in text.lower()
+    assert "scoped_files=" in text or "parent directory" in text.lower()
     for name in prefer:
         assert name in text
+    listed = {line.split()[0] for line in text.splitlines() if "[dir=" in line}
+    scoped_names = {
+        name for name, node in result.graph.nodes.items() if node.path in scoped
+    }
+    assert listed <= scoped_names
 
 
 def test_gate_keeps_datastore_and_resolves_via_symbol():
     from task2view.contracts.models import Evidence, ViewElement, ViewRelation
 
-    result = run_legacy_pipeline(
-        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
-    )
+    result = catalog_scope(GR10, GOAL, stakeholder="Tester", request_id="REQ-001")
     vm = ViewModel(
         request_id="REQ-001",
         view_type="deployment_view",
@@ -335,9 +340,7 @@ def test_gate_keeps_datastore_and_resolves_via_symbol():
 
 
 def test_gate_keeps_system_boundary():
-    result = run_legacy_pipeline(
-        UserRequest(code=str(GR10), goal=GOAL, request_id="REQ-001", skip_extract=True, legacy=True)
-    )
+    result = catalog_scope(GR10, GOAL, stakeholder="Tester", request_id="REQ-001")
     vm = ViewModel(
         request_id="REQ-001",
         view_type="context_view",

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from task2view.phase4.compile import compile_diagram, infer_notation, parse_formats
+from task2view.phase7.compile import compile_diagram, infer_notation, parse_formats
 
 
 FAKE_PNG = b"\x89PNG\r\n\x1a\n" + b"fake-png"

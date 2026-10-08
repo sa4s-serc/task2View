@@ -8,21 +8,14 @@ from typing import Any
 from task2view.contracts.models import (
     CleanedCorpus,
     NormalizedRequest,
-    PipelineError,
     RepositoryScope,
     UserRequest,
     ValidationReport,
     ViewModel,
     ViewSpecification,
 )
-from task2view.phase0.clean import clean_repository
-from task2view.phase1.intake import new_request_id, normalize_request
-from task2view.phase2.selector import identify_view
-from task2view.phase3 import build_graph, get_scoper
-from task2view.phase3.graph import RepositoryGraph
-from task2view.phase4 import get_adapter, get_extractor
-from task2view.phase4.gemini import generate_json
-from task2view.phase4.validate import validate_view, write_diagram
+from task2view.phase4.graph import RepositoryGraph
+from task2view.phase8.validate import write_diagram
 
 DIAGRAM_EXT = {
     "plantuml": "puml",
@@ -50,90 +43,11 @@ class PipelineResult:
     extras: dict[str, Any] = field(default_factory=dict)
 
 
-def run_through_phase2(
-    raw: UserRequest,
-) -> tuple[CleanedCorpus, NormalizedRequest, ViewSpecification]:
-    raw.request_id = raw.request_id or new_request_id()
-    corpus = clean_repository(raw.code or raw.repository or "", request_id=raw.request_id)
-    request = normalize_request(raw)
-    request.corpus = {
-        "kept": corpus.counts["kept"],
-        "dropped": corpus.counts["dropped"],
-        "languages": corpus.counts.get("languages", {}),
-    }
-    spec = identify_view(request)
-    return corpus, request, spec
-
-
-def run_through_phase3(raw: UserRequest) -> PipelineResult:
-    corpus, request, spec = run_through_phase2(raw)
-    repo = request.repository.location
-    graph = build_graph(repo, corpus)
-    strategy = raw.scope_strategy or "composite"
-    scoper = get_scoper(strategy)
-    scope = scoper.scope(
-        spec,
-        repo,
-        request.preferences.scope_token_budget,
-        corpus=corpus,
-        graph=graph,
-    )
-    if not scope.candidate_areas:
-        raise PipelineError(f"scope strategy {strategy!r} selected no files")
-    return PipelineResult(corpus=corpus, request=request, spec=spec, graph=graph, scope=scope)
-
-
-def run_legacy_pipeline(raw: UserRequest, *, generate=None) -> PipelineResult:
-    result = run_through_phase3(raw)
-    if raw.skip_extract:
-        return result
-    generate = generate or generate_json
-    extractor = get_extractor(raw.extract_backend or "gemini")
-    result.view_model = extractor.extract(
-        result.spec,
-        result.scope,
-        result.graph,
-        result.request.repository.location,
-        model=raw.gemini_model,
-        samples=raw.samples,
-        generate=generate,
-    )
-    from task2view.agents.phase6_critic import refine_extracted_view
-    from task2view.agents.runtime import AgentRuntime
-    runtime = None if raw.skip_critic else AgentRuntime(generate=generate, model=raw.gemini_model)
-    result.view_model, structure_report = refine_extracted_view(
-        result.view_model,
-        result.spec,
-        result.scope,
-        result.graph,
-        runtime,
-        skip_critic=raw.skip_critic,
-    )
-    result.extras["structure_report.json"] = structure_report
-    notation = result.spec.selected_view.diagram_language
-    adapter = get_adapter(notation)
-    source = adapter.emit(result.view_model)
-    cleaned, report = validate_view(
-        result.view_model,
-        result.spec,
-        result.scope,
-        result.graph,
-        source,
-        notation,
-    )
-    result.view_model = cleaned
-    result.diagram_source = adapter.emit(cleaned)
-    result.validation = report
-    return result
-
-
 def run_pipeline(raw: UserRequest, *, generate=None) -> PipelineResult:
     if raw.config:
         from task2view.config import apply_pipeline_config, load_pipeline_config
 
         raw = apply_pipeline_config(raw, load_pipeline_config(raw.config))
-    if raw.legacy:
-        return run_legacy_pipeline(raw, generate=generate)
     from task2view.agents.orchestrate import run_agentic
 
     return run_agentic(raw, generate=generate)
@@ -174,7 +88,7 @@ def write_run(
         ext = DIAGRAM_EXT.get(lang, "txt")
         write_diagram(out_dir / f"architecture_view.{ext}", diagram_source)
         if render_formats:
-            from task2view.phase4.compile import compile_diagram
+            from task2view.phase7.compile import compile_diagram
 
             report = compile_diagram(
                 diagram_source,

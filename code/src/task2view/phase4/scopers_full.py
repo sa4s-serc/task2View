@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from task2view.contracts.models import CleanedCorpus, RepositoryScope, ScopeCandidate, ViewSpecification
-from task2view.phase3.protocol import register_scoper
-from task2view.phase3.select import budget_select
+from task2view.phase4.protocol import register_scoper
+from task2view.phase4.select import budget_select
 
 
 @register_scoper

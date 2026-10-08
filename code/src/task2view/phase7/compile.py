@@ -1,7 +1,4 @@
-"""Compile diagram source to SVG / PNG / JPEG (Kroki, with local fallbacks).
-
-Pipeline spec v2 Stage 4b: adapters emit text; this module rasterises it.
-"""
+"""Phase 7. Compile diagram source to SVG, PNG, or JPEG."""
 
 from __future__ import annotations
 

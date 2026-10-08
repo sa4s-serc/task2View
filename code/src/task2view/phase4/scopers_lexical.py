@@ -3,20 +3,35 @@ from __future__ import annotations
 import re
 
 from task2view.contracts.models import CleanedCorpus, RepositoryScope, ScopeCandidate, ViewSpecification
-from task2view.phase3.protocol import register_scoper
-from task2view.phase3.select import budget_select
+from task2view.phase4.protocol import register_scoper
+from task2view.phase4.select import budget_select
 
 _TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9]{2,}")
 _STOP = {
     "the", "and", "for", "need", "show", "how", "entry", "point", "component",
+    "components", "module", "modules", "class", "classes", "type", "types",
     "domain", "service", "between", "participants", "observable", "paths",
+    "question", "questions", "concern", "viewpoint", "diagram", "system",
+    "responsibility", "responsibilities", "hierarchy", "containment",
+    "connector", "connectors", "owner", "owns", "handles",
 }
 
 
 def keywords(view_spec: ViewSpecification) -> list[str]:
-    blob = view_spec.task_summary
+    """Tokens that pull files out of the graph.
+
+    The task sentence and required-information lines are included, and so are
+    the Phase 1–3 decisions: question text, viewpoint purpose, and concerns.
+    """
+    parts = [view_spec.task_summary or ""]
     for item in view_spec.required_information:
-        blob += " " + item.need
+        parts.append(item.need)
+    for question in view_spec.architectural_questions or []:
+        parts.append(question.text)
+    view = view_spec.selected_view
+    parts.append(view.purpose or "")
+    parts.extend(view_spec.architectural_concerns or [])
+    blob = " ".join(parts)
     found = []
     for tok in _TOKEN.findall(blob.lower()):
         if tok in _STOP or tok in found:

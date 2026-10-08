@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from task2view.phase4.compile import compile_file
+from task2view.phase7.compile import compile_file
 
 RUNS = ROOT / "runs"
 PUML_SUFFIXES = {".puml", ".plantuml"}

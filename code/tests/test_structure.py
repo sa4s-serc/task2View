@@ -11,7 +11,7 @@ from task2view.contracts.models import (
     ViewSpecification,
 )
 from task2view.knowledge.loader import load_knowledge
-from task2view.phase3.graph import RepoNode, RepositoryGraph
+from task2view.phase4.graph import RepoNode, RepositoryGraph
 
 
 def _graph() -> RepositoryGraph:
@@ -79,15 +79,13 @@ def test_diagnose_flags_wrong_packages():
     assert "ReportService" in misplaced
 
 
-def test_grounding_keeps_component_names_and_fills_owner_uses():
+def test_grounding_keeps_published_names_and_adds_no_edges():
     grounded, report = ground_view_model(_misplaced_view(), _graph(), _spec("component_view"))
     names = {e.name for e in grounded.elements}
     assert names == {"Report", "HomePageGUI", "ReportService"}
     assert report["view_unit"] == "component"
-    by_id = {e.id: e.name for e in grounded.elements}
-    pairs = {(by_id[r.frm], by_id[r.to]) for r in grounded.relations}
-    assert ("HomePageGUI", "ReportService") in pairs
-    assert ("ReportService", "Report") in pairs
+    assert grounded.relations == []
+    assert report["relations_added"] == 0
 
 
 def test_component_view_does_not_collapse_to_packages():
@@ -133,10 +131,8 @@ def test_component_view_keeps_responsibility_names():
     grounded, report = ground_view_model(vm, g, _spec("component_view"))
     names = {e.name for e in grounded.elements}
     assert names == {"Report intake", "Report application", "Report store"}
-    by_id = {e.id: e.name for e in grounded.elements}
-    pairs = {(by_id[r.frm], by_id[r.to]) for r in grounded.relations}
-    assert ("Report intake", "Report application") in pairs
-    assert ("Report application", "Report store") in pairs
+    assert grounded.relations == []
+    assert report["relations_added"] == 0
     assert report["view_unit"] == "component"
 
 
@@ -146,17 +142,17 @@ def test_sequence_view_keeps_component_participants():
     vm.relations = [
         ViewRelation(id="R1", frm="E2", to="E3", kind="call", label="loadReports", order=1),
     ]
-    grounded, report = ground_view_model(vm, _graph(), _spec("sequence_view", "scenario"))
+    grounded, report = ground_view_model(vm, _graph(), _spec("sequence_view", "cnc-runtime"))
     assert report["view_unit"] == "component"
     names = {e.name for e in grounded.elements}
     assert "HomePageGUI" in names
     assert "ReportService" in names
     by_id = {e.id: e.name for e in grounded.elements}
-    pairs = {(by_id[r.frm], by_id[r.to]) for r in grounded.relations}
-    assert ("HomePageGUI", "ReportService") in pairs
+    pairs = {(by_id[r.frm], by_id[r.to], r.kind) for r in grounded.relations}
+    assert pairs == {("HomePageGUI", "ReportService", "call")}
 
 
-def test_class_view_inserts_type_edges():
+def test_class_view_does_not_insert_type_edges():
     vm = _misplaced_view()
     vm.view_type = "class_view"
     vm.elements.append(
@@ -167,15 +163,14 @@ def test_class_view_inserts_type_edges():
             evidence=Evidence(file="src/main/java/Entity/InternalNote.java", symbol="InternalNote"),
         )
     )
-    grounded, report = ground_view_model(vm, _graph(), _spec("class_view", "data-model"))
-    by_id = {e.id: e.name for e in grounded.elements}
-    pairs = {(by_id[r.frm], by_id[r.to]) for r in grounded.relations}
-    assert ("InternalNote", "Report") in pairs
+    grounded, report = ground_view_model(vm, _graph(), _spec("class_view", "code-mapping"))
+    assert grounded.relations == []
+    assert report["relations_added"] == 0
     assert report["view_unit"] == "type"
-    assert report["edge_insertion"] == "all_selected"
+    assert report["edge_insertion"] == "none"
 
 
-def test_context_view_adds_system_and_directory_structure():
+def test_context_view_keeps_the_published_actors():
     vm = ViewModel(
         request_id="REQ-CTX",
         view_type="context_view",
@@ -199,21 +194,11 @@ def test_context_view_adds_system_and_directory_structure():
         ],
     )
     grounded, _report = ground_view_model(vm, _graph(), spec, scope=scope)
-    kinds = {e.kind for e in grounded.elements}
     names = {e.name for e in grounded.elements}
-    assert kinds <= {"actor", "system"}
-    assert "Citizen" in names and "Operator" in names
-    assert any(e.kind == "system" for e in grounded.elements)
-    assert "HomePageGUI" not in names
-    by_id = {e.id: e for e in grounded.elements}
-    system = next(e for e in grounded.elements if e.kind == "system")
-    actor_links = {
-        (by_id[r.frm].name, by_id[r.to].name)
-        for r in grounded.relations
-        if by_id[r.frm].kind == "actor"
-    }
-    assert ("Citizen", system.name) in actor_links
-    assert ("Operator", system.name) in actor_links
+    kinds = {e.kind for e in grounded.elements}
+    assert names == {"Citizen", "Operator"}
+    assert kinds == {"actor"}
+    assert grounded.relations == []
 
 
 def test_system_label_uses_source_root_not_layout_noise():
@@ -230,15 +215,15 @@ def test_system_label_uses_source_root_not_layout_noise():
 
 
 def test_retarget_behavioural_view_when_questions_are_structural():
-    from task2view.agents.phase3_viewpoint import retarget_if_structural
+    from task2view.phase3.viewpoint import retarget_if_structural
     from task2view.agents.schemas import ArchitecturalQuestion, PlannedView, QuestionSet, StakeholderTaskProfile
 
     kb = load_knowledge()
     planned = [
         PlannedView(
             id="V1",
-            viewpoint_id="scenario",
-            view_type="sequence_view",
+            viewpoint_id="cnc-runtime",
+            view_type="component_view",
             required_evidence=["containment", "responsibilities"],
         )
     ]
@@ -287,22 +272,21 @@ def test_module_kind_with_file_evidence_keeps_published_name():
     grounded, report = ground_view_model(vm, g, _spec("component_view"))
     names = {e.name for e in grounded.elements}
     assert names == {"Booking UI", "Booking application"}
-    by_id = {e.id: e.name for e in grounded.elements}
-    pairs = {(by_id[r.frm], by_id[r.to]) for r in grounded.relations}
-    assert ("Booking UI", "Booking application") in pairs
+    assert grounded.relations == []
+    assert report["relations_added"] == 0
     assert report["view_unit"] == "component"
 
 
-def test_keep_sequence_when_questions_are_behavioural():
-    from task2view.agents.phase3_viewpoint import retarget_if_structural
+def test_keep_cnc_runtime_when_questions_are_behavioural():
+    from task2view.phase3.viewpoint import retarget_if_structural
     from task2view.agents.schemas import ArchitecturalQuestion, PlannedView, QuestionSet, StakeholderTaskProfile
 
     kb = load_knowledge()
     planned = [
         PlannedView(
             id="V1",
-            viewpoint_id="scenario",
-            view_type="sequence_view",
+            viewpoint_id="cnc-runtime",
+            view_type="component_view",
             required_evidence=["call chain"],
         )
     ]
@@ -318,17 +302,17 @@ def test_keep_sequence_when_questions_are_behavioural():
         source_goal="I need to understand how a user registration request is processed",
     )
     notes = retarget_if_structural(planned, questions, kb, profile, None)
-    assert planned[0].viewpoint_id == "scenario"
+    assert planned[0].viewpoint_id == "cnc-runtime"
     assert notes == []
 
 
-def test_keep_scenario_when_task_cues_prefer_behaviour():
-    from task2view.agents.phase3_viewpoint import retarget_if_structural
+def test_keep_cnc_runtime_when_task_cues_prefer_behaviour():
+    from task2view.phase3.viewpoint import retarget_if_structural
     from task2view.agents.schemas import ArchitecturalQuestion, PlannedView, QuestionSet, StakeholderTaskProfile
 
     kb = load_knowledge()
     planned = [
-        PlannedView(id="V1", viewpoint_id="scenario", view_type="sequence_view")
+        PlannedView(id="V1", viewpoint_id="cnc-runtime", view_type="component_view")
     ]
     questions = QuestionSet(
         questions=[
@@ -349,17 +333,17 @@ def test_keep_scenario_when_task_cues_prefer_behaviour():
         ),
     )
     notes = retarget_if_structural(planned, questions, kb, profile, None)
-    assert planned[0].viewpoint_id == "scenario"
+    assert planned[0].viewpoint_id == "cnc-runtime"
     assert notes == []
 
 
 def test_retarget_on_structural_behavioural_tie():
-    from task2view.agents.phase3_viewpoint import retarget_if_structural
+    from task2view.phase3.viewpoint import retarget_if_structural
     from task2view.agents.schemas import ArchitecturalQuestion, PlannedView, QuestionSet, StakeholderTaskProfile
 
     kb = load_knowledge()
     planned = [
-        PlannedView(id="V1", viewpoint_id="scenario", view_type="sequence_view")
+        PlannedView(id="V1", viewpoint_id="cnc-runtime", view_type="component_view")
     ]
     questions = QuestionSet(questions=[ArchitecturalQuestion(id="AQ1", text="Which components participate?")])
     profile = StakeholderTaskProfile(
@@ -373,43 +357,188 @@ def test_retarget_on_structural_behavioural_tie():
     assert notes
 
 
-def test_questions_match_viewpoint_grain():
-    from task2view.agents.phase2_questions import _keep_question
+def test_viewpoint_outside_the_concern_list_is_rejected():
+    from task2view.phase3.viewpoint import plan_viewpoints
+    from task2view.agents.runtime import AgentRuntime
+    from task2view.agents.schemas import StakeholderTaskProfile
 
-    assert not _keep_question(
+    def generate(prompt: str, *, model=None):
+        assert "module-decomposition" in prompt
+        assert "cnc-runtime" not in prompt
+        return {"views": [{"id": "V1", "viewpoint_id": "cnc-runtime", "purpose": "runtime"}]}
+
+    profile = StakeholderTaskProfile(
+        stakeholder="developer",
+        canonical_role="member-of-development-team",
+        task="modify seat booking",
+        concerns=["maintainability"],
+    )
+    plan = plan_viewpoints(
+        profile,
+        None,
+        AgentRuntime(generate=generate),
+        allowed_ids=["module-decomposition"],
+        concerns_are_framed=True,
+    )
+    assert plan.views[0].viewpoint_id == "module-decomposition"
+
+
+def test_viewpoint_agent_chooses_the_diagram_language():
+    from task2view.phase3.viewpoint import plan_viewpoints
+    from task2view.agents.runtime import AgentRuntime
+    from task2view.agents.schemas import ArchitecturalQuestion, QuestionSet, StakeholderTaskProfile
+
+    def generate(prompt: str, *, model=None):
+        assert "LANGUAGES" in prompt
+        assert "mermaid" in prompt
+        assert "A word in the goal is not a notation instruction." in prompt
+        return {
+            "views": [
+                {
+                    "id": "V1",
+                    "viewpoint_id": "module-decomposition",
+                    "diagram_language": "mermaid",
+                    "language_reason": "the questions ask for the order of the booking steps",
+                    "purpose": "modules",
+                }
+            ]
+        }
+
+    profile = StakeholderTaskProfile(
+        stakeholder="developer",
+        canonical_role="member-of-development-team",
+        task="draw the booking flow in plantuml",
+        concerns=["maintainability"],
+        source_goal="please use plantuml",
+    )
+    questions = QuestionSet(
+        questions=[ArchitecturalQuestion(id="AQ1", text="In what order do the booking steps run?", concern="maintainability")]
+    )
+    plan = plan_viewpoints(
+        profile,
+        questions,
+        AgentRuntime(generate=generate),
+        allowed_ids=["module-decomposition"],
+    )
+    view = plan.views[0]
+    assert view.diagram_language == "mermaid"
+    assert view.diagram_language_rule == (
+        "viewpoint agent chose mermaid: the questions ask for the order of the booking steps"
+    )
+
+
+def test_unknown_agent_language_keeps_the_viewpoint_default():
+    from task2view.phase3.viewpoint import plan_viewpoints
+    from task2view.agents.runtime import AgentRuntime
+    from task2view.agents.schemas import StakeholderTaskProfile
+
+    def generate(prompt: str, *, model=None):
+        return {
+            "views": [
+                {
+                    "id": "V1",
+                    "viewpoint_id": "module-decomposition",
+                    "diagram_language": "powerpoint",
+                    "purpose": "modules",
+                }
+            ]
+        }
+
+    profile = StakeholderTaskProfile(
+        stakeholder="developer",
+        canonical_role="member-of-development-team",
+        task="modify seat booking",
+        concerns=["maintainability"],
+    )
+    plan = plan_viewpoints(
+        profile,
+        None,
+        AgentRuntime(generate=generate),
+        allowed_ids=["module-decomposition"],
+    )
+    view = plan.views[0]
+    assert view.diagram_language == "plantuml"
+    assert "viewpoint default: plantuml" in view.diagram_language_rule
+    assert "powerpoint" in view.diagram_language_rule
+
+
+def test_questions_after_viewpoint_drop_unframed_concerns():
+    from task2view.phase2.questions import derive_questions
+    from task2view.agents.runtime import AgentRuntime
+    from task2view.agents.schemas import StakeholderTaskProfile
+    from task2view.knowledge.correspondence import select_correspondence
+
+    kb = load_knowledge()
+    correspondence = select_correspondence(
+        "member-of-development-team",
+        "modify seat booking",
+        kb,
+        extra_concerns=["maintainability", "control-flow"],
+        viewpoint_id="module-decomposition",
+    )
+
+    def generate(prompt: str, *, model=None):
+        assert "module-decomposition" in prompt
+        return {
+            "concerns": ["control-flow"],
+            "questions": [
+                {"id": "AQ1", "text": "Which modules own seat booking?", "concern": "maintainability"},
+                {"id": "AQ2", "text": "What is the exact call chain?", "concern": "control-flow"},
+            ],
+        }
+
+    profile = StakeholderTaskProfile(
+        stakeholder="developer",
+        canonical_role="member-of-development-team",
+        task="modify seat booking",
+        concerns=["maintainability", "control-flow"],
+    )
+    result = derive_questions(profile, AgentRuntime(generate=generate), correspondence=correspondence)
+    assert [q.text for q in result.questions] == ["Which modules own seat booking?"]
+    assert "control-flow" not in result.concerns
+
+
+def test_questions_keep_what_the_model_wrote():
+    from task2view.phase2.questions import derive_questions
+    from task2view.agents.runtime import AgentRuntime
+    from task2view.agents.schemas import StakeholderTaskProfile
+
+    def generate(prompt: str, *, model=None):
+        assert "Do not copy one template per viewpoint" in prompt
+        return {
+            "concerns": ["control-flow", "invented"],
+            "questions": [
+                {
+                    "id": "AQ1",
+                    "text": "What is the exact call chain from the API?",
+                    "concern": "control-flow",
+                },
+                {
+                    "id": "AQ2",
+                    "text": "Which specific classes own booking?",
+                    "concern": "not-a-concern",
+                },
+            ],
+        }
+
+    profile = StakeholderTaskProfile(
+        stakeholder="developer",
+        canonical_role="member-of-development-team",
+        task="understand seat booking",
+        concerns=["maintainability"],
+    )
+    result = derive_questions(profile, AgentRuntime(generate=generate))
+    assert [q.text for q in result.questions] == [
+        "What is the exact call chain from the API?",
         "Which specific classes own booking?",
-        allow_behavioural=False,
-        allow_types=False,
-    )
-    assert not _keep_question(
-        "What is the exact call chain from the API?",
-        allow_behavioural=False,
-        allow_types=False,
-    )
-    assert _keep_question(
-        "What is the exact call chain from the API?",
-        allow_behavioural=True,
-        allow_types=False,
-    )
-    assert _keep_question(
-        "Which persistent entities store a report?",
-        allow_behavioural=False,
-        allow_types=True,
-    )
-    assert not _keep_question(
-        "Which persistent entities store a report?",
-        allow_behavioural=False,
-        allow_types=False,
-    )
-    assert _keep_question(
-        "Which components participate in booking?",
-        allow_behavioural=False,
-        allow_types=False,
-    )
+    ]
+    assert result.questions[0].concern == "control-flow"
+    assert result.questions[1].concern is None
+    assert result.concerns == ["maintainability", "control-flow"]
 
 
 def test_viewpoint_purpose_drops_classes():
-    from task2view.agents.phase3_viewpoint import _sanitize_purpose
+    from task2view.phase3.viewpoint import _sanitize_purpose
     from task2view.agents.schemas import PlannedView, StakeholderTaskProfile
 
     kb = load_knowledge()
@@ -431,16 +560,16 @@ def test_viewpoint_purpose_drops_classes():
     assert "seat booking" in view.purpose.casefold()
 
 
-def test_data_model_purpose_may_mention_entities():
-    from task2view.agents.phase3_viewpoint import _sanitize_purpose
+def test_code_mapping_purpose_may_mention_types():
+    from task2view.phase3.viewpoint import _sanitize_purpose
     from task2view.agents.schemas import PlannedView, StakeholderTaskProfile
 
     kb = load_knowledge()
     view = PlannedView(
         id="V1",
-        viewpoint_id="data-model",
+        viewpoint_id="code-mapping",
         view_type="class_view",
-        purpose="Show persistent entities that store a municipal report",
+        purpose="Show types that implement municipal report persistence",
     )
     profile = StakeholderTaskProfile(
         stakeholder="analyst",
@@ -449,10 +578,10 @@ def test_data_model_purpose_may_mention_entities():
         target="report schema",
     )
     assert _sanitize_purpose(view, kb, profile) is None
-    assert "entities" in view.purpose.casefold()
+    assert "types" in view.purpose.casefold()
 
 
-def test_folder_named_boxes_become_types_with_uses():
+def test_folder_named_boxes_stay_as_published():
     vm = ViewModel(
         request_id="REQ-FOLDERS",
         view_type="component_view",
@@ -466,17 +595,12 @@ def test_folder_named_boxes_become_types_with_uses():
     )
     grounded, report = ground_view_model(vm, _graph(), _spec("component_view"))
     names = {e.name for e in grounded.elements}
-    assert "Boundary Module" not in names
-    assert "Entity" not in names
-    assert "HomePageGUI" in names
-    assert "ReportService" in names
-    by_id = {e.id: e.name for e in grounded.elements}
-    pairs = {(by_id[r.frm], by_id[r.to]) for r in grounded.relations}
-    assert pairs
-    assert report["relations_added"] >= 1
+    assert names == {"Boundary Module", "Control Subsystem", "Entity"}
+    assert grounded.relations == []
+    assert report["relations_added"] == 0
 
 
-def test_context_renames_folder_system():
+def test_context_keeps_published_system_name():
     g = _graph()
     vm = ViewModel(
         request_id="REQ-CTX",
@@ -490,10 +614,9 @@ def test_context_renames_folder_system():
     )
     grounded, _ = ground_view_model(vm, g, _spec("context_view", "context"))
     names = {e.name for e in grounded.elements}
-    assert "Boundary" not in names
+    assert names == {"Citizen", "Boundary"}
     assert any(e.kind == "system" for e in grounded.elements)
-    assert any(e.kind == "actor" for e in grounded.elements)
-    assert grounded.relations
+    assert grounded.relations == []
 
 
 

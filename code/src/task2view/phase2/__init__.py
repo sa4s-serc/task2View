@@ -1,3 +1,5 @@
-from task2view.phase2.selector import identify_view
+"""Phase 2. Concerns and architectural questions. No viewpoint is chosen here."""
 
-__all__ = ["identify_view"]
+from task2view.phase2.questions import derive_questions
+
+__all__ = ["derive_questions"]

@@ -66,19 +66,19 @@ Default path is `run_agentic` in `code/src/task2view/agents/orchestrate.py`.
 ```
 Input 1  stakeholder / task description
     │
-    ├─► 1  Stakeholder-Task Interpretation      Gemini → catalog role
-    ├─► 2  Concern and Architectural Questions  Gemini, seeded from the viewpoint
-    ├─► 3  Knowledge-Grounded Viewpoint Planning catalog rank, then agent confirms
+    ├─► 1  Stakeholder-Task Interpretation      phase1/interpret.py
+    ├─► 2  Concern and Architectural Questions  phase2/questions.py
+    ├─► 3  Knowledge-Grounded Viewpoint Planning phase3/viewpoint.py
 Input 2  software repository
     │
-    └─► 4  Repository Analysis                  graph + scoper (pagerank / composite / …)
-        5  Evidence Extraction and Grounding    gemini / ciao / archagent on scoped files
-        6  Need–Evidence Reconciliation         critic notes only
-        7  Specialized View Generation          PlantUML / Mermaid / …
-        8  Validation and Consistency           evidence gate + compile
+    └─► 4  Repository Analysis                  phase4/  graph + scoper
+        5  Evidence Extraction and Grounding    phase5/  gemini / ciao / archagent
+        6  Need–Evidence Reconciliation         phase6/  notes only
+        7  Specialized View Generation          phase7/  PlantUML / Mermaid / …
+        8  Validation and Consistency           phase8/  evidence gate
 ```
 
-`--legacy` skips Phases 1–3 agents and uses regex intake. `--skip-critic` skips only Phase 6. `--skip-extract` stops after Phase 4.
+`--skip-critic` skips only Phase 6. `--skip-extract` stops after Phase 4.
 
 ## Plug-ins
 
@@ -117,12 +117,13 @@ There is no vector store and no memory across runs. `code/runs/` is write-only o
 ## Layout
 
 ```
-code/src/task2view/   pipeline, agents, knowledge, CLI
-code/tests/           pytest
-code/scripts/         batch runner + compile helper
-docs/architecture.md  stage-by-stage description
-docs/adr/             design decisions ADR-001 … ADR-005
-input_example_task2view.txt
+code/src/task2view/phase1 … phase8   one package per diagram phase
+code/src/task2view/phase0            corpus clean, before the eight phases
+code/src/task2view/inputs            repository path and request id
+code/src/task2view/agents            runtime, schemas, orchestrator
+code/src/task2view/knowledge         catalogs and correspondence
+code/tests/                          pytest
+docs/architecture.md                 stage-by-stage description
 ```
 
 ## Tests

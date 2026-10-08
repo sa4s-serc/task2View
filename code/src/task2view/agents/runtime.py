@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 from task2view.agents.tools import RepoTools
 from task2view.contracts.models import PipelineError
-from task2view.phase4.gemini import generate_json as gemini_json
+from task2view.llm.gemini import generate_json as gemini_json
 
 GenerateFn = Callable[..., dict]
 

@@ -8,8 +8,8 @@ from task2view.contracts.models import (
     ScopeCandidate,
     ViewSpecification,
 )
-from task2view.phase3.graph import RepositoryGraph
-from task2view.phase3.tokens import file_tokens
+from task2view.phase4.graph import RepositoryGraph
+from task2view.phase4.tokens import file_tokens
 
 
 def budget_select(

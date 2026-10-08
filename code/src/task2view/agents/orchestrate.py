@@ -1,31 +1,39 @@
-"""Default pipeline: agents 1–3, then SOTA scoper + extractor + adapter (ADR-002)."""
+"""Runs phases 1–8 in diagram order. Phases 4–8 keep their current methods."""
 
 from __future__ import annotations
 
-from task2view.agents.phase1_interpret import interpret_stakeholder_task
-from task2view.agents.phase2_questions import derive_questions
-from task2view.agents.phase3_viewpoint import plan_viewpoints
+from task2view.phase1.interpret import interpret_stakeholder_task
+from task2view.phase2.questions import derive_questions
+from task2view.phase3.viewpoint import plan_viewpoints
 from task2view.agents.runtime import AgentRuntime
 from task2view.contracts.models import (
     Preferences,
     NormalizedRequest,
     PipelineError,
+    SpecQuestion,
     StakeholderRef,
     TaskRef,
     UserRequest,
 )
+from task2view.knowledge.selector import _instantiate_required_information
 from task2view.knowledge.correspondence import (
     select_correspondence,
     spec_from_correspondence,
-    with_viewpoint,
+    viewpoints_for_concerns,
 )
 from task2view.knowledge.loader import load_knowledge
 from task2view.phase0.clean import clean_repository
-from task2view.phase1.intake import new_request_id, resolve_repository
-from task2view.phase3 import get_scoper
-from task2view.phase3.graph import build_graph
-from task2view.phase4 import get_adapter, get_extractor
-from task2view.phase4.validate import validate_view
+from task2view.inputs.repository import new_request_id, resolve_repository
+from task2view.phase4 import get_scoper
+from task2view.phase4.graph import build_graph
+from task2view.phase4.plan import plan_repository_analysis, scope_for_plan
+from task2view.phase5 import get_extractor
+from task2view.phase5.evidence import extract_from_plan, tasks_name_files
+from task2view.phase7 import get_adapter
+from task2view.phase7.generate import generate_view
+from task2view.agents.structure import ground_view_model
+from task2view.phase6.reconcile import reconcile_evidence
+from task2view.phase8.validate import validate_view
 
 
 def _normalized(raw: UserRequest, profile, knowledge, corpus) -> NormalizedRequest:
@@ -60,25 +68,15 @@ def _normalized(raw: UserRequest, profile, knowledge, corpus) -> NormalizedReque
     )
 
 
-def _merge_question_concerns(spec, questions, knowledge) -> None:
-    catalog = knowledge.catalog_concerns()
-    concerns = list(spec.architectural_concerns)
-    for extra in questions.concerns:
-        if extra in catalog and extra not in concerns:
-            concerns.append(extra)
+def _record_uncovered(spec, knowledge) -> None:
+    """Concerns the model chose that this viewpoint does not frame stay uncovered.
+
+    They are not added from phrase cues, and they are not drawn as extra boxes.
+    """
     framed = set(knowledge.viewpoint(spec.selected_view.viewpoint_id).get("frames_concerns") or [])
-    unanswered = [c for c in concerns if c not in framed and c != "general"]
-    spec.architectural_concerns = concerns
-    spec.unanswered_concerns = unanswered
-    spec.declared_gaps = list(unanswered)
-
-
-def _profile_blob(profile) -> str:
-    return " ".join(
-        p
-        for p in (profile.source_goal, profile.task, profile.target, profile.goal)
-        if p
-    )
+    uncovered = [c for c in spec.architectural_concerns if c not in framed and c != "general"]
+    spec.unanswered_concerns = uncovered
+    spec.declared_gaps = list(uncovered)
 
 
 def run_agentic(raw: UserRequest, *, generate=None):
@@ -94,17 +92,11 @@ def run_agentic(raw: UserRequest, *, generate=None):
     corpus = clean_repository(raw.code or raw.repository or "", request_id=raw.request_id)
     profile = interpret_stakeholder_task(raw.goal or "", runtime, knowledge=knowledge)
     request = _normalized(raw, profile, knowledge, corpus)
-    correspondence = select_correspondence(
-        request.stakeholder.role,
-        _profile_blob(profile) or request.task.description,
-        knowledge,
-        goal=profile.source_goal or profile.task,
-        extra_concerns=list(profile.concerns),
-        preferred_language=raw.diagram_language,
-    )
-    questions = derive_questions(
-        profile, runtime, knowledge=knowledge, correspondence=correspondence
-    )
+    questions = derive_questions(profile, runtime, knowledge=knowledge)
+    if questions.concerns:
+        profile.concerns = list(questions.concerns)
+        request.concerns = list(questions.concerns)
+    allowed, concerns_are_framed = viewpoints_for_concerns(knowledge, list(profile.concerns))
     viewpoint_plan = plan_viewpoints(
         profile,
         questions,
@@ -112,29 +104,39 @@ def run_agentic(raw: UserRequest, *, generate=None):
         knowledge=knowledge,
         max_views=raw.max_views,
         preferred_language=raw.diagram_language,
-        correspondence=correspondence,
+        allowed_ids=allowed,
+        concerns_are_framed=concerns_are_framed,
     )
     active = next((v for v in viewpoint_plan.views if not v.deferred), None)
     if active is None:
         raise PipelineError("no active view in the viewpoint plan")
-    if active.viewpoint_id != correspondence.viewpoint_id:
-        correspondence = with_viewpoint(
-            correspondence,
-            active.viewpoint_id,
-            knowledge,
-            preferred_language=raw.diagram_language,
-            goal=profile.source_goal or profile.task,
-        )
+    cue_text = profile.source_goal or request.goal or request.task.description
+    correspondence = select_correspondence(
+        request.stakeholder.role,
+        cue_text,
+        knowledge,
+        goal=profile.source_goal or profile.task,
+        extra_concerns=list(profile.concerns),
+        preferred_language=raw.diagram_language,
+        viewpoint_id=active.viewpoint_id,
+    )
     spec = spec_from_correspondence(request, correspondence, knowledge)
     spec.task_summary = " | ".join(
         p for p in (profile.source_goal, profile.task, profile.target, profile.goal) if p
     )
-    if active.purpose:
-        spec.selected_view.purpose = active.purpose
+    focus = (profile.target or "").strip()
+    if focus and focus.casefold() != correspondence.task_focus.casefold():
+        spec.required_information = _instantiate_required_information(
+            correspondence.viewpoint_id, focus, knowledge
+        )
+    spec.architectural_questions = [
+        SpecQuestion(id=q.id, text=q.text, concern=q.concern) for q in questions.questions
+    ]
     spec.selected_view.diagram_language = active.diagram_language
+    spec.selected_view.diagram_language_rule = active.diagram_language_rule
     spec.selected_view.notation = active.notation or spec.selected_view.notation
     spec.selected_view.granularity = active.granularity or spec.selected_view.granularity
-    _merge_question_concerns(spec, questions, knowledge)
+    _record_uncovered(spec, knowledge)
     repo = request.repository.location
     graph = build_graph(repo, corpus)
     strategy = raw.scope_strategy or "composite"
@@ -148,11 +150,14 @@ def run_agentic(raw: UserRequest, *, generate=None):
     )
     if not scope.candidate_areas:
         raise PipelineError(f"scope strategy {strategy!r} selected no files")
+    analysis_plan = plan_repository_analysis(profile, spec, scope, runtime, knowledge=knowledge)
+    scope = scope_for_plan(scope, analysis_plan)
     extras = {
         "stakeholder_task_profile.json": profile.model_dump(mode="json"),
         "architectural_questions.json": questions.model_dump(mode="json"),
         "viewpoint_plan.json": viewpoint_plan.model_dump(mode="json"),
         "correspondence.json": correspondence.as_dict(),
+        "repository_analysis_plan.json": analysis_plan.model_dump(mode="json"),
     }
     result = PipelineResult(
         corpus=corpus,
@@ -164,23 +169,58 @@ def run_agentic(raw: UserRequest, *, generate=None):
     )
     if raw.skip_extract:
         return result
-    extractor = get_extractor(raw.extract_backend or "gemini")
-    extract_kw = dict(
-        model=raw.gemini_model,
-        samples=raw.samples,
-    )
-    if generate is not None:
-        extract_kw["generate"] = generate
-    view_model = extractor.extract(spec, scope, graph, repo, **extract_kw)
-    from task2view.agents.phase6_critic import refine_extracted_view
-    view_model, structure_report = refine_extracted_view(
-        view_model, spec, scope, graph, runtime, skip_critic=raw.skip_critic
-    )
+    evidence = None
+    if tasks_name_files(analysis_plan):
+        evidence, view_model = extract_from_plan(
+            analysis_plan, spec, scope, graph, repo, runtime, knowledge=knowledge
+        )
+        extras["architecture_evidence_model.json"] = evidence.model_dump(mode="json")
+    else:
+        extractor = get_extractor(raw.extract_backend or "gemini")
+        extract_kw = dict(
+            model=raw.gemini_model,
+            samples=raw.samples,
+        )
+        if generate is not None:
+            extract_kw["generate"] = generate
+        view_model = extractor.extract(
+            spec, scope, graph, repo, analysis_plan=analysis_plan, **extract_kw
+        )
+    view_model, structure_report = ground_view_model(view_model, graph, spec, scope=scope)
+    aware = None
+    if not raw.skip_critic:
+        aware = reconcile_evidence(spec, analysis_plan, evidence, view_model, runtime)
+        extras["evidence_aware_plan.json"] = aware.model_dump(mode="json")
+        structure_report["reconciliation"] = aware.model_dump(mode="json")
     extras["structure_report.json"] = structure_report
+    critic_notes = []
+    if aware is not None:
+        critic_notes = [
+            f"{row['id']} {row['support']}: {row['rationale']}" for row in aware.questions
+        ]
+    view_model = generate_view(
+        profile,
+        spec,
+        analysis_plan,
+        evidence,
+        view_model,
+        critic_notes,
+        runtime,
+        knowledge=knowledge,
+    )
     notation = spec.selected_view.diagram_language
     adapter = get_adapter(notation)
     source = adapter.emit(view_model)
-    cleaned, report = validate_view(view_model, spec, scope, graph, source, notation)
+    cleaned, report = validate_view(
+        view_model,
+        spec,
+        scope,
+        graph,
+        source,
+        notation,
+        evidence=evidence,
+        reconciliation=aware,
+    )
     result.view_model = cleaned
     result.diagram_source = adapter.emit(cleaned)
     result.validation = report
