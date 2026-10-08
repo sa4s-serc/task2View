@@ -25,11 +25,11 @@ PHASE1 = {"role_label": "developer", "role": "developer", "target": "order payme
 
 
 def scripted(prompt, model=None):
-    if "INFORMATION NEEDS" in prompt:
+    if "Phase 1: Stakeholder-task interpretation" in prompt:
         return PHASE1
-    if "Repository Analysis Agent" in prompt:
+    if "Phase 4: Investigation planning" in prompt:
         return {}
-    if "Evidence Extraction and Grounding Agent" in prompt:
+    if "Phase 5: Evidence extraction" in prompt:
         if "RESULT:" not in prompt:
             return {"tool": "symbol", "args": {"id": "OrderService"}}
         return {"final": {"claims": GOOD_CLAIMS + BAD_CLAIMS}}
@@ -37,7 +37,7 @@ def scripted(prompt, model=None):
 
 
 def judge(prompt, model=None):
-    assert "You review one architecture view" in prompt
+    assert "Phase 8: Task-fit review" in prompt
     return {"scores": {"grain": {"score": 4, "reason": "fits"}}, "overall": 4, "summary": "ok"}
 
 

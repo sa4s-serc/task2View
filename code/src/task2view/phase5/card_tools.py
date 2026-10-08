@@ -13,14 +13,7 @@ from pathlib import Path
 
 from task2view.contracts.card import RepositoryCard
 
-TOOL_SPEC = """TOOLS (reply with exactly one JSON object per turn)
-{"tool": "list_tree", "args": {"path": ".", "depth": 2}}
-{"tool": "search", "args": {"pattern": "regex", "path": "optional directory"}}
-{"tool": "read", "args": {"path": "relative/file", "start": 1, "end": 120}}
-{"tool": "symbol", "args": {"id": "symbol id or simple name"}}
-{"tool": "neighbours", "args": {"id": "symbol id", "direction": "out or in"}}
-{"final": {"claims": [...]}}"""
-
+TOOLS = ("list_tree", "search", "read", "symbol", "neighbours")  # documented in prompts/phase5_evidence.md
 
 class CardTools:
     def __init__(self, card: RepositoryCard, classes: list[str], *, max_read_lines: int = 200, max_hits: int = 40):

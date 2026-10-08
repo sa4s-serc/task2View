@@ -22,6 +22,7 @@ from task2view.contracts.aem import InvestigationTask, Question, Seeds
 from task2view.contracts.card import RepositoryCard
 from task2view.knowledge.catalog import Catalog
 from task2view.phase3.selection import ViewPlan
+from task2view.prompts import load_prompt
 
 _STOP = {"the", "a", "an", "and", "or", "of", "to", "for", "in", "on", "with", "by", "from", "as", "is", "are", "be",
          "this", "that", "these", "those", "it", "its", "which", "what", "how", "when", "where", "who", "their", "them",
@@ -103,35 +104,6 @@ def suggest_seeds(card: RepositoryCard, about: str, *, limit: int, neighbours: i
     return out
 
 
-PROMPT = """You are the Repository Analysis Agent.
-
-GOAL
-Plan where to look in the repository to answer one architectural question. Do not answer it yet.
-A later agent will read the code from your starting points and may follow references beyond them.
-
-REPOSITORY CARD
-{card}
-
-VIEW
-{viewpoint} ({vb_ref}). It may draw these elements: {elements}; and these relations: {relations}.
-
-QUESTIONS
-{questions}
-
-SUGGESTED STARTING POINTS (symbol, why it was suggested)
-{suggestions}
-
-DECISION
-- symbols: up to {limit} symbol ids from the card or the suggestions that most likely hold the answer. Only ids that exist.
-- paths: files or directories to start from (for example configuration or deployment files), only paths in the card.
-- goal: one sentence saying what evidence to collect.
-
-OUTPUT
-Return only this JSON.
-{{"symbols": ["symbol id"], "paths": ["path"], "goal": "one sentence"}}
-"""
-
-
 def plan_investigation(
     plan: ViewPlan,
     questions: list[Question],
@@ -158,8 +130,8 @@ def plan_investigation(
             goal = f"Collect evidence for: {'; '.join(q.text for q in group)}"
             suggested_by = sorted({o for _, o in suggestions}) or ["none"]
             if runtime is not None:
-                raw = runtime.complete_json(PROMPT.format(
-                    card=card_text, viewpoint=vp.name, vb_ref=vp.vb_ref,
+                raw = runtime.complete_json(load_prompt("phase4_investigate").render(
+                    card=card_text, viewpoint=f"{vp.name} ({vp.vb_ref})",
                     elements=", ".join(vp.element_kinds), relations=", ".join(vp.relation_kinds),
                     questions="\n".join(f"- {q.id}: {q.text}" for q in group),
                     suggestions="\n".join(f"- {s} ({o})" for s, o in suggestions) or "- none",

@@ -15,43 +15,9 @@ from task2view.agents.runtime import AgentRuntime
 from task2view.contracts.aem import InvestigationTask, Question
 from task2view.contracts.card import RepositoryCard
 from task2view.contracts.models import PipelineError
-from task2view.phase5.card_tools import TOOL_SPEC, CardTools
+from task2view.phase5.card_tools import CardTools
+from task2view.prompts import load_prompt
 
-PROMPT = """You are an Evidence Extraction and Grounding Agent.
-
-GOAL
-{goal}
-Collect small, verifiable claims that answer the questions below. Do not draw a diagram.
-
-QUESTIONS
-{questions}
-
-VIEW
-{viewpoint}: elements it can show: {elements}. Relations: {relations}.
-
-REPOSITORY CARD
-{card}
-
-STARTING POINTS (not a boundary; follow imports, calls, configuration and tests as needed)
-symbols: {symbols}
-paths: {paths}
-
-{tools}
-
-CLAIMS
-Each claim states one fact and cites the code that shows it. Use these shapes:
-{{"kind": "element", "element_kind": "one of the view's elements", "name": "name as the code names it",
-  "symbol": "symbol id if it is code", "responsibilities": ["short phrase"], "attributes": [{{"name": "", "type": "", "key": false}}],
-  "evidence": [{{"file": "path", "symbol": "id", "lines": [start, end], "excerpt": "exact text from those lines"}}], "confidence": 0.0}}
-{{"kind": "relation", "source": "symbol id", "target": "symbol id", "relation": "one of the view's relations", "label": "operation or short label", "evidence": [...], "confidence": 0.0}}
-{{"kind": "interaction", "scenario": "short scenario name", "order": 1, "source": "symbol id or actor", "target": "symbol id",
-  "label": "method(args)", "condition": "guard of an alternative path, or null", "evidence": [...], "confidence": 0.0}}
-{{"kind": "state", "name": "state name", "evidence": [...]}}   {{"kind": "transition", "source": "state", "target": "state", "label": "trigger", "evidence": [...]}}
-Rules:
-- Every excerpt is copied exactly from the cited lines, which you have read with the read tool.
-- Names are the names the code uses (class names, symbol ids). A responsibility is a short phrase in a separate field, never part of a name.
-- Do not claim what you did not see. Leave a question unanswered rather than guess.
-"""
 
 _FINAL_NUDGE = "Step budget reached. Return {\"final\": {\"claims\": [...]}} now with the claims you can cite."
 
@@ -69,7 +35,7 @@ def run_evidence_task(
 ) -> tuple[list[dict], list[str]]:
     """Run one task. Returns (raw claim dicts, files opened)."""
     tools = CardTools(card, task.seeds.classes, max_read_lines=max_read_lines, max_hits=max_hits)
-    history = PROMPT.format(
+    history = load_prompt("phase5_evidence").render(
         goal=task.goal,
         questions="\n".join(f"- {q.id}: {q.text}" for q in questions if q.id in task.question_ids),
         viewpoint=viewpoint_name,
@@ -78,7 +44,6 @@ def run_evidence_task(
         card=card_text,
         symbols=", ".join(task.seeds.symbols) or "none",
         paths=", ".join(task.seeds.paths) or "none",
-        tools=TOOL_SPEC,
     )
     for step in range(task.budget_steps + 1):
         if step == task.budget_steps:

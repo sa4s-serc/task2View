@@ -52,7 +52,7 @@ BAD_CLAIMS = [
 
 def _scripted_agent(claims):
     def generate(prompt, model=None):
-        if "Evidence Extraction and Grounding Agent" not in prompt:
+        if "Phase 5: Evidence extraction" not in prompt:
             return {"symbols": [], "paths": [], "goal": ""}
         if "RESULT:" not in prompt:
             return {"tool": "read", "args": {"path": SVC, "start": 1, "end": 20}}

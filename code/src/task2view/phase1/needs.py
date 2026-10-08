@@ -18,62 +18,7 @@ from pydantic import BaseModel, Field
 from task2view.agents.runtime import AgentRuntime
 from task2view.knowledge.catalog import Catalog, load_catalog
 from task2view.phase3.selection import GoalSubject, SelectionInput
-
-PROMPT = """You are the Stakeholder-Task Interpretation Agent.
-
-GOAL
-Say what this stakeholder must SEE to do their task, using a closed vocabulary of information needs.
-A later, deterministic step picks the architecture views from these needs, so every need you list becomes part of a diagram.
-
-INPUTS
-1. USER DESCRIPTION: the only text you may interpret.
-2. INFORMATION NEEDS: the only legal need ids, each with what it means and words people use for it.
-3. ROLES: the only legal role ids.
-4. QUALITY ATTRIBUTES: the only legal quality ids.
-
-INFORMATION NEEDS
-{needs}
-
-ROLES
-{roles}
-
-QUALITY ATTRIBUTES
-{qualities}
-
-USER DESCRIPTION
-{goal}
-
-DECISION
-- role_label: the words they used for themselves. role: one role id, or null when no id fits.
-- target: the feature, subsystem, or system the request is about, copied exactly (a short noun phrase), or "" when it is the whole system.
-- needs: every information need the description asks for, each with "evidence": the exact words from the description that ask for it.
-  Reason: every need becomes part of a diagram, so a need nobody asked for adds a diagram nobody wanted. Copy the words exactly.
-  Use the meanings in INFORMATION NEEDS, not word matching:
-  - A need is information the person asks to SEE. Words that only name the thing they will work on, or describe their situation, are not a need.
-  - Structural needs are about which parts exist and how they relate. Behavioural needs (interaction-order, process-flow, lifecycle, actors-goals) are about what happens:
-    the order of steps, the flow of a process, the states something goes through, or who uses the system for what.
-    List a behavioural need only when the description asks about that dynamic aspect.
-  - People who use the system are actors (actors-goals); software parts that work together are collaboration.
-  Give each need a "salience":
-  - "primary": the request is about this. It states it as something they need to understand, identify, or see.
-  - "secondary": it is mentioned in passing, gives context, or is only implied by a primary need.
-  Reason: only primary needs may add a diagram. A secondary need is answered only if a diagram chosen for a primary need already shows it.
-- subjects: the items the description enumerates as part of what they want to understand (for example a list of sub-functions, data items, or cases), copied exactly, each with the need ids it belongs to.
-  Reason: each subject must appear in a view, so the details of a long description are not lost.
-  The system, the feature being changed, and the stakeholder are not subjects. A description that enumerates nothing has no subjects.
-- quality_attributes: quality ids the description stresses, or an empty list. They do not choose diagrams.
-
-OUTPUT
-Return only this JSON.
-{{
-  "role_label": "label as the user said it",
-  "role": "one role id, or null",
-  "target": "exact words, or empty",
-  "needs": [{{"need": "need id", "evidence": "exact words", "salience": "primary or secondary"}}],
-  "subjects": [{{"text": "exact words", "needs": ["need id"]}}],
-  "quality_attributes": []
-}}
-"""
+from task2view.prompts import load_prompt
 
 
 class NeedEvidence(BaseModel):
@@ -135,14 +80,12 @@ def _render_roles(catalog: Catalog) -> str:
 def extract_needs(goal: str, runtime: AgentRuntime, *, catalog: Catalog | None = None) -> NeedProfile:
     catalog = catalog or load_catalog()
     goal = goal.strip()
-    raw = runtime.complete_json(
-        PROMPT.format(
-            needs=_render_needs(catalog),
-            roles=_render_roles(catalog),
-            qualities=", ".join(catalog.quality_attributes),
-            goal=goal,
-        )
-    )
+    raw = runtime.complete_json(load_prompt("phase1_interpret").render(
+        goal=goal,
+        needs=_render_needs(catalog),
+        roles=_render_roles(catalog),
+        qualities=", ".join(catalog.quality_attributes),
+    ))
     return validate_needs(goal, raw, catalog)
 
 
