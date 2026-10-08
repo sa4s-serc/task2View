@@ -112,6 +112,8 @@ Every catalog entry frames one or more needs. A goal may raise several.
 | `rationale` | decisions |
 | `requirement-traceability` | requirements-mapping |
 
+**Implemented (step 1):** 22 needs. Dependencies and change-impact are separate ids, both framed by `uses`. Each need has a category (structure / behavior / allocation / beyond), and behaviour viewpoints never cover structural needs. This encodes the expert's "second view" finding.
+
 **C&C style resolution.** `collaboration` is framed by `cnc-generic`. If the repository card shows a style (for example client-server from a REST controller plus a GUI client, or publish-subscribe from listeners), the most specific applicable style replaces `cnc-generic`. The style is decided from repository evidence, not from goal wording.
 
 ## 5. Records
@@ -172,10 +174,10 @@ Phase 2  questions per selected view, at its grain, one per subject  ← LLM
 | IS-seat-L2 | collaboration, interaction-order, change-impact | C&C + sequence (+ uses for "which parts are affected", cap 3) | component + sequence ✓ |
 | IS-seat-L3 | same, 5 subjects (request handling, availability, rules, storage, notification) | C&C (detailed) + sequence (alt) + uses | component + sequence ✓ |
 | IS-reg-L1 | collaboration | C&C | plain agent's L1 accepted ✓ |
-| IS-reg-L2 | collaboration, interaction-order | C&C + sequence | component + sequence ✓ |
+| IS-reg-L2 | collaboration, interaction-order, interface-contract | client-server C&C + sequence | component + sequence ✓ |
 | IS-reg-L3 | same, 5 subjects incl. invalid/duplicate paths | C&C + sequence (alt fragments) | component + sequence ✓ |
-| GR10-Q1 | decomposition, layering, dependencies | decomposition + layered (combined) + uses | macro-components / layers ✓ |
-| GR10-Q2 | deployment, build-packaging | deployment (+ install) | deployment ✓ |
+| GR10-Q1 | decomposition, layering, dependencies, collaboration | decomposition + C&C, both with the layered overlay (C&C also covers dependencies) | macro-components / layers ✓ |
+| GR10-Q2 | deployment, build-packaging | deployment (also covers build-packaging) | deployment ✓ |
 | GR10-Q3 | data-structure, change-impact | **data-model + uses** (dependents of the persisted entities) | entities with attributes ✓; second view per decision |
 | GR10-Q4 | actors-goals | use-case | use-case ✓ |
 
@@ -183,7 +185,7 @@ Notes:
 - The second view for GR10-Q3 is V&B's **uses** style. "Which parts depend on X" is exactly what the uses relation answers, and it is drawn at component grain. The expert criticised extra *layers* in the plain agent's diagram, not a separate dependency view.
 - Change-impact on IS-seat-L2/L3 brings in `uses` as a third view. If three views is too many, the cap or the role prior can drop it, and its content moves to the traceability appendix.
 
-These ten rows become golden tests for Phase 1 + selection, runnable without an LLM by fixing the Phase 1 output.
+These ten rows are the golden tests in `code/tests/fixtures/pilot_goals.yaml` / `test_selection.py`, which run without an LLM by fixing the Phase 1 output. The table reflects the implemented selection.
 
 ## 8. Settled points (2026-10-08)
 

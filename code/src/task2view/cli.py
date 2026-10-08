@@ -130,7 +130,40 @@ def build_parser() -> argparse.ArgumentParser:
 
     plugins = sub.add_parser("plugins", help="List registered scopers, extractors, and notations")
     plugins.set_defaults(command="plugins")
+
+    select = sub.add_parser(
+        "select-views",
+        help="ADR-006 Phase 1 + covering selection: which V&B views a goal needs (no repository read)",
+    )
+    select.set_defaults(command="select-views")
+    select.add_argument("--goal", required=True)
+    select.add_argument("--llm", help="provider:model for Phase 1 (default: TASK2VIEW_LLM, else gemini)")
+    select.add_argument(
+        "--signals",
+        default="",
+        help="Comma-separated repository signals (e.g. rest-api,layered,persisted-data); "
+        "the Phase 0 card will compute these",
+    )
+    select.add_argument("--max-views", type=int, default=3)
     return parser
+
+
+def _run_select_views(args: argparse.Namespace) -> int:
+    from task2view.agents.runtime import AgentRuntime
+    from task2view.knowledge.catalog import load_catalog
+    from task2view.phase1.needs import extract_needs
+    from task2view.phase3.selection import RepoFacts, select_views
+
+    catalog = load_catalog()
+    signals = {s.strip() for s in args.signals.split(",") if s.strip()}
+    unknown = sorted(signals - set(catalog.signals))
+    if unknown:
+        print(f"error: unknown signals {unknown}; known: {sorted(catalog.signals)}", file=sys.stderr)
+        return 2
+    profile = extract_needs(args.goal, AgentRuntime(model=args.llm), catalog=catalog)
+    plan = select_views(profile.selection_input(), catalog, RepoFacts(signals=signals), max_views=args.max_views)
+    print(json.dumps({"profile": profile.model_dump(), "plan": plan.model_dump()}, indent=2))
+    return 0
 
 
 def _run_compile(args: argparse.Namespace) -> int:
@@ -165,6 +198,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "plugins":
         print(json.dumps(_plugin_names(), indent=2))
         return 0
+    if args.command == "select-views":
+        try:
+            return _run_select_views(args)
+        except PipelineError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
     if args.command == "compile":
         try:
             return _run_compile(args)

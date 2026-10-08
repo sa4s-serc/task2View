@@ -1,0 +1,191 @@
+# Golden cases for Phase 1 + viewpoint selection (ADR-006 step 1).
+#
+# phase1:  what the Phase 1 agent should return for the goal (validated against
+#          the goal text by validate_needs, so evidence must be verbatim).
+# expect:  the views the expert's pilot review implies
+#          (experiments/pilot-2026-09/review/comparison_review.txt), the overlays,
+#          and the detail level computed from the goal.
+# facts:   repository signals, checked by hand on data/ (2026-10-08); the
+#          Phase 0 card computes these in step 2.
+
+facts:
+  progetto-is:   # REST controllers, Swing + web client, boundary/controller/entity/database packages,
+                 # JPA entities, Student/Librarian extend User, NotificationScheduler, reservation status enum
+    signals: [rest-api, gui-client, web-client, layered, inheritance, persisted-data, threads, lifecycle, deploy-config, build-config, tests]
+  gr10:          # Swing only, Boundary/Control/Entity/Database, persistence.xml, ReportStatus state hierarchy
+    signals: [gui-client, layered, inheritance, persisted-data, lifecycle, deploy-config, build-config, tests]
+
+cases:
+  IS-seat-L1:
+    system: progetto-is
+    goal: "I am a software developer. I need to modify the seat booking functionality and understand the main system components involved and how they interact."
+    phase1:
+      role_label: software developer
+      role: developer
+      needs:
+        - {need: collaboration, evidence: "the main system components involved and how they interact"}
+      subjects: []
+    expect:
+      detail_level: overview
+      views: [client-server]
+      overlays: {client-server: [layered]}
+
+  IS-seat-L2:
+    system: progetto-is
+    goal: "I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before changing the code, I need to understand the main components involved in this functionality, their responsibilities, and how they interact with each other. I also want to identify which parts of the system may be affected by the modification."
+    phase1:
+      role_label: software developer
+      role: developer
+      needs:
+        - {need: collaboration, evidence: "the main components involved in this functionality, their responsibilities"}
+        - {need: interaction-order, evidence: "how they interact with each other"}
+        - {need: change-impact, evidence: "which parts of the system may be affected by the modification"}
+      subjects: []
+    expect:
+      detail_level: feature
+      views: [client-server, sequence, uses]
+
+  IS-seat-L3:
+    system: progetto-is
+    goal: "I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes."
+    phase1:
+      role_label: software developer
+      role: developer
+      needs:
+        - {need: collaboration, evidence: "the main components involved in the booking process, their responsibilities"}
+        - {need: interaction-order, evidence: "the interactions and dependencies among them"}
+        - {need: dependencies, evidence: "dependencies among them"}
+        - {need: change-impact, evidence: "which other components may be affected by the changes"}
+      subjects:
+        - {text: "handling booking requests", needs: [collaboration, interaction-order]}
+        - {text: "checking seat availability", needs: [collaboration]}
+        - {text: "applying booking rules", needs: [collaboration]}
+        - {text: "managing and storing reservations", needs: [collaboration]}
+        - {text: "interacting with external services such as the notification service", needs: [collaboration]}
+    expect:
+      detail_level: detailed
+      views: [client-server, sequence, uses]
+      subjects_on: {client-server: 5, sequence: 1}
+
+  IS-reg-L1:
+    system: progetto-is
+    goal: "I am an integration tester. I need to test the user registration functionality and understand which system components are involved and how they interact."
+    phase1:
+      role_label: integration tester
+      role: tester
+      needs:
+        - {need: collaboration, evidence: "which system components are involved and how they interact"}
+      subjects: []
+    expect:
+      detail_level: overview
+      views: [client-server]
+      overlays: {client-server: [layered]}
+
+  IS-reg-L2:
+    system: progetto-is
+    goal: "I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the main components involved in registration, their responsibilities, and how they interact when a new user creates an account. I also need to identify the main integration points that should be exercised during the tests."
+    phase1:
+      role_label: integration tester
+      role: tester
+      needs:
+        - {need: collaboration, evidence: "the main components involved in registration, their responsibilities"}
+        - {need: interaction-order, evidence: "how they interact when a new user creates an account"}
+        - {need: interface-contract, evidence: "the main integration points"}
+      subjects: []
+    expect:
+      detail_level: feature
+      views: [client-server, sequence]
+
+  IS-reg-L3:
+    system: progetto-is
+    goal: "I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the registration process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components handle the registration request, validate the user's personal information and selected role, manage role-specific data such as the student ID or librarian identifier, verify the validity and uniqueness of the account, and persist the newly created user. I also need to understand how these components collaborate when invalid or already existing user data is provided, so that I can identify the main integration points and interactions that should be covered by the tests."
+    phase1:
+      role_label: integration tester
+      role: tester
+      needs:
+        - {need: collaboration, evidence: "the main components involved in the registration process, their responsibilities"}
+        - {need: dependencies, evidence: "the interactions and dependencies among them"}
+        - {need: interaction-order, evidence: "how these components collaborate when invalid or already existing user data is provided"}
+        - {need: interface-contract, evidence: "the main integration points and interactions"}
+      subjects:
+        - {text: "handle the registration request", needs: [collaboration, interaction-order]}
+        - {text: "validate the user's personal information and selected role", needs: [collaboration, interaction-order]}
+        - {text: "manage role-specific data such as the student ID or librarian identifier", needs: [collaboration]}
+        - {text: "verify the validity and uniqueness of the account", needs: [collaboration, interaction-order]}
+        - {text: "persist the newly created user", needs: [collaboration, interaction-order]}
+        - {text: "invalid or already existing user data", needs: [interaction-order]}
+    expect:
+      detail_level: detailed
+      views: [client-server, sequence]
+      subjects_on: {client-server: 5, sequence: 5}
+
+  GR10-Q1:
+    system: gr10
+    goal: "I am a software architect. I need to review the overall organization of the system before planning its future evolution. I want to understand the main architectural components, their responsibilities, how the system is decomposed into different layers or subsystems, and the main dependencies among them. I also need to identify how user-facing functionality, application logic, domain entities, and data persistence are separated and how these parts collaborate to provide the main system functionalities."
+    phase1:
+      role_label: software architect
+      role: architect
+      needs:
+        - {need: decomposition, evidence: "how the system is decomposed into different layers or subsystems"}
+        - {need: layering, evidence: "are separated"}
+        - {need: dependencies, evidence: "the main dependencies among them"}
+        - {need: collaboration, evidence: "how these parts collaborate to provide the main system functionalities"}
+      subjects:
+        - {text: "user-facing functionality", needs: [layering]}
+        - {text: "application logic", needs: [layering]}
+        - {text: "domain entities", needs: [layering]}
+        - {text: "data persistence", needs: [layering]}
+    expect:
+      detail_level: feature
+      views: [decomposition, cnc-generic]
+      overlays: {decomposition: [layered], cnc-generic: [layered]}
+
+  GR10-Q2:
+    system: gr10
+    goal: "I am a DevOps engineer. I need to deploy and configure the system in a new execution environment. Before preparing the deployment, I need to understand which runtime environments and software artifacts are required, where the application and its data are executed and stored, and how the main runtime elements communicate with each other. I also need to identify the technologies and runtime dependencies involved in the communication between the application and the database."
+    phase1:
+      role_label: DevOps engineer
+      role: devops
+      needs:
+        - {need: deployment, evidence: "where the application and its data are executed and stored"}
+        - {need: build-packaging, evidence: "software artifacts are required"}
+      subjects: []
+    expect:
+      detail_level: feature
+      views: [deployment]
+      gaps: {}
+
+  GR10-Q3:
+    system: gr10
+    goal: "I am a database engineer. I need to modify the persistence layer to support future changes to the management of municipal reports. Before modifying the database, I need to understand the main data entities stored by the system, the relationships among them, and which information must be persisted throughout the lifecycle of a report. In particular, I need to understand how users, reports, locations, categories, states, state changes, internal notes, and notifications are related, and which parts of the application depend on this persisted information."
+    phase1:
+      role_label: database engineer
+      role: data-engineer
+      needs:
+        - {need: data-structure, evidence: "the main data entities stored by the system, the relationships among them"}
+        - {need: change-impact, evidence: "which parts of the application depend on this persisted information"}
+      subjects:
+        - {text: "users", needs: [data-structure]}
+        - {text: "reports", needs: [data-structure]}
+        - {text: "locations", needs: [data-structure]}
+        - {text: "categories", needs: [data-structure]}
+        - {text: "states", needs: [data-structure]}
+        - {text: "state changes", needs: [data-structure]}
+        - {text: "internal notes", needs: [data-structure]}
+        - {text: "notifications", needs: [data-structure]}
+    expect:
+      detail_level: detailed
+      views: [data-model, uses]
+
+  GR10-Q4:
+    system: gr10
+    goal: "I am a business analyst. I need to understand at a high level how a system for reporting and managing problems in a municipal area is expected to work. I know that the application should allow people to report issues in the territory and support the municipality in managing them, but I do not yet know the specific user roles or the functionalities available to each of them. I need to identify the main types of users that interact with the system, the main goals they can achieve through it, and how the different functionalities are related to each other."
+    phase1:
+      role_label: business analyst
+      role: business-analyst
+      needs:
+        - {need: actors-goals, evidence: "the main types of users that interact with the system, the main goals they can achieve through it"}
+      subjects: []
+    expect:
+      detail_level: feature
+      views: [use-case]

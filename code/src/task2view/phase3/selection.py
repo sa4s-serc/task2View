@@ -1,0 +1,186 @@
+"""Deterministic viewpoint selection by covering information needs.
+
+Design: docs/redesign/01-knowledge-model.md §6.
+
+1. Applicable viewpoints: generic ones, plus style viewpoints whose
+   ``applies_when`` signal is present in the repository facts.
+2. Choose the smallest set (cap ``max_views``) that covers the most needs.
+   ``layering`` may be covered by a layered overlay on a host view instead of a
+   view of its own. Ties: more needs framed as primary, then role prior, then
+   catalog order.
+3. Specialise a selected ``cnc-generic`` view to the first applicable C&C style.
+4. Apply overlays (``combine_with``) that apply to this repository.
+5. A view whose ``evidence`` signals are all absent stays selected and carries a
+   declared gap.
+6. Assign each goal subject to every view that frames one of its needs.
+
+No LLM is involved: the same needs and facts always give the same plan.
+"""
+
+from __future__ import annotations
+
+from itertools import combinations
+
+from pydantic import BaseModel, Field
+
+from task2view.knowledge.catalog import Catalog, Viewpoint
+
+MAX_VIEWS = 3
+
+
+class RepoFacts(BaseModel):
+    """Repository signals (catalog `signals`). Built by the Phase 0 card; hand-written in tests."""
+
+    signals: set[str] = Field(default_factory=set)
+
+
+class GoalSubject(BaseModel):
+    text: str
+    needs: list[str] = Field(default_factory=list)
+
+
+class SelectionInput(BaseModel):
+    needs: list[str]
+    subjects: list[GoalSubject] = Field(default_factory=list)
+    role: str | None = None
+    detail_level: str = "feature"
+
+
+class PlannedView(BaseModel):
+    viewpoint_id: str
+    family: str
+    model_kind: str
+    needs: list[str]
+    subjects: list[str] = Field(default_factory=list)
+    overlays: list[str] = Field(default_factory=list)
+    specialised_from: str | None = None
+    detail_level: str
+    granularity: dict = Field(default_factory=dict)
+    evidence_gap: str | None = None
+    rationale: str = ""
+
+
+class ViewPlan(BaseModel):
+    views: list[PlannedView]
+    needs: list[str]
+    needs_from_role: bool = False
+    uncovered_needs: list[str] = Field(default_factory=list)
+    detail_level: str
+    notes: list[str] = Field(default_factory=list)
+
+
+def applicable(vp: Viewpoint, facts: RepoFacts) -> bool:
+    return vp.generic or any(sig in facts.signals for sig in vp.applies_when)
+
+
+def select_views(
+    request: SelectionInput,
+    catalog: Catalog,
+    facts: RepoFacts,
+    *,
+    max_views: int = MAX_VIEWS,
+) -> ViewPlan:
+    notes: list[str] = []
+    needs = [n for n in dict.fromkeys(request.needs) if n in catalog.needs]
+    unknown = [n for n in request.needs if n not in catalog.needs]
+    if unknown:
+        notes.append(f"ignored unknown needs: {', '.join(unknown)}")
+    needs_from_role = False
+    priors = catalog.roles[request.role].priors if request.role in catalog.roles else {}
+    if not needs and priors:
+        needs = [max(priors, key=lambda n: (priors[n], -list(catalog.needs).index(n)))]
+        needs_from_role = True
+        notes.append(f"goal states no need; used the strongest prior of role {request.role!r}: {needs[0]}")
+
+    layered = catalog.viewpoints.get("layered")
+    layered_overlay_ok = layered is not None and applicable(layered, facts)
+    candidates = [
+        vp for vp in catalog.viewpoints.values()
+        if applicable(vp, facts) and vp.covers() & set(needs) and vp.style_of is None
+    ]
+
+    def covered(views: tuple[Viewpoint, ...]) -> set[str]:
+        got = set().union(*(vp.covers() for vp in views)) & set(needs)
+        if "layering" in needs and layered_overlay_ok and any("layered" in vp.combine_with for vp in views):
+            got.add("layering")
+        return got
+
+    def score(views: tuple[Viewpoint, ...]):
+        primary = sum(len(set(vp.frames) & set(needs)) for vp in views)
+        prior = sum(max((priors.get(n, 0.0) for n in vp.covers() & set(needs)), default=0.0) for vp in views)
+        order = sum(catalog.order(vp.id) for vp in views)
+        return (len(covered(views)), -len(views), primary, prior, -order)
+
+    best: tuple[Viewpoint, ...] = ()
+    for size in range(1, max_views + 1):
+        for combo in combinations(candidates, size):
+            if not best or score(combo) > score(best):
+                best = combo
+    chosen = sorted(best, key=lambda vp: needs.index(_first_need(vp, needs, covered((vp,)))))
+    uncovered = [n for n in needs if n not in covered(tuple(chosen))]
+    if uncovered:
+        notes.append(f"needs not covered within {max_views} views: {', '.join(uncovered)}")
+
+    views: list[PlannedView] = []
+    for vp in chosen:
+        own = [n for n in needs if n in covered((vp,))]
+        final, specialised_from = _specialise(vp, catalog, facts)
+        overlays = [o for o in final.combine_with if applicable(catalog.viewpoint(o), facts)]
+        gap = None
+        if final.evidence and not any(sig in facts.signals for sig in final.evidence):
+            gap = f"no repository evidence of: {', '.join(final.evidence)}"
+        views.append(
+            PlannedView(
+                viewpoint_id=final.id,
+                family=final.family,
+                model_kind=final.model_kind,
+                needs=own,
+                overlays=overlays,
+                specialised_from=specialised_from,
+                detail_level=request.detail_level,
+                granularity=catalog.granularity(final.id, request.detail_level),
+                evidence_gap=gap,
+                rationale=_rationale(final, own, specialised_from, overlays),
+            )
+        )
+    _assign_subjects(views, request.subjects, needs)
+    return ViewPlan(
+        views=views,
+        needs=needs,
+        needs_from_role=needs_from_role,
+        uncovered_needs=uncovered,
+        detail_level=request.detail_level,
+        notes=notes,
+    )
+
+
+def _first_need(vp: Viewpoint, needs: list[str], got: set[str]) -> str:
+    return next(n for n in needs if n in got)
+
+
+def _specialise(vp: Viewpoint, catalog: Catalog, facts: RepoFacts) -> tuple[Viewpoint, str | None]:
+    if vp.id != "cnc-generic":
+        return vp, None
+    for style_id in catalog.cnc_style_priority:
+        style = catalog.viewpoint(style_id)
+        if applicable(style, facts):
+            return style, vp.id
+    return vp, None
+
+
+def _rationale(vp: Viewpoint, needs: list[str], specialised_from: str | None, overlays: list[str]) -> str:
+    parts = [f"{vp.name} ({vp.vb_ref}) covers {', '.join(needs)}"]
+    if specialised_from:
+        parts.append(f"specialised from {specialised_from} because the repository shows {', '.join(vp.applies_when)}")
+    if overlays:
+        parts.append(f"combined with {', '.join(overlays)} (V&B 6.6)")
+    return "; ".join(parts)
+
+
+def _assign_subjects(views: list[PlannedView], subjects: list[GoalSubject], needs: list[str]) -> None:
+    if not views:
+        return
+    for subject in subjects:
+        targets = [v for v in views if set(subject.needs) & set(v.needs)] or [views[0]]
+        for view in targets:
+            view.subjects.append(subject.text)
