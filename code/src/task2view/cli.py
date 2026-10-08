@@ -131,6 +131,12 @@ def build_parser() -> argparse.ArgumentParser:
     plugins = sub.add_parser("plugins", help="List registered scopers, extractors, and notations")
     plugins.set_defaults(command="plugins")
 
+    card_cmd = sub.add_parser("card", help="Phase 0 repository card: typed files, symbols, graph, facts, signals")
+    card_cmd.set_defaults(command="card")
+    card_cmd.add_argument("--code", required=True, help="Local repository path")
+    card_cmd.add_argument("--json", action="store_true", help="Print the full card as JSON instead of the summary")
+    card_cmd.add_argument("--out", help="Also write the full card JSON here")
+
     select = sub.add_parser(
         "select-views",
         help="ADR-006 Phase 1 + covering selection: which V&B views a goal needs (no repository read)",
@@ -144,8 +150,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Comma-separated repository signals (e.g. rest-api,layered,persisted-data); "
         "the Phase 0 card will compute these",
     )
+    select.add_argument("--code", help="Repository path: add the signals the Phase 0 card computes")
     select.add_argument("--max-views", type=int, default=3)
     return parser
+
+
+def _run_card(args: argparse.Namespace) -> int:
+    from task2view.phase0.card import build_card, render_card
+
+    card = build_card(args.code)
+    payload = card.model_dump_json(indent=2)
+    if args.out:
+        Path(args.out).write_text(payload, encoding="utf-8")
+    print(payload if args.json else render_card(card))
+    return 0
 
 
 def _run_select_views(args: argparse.Namespace) -> int:
@@ -156,6 +174,10 @@ def _run_select_views(args: argparse.Namespace) -> int:
 
     catalog = load_catalog()
     signals = {s.strip() for s in args.signals.split(",") if s.strip()}
+    if args.code:
+        from task2view.phase0.card import build_card
+
+        signals |= set(build_card(args.code).signals)
     unknown = sorted(signals - set(catalog.signals))
     if unknown:
         print(f"error: unknown signals {unknown}; known: {sorted(catalog.signals)}", file=sys.stderr)
@@ -198,6 +220,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "plugins":
         print(json.dumps(_plugin_names(), indent=2))
         return 0
+    if args.command == "card":
+        try:
+            return _run_card(args)
+        except PipelineError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
     if args.command == "select-views":
         try:
             return _run_select_views(args)
