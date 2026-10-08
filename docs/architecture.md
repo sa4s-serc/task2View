@@ -78,7 +78,8 @@ Adding a stakeholder or concern is catalog work under `code/src/task2view/knowle
 | ADR | Status |
 |---|---|
 | [ADR-001](adr/ADR-001-agentic-realignment.md) | accepted (extract D5–D7 superseded) |
-| [ADR-002](adr/ADR-002-sota-plugins.md) | accepted |
+| [ADR-002](adr/ADR-002-sota-plugins.md) | accepted (D1–D3 superseded by ADR-006) |
 | [ADR-003](adr/ADR-003-structure-grounding.md) | superseded in part by ADR-004 |
 | [ADR-004](adr/ADR-004-filesystem-graph-and-config.md) | accepted (D2 grouping superseded by ADR-005) |
-| [ADR-005](adr/ADR-005-correspondence-and-published-grain.md) | accepted |
+| [ADR-005](adr/ADR-005-correspondence-and-published-grain.md) | accepted (D1, D4 superseded by ADR-006) |
+| [ADR-006](adr/ADR-006-evidence-model-redesign.md) | accepted (design; implementation in progress) |
