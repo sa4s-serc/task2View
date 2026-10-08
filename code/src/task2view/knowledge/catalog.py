@@ -70,7 +70,7 @@ class Catalog(BaseModel):
     needs: dict[str, Need]
     quality_attributes: list[str]
     signals: dict[str, str]
-    constraints: dict[str, str]
+    constraints: dict[str, dict]  # name -> {severity, description}
     viewpoints: dict[str, Viewpoint]  # in catalog order
     roles: dict[str, Role]
     cnc_style_priority: list[str]

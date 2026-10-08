@@ -31,8 +31,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    run = sub.add_parser("run", help="Clean the repo, then run interpretation through view generation")
+    run = sub.add_parser("run", help="Run the pipeline: goal + repository -> validated architecture views")
     run.add_argument("--code", "--repo", dest="code", required=True, help="Path to the source repository")
+    run.add_argument("--engine", choices=["v2", "legacy"], default="v2",
+                     help="v2: ADR-006 pipeline (default). legacy: the pre-ADR-006 single-view pipeline")
+    run.add_argument("--judge-llm", help="v2: provider:model for the task-fit judge (Phase 8 layer 5); "
+                                         "use a different model from --llm. Omit to skip the judge")
+    run.add_argument("--notations", help="v2: comma-separated notations to write for every view "
+                                         "(default: --diagram-language, else plantuml)")
+    run.add_argument("--no-compile-check", action="store_true",
+                     help="v2: skip compiling diagram source in Phase 8 layer 1")
     run.add_argument(
         "--goal",
         help="Stakeholder goal statement, e.g. 'As a tester, I need to understand how registration works.'",
@@ -50,7 +58,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Notation adapter: plantuml, mermaid, d2, c4plantuml, structurizr, graphviz, nomnoml, excalidraw, bpmn",
     )
-    run.add_argument("--max-views", type=int, default=1)
+    run.add_argument("--max-views", type=int, default=None, help="v2 default 3 (ADR-006); legacy default 1")
     run.add_argument("--scope-token-budget", type=int, default=120_000)
     run.add_argument(
         "--scope-strategy",
@@ -155,6 +163,45 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _run_v2(args: argparse.Namespace) -> int:
+    from task2view.agents.run_v2 import run_v2
+    from task2view.agents.write_v2 import write_run_v2
+
+    if not args.goal:
+        print("error: --goal is required", file=sys.stderr)
+        return 2
+    notations = [n.strip() for n in (args.notations or args.diagram_language or "plantuml").split(",") if n.strip()]
+    result = run_v2(args.goal, args.code, llm=args.llm, judge_llm=args.judge_llm, max_views=args.max_views or 3,
+                    languages=notations, compile_enabled=not args.no_compile_check)
+    out = write_run_v2(result, args.out)
+    images = []
+    if not args.skip_render:
+        for view in result.viewset.views:
+            for render in result.renders.get(view.id, []):
+                name = f"view.{render.language}.{render.extension}" if render.language != "plantuml" else f"view.{render.extension}"
+                try:
+                    report = compile_file(out / view.id / name, out / view.id, notation=render.language,
+                                          formats=parse_formats(args.render_formats), kroki_url=args.kroki_url)
+                    images += report.get("files", []) if isinstance(report, dict) else []
+                except (PipelineError, ValueError, OSError) as exc:
+                    images.append(f"{view.id}/{name}: not rendered ({exc})")
+    summary = {
+        "out": str(out.resolve()),
+        "generator": result.llm,
+        "judge": result.judge_llm,
+        "views": [{"id": v.id, "viewpoint": v.viewpoint_id, "decision": result.decisions[v.id].decision,
+                   "verdict": result.validation[v.id].verdict, "elements": len(v.content_elements())}
+                  for v in result.viewset.views],
+        "uncovered_needs": result.viewset.uncovered_needs,
+        "declared_gaps": result.viewset.declared_gaps,
+        "claims": len(result.aem.claims),
+        "rejected_claims": len(result.aem.rejected_claims),
+        "images": images,
+    }
+    print(json.dumps(summary, indent=2))
+    return 0
+
+
 def _run_card(args: argparse.Namespace) -> int:
     from task2view.phase0.card import build_card, render_card
 
@@ -238,6 +285,14 @@ def main(argv: list[str] | None = None) -> int:
         except (PipelineError, ValueError, OSError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
+    if args.engine == "v2":
+        try:
+            return _run_v2(args)
+        except (PipelineError, ValueError, KeyError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+    if args.max_views is None:
+        args.max_views = 1
     try:
         raw = UserRequest(
             code=args.code,

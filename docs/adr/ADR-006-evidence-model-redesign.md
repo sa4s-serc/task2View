@@ -1,6 +1,6 @@
 # ADR-006 — Knowledge model, Architecture Evidence Model, and projected views
 
-- **Status:** accepted (design). Implementation in progress.
+- **Status:** accepted. Implemented (steps 1–5 and the v2 orchestrator, 2026-10-08); not yet evaluated with a live model.
 - **Date:** 2026-10-08
 - **Supersedes:**
   - ADR-002 D1–D3 (static scopers and a packed prompt *instead of* Phases 4–6 agents)

@@ -1,5 +1,27 @@
 # Pipeline and research-plan phases
 
+## Current pipeline (ADR-006, `task2view run`, default engine `v2`)
+
+Orchestrator: `code/src/task2view/agents/run_v2.py`. Design: [`redesign/01`](redesign/01-knowledge-model.md), [`02`](redesign/02-evidence-and-architecture-model.md), [`03`](redesign/03-views-reconciliation-validation.md); decision: [ADR-006](adr/ADR-006-evidence-model-redesign.md).
+
+| Phase | Module | What runs | Model call? | Artifact |
+|---|---|---|---|---|
+| 0 Repository card | `phase0/card.py`, `languages/`, `resolve.py`, `facts.py` | Typed files; tree-sitter symbols (Java, Python, JS/TS); directed code-only dependency graph; entry points, entities, deploy/build units, layers; repository signals with evidence | no | `repository_card.json/.txt` |
+| 1 Interpretation | `phase1/needs.py` | Needs (primary/secondary), subjects, target, role; every item verified against the goal text; detail level computed | yes | `stakeholder_profile.json` |
+| 3 Viewpoint selection | `phase3/selection.py`, `knowledge/catalog.py` | Covering over 30 Views-and-Beyond viewpoints, cap 3; style viewpoints only when the card shows the style; layered overlay; declared gaps | no | `view_plan.json` |
+| 2 Questions | `phase2/view_questions.py` | One question per (need, subject) for each selected view, at its grain | no | `architectural_questions.json` |
+| 4 Investigation | `phase4/investigate.py` | Tasks per view and subject; starting points from identifiers, entry points, graph neighbours (with origin); optional planning agent restricted to the card | optional | `investigation_plan.json` |
+| 5 Evidence | `phase5/agent.py`, `card_tools.py`, `verify.py`, `consolidate.py`, `collect.py` | Tool-using agents produce cited claims; every citation checked (file, lines, excerpt, symbol) and support decided; consolidation into the Architecture Evidence Model | yes | `evidence_model.json` |
+| 6 Reconciliation | `phase6/decide.py` | Coverage per question; rule-based decision per view (confirm, simplify, request_evidence, gap, drop); bounded evidence rounds | no | `reconciliation.json` |
+| 7 Views | `phase7/project.py`, `notations/` | Deterministic projection to View format v2 (nesting, stereotypes, responsibilities, attributes, ordered interactions, traceability); 9 notations x 10 model kinds | no | `viewset.json`, `V*/view.*` |
+| 8 Validation | `phase8/validate_view.py`, `constraints.py`, `judge.py` | Notation compiles; viewpoint constraints; faithfulness to the AEM; coverage; soft task-fit judge (different model) ; bounded repair | judge only | `validation_report.json` |
+
+Limits (task caps, step budgets, repair rounds) are in `knowledge/data/vb/pipeline.yaml`. The legacy pipeline below is still available with `--engine legacy`.
+
+---
+
+## Legacy pipeline (pre-ADR-006, `--engine legacy`)
+
 ![Task2View eight research-plan phases](diagrams/architecture.svg)
 
 Source: [`diagrams/architecture.dot`](diagrams/architecture.dot) · raster: [`diagrams/architecture.png`](diagrams/architecture.png).

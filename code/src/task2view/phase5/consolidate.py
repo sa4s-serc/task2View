@@ -259,11 +259,18 @@ def _deployment(aem: EvidenceModel, card: RepositoryCard) -> None:
         elif u.kind in {"persistence-unit", "app-config"}:
             url = str(u.details.get("jdbc_url") or u.details.get("spring.datasource.url") or "")
             m = re.match(r"jdbc:(\w+)://([^/:]+)(?::\d+)?/(\w+)", url)
-            if m and m.group(3) not in {slug(n) for n in datastores}:
-                eid = f"datastore:{slug(m.group(3))}"
-                aem.elements.setdefault(eid, ArchElement(id=eid, kind="datastore", name=m.group(3),
-                                                         details={"technology": m.group(1), "host": m.group(2), "url": url},
-                                                         named_by="fact"))
+            if not m:
+                continue
+            technology, host, database = m.groups()
+            same = datastores.get(host) or datastores.get(database)  # the URL's host is a compose service
+            if same:
+                aem.elements[same].details.update({"technology": technology, "database": database, "url": url})
+                continue
+            eid = f"datastore:{slug(database)}"
+            aem.elements.setdefault(eid, ArchElement(id=eid, kind="datastore", name=database,
+                                                     details={"technology": technology, "host": host, "url": url},
+                                                     named_by="fact"))
+            datastores[database] = eid
     nodes = [e for e in aem.elements.values() if e.kind in {"node", "execution_env"}]
     stores = [e for e in aem.elements.values() if e.kind == "datastore"]
     for art in artifacts:
@@ -326,19 +333,25 @@ def _scenarios(aem: EvidenceModel, claims: list[Claim]) -> None:
         scenario = Scenario(id=sid, name=name)
         fragments: dict[str, Fragment] = {}
         ordered = sorted(steps, key=lambda c: (c.order if c.order is not None else 10_000, c.id))
-        for i, c in enumerate(ordered, 1):
+        merged: dict[tuple, Step] = {}  # the same step found by several agents keeps all its claims
+        for c in ordered:
             src = _element_id_for(aem, c.source) or _actor(aem, c.source)
             tgt = _element_id_for(aem, c.target)
             if not src or not tgt:
                 continue
+            key = (c.order, src, tgt, c.label or c.relation or "call")
+            if key in merged:
+                merged[key].claims.append(c.id)
+                continue
             frag = None
             if c.condition:
-                key = c.condition.strip()
-                if key not in fragments:
-                    fragments[key] = Fragment(id=f"{sid}:alt{len(fragments) + 1}", kind="alt", guard=key)
-                frag = fragments[key].id
-            scenario.steps.append(Step(order=i, source=src, target=tgt, message=c.label or c.relation or "call",
-                                       fragment=frag, claims=[c.id]))
+                guard = c.condition.strip()
+                if guard not in fragments:
+                    fragments[guard] = Fragment(id=f"{sid}:alt{len(fragments) + 1}", kind="alt", guard=guard)
+                frag = fragments[guard].id
+            merged[key] = Step(order=len(merged) + 1, source=src, target=tgt, message=c.label or c.relation or "call",
+                               fragment=frag, claims=[c.id])
+            scenario.steps.append(merged[key])
         scenario.fragments = list(fragments.values())
         if scenario.steps:
             aem.scenarios[sid] = scenario

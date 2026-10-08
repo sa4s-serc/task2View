@@ -37,23 +37,25 @@ signals:
   requirement-docs: requirement or use-case documents
   tests: automated tests
 
+# Named, machine-checkable constraints (phase8/constraints.py). severity: error fails the view;
+# warning is reported and lowers nothing on its own.
 constraints:
-  element_kind_allowed: every element kind is one this viewpoint allows
-  relation_kind_allowed: every relation kind is one this viewpoint allows
-  max_elements: element count within the detail-level cap
-  no_package_or_directory_element: no element is named after a source package or directory
-  component_has_responsibility: every component or module shows at least one responsibility
-  nesting_well_formed: every parent exists and has a kind that may contain the child
-  lifeline_is_component_or_actor: sequence lifelines are components or actors, never packages or classes dumps
-  messages_ordered: interactions carry a total order
-  message_backed_by_call_evidence: every message has call evidence in the AEM
-  association_not_fk_field: no association is drawn for a foreign-key field; it is an attribute
-  entity_has_attributes: every entity shows its persisted attributes
-  one_system_box: exactly one system element, named after the product
-  actor_outside_boundary: actors are outside the system boundary
-  node_contains_artifact: every artifact is allocated to a node or environment
-  relation_has_evidence: every relation is backed by AEM evidence
-  no_isolated_element: every element takes part in at least one relation (except groups)
+  element_kind_allowed: {severity: error, description: "every element kind is one this viewpoint allows"}
+  relation_kind_allowed: {severity: error, description: "every relation kind is one this viewpoint allows"}
+  max_elements: {severity: error, description: "element count within the detail-level cap"}
+  no_package_or_directory_element: {severity: error, description: "no element is named after a source package or directory"}
+  component_has_responsibility: {severity: warning, description: "every component or module shows at least one responsibility"}
+  nesting_well_formed: {severity: error, description: "every parent exists and has a kind that may contain the child"}
+  lifeline_is_component_or_actor: {severity: error, description: "sequence lifelines are components or actors, never packages or classes dumps"}
+  messages_ordered: {severity: error, description: "interactions carry a total order"}
+  message_backed_by_call_evidence: {severity: error, description: "every message has call evidence in the AEM"}
+  association_not_fk_field: {severity: error, description: "no association is drawn for a foreign-key field; it is an attribute"}
+  entity_has_attributes: {severity: warning, description: "every entity shows its persisted attributes"}
+  one_system_box: {severity: error, description: "exactly one system element, named after the product"}
+  actor_outside_boundary: {severity: error, description: "actors are outside the system boundary"}
+  node_contains_artifact: {severity: error, description: "every artifact is allocated to a node or environment"}
+  relation_has_evidence: {severity: error, description: "every relation is backed by AEM evidence"}
+  no_isolated_element: {severity: warning, description: "every element takes part in at least one relation (except groups)"}
 
 # evidence_classes: corpus file classes (corpus.yaml) Phases 4-5 search for this family.
 families:

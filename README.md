@@ -40,95 +40,64 @@ Adding a provider means writing an `LLMClient` subclass with `complete_text` and
 ```bash
 task2view run \
   --code /path/to/repo \
-  --goal "I am a software developer. I need to modify the seat booking functionality and understand the main components involved." \
-  --out runs/demo
+  --goal "I am a tester. I need to design integration tests for user registration and understand the components involved and how they interact." \
+  --out runs/demo \
+  --llm anthropic:claude-sonnet-4-5 \
+  --judge-llm <another provider:model> \
+  --notations plantuml,mermaid
 ```
 
-Swap analysis plug-ins without changing the rest of the pipeline:
+The pipeline is ADR-006 (stages below). `--engine legacy` runs the pre-ADR-006 single-view pipeline with its scoper/extractor plug-ins.
+
+Inspect individual stages without running the whole pipeline:
 
 ```bash
-task2view run --code /path/to/repo --goal "..." --out runs/demo \
-  --scope-strategy pagerank \
-  --extract-backend ciao \
-  --diagram-language plantuml
+task2view card --code /path/to/repo                                   # Phase 0 repository card
+task2view select-views --goal "..." --code /path/to/repo --llm ...    # Phase 1 + viewpoint selection
+task2view plugins                                                     # notations, LLM providers, legacy plug-ins
 ```
 
-`--config pipeline.example.yaml` sets the same fields; CLI flags override.
-
-```bash
-task2view plugins          # list scopers, extractors, notations
-task2view compile --run-dir runs/demo
-```
-
-Example goals for the two evaluation repos: [`input_example_task2view.txt`](docs/input_example_task2view.txt). Batch runner:
+Goal sets (any repositories; the pilot set is `code/tests/fixtures/pilot_goals.yaml`):
 
 ```bash
 cd code
-.venv/bin/python scripts/run_input_examples.py \
-  --out-dir demo-batch \
-  --scope-strategy pagerank \
-  --extract-backend ciao \
-  --diagram-language plantuml
+.venv/bin/python scripts/eval_view_selection.py --goals goals.yaml --llm ... --runs 3   # Phase 1 + selection only
+.venv/bin/python scripts/run_goal_set.py --goals goals.yaml --out runs/eval --llm ... --judge-llm ...   # full runs
 ```
-
-Generated artifacts go to `code/runs/`. The current `pagerank-ciao` evaluation batch is in git; other run folders stay gitignored.
 
 ## What the pipeline does
 
-The eight phases are those of the research plan (Figure 1). What each phase runs: [`docs/architecture.md`](docs/architecture.md).
-
-Default path is `run_agentic` in `code/src/task2view/agents/orchestrate.py`.
+Stage by stage: [`docs/architecture.md`](docs/architecture.md). Orchestrator: `code/src/task2view/agents/run_v2.py`.
 
 ```
-Input 1  stakeholder / task description
-    │
-    ├─► 1  Stakeholder-Task Interpretation      phase1/interpret.py
-    ├─► 2  Concern and Architectural Questions  phase2/questions.py
-    ├─► 3  Knowledge-Grounded Viewpoint Planning phase3/viewpoint.py
-Input 2  software repository
-    │
-    └─► 4  Repository Analysis                  phase4/  graph + scoper
-        5  Evidence Extraction and Grounding    phase5/  packed / ciao / archagent
-        6  Need–Evidence Reconciliation         phase6/  notes only
-        7  Specialized View Generation          phase7/  PlantUML / Mermaid / …
-        8  Validation and Consistency           phase8/  evidence gate
+goal ──► 1 needs, subjects, target (LLM, verified against the goal)
+repo ──► 0 repository card: typed files, symbols, dependency graph, facts, signals (tree-sitter, no LLM)
+         3 viewpoint selection: covering over 30 Views-and-Beyond viewpoints, cap 3 (no LLM)
+         2 questions per selected view (no LLM)
+         4 investigation tasks with suggested starting points (optional planning agent)
+         5 evidence agents with repository tools ─► verified claims ─► Architecture Evidence Model
+         6 per-view decision: confirm / simplify / request evidence / gap / drop (rules)
+         7 deterministic projection to View format v2, rendered in 9 notations
+         8 validation: notation, viewpoint constraints, faithfulness, coverage, task-fit judge (soft)
 ```
 
-`--skip-critic` skips only Phase 6. `--skip-extract` stops after Phase 4.
-
-## Plug-ins
-
-| Kind | Default | Others |
-|---|---|---|
-| Scoper | `composite` | `pagerank`, `graph1`, `locagent`, `central`, `layer`, `grep`, `lexical`, `dataflow`, `full` |
-| Extractor | `packed` (alias `gemini`) | `ciao`, `archagent` |
-| Notation | viewpoint / goal / config | `plantuml`, `mermaid`, `d2`, `c4plantuml`, `structurizr`, `graphviz`, `nomnoml`, `excalidraw`, `bpmn` |
-
-PageRank scoping can **force up to 8 files** from required-information cues (IDF-filtered so common tokens do not swallow the repo), then fills to 16 with PageRank.
-
-## Knowledge and tools
-
-Static knowledge is YAML under `code/src/task2view/knowledge/data/` (stakeholders, viewpoints, required information, task cues, view projection, CIAO prompt). It is loaded every run.
-
-The LLM agents do **not** call repository tools. Each call is one JSON completion with evidence stuffed into the prompt (catalog text, scoped file bodies, graph summary). `RepoTools` (`list_tree`, `search`, `read`, `graph_query`, …) exists on `AgentRuntime.tool_loop` but is unused on the default path.
-
-There is no vector store and no memory across runs. `code/runs/` is write-only output.
+Every element in a view traces to code symbols and verified claims (`traceability.md`). Run-time limits: `code/src/task2view/knowledge/data/vb/pipeline.yaml`. Knowledge (needs, viewpoints, roles, corpus rules): `code/src/task2view/knowledge/data/vb/`.
 
 ## Output of a run
 
 | File | Contents |
 |---|---|
-| `correspondence.json` | Ranked viewpoints for this run |
-| `stakeholder_task_profile.json` | Interpreted role, task, target |
-| `architectural_questions.json` | Questions the view should answer |
-| `viewpoint_plan.json` | Chosen catalog viewpoint |
-| `view_specification.json` | Viewpoint + required information |
-| `repository_scope.json` | Files the scoper kept |
-| `view_model.json` | Elements, relations, groups |
-| `architecture_view.puml` (or `.mmd`, …) | Diagram source |
-| `architecture_view.svg` / `.png` | Compiled image |
-| `structure_report.json` | Grounding / critic notes |
-| `validation_report.json` | Semantic gate |
+| `repository_card.json` / `.txt` | Phase 0 facts and signals |
+| `stakeholder_profile.json` | Needs (primary/secondary), subjects, target, role, detail level |
+| `view_plan.json` | Selected viewpoints with rationale, overlays, gaps |
+| `architectural_questions.json` | Questions per view |
+| `investigation_plan.json` | Tasks, starting points and their origin |
+| `evidence_model.json` | Verified claims, rejected claims with reasons, elements, relations, scenarios |
+| `reconciliation.json` | Coverage per question and the decision per view |
+| `viewset.json`, `V*/view.json` | The views (format v2) and correspondences |
+| `V*/view.puml` (+ other notations) | Diagram sources; images when `--skip-render` is not set |
+| `validation_report.json` | Five-layer validation per view |
+| `traceability.md`, `README.md`, `run.log` | Element → files/symbols; run summary; models used |
 
 ## Layout
 

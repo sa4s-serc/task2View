@@ -187,3 +187,17 @@ Per run directory:
    \* c4plantuml includes PlantUML, so the non-C4 kinds use the plain PlantUML constructs.
 3. **Task-fit judge:** uses a different model from the generator by default. It is soft, reported but not gating, until calibrated on the expert reviews, CodeToDiagram and the GR10 UML model.
 4. **Repair budget:** 2 projection retries and 2 evidence rounds per view.
+
+## 10. Implementation status (2026-10-08)
+
+Implemented in `code/src/task2view/` (ADR-006 steps 4–5), with tests on synthetic repositories:
+- View format v2: `contracts/views.py`. Projection: `phase7/project.py`, including `fold` (Phase 6 simplify) and `exclude` (Phase 8 repair).
+- Renderers: `phase7/notations/`, 9 languages x 10 model kinds; the approximated flag comes from the §9 matrix.
+  - Compile-checked locally: PlantUML, C4-PlantUML, Graphviz, Mermaid.
+  - Checked for structure: D2, nomnoml, Structurizr, Excalidraw, BPMN.
+- Phase 6: `phase6/decide.py`. Phase 8: `phase8/constraints.py`, `validate_view.py`, `judge.py`.
+
+Differences from the text above:
+- **`split` is not automatic yet.** An overflowing structural view is simplified (folded to layers or packages) instead, and the limitation says so.
+- **No LLM wording step in Phase 7.** Responsibility phrases are the ones written in verified claims, and titles and labels are deterministic, so every word in a view traces to a claim or a code symbol. An LLM wording pass can be added later behind the same projection.
+- **The judge does not run without a judge model.** It is skipped unless `--judge-llm` is given. Independence is reported as unknown when either model has no spec.
