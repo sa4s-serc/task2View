@@ -21,10 +21,11 @@ sys.path.insert(0, "tools")
 from java_facts import JavaFacts  # noqa: E402
 from vpp_extract import VppModel  # noqa: E402
 
-VPP = "italian/progetto_ing_software_gr10-main/docs/visual-paradigm/Progetto_Ing_Software_GR10.vpp"
-SRC = "italian/progetto_ing_software_gr10-main/src/main/java"
-STOP = {"di", "del", "della", "al", "il", "la", "le", "elenco", "pattern", "bced",
-        "nuova", "nuovo", "informazioni", "dettagli", "andamento"}
+GR10 = "data/progetto_ing_software_gr10-main-English"
+VPP = f"{GR10}/docs/visual-paradigm/Software_Engineering_Project_GR10_English.vpp"
+SRC = f"{GR10}/src/main/java"
+STOP = {"of", "the", "to", "a", "an", "and", "for", "list", "pattern", "bced", "refined",
+        "new", "information", "details", "progress"}
 
 
 def norm(s):
@@ -35,7 +36,7 @@ def norm(s):
 
 
 def stem(w):
-    """Crude Italian stemmer: keep the discriminative prefix of a cue word."""
+    """Crude stemmer: keep the discriminative prefix of a cue word."""
     return norm(w).lower()[:6]
 
 

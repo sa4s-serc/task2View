@@ -38,7 +38,7 @@ Restart Codex if `$task2view` does not appear. Invoke with `$task2view` or `/ski
 
 ## Run one goal
 
-Open Codex **on the English subject repo** (`data/Progetto-IS-main-English` or `data/progetto_ing_software_gr10-main-English`), not on Task2View and not on the Italian originals.
+Open Codex **on the English subject repo** (`data/Progetto-IS-main-English` or `data/progetto_ing_software_gr10-main-English`), not on Task2View.
 
 ```
 $task2view

@@ -4,7 +4,7 @@ Use the goal text **verbatim**. Same strings as `Task2View/input_example_task2vi
 
 ## Repo 1 — `data/Progetto-IS-main-English`
 
-English conversion of https://github.com/CapHello/Progetto-IS. Use this checkout. Do not analyze the Italian original.
+Use this checkout.
 
 Suggested `--run-id` / output folder names: `IS-seat-L1`, `IS-seat-L2`, `IS-seat-L3`, `IS-reg-L1`, `IS-reg-L2`, `IS-reg-L3`.
 
@@ -42,7 +42,7 @@ I am an integration tester. I need to design integration tests for the user regi
 
 ## Repo 2 — `data/progetto_ing_software_gr10-main-English`
 
-English conversion of https://github.com/Sal-zip/progetto_ing_software_gr10. Use this checkout. Do not analyze the Italian original.
+Use this checkout.
 
 Suggested `--run-id`: `GR10-Q1` … `GR10-Q4`. Same caveat: old catalog-rank ids, not an answer key.
 

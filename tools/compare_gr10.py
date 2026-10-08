@@ -1,7 +1,8 @@
 """Check whether relations drawn in GR10's UML are present in its Java code.
 
-Runs on the Italian original so that the two independent English translations of
-the model and of the source cannot confound name matching.
+Run from the Task2View root. The model and the source were translated to English
+separately, so a UML name that does not match a code class is reported as
+non-code / unjudgeable rather than as contradicted.
 """
 
 import sys
@@ -11,8 +12,9 @@ sys.path.insert(0, "tools")
 from java_facts import JavaFacts  # noqa: E402
 from vpp_extract import VppModel  # noqa: E402
 
-VPP = "italian/progetto_ing_software_gr10-main/docs/visual-paradigm/Progetto_Ing_Software_GR10.vpp"
-SRC = "italian/progetto_ing_software_gr10-main/src/main/java"
+GR10 = "data/progetto_ing_software_gr10-main-English"
+VPP = f"{GR10}/docs/visual-paradigm/Software_Engineering_Project_GR10_English.vpp"
+SRC = f"{GR10}/src/main/java"
 PACKAGES = {"Boundary", "Control", "Entity", "Database"}
 
 
