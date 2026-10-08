@@ -1,210 +1,131 @@
-# Output schemas
+# Output files
 
-Match these shapes so a single-agent run can be compared file-for-file with Task2View.
+Write these files under `--out`, with exactly these names and fields. They are the files the Task2View pipeline writes (`code/src/task2view/agents/write_v2.py`), so runs can be compared file by file. Values below are illustrative.
 
-Allowed `kind` for elements: `actor`, `component`, `module`, `class`, `service`, `datastore`, `external_system`, `deployment_node`, `state`, `system`.
+```
+<out>/
+  repository_card.txt          repository_card.json
+  stakeholder_profile.json     view_plan.json
+  architectural_questions.json investigation_plan.json
+  evidence_model.json          reconciliation.json
+  viewset.json                 validation_report.json
+  traceability.md              README.md
+  V1-<viewpoint id>/view.json  V1-<viewpoint id>/view.puml   (one folder per view)
+```
 
-Allowed `kind` for relations: `uses`, `calls`, `call`, `return`, `depends`, `dataflow`, `inherits`, `implements`, `contains`, `deploys`, `transition`.
-
-Allowed `view_type`: `sequence_view`, `component_view`, `deployment_view`, `class_view`, `state_view`, `dataflow_view`, `context_view`.
-
-## stakeholder_task_profile.json
-
+## repository_card.json
 ```json
-{
-  "stakeholder": "member-of-development-team",
-  "canonical_role": "member-of-development-team",
-  "original_label": "software developer",
-  "task": "modify the seat booking functionality",
-  "target": "seat booking functionality",
-  "goal": "understand the main system components involved and how they interact",
-  "scope": "",
-  "constraints": [],
-  "confidence": 0.9,
-  "source_goal": "<verbatim user goal>",
-  "concerns": ["maintainability", "control-flow", "connectivity"],
-  "environment": ""
-}
+{"root": ".", "name": "repo-name", "languages": {"java": 40},
+ "layers": {"presentation": ["com.example.web"], "application": ["com.example.service"]},
+ "entry_points": [{"kind": "http-route", "symbol": "com.example.web.OrderController", "file": "src/…/OrderController.java", "line": 14, "detail": "PostMapping /orders/{id}/pay"}],
+ "entities": [{"symbol": "com.example.domain.Order", "name": "Order", "table": "orders", "source": "orm", "file": "src/…/Order.java",
+               "fields": [{"name": "id", "type": "Long", "key": true, "relation": null, "target": null, "foreign_key": null}]}],
+ "deploy": [{"kind": "compose-service", "name": "db", "file": "docker-compose.yml", "details": {"image": "postgres:16"}}],
+ "build": [{"tool": "maven", "file": "pom.xml", "name": "shop-service", "packaging": "jar", "dependencies": ["postgresql"]}],
+ "signals": {"rest-api": ["com.example.web.OrderController: PostMapping /orders/{id}/pay"], "layered": ["presentation: com.example.web"]},
+ "notes": []}
+```
+`repository_card.txt` is a short readable summary of the same facts.
+
+## stakeholder_profile.json
+```json
+{"goal": "<verbatim goal>", "role_label": "integration tester", "role": "tester", "target": "order checkout",
+ "needs": [{"need": "collaboration", "evidence": "<exact words>", "salience": "primary"}],
+ "subjects": [{"text": "<exact words>", "needs": ["interaction-order"]}],
+ "quality_attributes": [], "detail_level": "feature", "dropped": []}
+```
+
+## view_plan.json
+```json
+{"views": [{"viewpoint_id": "client-server", "family": "cnc", "model_kind": "uml-component",
+            "needs": ["collaboration"], "subjects": [], "overlays": ["layered"], "specialised_from": "cnc-generic",
+            "detail_level": "feature", "granularity": {"max_elements": 10}, "evidence_gap": null,
+            "rationale": "Client-Server (4.3.1 Client-Server Style) covers collaboration; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6)"}],
+ "needs": ["collaboration"], "secondary_needs": [], "needs_from_role": false,
+ "uncovered_needs": [], "secondary_not_shown": [], "detail_level": "feature", "notes": []}
 ```
 
 ## architectural_questions.json
-
 ```json
-{
-  "concerns": ["maintainability", "control-flow"],
-  "questions": [
-    {"id": "AQ1", "text": "Which module owns …?", "concern": "maintainability", "priority": 1}
-  ]
-}
+[{"id": "AQ1", "view_id": "V1-client-server", "viewpoint_id": "client-server", "need": "collaboration", "subject": null,
+  "element_kinds": ["component", "interface", "datastore", "external_system"], "relation_kinds": ["request-reply", "uses", "reads", "writes"],
+  "fragments": [], "text": "For order checkout: which parts work together for a feature and through which interfaces or connectors?"}]
 ```
 
-## correspondence.json
-
+## investigation_plan.json
 ```json
-{
-  "role_id": "member-of-development-team",
-  "stakeholder_name": "Member of development team",
-  "viewpoint_id": "module-decomposition",
-  "view_type": "component_view",
-  "task_focus": "seat booking",
-  "concerns": ["maintainability"],
-  "task_concerns": ["maintainability"],
-  "preferred_viewpoints": ["module-decomposition", "code-mapping"],
-  "phrases": ["modify", "main components involved"],
-  "task": "modify the seat booking functionality",
-  "purpose": "Module Decomposition View for seat booking: modules named by responsibility…",
-  "unanswered_concerns": ["control-flow", "connectivity"],
-  "decided_by": "model",
-  "grain": {
-    "viewpoint_id": "module-decomposition",
-    "unit": "component",
-    "nodes": "modules or subsystems that own the task, named by responsibility",
-    "relations": "containment or uses",
-    "forbid": "one box per source file; class inventory"
-  },
-  "ranked": [
-    {"viewpoint_id": "module-decomposition", "view_type": "component_view", "score": 10.0, "reasons": ["task-cue preferred viewpoint"]}
-  ]
-}
+[{"id": "IT1", "view_id": "V1-client-server", "viewpoint_id": "client-server", "question_ids": ["AQ1"], "need": "collaboration",
+  "subject": null, "goal": "Collect evidence for: …", "seeds": {"symbols": ["com.example.orders.OrderService"], "paths": [], "classes": ["code", "config", "web"]},
+  "expect_elements": ["component", "…"], "expect_relations": ["uses", "…"], "budget_steps": 10, "suggested_by": ["symbol-name", "entry-point:http-route"]}]
 ```
 
-## viewpoint_plan.json
-
+## evidence_model.json
 ```json
-{
-  "views": [
-    {
-      "id": "V1",
-      "viewpoint_id": "module-decomposition",
-      "view_type": "component_view",
-      "notation": "Component Diagram",
-      "diagram_language": "plantuml",
-      "granularity": "component_or_service_level",
-      "purpose": "Module Decomposition View for seat booking: modules or subsystems that own the task, named by responsibility. Relations: containment or uses. Do not: one box per source file; class inventory.",
-      "addresses": [],
-      "required_evidence": ["modules named by responsibility", "containment or uses"],
-      "deferred": false
-    }
-  ],
-  "notes": ["Eligible because they frame the chosen concerns: module-decomposition, cnc-runtime"]
-}
+{"claims": {"C1": {"id": "C1", "task": "IT1", "kind": "element", "element_kind": "component", "name": "OrderService",
+                    "symbol": "com.example.orders.OrderService", "responsibilities": ["validates that an order can be paid"], "attributes": [],
+                    "source": null, "target": null, "relation": null, "label": null, "order": null, "scenario": null, "condition": null,
+                    "evidence": [{"file": "src/…/OrderService.java", "symbol": null, "lines": [41, 43], "excerpt": "if (order.getStatus() != OrderStatus.NEW) {"}],
+                    "support": "observed", "confidence": 0.9, "question_ids": ["AQ1"]}},
+ "rejected_claims": [{"task": "IT1", "claim": {"…": "…"}, "reason": "src/…: excerpt not found at lines [10, 10]"}],
+ "elements": {"cmp:com.example.orders.OrderService": {"id": "cmp:com.example.orders.OrderService", "kind": "component", "name": "OrderService",
+               "realized_by": ["com.example.orders.OrderService"], "layer": "application",
+               "responsibilities": [{"text": "validates that an order can be paid", "claims": ["C1"]}],
+               "attributes": [], "details": {}, "support": "observed", "claims": ["C1"], "named_by": "symbol"}},
+ "relations": {"rel:…": {"id": "rel:…", "kind": "uses", "source": "cmp:…OrderController", "target": "cmp:…OrderService", "label": "pay",
+                "multiplicity": null, "member_edges": ["…OrderController -calls-> …OrderService (src/…:15)"], "claims": [], "support": "observed"}},
+ "scenarios": {"scn:pay-order": {"id": "scn:pay-order", "name": "pay order", "subject": null,
+               "steps": [{"order": 1, "source": "cmp:…OrderController", "target": "cmp:…OrderService", "message": "pay(id)", "kind": "call", "fragment": null, "claims": ["C3"]}],
+               "fragments": [{"id": "scn:pay-order:alt1", "kind": "alt", "guard": "order status is NEW"}]}},
+ "component_of": {"com.example.orders.OrderService": "cmp:com.example.orders.OrderService"},
+ "correspondences": [{"rule": "entity-realized-by-component", "elements": ["ent:…Order", "cmp:…Order"], "note": ""}],
+ "notes": ["IT1: 6 claims, read 3 files"]}
 ```
 
-Notation labels: sequence_view → UML Sequence Diagram; component_view → Component Diagram; deployment_view → Deployment Diagram; class_view → Class Diagram; context_view → System Context Diagram; dataflow_view → Data Flow Diagram.
-
-Granularity: high → `system_or_context_level`; medium → `component_or_service_level`; low → `class_or_code_level`.
-
-## view_specification.json
-
+## reconciliation.json
 ```json
-{
-  "request_id": "IS-seat-L1",
-  "stakeholder": "member-of-development-team",
-  "task_summary": "<goal | task | target | understanding>",
-  "architectural_concerns": ["maintainability"],
-  "selected_view": {
-    "view_type": "component_view",
-    "notation": "Component Diagram",
-    "diagram_language": "plantuml",
-    "granularity": "component_or_service_level",
-    "purpose": "…",
-    "viewpoint_id": "module-decomposition",
-    "grain_unit": "component"
-  },
-  "required_information": [
-    {"id": "RI-1", "need": "top-level modules and their responsibilities"}
-  ],
-  "declared_gaps": [],
-  "unanswered_concerns": []
-}
+{"V1-client-server": {"view_id": "V1-client-server", "decision": "confirm", "reason": "all assigned questions have evidence in the view",
+                      "coverage": [{"question": "AQ1", "status": "supported", "claims": ["C1", "C2"], "note": ""}], "unsupported_questions": []}}
 ```
 
-## repository_scope.json
-
+## V*/view.json (one per view; viewset.json holds all of them)
 ```json
-{
-  "request_id": "IS-seat-L1",
-  "strategy": "single-agent",
-  "files": [
-    {"path": "src/…/ReservationManager.java", "reason": "owns booking rules"}
-  ]
-}
+{"id": "V1-client-server", "viewpoint_id": "client-server", "viewpoint_name": "Client-Server", "vb_ref": "4.3.1 Client-Server Style",
+ "model_kind": "uml-component", "title": "Client-Server view — order checkout", "purpose": "…", "detail_level": "feature", "max_elements": 10,
+ "addresses": ["AQ1"], "overlays": ["layered"], "scenario": null,
+ "elements": [{"id": "group:layer:application", "kind": "layer", "name": "Application", "stereotype": null, "parent": null,
+               "responsibilities": [], "attributes": [], "realized_by": [], "support": "observed", "group": true},
+              {"id": "cmp:com.example.orders.OrderService", "kind": "component", "name": "OrderService", "stereotype": "application",
+               "parent": "group:layer:application", "responsibilities": ["validates that an order can be paid"], "attributes": [],
+               "realized_by": ["com.example.orders.OrderService"], "support": "observed", "group": false}],
+ "relations": [{"id": "rel:…", "kind": "uses", "source": "cmp:…", "target": "cmp:…", "label": "pay", "multiplicity": null, "support": "observed"}],
+ "interactions": [{"order": 1, "source": "cmp:…", "target": "cmp:…", "message": "pay(id)", "kind": "call", "fragment": null}],
+ "fragments": [{"id": "scn:pay-order:alt1", "kind": "alt", "guard": "order status is NEW"}],
+ "traceability": [{"element": "cmp:…OrderService", "name": "OrderService", "files": ["src/…/OrderService.java"], "symbols": ["com.example.orders.OrderService"]}],
+ "limitations": [], "gaps": [], "overflow": []}
 ```
-
-Keep ≤ 16 files.
-
-## view_model.json
-
+`viewset.json`:
 ```json
-{
-  "request_id": "IS-seat-L1",
-  "view_type": "component_view",
-  "granularity": "component_or_service_level",
-  "groups": [],
-  "elements": [
-    {
-      "id": "E1",
-      "name": "ReservationManager",
-      "kind": "component",
-      "role": "applies booking rules and stores reservations",
-      "external": false,
-      "evidence": {"file": "src/…/ReservationManager.java", "symbol": "ReservationManager", "excerpt": "public class ReservationManager"},
-      "support": "observed",
-      "agreement": 1.0
-    }
-  ],
-  "relations": [
-    {
-      "id": "R1",
-      "from": "E1",
-      "to": "E2",
-      "kind": "uses",
-      "label": "createReservation",
-      "order": null,
-      "evidence": {"file": "src/…/ReservationManager.java", "symbol": "createReservation", "excerpt": "reservationDao.save"},
-      "support": "observed",
-      "agreement": 1.0
-    }
-  ],
-  "unanswered": [],
-  "notes": []
-}
-```
-
-Relation field is `from` (not `frm`).
-
-## structure_report.json
-
-```json
-{
-  "request_id": "IS-seat-L1",
-  "answered_questions": ["AQ1", "AQ2"],
-  "unanswered_questions": ["AQ5"],
-  "answered_information": ["RI-1", "RI-3"],
-  "unanswered_information": ["RI-2"],
-  "package_shaped_names": [],
-  "notes": []
-}
+{"system": "repo-name", "stakeholder": "tester", "goal": "<verbatim>", "views": [ … ],
+ "correspondences": [{"rule": "same-element", "elements": ["V1-client-server:cmp:…", "V2-sequence:cmp:…"]}],
+ "declared_gaps": [], "uncovered_needs": [], "secondary_not_shown": []}
 ```
 
 ## validation_report.json
-
 ```json
-{
-  "request_id": "IS-seat-L1",
-  "notation": "plantuml",
-  "syntax": {"status": "pass", "attempts": 1},
-  "semantic": {
-    "elements_resolved": "8/8",
-    "relations_resolved": "10/10",
-    "unsupported": [],
-    "unresolved_elements": [],
-    "granularity_violations": [],
-    "unanswered_information": [],
-    "unanswered_concerns": ["control-flow"],
-    "scope_files": 16,
-    "misplaced_groups": []
-  },
-  "verdict": "pass"
-}
+{"V1-client-server": {"view_id": "V1-client-server", "verdict": "pass_with_limitations",
+  "notation": {"status": "pass", "language": "plantuml", "approximated": false, "model_kind_matches": true},
+  "constraints": [{"constraint": "component_has_responsibility", "severity": "warning", "mark": "cmp:…", "message": "… shows no responsibility"}],
+  "faithfulness": [], "coverage": [{"question": "AQ1", "status": "supported", "claims": ["C1"], "note": ""}],
+  "task_fit": {"status": "not-run", "model": null, "independent": null, "scores": {}, "overall": null, "summary": "a different model must judge"},
+  "errors": 0, "warnings": 1, "repair_marks": []}}
 ```
+
+## traceability.md and README.md
+`traceability.md`: per view, a table `| Element | Files | Symbols |`.
+
+`README.md` has these parts:
+- goal, role, target, detail level, primary and secondary needs, and the model you are;
+- a table of views (viewpoint, decision, verdict, element count, notation);
+- the rationale per view;
+- limitations and declared gaps;
+- evidence counts (verified and rejected claims, elements, relations, scenarios).

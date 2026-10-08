@@ -1,0 +1,93 @@
+# Phase 0 repository card: how files are classified and which markers raise
+# repository signals. Design: docs/redesign/02-evidence-and-architecture-model.md §3.
+# Every file gets a class; nothing is silently dropped.
+
+skip_directories: [.git, .hg, .svn, .idea, .vscode, .venv, venv, env, node_modules, target, build, dist, out, bin, obj,
+                   __pycache__, .pytest_cache, .mypy_cache, .gradle, .mvn, vendor, coverage, .next, .nuxt, .tox]
+
+languages:
+  java: java
+  kt: kotlin
+  kts: kotlin
+  scala: scala
+  groovy: groovy
+  py: python
+  js: javascript
+  mjs: javascript
+  cjs: javascript
+  jsx: javascript
+  ts: typescript
+  tsx: typescript
+  go: go
+  rs: rust
+  c: c
+  h: c
+  cc: cpp
+  cpp: cpp
+  hpp: cpp
+  cs: csharp
+  rb: ruby
+  php: php
+  swift: swift
+  dart: dart
+  vue: vue
+  svelte: svelte
+
+# First matching rule wins. `names` match the file name (case-insensitive, glob),
+# `extensions` the suffix, `paths` any directory segment (case-insensitive).
+classes:
+  - {class: model,  extensions: [vpp, vpd, mdj, uml, xmi, puml, plantuml, drawio, mmd, eap, archimate]}
+  - {class: binary, extensions: [png, jpg, jpeg, gif, bmp, ico, svg, pdf, doc, docx, xls, xlsx, ppt, pptx, jar, war, ear,
+                                 class, so, dll, dylib, exe, zip, tar, gz, tgz, 7z, rar, mp4, mov, mp3, wav, ttf, woff, woff2,
+                                 eot, db, sqlite, bin, dat, lock, form]}
+  - {class: deploy, names: [Dockerfile, "Dockerfile.*", "*.dockerfile", "docker-compose*.yml", "docker-compose*.yaml",
+                            "compose*.yml", "compose*.yaml", Procfile, "*.tf", "Jenkinsfile", ".gitlab-ci.yml", "app.yaml"],
+                    paths: [k8s, kubernetes, helm, charts, deploy, deployment, .github]}
+  - {class: build,  names: [pom.xml, build.gradle, build.gradle.kts, settings.gradle, settings.gradle.kts, package.json,
+                            pyproject.toml, setup.py, setup.cfg, requirements.txt, "requirements*.txt", Pipfile, go.mod,
+                            Cargo.toml, "*.csproj", "*.sln", Gemfile, composer.json, Makefile, CMakeLists.txt, build.xml]}
+  - {class: schema, extensions: [sql, ddl, prisma, graphql, proto, avsc], names: ["*.changelog.xml", "*migration*"]}
+  - {class: config, names: [persistence.xml, "application*.properties", "application*.yml", "application*.yaml",
+                            "*.properties", "*.env.example", ".env.example", "web.xml", "beans.xml", "logback*.xml",
+                            "log4j*.xml", "openapi*.yaml", "openapi*.yml", "openapi*.json", "swagger*.json", "swagger*.yaml",
+                            "*.ini", "*.toml", "*.conf", "*.cfg"]}
+  - {class: docs,   extensions: [md, markdown, rst, adoc, txt], names: [README*, CHANGELOG*, LICENSE*, CODEOWNERS]}
+  - {class: web,    extensions: [html, htm, css, scss, sass, less, vue, svelte, jsx, tsx], paths: [static, public, templates, webapp, www]}
+  - {class: test,   paths: [test, tests, __tests__, spec, specs, androidTest], names: ["*Test.java", "*Tests.java", "*IT.java",
+                            "test_*.py", "*_test.py", "*.test.js", "*.test.ts", "*.spec.js", "*.spec.ts", "*_test.go"]}
+  - {class: code,   language_extensions: true}
+  - {class: config, extensions: [xml, yml, yaml, json]}
+  - {class: other}
+
+max_parse_bytes: 1048576
+
+# Layer vocabulary (generic; BCED, MVC, hexagonal and Spring names are aliases).
+# Order is top (presentation) to bottom (persistence): allowed-to-use goes downwards.
+layers:
+  - {id: presentation,   name: Presentation,   aliases: [boundary, boundaries, presentation, gui, ui, view, views, frontend, web, controller-web, pages, screens, cli]}
+  - {id: application,    name: Application,    aliases: [control, controller, controllers, application, app, service, services, usecase, usecases, facade, handlers, api]}
+  - {id: domain,         name: Domain,         aliases: [entity, entities, domain, model, models, core, dto, dtos]}
+  - {id: persistence,    name: Persistence,    aliases: [database, db, persistence, repository, repositories, dao, daos, store, storage, data]}
+  - {id: infrastructure, name: Infrastructure, aliases: [infra, infrastructure, adapter, adapters, integration, gateway, gateways, config, util, utils, common]}
+layered_rule: {min_layers: 3, min_coverage: 0.5}   # distinct layers among non-test symbols, share of symbols placed in a layer
+
+# Import / type / annotation markers that raise signals (substring match on
+# fully qualified imports, annotations, or supertypes).
+markers:
+  gui-client: [javax.swing, java.awt, javafx, org.eclipse.swt, tkinter, PyQt, PySide, wx, kivy, electron]
+  gui-supertypes: [JFrame, JPanel, JDialog, JComponent, Application, Stage, QWidget, QMainWindow, Frame, Tk]
+  rest-annotations: [RestController, Controller, RequestMapping, GetMapping, PostMapping, PutMapping, DeleteMapping, PatchMapping, Path, GET, POST, PUT, DELETE]
+  route-decorators: [route, get, post, put, delete, patch, api_view]
+  crosscutting: [Aspect, Around, Before, After, HandlerInterceptor, OncePerRequestFilter, javax.servlet.Filter, jakarta.servlet.Filter, Interceptor, middleware]
+  event-bus: [ApplicationEvent, EventListener, ApplicationEventPublisher, kafka, amqp, rabbitmq, javax.jms, jakarta.jms, nats, pubsub, eventbus, EventBus, celery, mqtt]
+  data-flow: [org.apache.beam, org.apache.spark, org.apache.flink, kafka.streams, airflow, luigi, prefect]
+  threads: [java.lang.Thread, Thread, ExecutorService, Executors, ScheduledExecutorService, Scheduled, Async, threading, concurrent.futures, asyncio, multiprocessing, TimerTask]
+  variability: [Profile, ConditionalOnProperty, ServiceLoader, spring.profiles, feature_flag, featureflag, unleash, launchdarkly, pluggy, entry_points]
+  services: [EnableEurekaClient, EnableDiscoveryClient, FeignClient, grpc, consul]
+  entity-annotations: [Entity, Table, Document, Embeddable]
+  relation-annotations: {ManyToOne: many-to-one, OneToMany: one-to-many, OneToOne: one-to-one, ManyToMany: many-to-many, Embedded: embedded, ElementCollection: collection}
+  key-annotations: [Id, EmbeddedId]
+min_inheritance_edges: 2
+decision_record_names: ["adr-*", "adr_*", "*decision*", "*adr*.md"]
+decision_record_paths: [adr, adrs, decisions]
+requirement_doc_names: ["*requirement*", "*use-case*", "*usecase*", "*srs*", "*user-stor*", "*specification*"]

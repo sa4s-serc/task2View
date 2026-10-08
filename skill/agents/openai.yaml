@@ -1,10 +1,13 @@
 interface:
   display_name: Task2View
-  short_description: Stakeholder-task architecture view from a repository (single-agent baseline)
+  short_description: >-
+    Stakeholder- and task-specific architecture views from a repository (ISO 42010, Views and Beyond),
+    following the Task2View method by hand and writing the pipeline's output files
   default_prompt: >-
-    Generate a stakeholder- and task-guided architecture view.
-    I will give a local --code path and a --goal. Follow the Task2View skill.
-    Do not run the Task2View multi-agent pipeline.
+    Use the task2view skill. I will give --code (repository path), --goal (the stakeholder's request,
+    verbatim), --out (output folder) and optionally --run-id and --notation. Follow SKILL.md phase by phase,
+    cite real code for every element and relation, write every file in references/output-schema.md,
+    and do not run the Task2View pipeline.
 
 policy:
   allow_implicit_invocation: true
@@ -12,4 +15,4 @@ policy:
 dependencies:
   tools:
     - type: bash
-      description: List and search the subject repository, then write run artifacts
+      description: List, search and read the subject repository, then write the run files under --out

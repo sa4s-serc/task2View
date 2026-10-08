@@ -111,7 +111,9 @@ code/tests/                          pytest
 docs/architecture.md                 stage-by-stage description
 docs/design-review-2026-10.md        root causes of the pilot failures, redesign proposal
 docs/adr/                            decision log
-skill/                               Task2View skill (single-agent baseline)
+code/src/task2view/prompts/          every prompt sent to a model, documented (README.md there)
+experiments/PROTOCOL.md              how to run plain-agent, skill-agent and task2view conditions
+skill/                               Task2View skill: the method by hand, same files as the pipeline (sync: code/scripts/sync_skill.py)
 experiments/pilot-2026-09/           pilot: all three conditions' outputs, review, provenance
 tools/                               GR10 UML-vs-code analysis scripts
 data/                                English subject repositories (gitignored, local only)

@@ -1,79 +1,73 @@
-# Task2View skill (single-agent baseline)
+# Task2View skill (single-agent method)
 
-Give this folder to **Cursor**, **Codex**, or **ChatGPT**. One agent follows the same ISO 42010 / Views-and-Beyond method as the Task2View pipeline and writes the same artifact filenames. Use those folders to compare against `Task2View/code/runs/pagerank-ciao/`.
+This folder teaches one coding agent (Codex, Cursor, Claude Code, …) to carry out the Task2View method by hand. The phases, rules, catalogs and output files are the same as the Task2View pipeline (ADR-006). In experiments it is the **agent + skill** condition. The experiment protocol is in [`../experiments/PROTOCOL.md`](../experiments/PROTOCOL.md).
 
-Phase order matches `run_agentic`: interpret the goal, choose one viewpoint from the concerns it raises, bind that viewpoint's published grain, then write questions at that grain. The agent does not retarget the viewpoint afterward.
+| File | What it is |
+|---|---|
+| `SKILL.md` | The workflow the agent follows (Phase 0 → 8) |
+| `references/catalogs.md` | Needs, viewpoints, roles with priors, signals, constraints. **Generated** |
+| `references/selection.md` | The deterministic viewpoint selection, step by step |
+| `references/evidence.md` | Claims, citation checks, and how the evidence model is built |
+| `references/views.md` | Projection rules, notation, Phase 6 decisions, Phase 8 checks |
+| `references/output-schema.md` | Every output file and its fields |
+| `references/goal-sets.md` | Goal texts used in experiments (no expected answers). **Generated** |
+| `knowledge/*.yaml` | Copies of the pipeline's catalog files. **Generated** |
+| `agents/openai.yaml` | Codex agent metadata |
 
-This skill is **not** a wrapper around `task2view run`. The agent must do the eight phases itself.
-
-## Give it to Cursor
-
-Project skill (this comparison uses an isolated checkout so a no-skill run cannot see it):
-
-```bash
-mkdir -p /path/to/subject/.cursor/skills
-cp -R skill /path/to/subject/.cursor/skills/task2view
-```
-
-Cursor loads `SKILL.md` from `.cursor/skills/<name>/`. The agent applies it when the request is an architecture view for a stakeholder goal.
-
-## Give it to Codex
-
-Codex loads skills from `.agents/skills/<name>/SKILL.md`.
-
-**Option A — user skill (works for every repo)**
+Generated files come from `code/scripts/sync_skill.py`. Run it after any change to `code/src/task2view/knowledge/data/vb/`. The test `code/tests/test_skill_sync.py` fails when the skill is stale.
 
 ```bash
-mkdir -p ~/.agents/skills
-cp -R skill ~/.agents/skills/task2view
+cd ../code
+.venv/bin/python scripts/sync_skill.py
 ```
 
-**Option B — drop it into the subject repository**
+## Install
 
+The skill must be visible to the agent in the **agent + skill** condition and invisible in the **plain agent** condition. Install it per run, in a separate copy of the subject repository.
+
+**Codex** (loads `.agents/skills/<name>/SKILL.md`):
 ```bash
-cp -R skill /path/to/Progetto-IS/.agents/skills/task2view
+mkdir -p /path/to/subject-copy/.agents/skills
+cp -R skill /path/to/subject-copy/.agents/skills/task2view
 ```
 
-Restart Codex if `$task2view` does not appear. Invoke with `$task2view` or `/skills`.
+**Cursor** (loads `.cursor/skills/<name>/SKILL.md`):
+```bash
+mkdir -p /path/to/subject-copy/.cursor/skills
+cp -R skill /path/to/subject-copy/.cursor/skills/task2view
+```
+
+**Claude Code** (loads `.claude/skills/<name>/SKILL.md`):
+```bash
+mkdir -p /path/to/subject-copy/.claude/skills
+cp -R skill /path/to/subject-copy/.claude/skills/task2view
+```
 
 ## Run one goal
+Open the agent **on the subject copy**, not on Task2View, and send the instruction from the protocol (it invokes the skill and passes the goal verbatim):
 
-Open Codex **on the English subject repo** (`data/Progetto-IS-main-English` or `data/progetto_ing_software_gr10-main-English`), not on Task2View.
-
-```
-$task2view
-
+```text
+Use the task2view skill.
 --code .
---goal "I am a software developer. I need to modify the seat booking functionality and understand the main system components involved and how they interact."
---out ./runs/single-agent/IS-seat-L1
---run-id IS-seat-L1
+--goal "<goal text, verbatim from references/goal-sets.md>"
+--out ./task2view-out/<run-id>
+--run-id <run-id>
+--notation plantuml
 ```
 
-All ten goals: [references/examples.md](references/examples.md). Paste each goal **verbatim**.
+## Compare with the pipeline
+The pipeline writes the same files:
+```bash
+task2view run --code <subject> --goal "<same goal>" --out <dir>
+```
+So the conditions can be compared directly:
 
-## Compare with the multi-agent pipeline
-
-| Side | How it is produced |
+| Compare | How |
 |---|---|
-| Multi-agent | `task2view run --code … --goal … --out Task2View/code/runs/pagerank-ciao/<id>` |
-| Single-agent | this skill + Codex on the same checkout and the same goal text |
+| Views chosen | `view_plan.json` → `views[].viewpoint_id` |
+| Needs typed | `stakeholder_profile.json` → `needs` |
+| Grounding | `evidence_model.json` → verified vs `rejected_claims` |
+| Diagram content | `V*/view.json` → `elements`, `relations`, `interactions` |
+| Quality checks | `validation_report.json` → verdicts and constraint findings |
 
-Compare, per run id:
-
-1. `viewpoint_plan.json` → same `viewpoint_id`?
-2. `view_model.json` → element names (responsibility vs package folders), grounding, count
-3. `architecture_view.puml` → readable diagram vs dump
-4. `validation_report.json` / `structure_report.json` → gaps the other side missed
-
-## Layout
-
-```
-skill/
-  SKILL.md                 # what Codex loads
-  agents/openai.yaml
-  knowledge/               # same catalogs as Task2View
-  references/
-    quality-rules.md
-    output-schema.md
-    examples.md
-```
+Task fit is scored afterwards for all conditions with the same judge model.
