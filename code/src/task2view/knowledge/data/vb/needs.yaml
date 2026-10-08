@@ -1,0 +1,107 @@
+# Information needs: what a stakeholder must SEE. Closed vocabulary used by
+# Phase 1 (needs extracted from the goal) and by viewpoint selection (covering).
+# Quality attributes (ISO 25010) are NOT needs; they only set emphasis.
+# See docs/redesign/01-knowledge-model.md §4.
+# category: structure | behavior | allocation | beyond. Behaviour viewpoints never
+# cover structural needs and vice versa (the expert's "second view" finding).
+
+needs:
+  - id: actors-goals
+    category: behavior
+    description: who uses the system and what each user type can achieve with it
+    cues: [user roles, types of users, what users can do, goals of users, functionalities available to each]
+  - id: boundary
+    category: structure
+    description: the system edge, external systems and services, datastores at the boundary
+    cues: [external services, third-party, interacts with, outside the system]
+  - id: decomposition
+    category: structure
+    description: the parts of the system, their responsibilities, and how they are contained in subsystems
+    cues: [main components, subsystems, modules, responsibilities, overall organization, decomposed]
+  - id: layering
+    category: structure
+    description: how the parts are separated into layers and which layer may use which
+    cues: [layers, presentation, application logic, persistence layer, separated]
+  - id: dependencies
+    category: structure
+    description: which parts depend on which other parts
+    cues: [dependencies among, depends on, relies on]
+  - id: change-impact
+    category: structure
+    description: which parts are affected when a given part changes
+    cues: [affected by the modification, impact of the change, which parts need to be modified]
+  - id: inheritance-extension
+    category: structure
+    description: type hierarchies, specialisations and extension points
+    cues: [extends, specialisation, subtypes, extension points, plug-ins]
+  - id: crosscutting
+    category: structure
+    description: concerns that cut across many parts (logging, security checks, transactions)
+    cues: [logging, cross-cutting, interceptors, transactions everywhere]
+  - id: collaboration
+    category: structure
+    description: which parts work together for a feature and through which interfaces or connectors
+    cues: [components involved, how they interact, integration points, collaborate, interactions among]
+  - id: interaction-order
+    category: behavior
+    description: the order of calls in a scenario, including alternative and failure paths
+    cues: [in which order, sequence, flow of the request, when invalid data, failure paths, step by step]
+  - id: process-flow
+    category: behavior
+    description: the steps and decisions of a business or technical process
+    cues: [workflow, process steps, procedure, activities]
+  - id: lifecycle
+    category: behavior
+    description: the states an element goes through and the transitions between them
+    cues: [lifecycle, status changes, states, transitions]
+  - id: data-structure
+    category: structure
+    description: the data entities, their attributes, keys, and relationships
+    cues: [data entities, relationships among them, attributes, fields, schema]
+  - id: data-storage
+    category: allocation
+    description: where and how data is persisted (databases, schemas, stores)
+    cues: [persisted, stored, database, persistence]
+  - id: concurrency
+    category: structure
+    description: processes, threads, scheduling and their synchronisation
+    cues: [concurrent, threads, scheduled, asynchronous, background jobs]
+  - id: deployment
+    category: allocation
+    description: runtime nodes and environments, what runs where, and how they communicate
+    cues: [deploy, execution environment, runtime environments, where it runs, servers, communication with the database]
+  - id: build-packaging
+    category: allocation
+    description: the deployable artifacts and how they are built and packaged
+    cues: [software artifacts, build, package, jar, container image]
+  - id: code-location
+    category: allocation
+    description: where in the source tree each architectural element is implemented
+    cues: [where is it implemented, which files, which classes implement]
+  - id: ownership
+    category: allocation
+    description: which team or person is responsible for which part
+    cues: [team, owner, responsible developer, work assignment]
+  - id: interface-contract
+    category: structure
+    description: the operations an element provides or requires, with their parameters, semantics and errors
+    cues: [API, endpoints, interface, operations provided, contract]
+  - id: rationale
+    category: beyond
+    description: the architectural decisions and the reasons behind them
+    cues: [why, decision, rationale, trade-off]
+  - id: requirement-traceability
+    category: beyond
+    description: which requirements are realised by which architectural elements
+    cues: [requirements, use cases realised by, traceability]
+
+# ISO/IEC 25010 product quality characteristics (emphasis only, never selection).
+quality_attributes:
+  - functional-suitability
+  - performance-efficiency
+  - compatibility
+  - usability
+  - reliability
+  - security
+  - maintainability
+  - portability

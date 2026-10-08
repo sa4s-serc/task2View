@@ -1,0 +1,509 @@
+# Views and Beyond viewpoint catalog (Clements et al., Documenting Software
+# Architectures: Views and Beyond, 2nd ed., 2010). 30 entries.
+# Design: docs/redesign/01-knowledge-model.md. Vocabulary: ISO/IEC/IEEE 42010:2011.
+#
+# Per viewpoint:
+#   applies_when    repository signals, ANY of which makes a style viewpoint applicable;
+#                   empty = generic (applies to every system, V&B §9.2 Step 1)
+#   evidence        repository signals, ANY of which is needed to populate the view;
+#                   empty = code is enough. None present -> selected with a declared gap.
+#   frames          needs this viewpoint is designed to answer (primary)
+#   also_covers     needs it answers as a by-product (secondary, used by covering)
+#   style_of        C&C styles: the generic viewpoint they specialise
+#   combine_with    overlays applied when that viewpoint also applies (V&B §6.6)
+#   granularity     caps per Phase 1 detail level (defaults per family below)
+
+signals:
+  rest-api: HTTP/REST endpoints exposed by the system
+  gui-client: desktop GUI front end
+  web-client: browser front end served by or calling the system
+  layered: packages or naming that follow a layering scheme (BCED, MVC, controller/service/repository)
+  inheritance: architecturally significant type hierarchies or interfaces
+  crosscutting: aspects, interceptors, filters
+  persisted-data: entities persisted through an ORM, SQL schema or files
+  event-bus: publish/subscribe infrastructure (message broker, application events)
+  services: independently deployed services, service registry or ESB
+  peer-calls: components that both request and provide services to each other
+  data-flow: stream or batch processing stages connected by pipes or queues
+  shared-repository: a central datastore accessed by many independent components
+  multi-tier: separately deployed presentation, application and data tiers
+  threads: threads, executors, schedulers
+  lifecycle: an element with explicit states (state pattern, status enum with transitions)
+  variability: profiles, feature flags, plug-in mechanisms
+  deploy-config: deployment descriptors (Dockerfile, compose, k8s, persistence.xml, app server config)
+  build-config: build manifests (pom.xml, build.gradle, package.json)
+  ownership: CODEOWNERS or multi-author version history
+  decision-records: ADRs or documented design decisions
+  requirement-docs: requirement or use-case documents
+  tests: automated tests
+
+constraints:
+  element_kind_allowed: every element kind is one this viewpoint allows
+  relation_kind_allowed: every relation kind is one this viewpoint allows
+  max_elements: element count within the detail-level cap
+  no_package_or_directory_element: no element is named after a source package or directory
+  component_has_responsibility: every component or module shows at least one responsibility
+  nesting_well_formed: every parent exists and has a kind that may contain the child
+  lifeline_is_component_or_actor: sequence lifelines are components or actors, never packages or classes dumps
+  messages_ordered: interactions carry a total order
+  message_backed_by_call_evidence: every message has call evidence in the AEM
+  association_not_fk_field: no association is drawn for a foreign-key field; it is an attribute
+  entity_has_attributes: every entity shows its persisted attributes
+  one_system_box: exactly one system element, named after the product
+  actor_outside_boundary: actors are outside the system boundary
+  node_contains_artifact: every artifact is allocated to a node or environment
+  relation_has_evidence: every relation is backed by AEM evidence
+  no_isolated_element: every element takes part in at least one relation (except groups)
+
+families:
+  module:     {granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
+  cnc:        {granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
+  allocation: {granularity: {overview: {max_elements: 8}, feature: {max_elements: 12}, detailed: {max_elements: 18}}}
+  behavior:   {granularity: {overview: {max_elements: 5}, feature: {max_elements: 8}, detailed: {max_elements: 12}}}
+  beyond:     {granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
+
+viewpoints:
+
+  # ---------------------------------------------------------------- module views (Ch. 2)
+  - id: decomposition
+    name: Decomposition
+    vb_ref: "2.1 Decomposition Style"
+    family: module
+    applies_when: []
+    evidence: []
+    frames: [decomposition]
+    also_covers: [code-location]
+    element_kinds: [module, component]
+    relation_kinds: [is-part-of]
+    model_kind: uml-package
+    combine_with: [layered]
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, no_package_or_directory_element, component_has_responsibility, nesting_well_formed]
+
+  - id: uses
+    name: Uses
+    vb_ref: "2.2 Uses Style"
+    family: module
+    applies_when: []
+    evidence: []
+    frames: [dependencies, change-impact]
+    also_covers: []
+    element_kinds: [module, component]
+    relation_kinds: [uses]
+    model_kind: uml-package
+    combine_with: [layered]
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, no_package_or_directory_element, relation_has_evidence]
+
+  - id: generalization
+    name: Generalization
+    vb_ref: "2.3 Generalization Style"
+    family: module
+    applies_when: [inheritance]
+    evidence: []
+    frames: [inheritance-extension]
+    also_covers: []
+    element_kinds: [module, class, interface]
+    relation_kinds: [is-a, implements]
+    model_kind: uml-class
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  - id: layered
+    name: Layered
+    vb_ref: "2.4 Layered Style"
+    family: module
+    applies_when: [layered]
+    evidence: []
+    frames: [layering]
+    also_covers: [decomposition]
+    element_kinds: [layer, module, component]
+    relation_kinds: [allowed-to-use, is-part-of]
+    model_kind: uml-package
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, nesting_well_formed]
+
+  - id: aspects
+    name: Aspects
+    vb_ref: "2.5 Aspects Style"
+    family: module
+    applies_when: [crosscutting]
+    evidence: []
+    frames: [crosscutting]
+    also_covers: []
+    element_kinds: [aspect, module, component]
+    relation_kinds: [crosscuts]
+    model_kind: uml-package
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  - id: data-model
+    name: Data Model
+    vb_ref: "2.6 Data Model"
+    family: module
+    applies_when: [persisted-data]
+    evidence: []
+    frames: [data-structure]
+    also_covers: [data-storage]
+    element_kinds: [entity, enum]
+    relation_kinds: [association, composition, generalization]
+    model_kind: uml-class
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, association_not_fk_field, entity_has_attributes, relation_has_evidence]
+
+  # ------------------------------------------------------- component-and-connector views (Ch. 3-4)
+  - id: cnc-generic
+    name: Component-and-Connector
+    vb_ref: "Ch. 3 Component-and-Connector Views"
+    family: cnc
+    applies_when: []
+    evidence: []
+    frames: [collaboration]
+    also_covers: [dependencies, interface-contract]
+    element_kinds: [component, connector, interface, datastore, external_system]
+    relation_kinds: [attachment, uses, reads, writes]
+    model_kind: uml-component
+    combine_with: [layered]
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, no_package_or_directory_element, component_has_responsibility, relation_has_evidence, no_isolated_element]
+
+  - id: pipe-and-filter
+    name: Pipe-and-Filter
+    vb_ref: "4.2.1 Pipe-and-Filter Style"
+    family: cnc
+    style_of: cnc-generic
+    applies_when: [data-flow]
+    evidence: []
+    frames: [collaboration]
+    also_covers: [dependencies]
+    element_kinds: [filter, pipe, datastore]
+    relation_kinds: [attachment]
+    model_kind: uml-component
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  - id: client-server
+    name: Client-Server
+    vb_ref: "4.3.1 Client-Server Style"
+    family: cnc
+    style_of: cnc-generic
+    applies_when: [rest-api]
+    evidence: []
+    frames: [collaboration]
+    also_covers: [dependencies, interface-contract]
+    element_kinds: [component, interface, datastore, external_system]
+    relation_kinds: [request-reply, uses, reads, writes]
+    model_kind: uml-component
+    combine_with: [layered]
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, no_package_or_directory_element, component_has_responsibility, relation_has_evidence, no_isolated_element]
+
+  - id: peer-to-peer
+    name: Peer-to-Peer
+    vb_ref: "4.3.2 Peer-to-Peer Style"
+    family: cnc
+    style_of: cnc-generic
+    applies_when: [peer-calls]
+    evidence: []
+    frames: [collaboration]
+    also_covers: [dependencies]
+    element_kinds: [component, interface]
+    relation_kinds: [call-return]
+    model_kind: uml-component
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  - id: soa
+    name: Service-Oriented Architecture
+    vb_ref: "4.3.3 Service-Oriented Architecture Style"
+    family: cnc
+    style_of: cnc-generic
+    applies_when: [services]
+    evidence: []
+    frames: [collaboration]
+    also_covers: [dependencies, interface-contract]
+    element_kinds: [service, interface, external_system, connector]
+    relation_kinds: [request-reply, uses]
+    model_kind: uml-component
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  - id: publish-subscribe
+    name: Publish-Subscribe
+    vb_ref: "4.4.1 Publish-Subscribe Style"
+    family: cnc
+    style_of: cnc-generic
+    applies_when: [event-bus]
+    evidence: []
+    frames: [collaboration]
+    also_covers: [dependencies]
+    element_kinds: [component, event_bus]
+    relation_kinds: [publishes, subscribes]
+    model_kind: uml-component
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  - id: shared-data
+    name: Shared-Data
+    vb_ref: "4.5.1 Shared-Data Style"
+    family: cnc
+    style_of: cnc-generic
+    applies_when: [shared-repository]
+    evidence: []
+    frames: [collaboration]
+    also_covers: [data-storage]
+    element_kinds: [component, datastore]
+    relation_kinds: [reads, writes]
+    model_kind: uml-component
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  - id: tiers
+    name: Tiers
+    vb_ref: "4.6.2 Tiers"
+    family: cnc
+    applies_when: [multi-tier]
+    evidence: []
+    frames: [layering]
+    also_covers: [deployment]
+    element_kinds: [tier, component, datastore]
+    relation_kinds: [allowed-to-communicate, is-part-of]
+    model_kind: uml-component
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, nesting_well_formed]
+
+  - id: communicating-processes
+    name: Communicating Processes
+    vb_ref: "4.6.1 Communicating Processes"
+    family: cnc
+    applies_when: [threads]
+    evidence: []
+    frames: [concurrency]
+    also_covers: []
+    element_kinds: [process, thread, component]
+    relation_kinds: [synchronizes, communicates]
+    model_kind: uml-component
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  # ---------------------------------------------------------------- allocation views (Ch. 5)
+  - id: deployment
+    name: Deployment
+    vb_ref: "5.2 Deployment Style"
+    family: allocation
+    applies_when: []
+    evidence: [deploy-config, build-config]
+    frames: [deployment]
+    also_covers: [build-packaging, data-storage]
+    element_kinds: [node, execution_env, artifact, datastore]
+    relation_kinds: [deploys, communicates, contains]
+    model_kind: uml-deployment
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, node_contains_artifact, nesting_well_formed]
+
+  - id: install
+    name: Install
+    vb_ref: "5.3 Install Style"
+    family: allocation
+    applies_when: []
+    evidence: [build-config]
+    frames: [build-packaging]
+    also_covers: []
+    element_kinds: [artifact, file, directory]
+    relation_kinds: [contains, installs]
+    model_kind: uml-deployment
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, nesting_well_formed]
+
+  - id: implementation
+    name: Implementation
+    vb_ref: "5.5 Other Allocation Styles (Implementation)"
+    family: allocation
+    applies_when: []
+    evidence: []
+    frames: [code-location]
+    also_covers: []
+    element_kinds: [module, component, file, directory]
+    relation_kinds: [allocated-to, contains]
+    model_kind: table
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, nesting_well_formed]
+
+  - id: data-stores
+    name: Data Stores
+    vb_ref: "5.5 Other Allocation Styles (Data Stores)"
+    family: allocation
+    applies_when: [persisted-data]
+    evidence: []
+    frames: [data-storage]
+    also_covers: []
+    element_kinds: [entity, datastore]
+    relation_kinds: [allocated-to]
+    model_kind: uml-deployment
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  - id: work-assignment
+    name: Work Assignment
+    vb_ref: "5.4 Work Assignment Style"
+    family: allocation
+    applies_when: []
+    evidence: [ownership]
+    frames: [ownership]
+    also_covers: []
+    element_kinds: [module, team, person]
+    relation_kinds: [assigned-to]
+    model_kind: table
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed]
+
+  # ---------------------------------------------------------------- behaviour (Ch. 8)
+  - id: use-case
+    name: Use Case
+    vb_ref: "8.3.1 Notations for Capturing Traces (use case diagrams)"
+    family: behavior
+    applies_when: []
+    evidence: []
+    frames: [actors-goals]
+    also_covers: [requirement-traceability]
+    element_kinds: [actor, use_case, system]
+    relation_kinds: [association, include, extend, generalization]
+    model_kind: uml-usecase
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, actor_outside_boundary, one_system_box]
+
+  - id: sequence
+    name: Sequence
+    vb_ref: "8.3.1 Notations for Capturing Traces (sequence diagrams)"
+    family: behavior
+    applies_when: []
+    evidence: []
+    frames: [interaction-order]
+    also_covers: []
+    element_kinds: [actor, lifeline]
+    relation_kinds: [message, return]
+    fragments: [alt, opt, loop]
+    scope: scenario
+    model_kind: uml-sequence
+    combine_with: [layered]
+    granularity:
+      overview: {max_elements: 5, fragments: []}
+      feature: {max_elements: 8, fragments: [alt]}
+      detailed: {max_elements: 12, fragments: [alt, opt, loop]}
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, lifeline_is_component_or_actor, messages_ordered, message_backed_by_call_evidence, no_package_or_directory_element]
+
+  - id: communication
+    name: Communication
+    vb_ref: "8.3.1 Notations for Capturing Traces (communication diagrams)"
+    family: behavior
+    applies_when: []
+    evidence: []
+    frames: [interaction-order]
+    also_covers: []
+    element_kinds: [actor, component]
+    relation_kinds: [link, message]
+    scope: scenario
+    model_kind: uml-communication
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, messages_ordered, message_backed_by_call_evidence]
+
+  - id: activity
+    name: Activity
+    vb_ref: "8.3.1 Notations for Capturing Traces (activity diagrams)"
+    family: behavior
+    applies_when: []
+    evidence: []
+    frames: [process-flow]
+    also_covers: []
+    element_kinds: [action, decision, fork, join, swimlane]
+    relation_kinds: [control-flow]
+    scope: scenario
+    model_kind: uml-activity
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements]
+
+  - id: state-machine
+    name: State Machine
+    vb_ref: "8.3.2 Notations for Capturing Comprehensive Models"
+    family: behavior
+    applies_when: [lifecycle]
+    evidence: []
+    frames: [lifecycle]
+    also_covers: []
+    element_kinds: [state, initial, final]
+    relation_kinds: [transition]
+    model_kind: uml-state
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
+
+  # --------------------------------------------- beyond the basics / beyond views (Ch. 6, 7, 10)
+  - id: context
+    name: Context Diagram
+    vb_ref: "6.3 Documenting Context Diagrams"
+    family: beyond
+    applies_when: []
+    evidence: []
+    frames: [boundary]
+    also_covers: []
+    element_kinds: [system, actor, external_system, datastore]
+    relation_kinds: [uses]
+    model_kind: uml-component
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, one_system_box, actor_outside_boundary]
+
+  - id: interfaces
+    name: Interface Documentation
+    vb_ref: "Ch. 7 Documenting Software Interfaces"
+    family: beyond
+    applies_when: []
+    evidence: []
+    frames: [interface-contract]
+    also_covers: []
+    element_kinds: [interface, operation]
+    relation_kinds: [provides, requires]
+    model_kind: table
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed]
+
+  - id: variation-points
+    name: Variation Points
+    vb_ref: "6.4 Documenting Variation Points"
+    family: beyond
+    applies_when: [variability]
+    evidence: []
+    frames: [inheritance-extension]
+    also_covers: []
+    element_kinds: [variation_point, module]
+    relation_kinds: [binds]
+    model_kind: table
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed]
+
+  - id: decisions
+    name: Architectural Decisions
+    vb_ref: "6.5 Documenting Architectural Decisions"
+    family: beyond
+    applies_when: []
+    evidence: [decision-records]
+    frames: [rationale]
+    also_covers: []
+    element_kinds: [decision_record, module, component]
+    relation_kinds: [affects]
+    model_kind: table
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed]
+
+  - id: requirements-mapping
+    name: Mapping to Requirements
+    vb_ref: "10.3 Documenting a Mapping to Requirements"
+    family: beyond
+    applies_when: []
+    evidence: [requirement-docs]
+    frames: [requirement-traceability]
+    also_covers: []
+    element_kinds: [requirement, module, component]
+    relation_kinds: [traces-to]
+    model_kind: table
+    combine_with: []
+    constraints: [element_kind_allowed, relation_kind_allowed]
+
+# When a selected cnc-generic view can be specialised, the first applicable
+# style in this order replaces it (decided from repository evidence, never from
+# goal wording).
+cnc_style_priority: [client-server, soa, publish-subscribe, peer-to-peer, pipe-and-filter, shared-data]

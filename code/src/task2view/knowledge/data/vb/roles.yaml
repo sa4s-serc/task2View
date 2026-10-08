@@ -1,0 +1,56 @@
+# Stakeholder roles as PRIORS over information needs (V&B Table 9.1, read as
+# "which needs this role usually has"). A prior never overrides a need stated in
+# the goal: it fills in when the goal states none, and it breaks ties.
+# Weights are 0..1.
+
+roles:
+  developer:
+    label: Software developer
+    vb_row: member-of-development-team
+    aliases: [software developer, developer, programmer, software engineer, implementer]
+    priors: {collaboration: 0.9, decomposition: 0.8, interaction-order: 0.7, change-impact: 0.7, code-location: 0.6, interface-contract: 0.6}
+  tester:
+    label: Tester / integrator
+    vb_row: tester-and-integrator
+    aliases: [integration tester, tester, test engineer, qa engineer, integrator]
+    priors: {collaboration: 0.9, interaction-order: 0.9, interface-contract: 0.7, boundary: 0.5}
+  maintainer:
+    label: Maintainer
+    vb_row: maintainer
+    aliases: [maintainer, maintenance engineer]
+    priors: {change-impact: 0.9, dependencies: 0.8, decomposition: 0.7, code-location: 0.7}
+  architect:
+    label: Software architect
+    vb_row: current-and-future-architect
+    aliases: [software architect, architect, solution architect, enterprise architect]
+    priors: {decomposition: 0.9, layering: 0.8, dependencies: 0.8, collaboration: 0.7, rationale: 0.6, deployment: 0.5}
+  devops:
+    label: DevOps / infrastructure engineer
+    vb_row: infrastructure-support-personnel
+    aliases: [devops engineer, devops, dev-ops, infrastructure engineer, system administrator, sysadmin, site reliability engineer, sre, operations engineer]
+    priors: {deployment: 0.9, build-packaging: 0.8, boundary: 0.5, concurrency: 0.4}
+  data-engineer:
+    label: Database / data engineer
+    vb_row: analyst
+    aliases: [database engineer, dba, database administrator, data engineer, data architect]
+    priors: {data-structure: 0.9, data-storage: 0.8, change-impact: 0.5, deployment: 0.4}
+  security-analyst:
+    label: Security analyst
+    vb_row: analyst
+    aliases: [security analyst, security engineer, penetration tester]
+    priors: {boundary: 0.8, crosscutting: 0.7, deployment: 0.6, interface-contract: 0.6}
+  business-analyst:
+    label: Business analyst / customer
+    vb_row: customer
+    aliases: [business analyst, customer, product owner, domain expert, client]
+    priors: {actors-goals: 0.9, process-flow: 0.6, boundary: 0.5, requirement-traceability: 0.4}
+  project-manager:
+    label: Project manager
+    vb_row: project-manager
+    aliases: [project manager, manager, team lead]
+    priors: {decomposition: 0.7, ownership: 0.7, deployment: 0.4}
+  end-user:
+    label: End user
+    vb_row: end-user
+    aliases: [end user, user]
+    priors: {actors-goals: 0.8, process-flow: 0.5}
