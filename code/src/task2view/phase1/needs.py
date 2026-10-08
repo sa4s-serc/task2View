@@ -45,6 +45,7 @@ USER DESCRIPTION
 
 DECISION
 - role_label: the words they used for themselves. role: one role id, or null when no id fits.
+- target: the feature, subsystem, or system the request is about, copied exactly (a short noun phrase), or "" when it is the whole system.
 - needs: every information need the description asks for, each with "evidence": the exact words from the description that ask for it.
   Reason: every need becomes part of a diagram, so a need nobody asked for adds a diagram nobody wanted. Copy the words exactly.
   Use the meanings in INFORMATION NEEDS, not word matching:
@@ -67,6 +68,7 @@ Return only this JSON.
 {{
   "role_label": "label as the user said it",
   "role": "one role id, or null",
+  "target": "exact words, or empty",
   "needs": [{{"need": "need id", "evidence": "exact words", "salience": "primary or secondary"}}],
   "subjects": [{{"text": "exact words", "needs": ["need id"]}}],
   "quality_attributes": []
@@ -84,6 +86,7 @@ class NeedProfile(BaseModel):
     goal: str
     role_label: str = ""
     role: str | None = None
+    target: str = ""
     needs: list[NeedEvidence] = Field(default_factory=list)
     subjects: list[GoalSubject] = Field(default_factory=list)
     quality_attributes: list[str] = Field(default_factory=list)
@@ -172,6 +175,10 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
         subject_needs = [n for n in (row.get("needs") or []) if n in catalog.needs]
         subjects.append(GoalSubject(text=text, needs=subject_needs))
 
+    target = str(raw.get("target") or "").strip()
+    if target and _norm(target) not in norm_goal:
+        dropped.append(f"target {target!r}: not in the goal")
+        target = ""
     label = str(raw.get("role_label") or "").strip()
     role = raw.get("role")
     role = role if role in catalog.roles else catalog.resolve_role(label)
@@ -180,6 +187,7 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
         goal=goal,
         role_label=label,
         role=role,
+        target=target,
         needs=needs,
         subjects=subjects,
         quality_attributes=qualities,

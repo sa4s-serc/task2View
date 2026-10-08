@@ -1,0 +1,25 @@
+# Run-time limits of the ADR-006 pipeline. These are cost and effort bounds,
+# not tuned to any repository or goal set. Decided values cite their decision.
+
+investigation:
+  max_tasks_per_view: 6           # tasks beyond this are merged into the last task of the view
+  seed_symbols_per_task: 6        # deterministic suggestions offered to the planning agent
+  neighbour_suggestions: 4        # 1-hop graph neighbours of the top seeds
+  budget_steps:                   # tool-loop steps per evidence task, by Phase 1 detail level
+    overview: 6
+    feature: 10
+    detailed: 14
+
+evidence:
+  max_read_lines: 200             # lines returned by one `read` tool call
+  max_search_hits: 40
+  excerpt_line_slack: 3           # an excerpt may sit this many lines outside its stated range
+  min_confidence: 0.0             # claims below this are kept but marked weak
+
+consolidation:
+  helper_kinds: [enum, record]    # attached to the component that uses them most, never components themselves
+  helper_name_suffixes: [Exception, Error, DTO, Dto, Request, Response]
+
+repair:                           # ADR-006 D3 (decided 2026-10-08)
+  projection_retries: 2
+  evidence_rounds: 2

@@ -46,6 +46,7 @@ class Viewpoint(BaseModel):
     model_kind: str
     combine_with: list[str] = Field(default_factory=list)
     granularity: dict[str, dict] = Field(default_factory=dict)
+    evidence_classes: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
 
     @property
@@ -141,6 +142,8 @@ def load_catalog() -> Catalog:
         vp = Viewpoint(**row)
         if not vp.granularity:
             vp.granularity = dict((families.get(vp.family) or {}).get("granularity") or {})
+        if not vp.evidence_classes:
+            vp.evidence_classes = list((families.get(vp.family) or {}).get("evidence_classes") or [])
         if vp.id in viewpoints:
             raise PipelineError(f"duplicate viewpoint id {vp.id!r}")
         viewpoints[vp.id] = vp

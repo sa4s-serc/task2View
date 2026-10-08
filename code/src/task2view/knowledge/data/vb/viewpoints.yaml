@@ -55,12 +55,18 @@ constraints:
   relation_has_evidence: every relation is backed by AEM evidence
   no_isolated_element: every element takes part in at least one relation (except groups)
 
+# evidence_classes: corpus file classes (corpus.yaml) Phases 4-5 search for this family.
 families:
-  module:     {granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
-  cnc:        {granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
-  allocation: {granularity: {overview: {max_elements: 8}, feature: {max_elements: 12}, detailed: {max_elements: 18}}}
-  behavior:   {granularity: {overview: {max_elements: 5}, feature: {max_elements: 8}, detailed: {max_elements: 12}}}
-  beyond:     {granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
+  module:     {evidence_classes: [code, schema],
+               granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
+  cnc:        {evidence_classes: [code, config, web],
+               granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
+  allocation: {evidence_classes: [deploy, config, build, code],
+               granularity: {overview: {max_elements: 8}, feature: {max_elements: 12}, detailed: {max_elements: 18}}}
+  behavior:   {evidence_classes: [code, test, web],
+               granularity: {overview: {max_elements: 5}, feature: {max_elements: 8}, detailed: {max_elements: 12}}}
+  beyond:     {evidence_classes: [code, docs, config],
+               granularity: {overview: {max_elements: 6}, feature: {max_elements: 10}, detailed: {max_elements: 15}}}
 
 viewpoints:
 
@@ -136,6 +142,7 @@ viewpoints:
     constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: data-model
+    evidence_classes: [code, schema, config]
     name: Data Model
     vb_ref: "2.6 Data Model"
     family: module
@@ -326,6 +333,7 @@ viewpoints:
     constraints: [element_kind_allowed, relation_kind_allowed, nesting_well_formed]
 
   - id: data-stores
+    evidence_classes: [config, schema, deploy, code]
     name: Data Stores
     vb_ref: "5.5 Other Allocation Styles (Data Stores)"
     family: allocation
@@ -340,6 +348,7 @@ viewpoints:
     constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: work-assignment
+    evidence_classes: [docs, build]
     name: Work Assignment
     vb_ref: "5.4 Work Assignment Style"
     family: allocation
@@ -355,6 +364,7 @@ viewpoints:
 
   # ---------------------------------------------------------------- behaviour (Ch. 8)
   - id: use-case
+    evidence_classes: [code, web, test, docs]
     name: Use Case
     vb_ref: "8.3.1 Notations for Capturing Traces (use case diagrams)"
     family: behavior
@@ -434,6 +444,7 @@ viewpoints:
 
   # --------------------------------------------- beyond the basics / beyond views (Ch. 6, 7, 10)
   - id: context
+    evidence_classes: [code, config, deploy, docs]
     name: Context Diagram
     vb_ref: "6.3 Documenting Context Diagrams"
     family: beyond
@@ -448,6 +459,7 @@ viewpoints:
     constraints: [element_kind_allowed, relation_kind_allowed, max_elements, one_system_box, actor_outside_boundary]
 
   - id: interfaces
+    evidence_classes: [code, config, web]
     name: Interface Documentation
     vb_ref: "Ch. 7 Documenting Software Interfaces"
     family: beyond
@@ -476,6 +488,7 @@ viewpoints:
     constraints: [element_kind_allowed, relation_kind_allowed]
 
   - id: decisions
+    evidence_classes: [docs]
     name: Architectural Decisions
     vb_ref: "6.5 Documenting Architectural Decisions"
     family: beyond
@@ -490,6 +503,7 @@ viewpoints:
     constraints: [element_kind_allowed, relation_kind_allowed]
 
   - id: requirements-mapping
+    evidence_classes: [docs, code]
     name: Mapping to Requirements
     vb_ref: "10.3 Documenting a Mapping to Requirements"
     family: beyond
