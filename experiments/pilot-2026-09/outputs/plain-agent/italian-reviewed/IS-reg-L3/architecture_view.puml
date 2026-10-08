@@ -1,0 +1,78 @@
+@startuml architecture_view
+title UC1 User Registration — Component Architecture\n(Progetto-IS / JavaProject) — for integration-test design
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+actor "Client\n(Web form / Swing / Test)" as Client
+
+package "Boundary layer" {
+  component "BoundaryAutenticazione\nPOST /api/auth/registrazione\n(forwards params; no domain logic)" as RestAuth
+  component "Registrazione (Swing)\ncollects form fields;\nblank-field check" as SwingReg
+  component "GestoreEccezioni\nIllegalArgumentException → HTTP 400\n{\"errore\": message}" as ExcHandler
+}
+
+package "Controller layer" {
+  component "BibliotecaFacade\nregistrazione(...)\n(sole boundary entry)" as Facade
+  component "GestoreUtenti\nverificaValidita role nome password\nrole-specific personal/ID checks\nuniqueness of email and identifier\nfactory selection + toDTO" as Gestore
+  component "UtenteFactory\n(interface)" as FactoryIF
+  component "StudenteFactory\nsets matricola" as StudFactory
+  component "BibliotecarioFactory\nsets codiceIdentificativoInterno" as BibFactory
+}
+
+package "DTO" {
+  component "UtenteDTO\nid / anagrafica / ruolo / identificativo" as UtenteDto
+}
+
+package "Entity / registry layer" {
+  component "RegistroUtenti\nesisteEmailIstituzionale\ncercaStudentePerMatricola\ncercaBibliotecarioPerCodice\nregistraUtente" as Registro
+  component "Utente\nabstract JOINED" as Utente
+  component "Studente\n(matricola unique)" as Studente
+  component "Bibliotecario\n(codiceIdentificativoInterno unique)" as Biblio
+}
+
+package "Persistence layer" {
+  component "GestorePersistenza\nsalva / cercaPrimoPerCampi" as Persist
+}
+
+Client --> RestAuth : POST registration params
+Client --> SwingReg : submit form
+RestAuth --> Facade : registrazione(...)
+SwingReg --> Facade : registrazione(...)
+Facade --> Gestore : delegate UC1
+Gestore --> Registro : uniqueness lookups
+Gestore --> FactoryIF : creaUtente(...)
+FactoryIF <|.. StudFactory
+FactoryIF <|.. BibFactory
+StudFactory --> Studente : new + populate
+BibFactory --> Biblio : new + populate
+Studente --|> Utente
+Biblio --|> Utente
+Gestore --> Registro : registraUtente(nuovoUtente)
+Registro --> Persist : salva(Utente)
+Gestore --> UtenteDto : return on success
+RestAuth --> UtenteDto : HTTP 200 body
+SwingReg --> UtenteDto : success dialog (then Login)
+
+Gestore ..> ExcHandler : throws IllegalArgumentException\n(invalid / duplicate data)
+RestAuth ..> ExcHandler : uncaught domain errors
+SwingReg ..> SwingReg : catch RuntimeException\n→ error dialog
+
+note right of Gestore
+  Invalid / duplicate paths stop
+  before factory create & persist.
+  Persist failure → RuntimeException
+  ("Errore Lato Server...").
+end note
+
+note bottom of Registro
+  Integration seams for tests:
+  Boundary↔Facade, Facade↔GestoreUtenti,
+  Gestore↔Registro (email/ID uniqueness),
+  Gestore↔Factory (role-specific data),
+  Registro↔GestorePersistenza,
+  REST↔GestoreEccezioni (400 body).
+end note
+
+@enduml

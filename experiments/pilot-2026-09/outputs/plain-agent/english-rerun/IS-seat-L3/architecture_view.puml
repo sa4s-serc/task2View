@@ -1,0 +1,110 @@
+@startuml architecture_view
+title Seat Booking Architecture (IS-seat-L3)
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Student / Developer client" as Client
+
+package "Boundary — booking requests" {
+  [ReservationController] as RC <<SpringBoot>>
+  [ReservationSummary] as RS <<Swing>>
+  [SeatSelection] as SS <<Swing>>
+  [DateAndRoomSelection] as DRS <<Swing>>
+  [TimeSlotSelection] as TSS <<Swing>>
+  [AreaSelection] as AS <<Swing>>
+}
+
+package "Controller — orchestration & rules" {
+  [LibraryFacade] as LF
+  [ReservationManager] as RM
+  [StudyRoomManager] as SRM
+  [AssignmentStrategy] as AStrat <<interface>>
+  [FirstAvailableAssignment] as FAA
+  [NotificationManager] as NM
+}
+
+package "Entity — domain & availability" {
+  [StudyRoom] as StudyRoom
+  [Area] as Area
+  [Seat] as Seat
+  [Student] as Student
+  [Reservation] as Reservation
+  [TimeSlot] as TimeSlot
+}
+
+package "Registries & persistence — store reservations" {
+  [ReservationRegistry] as ResReg
+  [StudyRoomRegistry] as RoomReg
+  [UserRegistry] as UserReg
+  [PersistenceManager] as PM
+}
+
+package "External notification" {
+  [NotificationService] as NSvc <<interface>>
+  [NotificationServiceAdapter] as NSA
+  [ExternalEmailGateway] as EEG
+}
+
+' --- Request handling ---
+Client --> RC : POST /api/reservations/create
+Client --> RS : confirm booking (wizard)
+Client --> SS : choose seat / auto-assign
+DRS --> LF : getAvailableStudyRooms
+TSS --> LF : getAvailableTimeSlots
+AS --> LF : getRoomDetail
+SS --> LF : getRoomDetail
+RS --> LF : makeReservation
+RC --> LF : makeReservation
+
+LF --> RM : makeReservation
+LF --> SRM : availability queries
+
+' --- Booking rules (ReservationManager) ---
+RM --> UserReg : resolveStudent
+RM --> RoomReg : resolveRoom / Area / Seat / TimeSlot
+RM --> StudyRoom : isActive, isOpenOnDate
+RM --> Student : hasActiveOrConfirmedReservationForDateAndSlot
+RM --> Area : getAvailableSeats
+RM --> Seat : isAvailable
+RM --> AStrat : selectSeat (when seatId=0)
+AStrat <|.. FAA
+RM --> ResReg : saveReservation
+RM --> Reservation : create + attach observer
+RM --> NM : notifyObservers / sendNotification
+
+' --- Availability (StudyRoomManager) ---
+SRM --> RoomReg : rooms, areas, seats, slots
+SRM --> Area : getAvailableSeats
+SRM --> Seat : isAvailable
+Seat --> ResReg : findReservationsBySeat
+Student --> ResReg : findActiveReservations
+
+' --- Persistence ---
+ResReg --> PM : save / update / find
+RoomReg --> PM : find / update
+UserReg --> PM : find / update
+
+' --- Notifications ---
+Reservation ..> NM : Observer.update
+NM --> NSvc : sendNotification
+NSvc <|.. NSA
+NSA --> EEG : send email
+
+note right of RM
+  Booking rules applied here:
+  room active & open on date;
+  time slot not past;
+  seat belongs to area;
+  uniqueness per student/date/slot;
+  seat still available;
+  AssignmentStrategy if auto seat
+end note
+
+note right of Seat
+  Availability = no occupying
+  reservation for same
+  seat + date + time slot
+end note
+
+@enduml

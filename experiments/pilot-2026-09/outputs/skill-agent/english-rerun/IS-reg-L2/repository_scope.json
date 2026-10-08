@@ -1,0 +1,20 @@
+{
+  "request_id": "IS-reg-L2",
+  "strategy": "single-agent",
+  "files": [
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java", "reason": "owns UC1 register validation, uniqueness checks, factory selection, and persistence handoff"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java", "reason": "application facade that exposes register to callers"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java", "reason": "registry API for email/identifier uniqueness and registerUser"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java", "reason": "creates Student accounts during registration"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java", "reason": "creates Librarian accounts during registration"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java", "reason": "factory interface used to create role-specific users"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java", "reason": "persists newly created User entities"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java", "reason": "REST /api/auth/register integration entry point"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java", "reason": "Student entity built by StudentFactory"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Librarian.java", "reason": "Librarian entity built by LibrarianFactory"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/User.java", "reason": "base persisted user type for registration"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java", "reason": "EntityManager factory used by PersistenceManager"},
+    {"path": "JavaProject/src/main/resources/META-INF/persistence.xml", "reason": "persistence unit listing User/Student/Librarian"},
+    {"path": "JavaProject/src/test/java/it/unina/reservations/controller/RegistrationTest.java", "reason": "existing registration integration tests via LibraryFacade"}
+  ]
+}

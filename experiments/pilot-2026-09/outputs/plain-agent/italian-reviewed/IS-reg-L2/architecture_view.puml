@@ -1,0 +1,76 @@
+@startuml architecture_view
+title UC1 User Registration — Components & Integration Points\n(for integration test design)
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #333333
+skinparam noteBackgroundColor #FFFDE7
+
+actor "New user\n(client)" as Client
+
+package "Boundary" {
+  [BoundaryAutenticazione\nPOST /api/auth/registrazione] as RestBoundary
+  [Registrazione\n(Swing form)] as SwingBoundary
+}
+
+package "Controller" {
+  [BibliotecaFacade\nUC1 entry] as Facade
+  [GestoreUtenti\nvalidate + orchestrate] as Gestore
+  package "Factory Method" {
+    [UtenteFactory] as UFactory
+    [StudenteFactory] as SFactory
+    [BibliotecarioFactory] as BFactory
+  }
+}
+
+package "DTO (boundary contract)" {
+  [UtenteDTO] as DTO
+}
+
+package "Entity / Registry" {
+  [RegistroUtenti] as Registro
+  [Utente\n(JOINED)] as Utente
+  [Studente\nmatricola] as Studente
+  [Bibliotecario\ncodice interno] as Bibliotecario
+}
+
+package "Persistence" {
+  [GestorePersistenza\nsalva / query] as Persistenza
+  [JpaUtil\nprenotazioniPU] as Jpa
+  database "MySQL\nprenotazionidb" as DB
+}
+
+Client --> RestBoundary : form params
+Client --> SwingBoundary : form fields
+RestBoundary --> Facade : IP1 registrazione(...)
+SwingBoundary --> Facade : IP1 registrazione(...)
+Facade --> Gestore : IP2 delegates UC1
+Gestore --> Gestore : validate ruolo,\nnome, password,\nemail, identificativo
+Gestore --> Registro : IP3 esisteEmail /\ncerca matricola|codice
+Gestore --> UFactory : IP4 creaUtente by ruolo
+UFactory <|.. SFactory
+UFactory <|.. BFactory
+SFactory --> Studente : builds
+BFactory --> Bibliotecario : builds
+Studente --|> Utente
+Bibliotecario --|> Utente
+Gestore --> Registro : IP3 registraUtente(Utente)
+Registro --> Persistenza : IP5 salva / cercaPrimoPerCampi
+Persistenza --> Jpa : EntityManager
+Jpa --> DB : persist + uniqueness
+Gestore --> DTO : IP6 toDTO → return
+DTO ..> RestBoundary : response body
+DTO ..> SwingBoundary : success path uses side effects
+
+legend left
+  **Integration points (exercise in tests)**
+  IP1 Boundary ↔ BibliotecaFacade
+  IP2 Facade ↔ GestoreUtenti
+  IP3 GestoreUtenti ↔ RegistroUtenti
+      (uniqueness reads + persist write)
+  IP4 GestoreUtenti ↔ role Factories
+  IP5 RegistroUtenti ↔ GestorePersistenza ↔ DB
+  IP6 GestoreUtenti → UtenteDTO (no entity across boundary)
+endlegend
+
+@enduml

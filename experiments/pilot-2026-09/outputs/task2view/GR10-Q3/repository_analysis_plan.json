@@ -1,0 +1,88 @@
+{
+  "analysis_goal": "The diagram must make clear the main data entities stored by the system, their relationships, and which information must be persisted throughout the lifecycle of a report.",
+  "target_view": "code-mapping",
+  "target_granularity": "type",
+  "analysis_tasks": [
+    {
+      "id": "AT1",
+      "goal": "Identify the main data entities and their relationships within the persistence layer regarding municipal reports",
+      "starting_points": [],
+      "candidate_locations": [],
+      "expected_evidence": [
+        "types representing entities and their relations"
+      ],
+      "addresses": [
+        "AQ1"
+      ],
+      "target_view": "code-mapping"
+    },
+    {
+      "id": "AT2",
+      "goal": "Identify specific information within the persistence layer that must be persisted throughout the lifecycle of a report",
+      "starting_points": [
+        "src/main/java/Boundary/InternalNoteGUI.java",
+        "src/main/java/Boundary/ReportStatusUpdateGUI.java",
+        "src/main/java/Boundary/UserDashboardGUI.java"
+      ],
+      "candidate_locations": [
+        "src/main/java/Boundary/InternalNoteGUI.java",
+        "src/main/java/Boundary/ReportStatusUpdateGUI.java",
+        "src/main/java/Boundary/UserDashboardGUI.java"
+      ],
+      "expected_evidence": [
+        "types handling users, locations, categories, states, state changes, internal notes, and notifications"
+      ],
+      "addresses": [
+        "AQ2"
+      ],
+      "target_view": "code-mapping"
+    },
+    {
+      "id": "AT3",
+      "goal": "Locate extension points or modular boundaries designed to support future changes to the management of municipal reports",
+      "starting_points": [],
+      "candidate_locations": [],
+      "expected_evidence": [
+        "types implementing extension points or modular boundaries"
+      ],
+      "addresses": [
+        "AQ3"
+      ],
+      "target_view": "code-mapping"
+    },
+    {
+      "id": "AT4",
+      "goal": "Identify which parts of the application depend on the persisted information managed by the persistence layer",
+      "starting_points": [
+        "src/main/java/Boundary/ActivityMonitoringGUI.java",
+        "src/main/java/Boundary/HomePageGUI.java",
+        "src/main/java/Boundary/InternalNoteGUI.java",
+        "src/main/java/Boundary/ReceivedReportsGUI.java",
+        "src/main/java/Boundary/ReportCreationGUI.java",
+        "src/main/java/Boundary/ReportStatusUpdateGUI.java",
+        "src/main/java/Boundary/SubmittedReportsGUI.java",
+        "src/main/java/Boundary/UserDashboardGUI.java"
+      ],
+      "candidate_locations": [
+        "src/main/java/Boundary/ActivityMonitoringGUI.java",
+        "src/main/java/Boundary/HomePageGUI.java",
+        "src/main/java/Boundary/InternalNoteGUI.java",
+        "src/main/java/Boundary/ReceivedReportsGUI.java",
+        "src/main/java/Boundary/ReportCreationGUI.java",
+        "src/main/java/Boundary/ReportStatusUpdateGUI.java",
+        "src/main/java/Boundary/SubmittedReportsGUI.java",
+        "src/main/java/Boundary/UserDashboardGUI.java"
+      ],
+      "expected_evidence": [
+        "types depending on persisted information"
+      ],
+      "addresses": [
+        "AQ4"
+      ],
+      "target_view": "code-mapping"
+    }
+  ],
+  "constraints": [
+    "entire-repository class dump"
+  ]
+}

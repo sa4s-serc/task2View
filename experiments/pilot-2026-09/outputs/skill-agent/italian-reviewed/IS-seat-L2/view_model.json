@@ -1,0 +1,335 @@
+{
+  "request_id": "IS-seat-L2",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "BibliotecaFacade",
+      "kind": "module",
+      "role": "single entry that delegates seat booking to GestorePrenotazioni and availability to GestoreSale",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+        "symbol": "effettuaPrenotazione",
+        "excerpt": "public PrenotazioneDTO effettuaPrenotazione(RichiestaPrenotazioneDTO richiesta) { return GestorePrenotazioni.getInstance().effettuaPrenotazione(richiesta); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "GestorePrenotazioni",
+      "kind": "module",
+      "role": "owns seat booking: validates input, uniqueness V18, availability, seat selection, create and notify",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java",
+        "symbol": "effettuaPrenotazione",
+        "excerpt": "verificaUnicita(studente, data, fascia); List<Postazione> disponibili = postazioniDisponibili(area, data, fascia); Postazione postazione = selezionaPostazione(...); Prenotazione prenotazione = creaESalva(...); notifica(prenotazione);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "AssegnazionePrimaLibera",
+      "kind": "module",
+      "role": "automatic seat-assignment booking rule (first free seat strategy)",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/strategy/AssegnazionePrimaLibera.java",
+        "symbol": "selezionaPostazione",
+        "excerpt": "public Postazione selezionaPostazione(List<Postazione> postazioniDisponibili) { return postazioniDisponibili.getFirst(); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "GestoreSale",
+      "kind": "module",
+      "role": "consults rooms, slots, and seats available for booking",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreSale.java",
+        "symbol": "selezionaDettaglioSala",
+        "excerpt": "boolean disponibile = p.disponibilita(data, fascia); adto.getPostazioni().add(toPostazioneDTO(p, area.getTipologia(), disponibile, numero));"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "RegistroPrenotazioni",
+      "kind": "module",
+      "role": "persists and looks up reservations for booking and availability",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroPrenotazioni.java",
+        "symbol": "salvaPrenotazione",
+        "excerpt": "public boolean salvaPrenotazione(Prenotazione prenotazione) { return gestorePersistenza.salva(prenotazione); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "Prenotazione",
+      "kind": "module",
+      "role": "reservation aggregate holding seat, slot, student, and temporal booking rules",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Prenotazione.java",
+        "symbol": "Prenotazione",
+        "excerpt": "public class Prenotazione extends Subject { public static final int TOLLERANZA_CHECKIN_MINUTI = 10;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "Postazione",
+      "kind": "module",
+      "role": "checks whether a seat is free for a date and time slot",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Postazione.java",
+        "symbol": "disponibilita",
+        "excerpt": "public boolean disponibilita(LocalDate data, FasciaOraria fascia) { for (Prenotazione p : registro.cercaPrenotazioniPerPostazione(id, data, fascia.getId())) {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "GestoreNotifiche",
+      "kind": "module",
+      "role": "observes booking state changes and sends notifications",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreNotifiche.java",
+        "symbol": "update",
+        "excerpt": "public void update(Prenotazione prenotazione) { inviaNotifica(List.of(toUtenteDTO(studente)), messaggioPerStato(prenotazione)); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "GestorePersistenza",
+      "kind": "module",
+      "role": "JPA persistence used when saving reservations",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java",
+        "symbol": "salva",
+        "excerpt": "public boolean salva(Object oggetto) { em.persist(oggetto); em.getTransaction().commit();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "Studente",
+      "kind": "module",
+      "role": "enforces one active/confirmed booking per student per date and slot (V18)",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Studente.java",
+        "symbol": "verificaPrenotazioneAttivaOConfermataInDataFascia",
+        "excerpt": "public boolean verificaPrenotazioneAttivaOConfermataInDataFascia(LocalDate data, String fasciaEtichetta) { for (Prenotazione p : registro.cercaPrenotazioneAttiva(matricola, data)) {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": "effettuaPrenotazione",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+        "symbol": "effettuaPrenotazione",
+        "excerpt": "return GestorePrenotazioni.getInstance().effettuaPrenotazione(richiesta);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E1",
+      "to": "E4",
+      "kind": "uses",
+      "label": "selezionaDettaglioSala",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+        "symbol": "selezionaDettaglioSala",
+        "excerpt": "return GestoreSale.getInstance().selezionaDettaglioSala(idSala, idFascia, data);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "selezionaPostazione",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java",
+        "symbol": "selezionaPostazione",
+        "excerpt": "return strategiaAssegnazione.selezionaPostazione(disponibili);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E2",
+      "to": "E5",
+      "kind": "uses",
+      "label": "salvaPrenotazione",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java",
+        "symbol": "creaESalva",
+        "excerpt": "boolean esito = registroPrenotazioni.salvaPrenotazione(prenotazione);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E2",
+      "to": "E6",
+      "kind": "uses",
+      "label": "creaESalva",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java",
+        "symbol": "creaESalva",
+        "excerpt": "Prenotazione prenotazione = new Prenotazione(); prenotazione.setPostazione(postazione); prenotazione.setStato(StatoAttiva.getInstance());"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E2",
+      "to": "E7",
+      "kind": "uses",
+      "label": "postazioniDisponibili",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java",
+        "symbol": "postazioniDisponibili",
+        "excerpt": "List<Postazione> disponibili = area.getPostazioniDisponibili(data, fascia);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E2",
+      "to": "E8",
+      "kind": "uses",
+      "label": "notifica",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java",
+        "symbol": "notifica",
+        "excerpt": "prenotazione.attach(GestoreNotifiche.getInstance()); prenotazione.notifyObservers();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E2",
+      "to": "E10",
+      "kind": "uses",
+      "label": "verificaUnicita",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java",
+        "symbol": "verificaUnicita",
+        "excerpt": "if(studente.verificaPrenotazioneAttivaOConfermataInDataFascia(data, fascia.getEtichetta())){"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E5",
+      "to": "E9",
+      "kind": "uses",
+      "label": "salva",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroPrenotazioni.java",
+        "symbol": "salvaPrenotazione",
+        "excerpt": "return gestorePersistenza.salva(prenotazione);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R10",
+      "from": "E7",
+      "to": "E5",
+      "kind": "uses",
+      "label": "cercaPrenotazioniPerPostazione",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Postazione.java",
+        "symbol": "disponibilita",
+        "excerpt": "for (Prenotazione p : registro.cercaPrenotazioniPerPostazione(id, data, fascia.getId())) {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R11",
+      "from": "E4",
+      "to": "E7",
+      "kind": "uses",
+      "label": "disponibilita",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreSale.java",
+        "symbol": "selezionaDettaglioSala",
+        "excerpt": "boolean disponibile = p.disponibilita(data, fascia);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R12",
+      "from": "E10",
+      "to": "E5",
+      "kind": "uses",
+      "label": "cercaPrenotazioneAttiva",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Studente.java",
+        "symbol": "verificaPrenotazioneAttivaOConfermataInDataFascia",
+        "excerpt": "for (Prenotazione p : registro.cercaPrenotazioneAttiva(matricola, data)) {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": ["RI-2"],
+  "notes": [
+    "Module Decomposition for seat booking: GestorePrenotazioni owns booking rules; AssegnazionePrimaLibera is the replaceable assignment rule; BibliotecaFacade and GestoreSale are affected entry/availability collaborators.",
+    "RI-2 containment hierarchy not grounded: collaboration is uses-only among these modules."
+  ]
+}

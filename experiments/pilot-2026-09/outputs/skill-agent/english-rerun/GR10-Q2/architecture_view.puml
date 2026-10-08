@@ -1,0 +1,18 @@
+@startuml
+title Deployment / Allocation View — new execution environment deployment
+
+node "Java Runtime Host" as E1
+artifact "municipal-report-management" as E2
+artifact "persistence.xml" as E3
+node "MySQL Server Host" as E4
+database "reports_db" as E5
+
+E1 --> E2 : deploys\nruns on Java 23 JVM
+E1 --> E3 : deploys\nships META-INF/persistence.xml
+E2 --> E3 : contains\nincludes JPA config
+E4 --> E5 : deploys\nhosts schema reports_db
+E2 --> E5 : dataflow\nJDBC/Hibernate via mysql-connector-j
+E3 --> E5 : dataflow\ncom.mysql.cj.jdbc.Driver to reports_user@reports_db
+E1 --> E4 : uses\nnetwork to MySQL 127.0.0.1:3306
+
+@enduml

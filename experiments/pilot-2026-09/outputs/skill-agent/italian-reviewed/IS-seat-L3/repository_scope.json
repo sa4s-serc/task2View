@@ -1,0 +1,22 @@
+{
+  "request_id": "IS-seat-L3",
+  "strategy": "single-agent",
+  "files": [
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java", "reason": "entry point that delegates booking requests to GestorePrenotazioni"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java", "reason": "owns UC7 booking rules, uniqueness, assignment, save, and notify"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreSale.java", "reason": "consults room/seat availability for booking wizard"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/strategy/StrategiaAssegnazione.java", "reason": "booking-rule strategy interface for seat assignment"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/strategy/AssegnazionePrimaLibera.java", "reason": "concrete seat-assignment booking rule"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroPrenotazioni.java", "reason": "manages and stores reservations via persistence"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Postazione.java", "reason": "checks seat availability for date/slot"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Area.java", "reason": "aggregates available seats for an area"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreNotifiche.java", "reason": "observer that sends booking notifications"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/ServizioNotifiche.java", "reason": "notification service interface used by GestoreNotifiche"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/AdapterServizioNotifiche.java", "reason": "adapts ServizioNotifiche to external email gateway"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/GatewayEmailEsterno.java", "reason": "external notification/email gateway stub"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/ConfigurazioneNotifiche.java", "reason": "wires AdapterServizioNotifiche into GestoreNotifiche"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java", "reason": "persists reservation entities"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryPrenotazione.java", "reason": "HTTP booking request handler calling BibliotecaFacade"},
+    {"path": "JavaProject/src/main/resources/META-INF/persistence.xml", "reason": "JPA persistence configuration for reservation storage"}
+  ]
+}

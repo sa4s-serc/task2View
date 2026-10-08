@@ -1,0 +1,190 @@
+{
+  "request_id": "GR10-Q2",
+  "view_type": "deployment_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Java Runtime Host",
+      "kind": "deployment_node",
+      "role": "Execution environment that runs the Java 23 Swing application",
+      "external": false,
+      "evidence": {
+        "file": "README.md",
+        "symbol": "Requirements",
+        "excerpt": "- Java 23\n- Maven\n- MySQL"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "municipal-report-management",
+      "kind": "component",
+      "role": "Deployable Maven software artifact (Municipal Report Management System)",
+      "external": false,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "artifactId",
+        "excerpt": "<artifactId>municipal-report-management</artifactId>\n    <version>1.0-SNAPSHOT</version>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "persistence.xml",
+      "kind": "component",
+      "role": "JPA/Hibernate configuration artifact with JDBC driver, URL, and credentials",
+      "external": false,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "Municipal_Report_Management_System",
+        "excerpt": "<persistence-unit name=\"Municipal_Report_Management_System\" transaction-type=\"RESOURCE_LOCAL\">\n        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "MySQL Server Host",
+      "kind": "deployment_node",
+      "role": "Database server host at 127.0.0.1:3306",
+      "external": true,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jakarta.persistence.jdbc.url",
+        "excerpt": "jdbc:mysql://127.0.0.1:3306/reports_db"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "reports_db",
+      "kind": "datastore",
+      "role": "MySQL schema storing application entity data",
+      "external": false,
+      "evidence": {
+        "file": "README.md",
+        "symbol": "CREATE DATABASE",
+        "excerpt": "CREATE DATABASE reports_db;\nCREATE USER 'reports_user'@'localhost' IDENTIFIED BY 'reports_password';"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "deploys",
+      "label": "runs on Java 23 JVM",
+      "order": null,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "maven.compiler.source",
+        "excerpt": "<maven.compiler.source>23</maven.compiler.source>\n        <maven.compiler.target>23</maven.compiler.target>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E1",
+      "to": "E3",
+      "kind": "deploys",
+      "label": "ships META-INF/persistence.xml",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "persistence-unit",
+        "excerpt": "<persistence-unit name=\"Municipal_Report_Management_System\" transaction-type=\"RESOURCE_LOCAL\">"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E2",
+      "to": "E3",
+      "kind": "contains",
+      "label": "includes JPA config",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "HibernatePersistenceProvider",
+        "excerpt": "<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E4",
+      "to": "E5",
+      "kind": "deploys",
+      "label": "hosts schema reports_db",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jdbc.url",
+        "excerpt": "jdbc:mysql://127.0.0.1:3306/reports_db"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E2",
+      "to": "E5",
+      "kind": "dataflow",
+      "label": "JDBC/Hibernate via mysql-connector-j",
+      "order": null,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "mysql-connector-j",
+        "excerpt": "<groupId>com.mysql</groupId>\n            <artifactId>mysql-connector-j</artifactId>\n            <version>9.4.0</version>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E3",
+      "to": "E5",
+      "kind": "dataflow",
+      "label": "com.mysql.cj.jdbc.Driver to reports_user@reports_db",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jdbc.driver",
+        "excerpt": "<property name=\"jakarta.persistence.jdbc.driver\"\n                      value=\"com.mysql.cj.jdbc.Driver\"/>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E1",
+      "to": "E4",
+      "kind": "uses",
+      "label": "network to MySQL 127.0.0.1:3306",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jdbc.url",
+        "excerpt": "jdbc:mysql://127.0.0.1:3306/reports_db"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "No Docker/compose in repository; nodes grounded from Java 23 / MySQL requirements and JDBC URL.",
+    "App–database technologies: HibernatePersistenceProvider, mysql-connector-j, com.mysql.cj.jdbc.Driver, RESOURCE_LOCAL unit Municipal_Report_Management_System."
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "claims": [
+    {
+      "claim": "ReportReviewController depends on UserService to verify user roles and permissions",
+      "source_element": "ReportReviewController",
+      "target_element": "UserService",
+      "relationship": "depends",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": "UserService",
+          "excerpt": "private UserService userService;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "ReportReviewController depends on ReportService to retrieve submitted and received reports",
+      "source_element": "ReportReviewController",
+      "target_element": "ReportService",
+      "relationship": "depends",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": "ReportService",
+          "excerpt": "private ReportService reportService;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "The system defines Citizen as a primary user type and role interacting with the system.",
+      "source_element": "UserDashboardGUI",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": "UserDashboardGUI",
+          "excerpt": "private static final String RUOLO_CITIZEN = \"Citizen\";"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "The system defines Municipal Operator as a primary user type and role interacting with the system.",
+      "source_element": "UserDashboardGUI",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": "UserDashboardGUI",
+          "excerpt": "private static final String RUOLO_MUNICIPAL_OPERATOR = \"Municipal Operator\";"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "The abstract User entity represents system users supporting inheritance for specific roles.",
+      "source_element": "User",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/User.java",
+          "symbol": "User",
+          "excerpt": "public abstract class User {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "MunicipalOperator extends the User entity to represent municipal operators in the system.",
+      "source_element": "MunicipalOperator",
+      "target_element": "User",
+      "relationship": "depends",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/MunicipalOperator.java",
+          "symbol": "MunicipalOperator",
+          "excerpt": "public class MunicipalOperator extends User {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "Citizens can create reports and view reports they have submitted.",
+      "source_element": "UserDashboardGUI",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": "configureDashboardCitizen",
+          "excerpt": "\"You can create reports and view reports you have submitted.\""
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "Municipal operators can view, manage, and monitor municipal reports.",
+      "source_element": "UserDashboardGUI",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": "configureDashboardOperator",
+          "excerpt": "\"You can view, manage, and monitor municipal reports.\""
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "ReportReviewController provides functionality to retrieve reports submitted by a citizen user.",
+      "source_element": "ReportReviewController",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": "retrieveReportsSubmitted",
+          "excerpt": "public List<Map<String, Object>> retrieveReportsSubmitted(Long userId) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "ReportReviewController provides functionality to retrieve reports received by a municipal operator based on criteria filters.",
+      "source_element": "ReportReviewController",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": "retrieveReportsReceived",
+          "excerpt": "public List<Map<String, Object>> retrieveReportsReceived("
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "UserDashboardGUI depends on User and manages features based on user roles such as Citizen and Municipal Operator.",
+      "source_element": "UserDashboardGUI",
+      "target_element": "User",
+      "relationship": "depends",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": "UserDashboardGUI",
+          "excerpt": "private static final String RUOLO_CITIZEN = \"Citizen\";"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    },
+    {
+      "claim": "ReportReviewController depends on UserService and ReportService to handle report retrieval functionalities for citizens and operators.",
+      "source_element": "ReportReviewController",
+      "target_element": "UserService",
+      "relationship": "depends",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": "ReportReviewController",
+          "excerpt": "private UserService userService;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    }
+  ],
+  "elements": [
+    "ReportReviewController",
+    "UserService",
+    "ReportService",
+    "UserDashboardGUI",
+    "User",
+    "MunicipalOperator"
+  ],
+  "notes": []
+}

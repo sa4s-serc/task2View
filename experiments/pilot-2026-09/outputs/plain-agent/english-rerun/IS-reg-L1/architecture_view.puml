@@ -1,0 +1,70 @@
+@startuml architecture_view
+title User Registration — Components & Interactions (IS-reg-L1)
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "Integration Tester / End User" as Tester
+
+package "Boundary" {
+  component "Registration\n(Swing UI)" as Registration
+  component "registration.html\n(Web UI)" as RegistrationHtml
+  component "AuthenticationController\nPOST /api/auth/register" as AuthController
+  component "RestExceptionHandler" as RestEx
+}
+
+package "Controller" {
+  component "LibraryFacade" as Facade
+  component "UserManager" as UserManager
+  component "UserFactory" as UserFactory
+  component "StudentFactory" as StudentFactory
+  component "LibrarianFactory" as LibrarianFactory
+}
+
+package "DTO" {
+  component "UserDTO" as UserDTO
+}
+
+package "Entity / Registry" {
+  component "UserRegistry" as UserRegistry
+  component "User" as User
+  component "Student" as Student
+  component "Librarian" as Librarian
+}
+
+package "Persistence" {
+  component "PersistenceManager" as PersistenceManager
+  component "JpaUtil" as JpaUtil
+  database "JPA Database" as DB
+}
+
+Tester --> Registration : fill form / Sign Up
+Tester --> RegistrationHtml : fill form / submit
+
+Registration --> Facade : register(role, name, surname,\nemail, password, identifier)
+RegistrationHtml --> AuthController : POST /api/auth/register
+AuthController --> Facade : register(...)
+RestEx ..> AuthController : maps IllegalArgumentException\nto HTTP 400
+
+Facade --> UserManager : register(...)
+UserManager --> UserRegistry : institutionalEmailExists /\nfindStudentByStudentNumber /\nfindLibrarianByCode
+UserManager --> StudentFactory : createUser(...) [role=Student]
+UserManager --> LibrarianFactory : createUser(...) [role=Librarian]
+StudentFactory ..|> UserFactory
+LibrarianFactory ..|> UserFactory
+StudentFactory --> Student : new Student
+LibrarianFactory --> Librarian : new Librarian
+Student --|> User
+Librarian --|> User
+
+UserManager --> UserRegistry : registerUser(newUser)
+UserRegistry --> PersistenceManager : save(newUser)
+PersistenceManager --> JpaUtil : getEntityManager
+JpaUtil --> DB : persist User / Student / Librarian
+
+UserManager --> UserDTO : toDTO(newUser)
+Facade --> UserDTO : return
+AuthController --> UserDTO : return JSON
+Registration --> UserDTO : success → Login
+
+@enduml

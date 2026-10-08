@@ -1,0 +1,263 @@
+{
+  "claims": [
+    {
+      "claim": "Seat selection functionality is owned by the SeatSelection UI component which interacts with SeatDTO and Seat entities",
+      "source_element": "SeatSelection",
+      "target_element": "Seat",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "SeatSelection",
+          "excerpt": "public class SeatSelection {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "Seat availability check logic is implemented in the Seat entity class",
+      "source_element": "Seat",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+          "symbol": "Seat",
+          "excerpt": "public boolean isAvailable(LocalDate date, TimeSlot timeSlot) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "Seat entity models an individual seat belonging to an area and checks its availability for a given date and time slot using the reservation registry.",
+      "source_element": "Seat Entity",
+      "target_element": "ReservationRegistry",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+          "symbol": "isAvailable",
+          "excerpt": "public boolean isAvailable(LocalDate date, TimeSlot timeSlot) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "SeatDTO represents seat data transfer properties including identifier, number, area type, and availability status.",
+      "source_element": "Seat Data Transfer Object",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/dto/SeatDTO.java",
+          "symbol": "SeatDTO",
+          "excerpt": "public class SeatDTO {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "SeatSelection boundary class provides the UI and workflow logic for selecting a seat or choosing automatic assignment.",
+      "source_element": "Seat Selection View",
+      "target_element": "SeatDTO",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "SeatSelection",
+          "excerpt": "public class SeatSelection {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "app.js provides client-side API communication helper functions for frontend operations.",
+      "source_element": "API Client Script",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/resources/static/app.js",
+          "symbol": "api",
+          "excerpt": "async function api(method, path, params, isJson = false) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "SeatSelection uses SeatDTO to represent seat data during seat selection UI handling",
+      "source_element": "SeatSelection",
+      "target_element": "SeatDTO",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "SeatSelection",
+          "excerpt": "import it.unina.reservations.dto.SeatDTO;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "Seat uses ReservationRegistry to verify seat availability against existing reservations",
+      "source_element": "Seat",
+      "target_element": "ReservationRegistry",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+          "symbol": "Seat",
+          "excerpt": "ReservationRegistry registry = ReservationRegistry.getInstance();"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "SeatSelection builds a grid of seats by iterating over available seats in an area and creating seat buttons with action listeners for selection.",
+      "source_element": "SeatSelection",
+      "target_element": "SeatDTO",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "costruisciGriglia",
+          "excerpt": "for (SeatDTO posto : area.getSeats()) { griglia.add(createBottonePosto(posto)); }"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    },
+    {
+      "claim": "SeatSelection handles seat selection and automatic seat assignment options before continuing the reservation wizard.",
+      "source_element": "SeatSelection",
+      "target_element": "WizardState",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "selectPosto",
+          "excerpt": "status.setSeatId(posto.getId());"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    },
+    {
+      "claim": "Seat entity checks availability for a specific date and time slot by querying the ReservationRegistry.",
+      "source_element": "Seat",
+      "target_element": "ReservationRegistry",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+          "symbol": "isAvailable",
+          "excerpt": "ReservationRegistry registry = ReservationRegistry.getInstance();"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    },
+    {
+      "claim": "Seat selection UI component depends on SeatDTO for displaying and interacting with seat information.",
+      "source_element": "SeatSelection",
+      "target_element": "SeatDTO",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "SeatSelection",
+          "excerpt": "import it.unina.reservations.dto.SeatDTO;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ5"
+      ],
+      "analysis_task": "AT5"
+    },
+    {
+      "claim": "Seat entity checks availability using ReservationRegistry and TimeSlot dependencies.",
+      "source_element": "Seat",
+      "target_element": "ReservationRegistry",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+          "symbol": "isAvailable",
+          "excerpt": "ReservationRegistry registry = ReservationRegistry.getInstance();"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ5"
+      ],
+      "analysis_task": "AT5"
+    }
+  ],
+  "elements": [
+    "SeatSelection",
+    "Seat",
+    "Seat Entity",
+    "ReservationRegistry",
+    "Seat Data Transfer Object",
+    "Seat Selection View",
+    "SeatDTO",
+    "API Client Script",
+    "WizardState"
+  ],
+  "notes": []
+}

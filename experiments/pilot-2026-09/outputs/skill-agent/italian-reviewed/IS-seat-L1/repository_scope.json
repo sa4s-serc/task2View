@@ -1,0 +1,22 @@
+{
+  "request_id": "IS-seat-L1",
+  "strategy": "single-agent",
+  "files": [
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestorePrenotazioni.java", "reason": "owns seat booking rules, create/cancel/check-in lifecycle"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java", "reason": "single entry point delegating UC7 booking to GestorePrenotazioni"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroPrenotazioni.java", "reason": "stores and retrieves Prenotazione instances"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Prenotazione.java", "reason": "reservation entity with state transitions and booking constraints"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Postazione.java", "reason": "seat availability derived from occupying reservations"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Area.java", "reason": "lists available seats for a date/slot during booking"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroSale.java", "reason": "looks up rooms, areas, and seats used by booking"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/strategy/AssegnazionePrimaLibera.java", "reason": "automatic seat assignment strategy for UC7"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/strategy/StrategiaAssegnazione.java", "reason": "assignment strategy interface used by GestorePrenotazioni"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreNotifiche.java", "reason": "notification collaborator after booking save/state change"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreSale.java", "reason": "consults available rooms/slots that feed the booking flow"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java", "reason": "persistence backing RegistroPrenotazioni saves"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryPrenotazione.java", "reason": "HTTP API that invokes BibliotecaFacade.effettuaPrenotazione"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/ServizioNotifiche.java", "reason": "notification service interface used by GestoreNotifiche"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/dto/RichiestaPrenotazioneDTO.java", "reason": "booking request payload including seat id sentinel"},
+    {"path": "README.md", "reason": "product name and seat-booking domain context"}
+  ]
+}

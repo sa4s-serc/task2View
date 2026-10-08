@@ -1,0 +1,102 @@
+# Viewpoint catalog. Schema follows 42010 viewpoint ≈ V&B style guide
+# (CMU/SEI-2005-TN-017) plus ciao-views/03-viewpoint-catalog.md.
+#
+# genericity:
+#   generic     -> applies to every system (V&B Step 1: decomp, uses, work assignment)
+#   conditional -> applies when the corresponding style/evidence is present
+#   specific    -> also requires a stakeholder trigger
+#
+# Phase 2 does not inspect the repository. Applicability predicates that need
+# AKB facts are recorded here and evaluated later; Phase 2 only uses stakeholder
+# × view (Table 9.1), profile.required, and task cues.
+#
+# Catalog is CIAO-aligned: only viewpoints with a ciao_equivalent (or CIAO §7
+# rationale) are kept.
+
+viewpoints:
+
+  - id: context
+    name: System Context View
+    genericity: generic
+    frames_concerns: [general, connectivity]
+    serves_stakeholders: [all]
+    model_kinds: [context, use-case]
+    view_type: context_view
+    default_granularity: high
+    default_notation: informal
+    default_diagram_language: mermaid
+    techniques: ["context diagram", "use-case diagram"]
+    selection_rationale: "V&B Context column; every stakeholder row has at least overview interest except end-user (C&C/deployment) and infrastructure."
+    ciao_equivalent: "sections 2, 2.1"
+
+  - id: module-decomposition
+    name: Module Decomposition View
+    genericity: generic
+    frames_concerns: [maintainability]
+    serves_stakeholders: [member-of-development-team, maintainer, tester-and-integrator, current-and-future-architect]
+    model_kinds: [package, component]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["module decomposition diagram"]
+    selection_rationale: "V&B: decomposition applies to every system."
+    ciao_equivalent: "section 4"
+
+  - id: cnc-runtime
+    name: Component-and-Connector Runtime View
+    genericity: generic
+    frames_concerns: [connectivity, performance]
+    serves_stakeholders: [member-of-development-team, maintainer, current-and-future-architect, tester-and-integrator]
+    model_kinds: [component-and-connector]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["C&C diagram", "C4 container/component"]
+    selection_rationale: "V&B C&C viewtype; CIAO sections 3 / 3.1."
+    ciao_equivalent: "sections 3, 3.1"
+
+  - id: allocation-deployment
+    name: Deployment / Allocation View
+    genericity: conditional
+    frames_concerns: [deployment, reliability]
+    serves_stakeholders: [infrastructure-support-personnel, analyst, member-of-development-team, project-manager]
+    model_kinds: [deployment]
+    view_type: deployment_view
+    default_granularity: medium
+    default_notation: semi-formal
+    default_diagram_language: plantuml
+    techniques: ["UML deployment", "C4 deployment"]
+    on_missing_evidence: declare-gap
+    selection_rationale: "V&B allocation/deployment. Conditional: CIAO generated this unconditionally and it was the #2 complaint."
+    ciao_equivalent: "sections 8, 8.1"
+
+  - id: code-mapping
+    name: Code / Implementation Mapping View
+    genericity: generic
+    frames_concerns: [maintainability, traceability]
+    serves_stakeholders: [tester-and-integrator, member-of-development-team, maintainer]
+    model_kinds: [table, class]
+    view_type: class_view
+    default_granularity: low
+    default_notation: formal
+    default_diagram_language: plantuml
+    techniques: ["element-to-file table", "class diagram"]
+    selection_rationale: "V&B Implementation column."
+    ciao_equivalent: "sections 5, 5.1"
+
+  - id: decision-record
+    name: Architecture Decision Record View
+    genericity: specific
+    frames_concerns: [flexibility, general]
+    serves_stakeholders: [current-and-future-architect, analyst]
+    model_kinds: [table]
+    view_type: component_view
+    default_granularity: medium
+    default_notation: informal
+    default_diagram_language: mermaid
+    techniques: ["ADR list", "rationale catalog"]
+    selection_rationale: "V&B documentation-beyond-views § rationale; CIAO §7 as structured ADRs."
+    ciao_equivalent: "section 7"
+    beyond_views: true

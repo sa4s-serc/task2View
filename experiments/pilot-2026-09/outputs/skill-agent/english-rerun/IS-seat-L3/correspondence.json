@@ -1,0 +1,28 @@
+{
+  "role_id": "member-of-development-team",
+  "stakeholder_name": "Member of development team",
+  "viewpoint_id": "module-decomposition",
+  "view_type": "component_view",
+  "task_focus": "seat booking",
+  "concerns": ["maintainability", "control-flow", "connectivity"],
+  "task_concerns": ["maintainability", "control-flow", "connectivity"],
+  "preferred_viewpoints": ["module-decomposition", "cnc-runtime", "code-mapping", "context"],
+  "phrases": ["modify", "booking rules", "main components", "responsibilities", "interactions and dependencies", "notification service"],
+  "task": "modify the seat booking functionality to introduce new booking rules",
+  "purpose": "Module Decomposition View for seat booking: modules or subsystems that own the task, named by responsibility. Relations: containment or uses. Do not: one box per source file; class inventory.",
+  "unanswered_concerns": ["control-flow", "connectivity"],
+  "decided_by": "model",
+  "grain": {
+    "viewpoint_id": "module-decomposition",
+    "unit": "component",
+    "nodes": "modules or subsystems that own the task, named by responsibility",
+    "relations": "containment or uses",
+    "forbid": "one box per source file; class inventory"
+  },
+  "ranked": [
+    {"viewpoint_id": "module-decomposition", "view_type": "component_view", "score": 10.0, "reasons": ["frames maintainability; nodes are responsibility-named modules the developer must locate before changing booking rules"]},
+    {"viewpoint_id": "cnc-runtime", "view_type": "component_view", "score": 9.0, "reasons": ["frames connectivity; interactions and notification connectors"]},
+    {"viewpoint_id": "code-mapping", "view_type": "class_view", "score": 8.0, "reasons": ["frames maintainability; type-to-file mapping at lower grain than needed"]},
+    {"viewpoint_id": "context", "view_type": "context_view", "score": 7.0, "reasons": ["frames connectivity; too coarse for internal booking responsibilities"]}
+  ]
+}

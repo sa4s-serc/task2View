@@ -1,0 +1,55 @@
+@startuml architecture_view
+title Municipal Report Management — Deployment / Runtime View (GR10-Q2)
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+legend left
+  Stakeholder: DevOps engineer
+  Focus: runtime environments, artifacts, data store, app↔DB communication
+endlegend
+
+node "Application Host\n(local desktop / JVM Java 23)" as AppHost {
+
+  artifact "municipal-report-management\n(Maven artifact 1.0-SNAPSHOT)" as AppArtifact {
+
+    component "Boundary\n(Swing GUI — HomePageGUI, UserLoginGUI, …)" as Boundary
+    component "Control\n(use-case controllers)" as Control
+    component "Entity\n(UserService, ReportService, domain entities)" as Entity
+    component "Database\n(PersistenceService, JpaUtil)" as DatabaseLayer
+
+    Boundary --> Control : in-process calls
+    Control --> Entity : in-process calls
+    Entity --> DatabaseLayer : PersistenceService API
+  }
+
+  component "Hibernate ORM\n(hibernate-core /\nHibernatePersistenceProvider)" as Hibernate
+  component "mysql-connector-j\n(com.mysql.cj.jdbc.Driver)" as MysqlDriver
+  artifact "persistence.xml\n(persistence-unit:\nMunicipal_Report_Management_System)" as PersistConfig
+
+  DatabaseLayer --> Hibernate : JPA EntityManager\n(RESOURCE_LOCAL)
+  Hibernate --> MysqlDriver : JDBC
+  PersistConfig ..> Hibernate : configures\nJDBC URL, user, schema DDL
+  PersistConfig ..> MysqlDriver
+  AppArtifact ..> Hibernate : runtime dependency
+  AppArtifact ..> MysqlDriver : runtime dependency
+}
+
+node "Database Host\n(MySQL Server @ 127.0.0.1:3306)" as DbHost {
+  database "reports_db" as ReportsDb {
+    collections "JPA-mapped tables\n(User, Citizen, MunicipalOperator,\nReport, InternalNote,\nStatusUpdate, Notification)" as Tables
+  }
+}
+
+MysqlDriver --> ReportsDb : JDBC\njdbc:mysql://127.0.0.1:3306/reports_db\nuser: reports_user
+
+note right of PersistConfig
+  Runtime config (English defaults):
+  - driver: com.mysql.cj.jdbc.Driver
+  - url: jdbc:mysql://127.0.0.1:3306/reports_db
+  - user: reports_user
+  - hibernate.hbm2ddl.auto=update
+  Build/runtime needs: Java 23, Maven, MySQL
+end note
+
+@enduml

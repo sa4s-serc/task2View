@@ -1,0 +1,19 @@
+@startuml
+title Component-and-Connector Runtime View — user registration
+
+component "LibraryFacade" as E1
+component "UserManager" as E2
+component "StudentFactory" as E3
+component "LibrarianFactory" as E4
+component "UserRegistry" as E5
+component "PersistenceManager" as E6
+database "reservationsdb" as E7
+
+E1 --> E2 : register
+E2 --> E5 : institutionalEmailExists / find* / registerUser
+E2 --> E3 : createUser (Student)
+E2 --> E4 : createUser (Librarian)
+E5 --> E6 : save / findFirstByFields
+E6 --> E7 : JPA persist to MySQL
+
+@enduml

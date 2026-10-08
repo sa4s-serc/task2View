@@ -1,0 +1,72 @@
+{
+  "request_id": "IS-seat-L3",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "SeatSelection",
+      "kind": "component",
+      "role": "SeatSelection acts as a boundary component handling UI events and user interactions for seat selection during reservation.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "public class SeatSelection {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E2",
+      "name": "PersistenceManager",
+      "kind": "component",
+      "role": "PersistenceManager acts as a persistence component providing database operations using JPA EntityManager.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "PersistenceManager",
+        "excerpt": "public class PersistenceManager {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E3",
+      "name": "SeatDTO",
+      "kind": "component",
+      "role": "SeatDTO is used by SeatSelection to check seat availability.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "createBottonePosto",
+        "excerpt": "if (posto.isAvailable()) {"
+      },
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E3",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "AT2 unanswered: the files did not show AQ2",
+    "control-flow",
+    "maintainability",
+    "AQ2"
+  ],
+  "notes": [
+    "No evidence names were left out, but call sequences and full type ownership details were omitted due to being unsupported or partially supported per reconciliation notes."
+  ]
+}

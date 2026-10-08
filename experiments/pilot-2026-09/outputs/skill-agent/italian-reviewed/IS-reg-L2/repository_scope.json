@@ -1,0 +1,70 @@
+{
+  "request_id": "IS-reg-L2",
+  "strategy": "single-agent",
+  "files": [
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+      "reason": "owns UC1 registration validation, uniqueness checks, and factory orchestration"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+      "reason": "facade entry that exposes registrazione to boundaries and tests"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroUtenti.java",
+      "reason": "registers users and checks email/identifier uniqueness"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/UtenteFactory.java",
+      "reason": "factory method contract for role-specific user creation"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/StudenteFactory.java",
+      "reason": "creates Studente accounts during registration"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/BibliotecarioFactory.java",
+      "reason": "creates Bibliotecario accounts during registration"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java",
+      "reason": "persists newly created users via salva"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Utente.java",
+      "reason": "base registered-user domain type persisted on account creation"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Studente.java",
+      "reason": "student role entity with matricola built by StudenteFactory"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Bibliotecario.java",
+      "reason": "librarian role entity with internal code built by BibliotecarioFactory"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryAutenticazione.java",
+      "reason": "HTTP /api/auth/registrazione integration endpoint into BibliotecaFacade"
+    },
+    {
+      "path": "JavaProject/src/test/java/it/unina/prenotazioni/controller/RegistrazioneTest.java",
+      "reason": "existing registration tests show facade as the exercised integration seam"
+    },
+    {
+      "path": "JavaProject/src/main/resources/META-INF/persistence.xml",
+      "reason": "JPA persistence unit backing GestorePersistenza"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/dto/UtenteDTO.java",
+      "reason": "registration result DTO returned across the facade boundary"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/database/JpaUtil.java",
+      "reason": "EntityManager factory used by GestorePersistenza"
+    },
+    {
+      "path": "README.md",
+      "reason": "product context for the library seat-booking system"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+@startuml
+component "LibraryFacade" as E1
+component "ReservationManager" as E2
+component "StudyRoomManager" as E3
+component "FirstAvailableAssignment" as E4
+component "ReservationRegistry" as E5
+component "StudyRoomRegistry" as E6
+component "UserRegistry" as E7
+component "NotificationManager" as E8
+component "PersistenceManager" as E9
+component "Area" as E10
+
+E1 --> E2 : makeReservation
+E1 --> E3 : getAvailableStudyRooms
+E1 --> E8 : sendReminders
+E2 --> E4 : selectSeat
+E2 --> E5 : saveReservation
+E2 --> E6 : findRoomById/findSeatById
+E2 --> E7 : findStudentById
+E2 --> E8 : notifyReservation
+E2 --> E10 : getAvailableSeats
+E5 --> E9 : save
+E6 --> E9 : findById
+E7 --> E9 : findById
+E3 --> E6 : roomRegistry
+E10 --> E6 : getSeatsForArea
+@enduml

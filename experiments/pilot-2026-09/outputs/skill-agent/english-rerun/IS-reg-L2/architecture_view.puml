@@ -1,0 +1,17 @@
+@startuml
+component "AuthenticationController" as E1
+component "LibraryFacade" as E2
+component "UserManager" as E3
+component "StudentFactory" as E4
+component "LibrarianFactory" as E5
+component "UserRegistry" as E6
+component "PersistenceManager" as E7
+
+E1 --> E2 : register
+E2 --> E3 : register
+E3 --> E4 : createUser (Student)
+E3 --> E5 : createUser (Librarian)
+E3 --> E6 : uniqueness + registerUser
+E6 --> E7 : persistenceManager
+E6 --> E7 : save
+@enduml

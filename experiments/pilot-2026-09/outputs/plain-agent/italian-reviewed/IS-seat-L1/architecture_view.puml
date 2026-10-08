@@ -1,0 +1,98 @@
+@startuml architecture_view
+title Progetto-IS — Seat booking (postazione) L1 components\nGoal: modify seat booking — main components and interactions
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+actor "Student (client)" as Student
+
+package "Boundary" {
+  [BoundarySalaStudio\nREST /api/sale] as BSala
+  [BoundaryPrenotazione\nREST /api/prenotazioni] as BPren
+  [Swing booking wizard\nSelezionaDataAndSala → … →\nSelezionaPostazione →\nRiepilogoPrenotazione] as SwingW
+}
+
+package "Controller" {
+  [BibliotecaFacade] as Facade
+  [GestoreSale] as GSale
+  [GestorePrenotazioni] as GPren
+  [StrategiaAssegnazione\nAssegnazionePrimaLibera] as Strat
+  [GestoreNotifiche\nObserver] as GNotif
+}
+
+package "DTOs (boundary ↔ controller)" {
+  [RichiestaPrenotazioneDTO\nPrenotazioneDTO] as DTOPren
+  [SalaStudioDTO\nFasciaDisponibileDTO\nDettaglioSalaDTO\nPostazioneDTO] as DTOSala
+}
+
+package "Entity / domain" {
+  [RegistroSale] as RegSale
+  [RegistroPrenotazioni] as RegPren
+  [RegistroUtenti] as RegUt
+  [SalaStudio] as Sala
+  [Area] as Area
+  [Postazione\n(seat)] as Posto
+  [FasciaOraria] as Fascia
+  [Prenotazione\n+ StatoAttiva…] as Pren
+  [Studente] as Stud
+}
+
+package "Persistence" {
+  [GestorePersistenza\n(+ JpaUtil / JPA)] as Persist
+}
+
+Student --> BSala : consult sale / fasce /\ndettaglio postazioni
+Student --> BPren : POST effettua /\nannulla / check-in
+Student --> SwingW : wizard UI
+
+BSala --> Facade
+BPren --> Facade
+SwingW --> Facade
+
+Facade --> GSale : UC6 availability &\nsala detail
+Facade --> GPren : UC7 book seat\n(+ annulla / check-in)
+Facade ..> DTOPren
+Facade ..> DTOSala
+
+GSale --> RegSale
+GSale --> Posto : disponibilita(data, fascia)
+GPren --> RegUt : resolve Studente
+GPren --> RegSale : sala / area / postazione
+GPren --> RegPren : salvaPrenotazione
+GPren --> Strat : idPostazione == 0\nauto-assign
+GPren --> Pren : create ATTIVA
+GPren --> GNotif : attach / notify\nafter save
+
+RegSale --> Sala
+RegSale --> Area
+RegSale --> Posto
+RegSale --> Fascia
+RegSale --> Persist
+RegPren --> Pren
+RegPren --> Persist
+RegUt --> Stud
+RegUt --> Persist
+
+Area --> Posto : contains
+Posto --> RegPren : derived free/busy\nvia prenotazioni
+Pren --> Posto : books
+Pren --> Fascia
+Pren --> Stud
+Pren --> GNotif : Subject/Observer\non state change
+
+note right of GPren
+  UC7 (synchronized):
+  validate → uniqueness V18 →
+  Area.getPostazioniDisponibili →
+  select Postazione (explicit or Strategy) →
+  save Prenotazione ATTIVA → notify
+end note
+
+note bottom of Posto
+  Seat has no own status;
+  free iff no ATTIVA/CONFERMATA
+  Prenotazione on (postazione, data, fascia)
+end note
+
+@enduml

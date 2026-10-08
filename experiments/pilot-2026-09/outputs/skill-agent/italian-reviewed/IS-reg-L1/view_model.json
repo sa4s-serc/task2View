@@ -1,0 +1,203 @@
+{
+  "request_id": "IS-reg-L1",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "BoundaryAutenticazione",
+      "kind": "component",
+      "role": "HTTP entry for UC1 registration and UC2 login",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryAutenticazione.java",
+        "symbol": "registrazione",
+        "excerpt": "@PostMapping(\"/registrazione\") public UtenteDTO registrazione(...)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "BibliotecaFacade",
+      "kind": "component",
+      "role": "sole access point that delegates UC1 registrazione to GestoreUtenti",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+        "symbol": "registrazione",
+        "excerpt": "return GestoreUtenti.getInstance().registrazione(ruolo, nome, cognome, email, password, identificativo);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "GestoreUtenti",
+      "kind": "component",
+      "role": "validates registration data, selects role factory, and persists the new user",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+        "symbol": "registrazione",
+        "excerpt": "public UtenteDTO registrazione(String ruolo, String nome, String cognome, String email, String password, String identificativo)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "UtenteFactory",
+      "kind": "component",
+      "role": "creates Studente or Bibliotecario by selected registration role",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/UtenteFactory.java",
+        "symbol": "creaUtente",
+        "excerpt": "Utente creaUtente(String nome, String cognome, String email, String password, String identificativo);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "RegistroUtenti",
+      "kind": "component",
+      "role": "checks email/id uniqueness and registers the new user",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroUtenti.java",
+        "symbol": "registraUtente",
+        "excerpt": "public boolean registraUtente(Utente nuovoUtente) { return gestorePersistenza.salva(nuovoUtente); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "GestorePersistenza",
+      "kind": "component",
+      "role": "JPA persistence connector that saves new user entities",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java",
+        "symbol": "salva",
+        "excerpt": "public boolean salva(Object oggetto) { EntityManager em = JpaUtil.getInstance().getEntityManager();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "prenotazionidb",
+      "kind": "datastore",
+      "role": "MySQL database storing registered users via prenotazioniPU",
+      "external": true,
+      "evidence": {
+        "file": "JavaProject/src/main/resources/META-INF/persistence.xml",
+        "symbol": "prenotazionidb",
+        "excerpt": "jdbc:mysql://localhost:3306/prenotazionidb?serverTimezone=UTC&createDatabaseIfNotExist=true"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "calls",
+      "label": "registrazione",
+      "order": 1,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryAutenticazione.java",
+        "symbol": "registrazione",
+        "excerpt": "return BibliotecaFacade.getInstance().registrazione(ruolo, nome, cognome, email, password, identificativo);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E3",
+      "kind": "calls",
+      "label": "registrazione",
+      "order": 2,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+        "symbol": "registrazione",
+        "excerpt": "return GestoreUtenti.getInstance().registrazione(ruolo, nome, cognome, email, password, identificativo);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": "creaUtente",
+      "order": 3,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+        "symbol": "creaUtente",
+        "excerpt": "UtenteFactory factory = studente ? new StudenteFactory() : new BibliotecarioFactory(); Utente nuovoUtente = factory.creaUtente(...);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E3",
+      "to": "E5",
+      "kind": "uses",
+      "label": "registraUtente",
+      "order": 4,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+        "symbol": "registraUtente",
+        "excerpt": "boolean esito = registroUtenti.registraUtente(nuovoUtente);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E5",
+      "to": "E6",
+      "kind": "uses",
+      "label": "salva",
+      "order": 5,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroUtenti.java",
+        "symbol": "salva",
+        "excerpt": "return gestorePersistenza.salva(nuovoUtente);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E6",
+      "to": "E7",
+      "kind": "dataflow",
+      "label": "persist Utente",
+      "order": 6,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java",
+        "symbol": "persist",
+        "excerpt": "em.persist(oggetto); em.getTransaction().commit();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "cnc-runtime for user registration: HTTP boundary → facade → GestoreUtenti → factory/registry → JPA → MySQL",
+    "Swing Registrazione UI omitted; REST BoundaryAutenticazione and BibliotecaFacade cover the integration path used by tests"
+  ]
+}

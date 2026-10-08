@@ -1,0 +1,234 @@
+{
+  "request_id": "IS-reg-L3",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "LibraryFacade",
+      "kind": "module",
+      "role": "accepts registration requests and delegates to UserManager",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "register",
+        "excerpt": "public UserDTO register(...) { return UserManager.getInstance().register(...); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "UserManager",
+      "kind": "module",
+      "role": "validates personal information and role, checks uniqueness, selects factory, and registers the user",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "validate(role, name, password); ... if (userRegistry.institutionalEmailExists(email)) throw ... userRegistry.registerUser(newUser)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "StudentFactory",
+      "kind": "module",
+      "role": "builds a Student with the student ID identifier",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java",
+        "symbol": "createUser",
+        "excerpt": "student.setStudentNumber(identifier); return student;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "LibrarianFactory",
+      "kind": "module",
+      "role": "builds a Librarian with the librarian internal identifier",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java",
+        "symbol": "createUser",
+        "excerpt": "librarian.setInternalIdentifierCode(identifier); return librarian;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "UserRegistry",
+      "kind": "module",
+      "role": "looks up email and role identifiers for uniqueness and persists new users",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "symbol": "registerUser",
+        "excerpt": "public boolean registerUser(User newUser) { return persistenceManager.save(newUser); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "PersistenceManager",
+      "kind": "module",
+      "role": "persists the newly created user via JPA",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "save",
+        "excerpt": "em.persist(object); em.getTransaction().commit();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "Student",
+      "kind": "module",
+      "role": "holds unique studentNumber role-specific registration data",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "studentNumber",
+        "excerpt": "@Column(nullable = false, unique = true) private String studentNumber;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "Librarian",
+      "kind": "module",
+      "role": "holds unique internalIdentifierCode role-specific registration data",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Librarian.java",
+        "symbol": "internalIdentifierCode",
+        "excerpt": "@Column(nullable = false, unique = true) private String internalIdentifierCode;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": "register",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "register",
+        "excerpt": "return UserManager.getInstance().register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E5",
+      "kind": "uses",
+      "label": "uniqueness and registerUser",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "if (userRegistry.institutionalEmailExists(email)) throw ... userRegistry.registerUser(newUser)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "createUser for Student",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory(); User newUser = factory.createUser(...);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E2",
+      "to": "E4",
+      "kind": "uses",
+      "label": "createUser for Librarian",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E5",
+      "to": "E6",
+      "kind": "uses",
+      "label": "save",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "symbol": "registerUser",
+        "excerpt": "return persistenceManager.save(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E3",
+      "to": "E7",
+      "kind": "uses",
+      "label": "instantiate Student",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java",
+        "symbol": "createUser",
+        "excerpt": "Student student = new Student(); student.setStudentNumber(identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E4",
+      "to": "E8",
+      "kind": "uses",
+      "label": "instantiate Librarian",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java",
+        "symbol": "createUser",
+        "excerpt": "Librarian librarian = new Librarian(); librarian.setInternalIdentifierCode(identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [
+    "RI-2"
+  ],
+  "notes": [
+    "No explicit containment hierarchy among registration modules; only uses relations are grounded.",
+    "Invalid or duplicate registration paths raise IllegalArgumentException inside UserManager before PersistenceManager.save."
+  ]
+}

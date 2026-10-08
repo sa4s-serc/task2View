@@ -1,0 +1,88 @@
+%% architecture_view.mmd
+%% Run-id: IS-reg-L1
+%% Goal: Integration tester view of user registration (UC1) components and interactions
+%% Evidence-only from Progetto-IS / JavaProject
+
+flowchart TB
+  %% ---- External / test actors ----
+  Tester["Integration Tester / Client"]
+  MySQL[("MySQL DB<br/>prenotazionidb")]
+
+  %% ---- Boundary layer ----
+  subgraph Boundary["Boundary layer"]
+    SwingReg["Swing Registrazione<br/>boundary.Swing.Registrazione"]
+    RestAuth["REST BoundaryAutenticazione<br/>POST /api/auth/registrazione"]
+    GestExc["GestoreEccezioni<br/>IllegalArgument → HTTP 400"]
+  end
+
+  %% ---- Controller layer ----
+  subgraph Controller["Controller layer"]
+    Facade["BibliotecaFacade<br/>registrazione(...)"]
+    GestUtenti["GestoreUtenti<br/>UC1 validation + uniqueness"]
+    FactoryIF["UtenteFactory"]
+    StudFact["StudenteFactory"]
+    BibFact["BibliotecarioFactory"]
+  end
+
+  %% ---- Domain / DTO ----
+  subgraph Domain["Entity & DTO"]
+    RegUtenti["RegistroUtenti"]
+    UtenteAbs["Utente JOINED"]
+    Studente["Studente"]
+    Bibliotecario["Bibliotecario"]
+    DTO["UtenteDTO"]
+  end
+
+  %% ---- Persistence ----
+  subgraph Persistence["Database layer"]
+    GestPers["GestorePersistenza.salva"]
+    JpaUtil["JpaUtil / Hibernate<br/>prenotazioniPU"]
+  end
+
+  %% ---- Test harness (evidence: RegistrazioneTest) ----
+  RegTest["RegistrazioneTest<br/>calls BibliotecaFacade"]
+
+  %% Interactions — registration happy path
+  Tester -->|"form fields: ruolo, nome, cognome,<br/>email, password, identificativo"| SwingReg
+  Tester -->|"POST form-urlencoded same params"| RestAuth
+
+  SwingReg -->|"BibliotecaFacade.registrazione"| Facade
+  RestAuth -->|"BibliotecaFacade.registrazione"| Facade
+  RegTest -->|"BibliotecaFacade.registrazione"| Facade
+
+  Facade -->|"delegates"| GestUtenti
+
+  GestUtenti -->|"role Studente →"| StudFact
+  GestUtenti -->|"role Bibliotecario →"| BibFact
+  StudFact -.->|implements| FactoryIF
+  BibFact -.->|implements| FactoryIF
+  StudFact -->|"creaUtente →"| Studente
+  BibFact -->|"creaUtente →"| Bibliotecario
+  Studente -.->|extends| UtenteAbs
+  Bibliotecario -.->|extends| UtenteAbs
+
+  GestUtenti -->|"esisteEmail / cerca matricola|codice"| RegUtenti
+  GestUtenti -->|"registraUtente(nuovoUtente)"| RegUtenti
+  RegUtenti -->|"salva / cercaPrimoPerCampi"| GestPers
+  GestPers --> JpaUtil
+  JpaUtil -->|"persist Utente/Studente/Bibliotecario"| MySQL
+
+  GestUtenti -->|"returns"| DTO
+  Facade --> DTO
+  RestAuth -->|"JSON UtenteDTO"| Tester
+  SwingReg -->|"success dialog → Login"| Tester
+
+  RestAuth -.->|"throws IllegalArgumentException"| GestExc
+  GestExc -->|"HTTP 400 {errore}"| Tester
+
+  classDef boundary fill:#E8F4FD,stroke:#2B6CB0
+  classDef controller fill:#FEF3C7,stroke:#B45309
+  classDef domain fill:#E6F7ED,stroke:#2F855A
+  classDef persist fill:#F3E8FF,stroke:#6B46C1
+  classDef external fill:#F7FAFC,stroke:#4A5568
+
+  class SwingReg,RestAuth,GestExc boundary
+  class Facade,GestUtenti,FactoryIF,StudFact,BibFact controller
+  class RegUtenti,UtenteAbs,Studente,Bibliotecario,DTO domain
+  class GestPers,JpaUtil persist
+  class Tester,MySQL,RegTest external

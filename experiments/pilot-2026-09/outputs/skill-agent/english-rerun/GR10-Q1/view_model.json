@@ -1,0 +1,335 @@
+{
+  "request_id": "GR10-Q1",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "UserDashboardGUI",
+      "kind": "module",
+      "role": "user-facing dashboard that launches report and monitoring screens",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "UserDashboardGUI",
+        "excerpt": "public class UserDashboardGUI {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "ReportCreationGUI",
+      "kind": "module",
+      "role": "user-facing UI for submitting a new municipal report",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Boundary/ReportCreationGUI.java",
+        "symbol": "ReportCreationGUI",
+        "excerpt": "public class ReportCreationGUI {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "UserLoginGUI",
+      "kind": "module",
+      "role": "user-facing login screen for citizens and municipal operators",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserLoginGUI.java",
+        "symbol": "UserLoginGUI",
+        "excerpt": "public class UserLoginGUI {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "SystemServicesController",
+      "kind": "module",
+      "role": "application facade that delegates to use-case controllers",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/SystemServicesController.java",
+        "symbol": "SystemServicesController",
+        "excerpt": "public class SystemServicesController {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "ReportCreationController",
+      "kind": "module",
+      "role": "application logic for validating and registering new reports",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/ReportCreationController.java",
+        "symbol": "ReportCreationController",
+        "excerpt": "public class ReportCreationController {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "UserLoginController",
+      "kind": "module",
+      "role": "application logic for verifying login credentials",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/UserLoginController.java",
+        "symbol": "UserLoginController",
+        "excerpt": "public class UserLoginController {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "ReportService",
+      "kind": "module",
+      "role": "domain service for report lifecycle and queries",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportService.java",
+        "symbol": "ReportService",
+        "excerpt": "public class ReportService {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "UserService",
+      "kind": "module",
+      "role": "domain service for user registration and credential lookup",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/UserService.java",
+        "symbol": "UserService",
+        "excerpt": "public class UserService {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "Report",
+      "kind": "module",
+      "role": "domain entity representing a municipal report and its status",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "Report",
+        "excerpt": "@Table(name = \"reports\")\npublic class Report {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "PersistenceService",
+      "kind": "module",
+      "role": "data persistence operations over JPA EntityManager",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Database/PersistenceService.java",
+        "symbol": "PersistenceService",
+        "excerpt": "public class PersistenceService {"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E11",
+      "name": "JpaUtil",
+      "kind": "module",
+      "role": "boots EntityManagerFactory for Municipal_Report_Management_System",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Database/JpaUtil.java",
+        "symbol": "JpaUtil",
+        "excerpt": "this.emf = Persistence.createEntityManagerFactory(\"Municipal_Report_Management_System\");"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": "opens ReportCreationGUI",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "ReportCreationGUI",
+        "excerpt": "ReportCreationGUI guiCreation = new ReportCreationGUI(userSessionData);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E4",
+      "kind": "uses",
+      "label": "delegates via SystemServicesController",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/ReportCreationGUI.java",
+        "symbol": "SystemServicesController",
+        "excerpt": "this.systemServicesController = new SystemServicesController();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E6",
+      "kind": "uses",
+      "label": "verifyCredentialsLogin",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserLoginGUI.java",
+        "symbol": "UserLoginController",
+        "excerpt": "this.controllerLoginUser = new UserLoginController();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E4",
+      "to": "E5",
+      "kind": "contains",
+      "label": "owns ReportCreationController",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/SystemServicesController.java",
+        "symbol": "controllerCreationReport",
+        "excerpt": "this.controllerCreationReport = new ReportCreationController();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E5",
+      "to": "E7",
+      "kind": "uses",
+      "label": "registerNewReport",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/ReportCreationController.java",
+        "symbol": "ReportService",
+        "excerpt": "this.reportService = new ReportService();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E5",
+      "to": "E8",
+      "kind": "uses",
+      "label": "verifyUserCitizen",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/ReportCreationController.java",
+        "symbol": "UserService",
+        "excerpt": "this.userService = new UserService();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E6",
+      "to": "E8",
+      "kind": "uses",
+      "label": "retrieveUserDataByCredentials",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/UserLoginController.java",
+        "symbol": "UserService",
+        "excerpt": "this.userService = new UserService();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E7",
+      "to": "E9",
+      "kind": "uses",
+      "label": "creates Report",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportService.java",
+        "symbol": "Report",
+        "excerpt": "Report report = new Report("
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E7",
+      "to": "E10",
+      "kind": "uses",
+      "label": "save/find reports",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportService.java",
+        "symbol": "PersistenceService",
+        "excerpt": "this.persistenceService = new PersistenceService();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R10",
+      "from": "E8",
+      "to": "E10",
+      "kind": "uses",
+      "label": "persist users",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/UserService.java",
+        "symbol": "PersistenceService",
+        "excerpt": "this.persistenceService = new PersistenceService();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R11",
+      "from": "E10",
+      "to": "E11",
+      "kind": "uses",
+      "label": "getEntityManager",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Database/PersistenceService.java",
+        "symbol": "JpaUtil",
+        "excerpt": "this.jpaUtil = JpaUtil.getInstance();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": ["RI-3"],
+  "notes": [
+    "Module names are English type stems from Boundary/Control/Entity/Database layers; folder names are not used as boxes.",
+    "Layer separation is shown by responsibility roles and uses/contains edges rather than package-shaped containers.",
+    "RI-3 left unanswered: no single module owns the whole overall system organization."
+  ]
+}

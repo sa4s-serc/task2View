@@ -1,0 +1,261 @@
+{
+  "claims": [
+    {
+      "claim": "Registration boundary component handles user registration input and interacts with the library library/facade controller.",
+      "source_element": "Registration",
+      "target_element": "UserManager",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+          "symbol": "register",
+          "excerpt": "LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "UserManager processes user registration by validating inputs, using a UserFactory, and registering the user in the UserRegistry.",
+      "source_element": "UserManager",
+      "target_element": "UserRegistry",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+          "symbol": "register",
+          "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "UserRegistry persists new user entities via the PersistenceManager.",
+      "source_element": "UserRegistry",
+      "target_element": "PersistenceManager",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+          "symbol": "registerUser",
+          "excerpt": "return persistenceManager.save(newUser);"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "Registration boundary component communicates with LibraryFacade during user registration",
+      "source_element": "Registration",
+      "target_element": "LibraryFacade",
+      "relationship": "calls",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+          "symbol": "register",
+          "excerpt": "LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "UserManager component registers a new user and interacts with PersistenceManager via UserRegistry during user registration",
+      "source_element": "UserManager",
+      "target_element": "PersistenceManager",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+          "symbol": "register",
+          "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "Registration boundary calls LibraryFacade register method to process user registration",
+      "source_element": "Registration",
+      "target_element": "LibraryFacade",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+          "symbol": "register",
+          "excerpt": "LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "UserManager validates registration parameters and invokes UserRegistry to check existing email and identifiers",
+      "source_element": "UserManager",
+      "target_element": "UserRegistry",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+          "symbol": "register",
+          "excerpt": "if (userRegistry.institutionalEmailExists(email)) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "UserManager uses a UserFactory implementation to create a new User instance",
+      "source_element": "UserManager",
+      "target_element": "UserFactory",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+          "symbol": "register",
+          "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "UserRegistry delegates user persistence to PersistenceManager",
+      "source_element": "UserRegistry",
+      "target_element": "PersistenceManager",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+          "symbol": "registerUser",
+          "excerpt": "return persistenceManager.save(newUser);"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "PersistenceManager saves the user entity using the JPA EntityManager",
+      "source_element": "PersistenceManager",
+      "target_element": "User",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+          "symbol": "save",
+          "excerpt": "em.persist(object);"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "UserManager provides a register method to handle user registration for students and librarians, validating input details and checking for existing emails and identifiers.",
+      "source_element": "UserManager",
+      "target_element": "UserRegistry",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+          "symbol": "register",
+          "excerpt": "public UserDTO register(String role, String name, String surname, String email, String password, String identifier) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    },
+    {
+      "claim": "UserRegistry provides a registerUser method to save a new user through the persistence manager.",
+      "source_element": "UserRegistry",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+          "symbol": "registerUser",
+          "excerpt": "public boolean registerUser(User newUser) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    },
+    {
+      "claim": "UserFactory defines the interface for creating user instances during registration.",
+      "source_element": "UserFactory",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java",
+          "symbol": "UserFactory",
+          "excerpt": "public interface UserFactory {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    }
+  ],
+  "elements": [
+    "Registration",
+    "UserManager",
+    "UserRegistry",
+    "PersistenceManager",
+    "LibraryFacade",
+    "UserFactory",
+    "User"
+  ],
+  "notes": []
+}

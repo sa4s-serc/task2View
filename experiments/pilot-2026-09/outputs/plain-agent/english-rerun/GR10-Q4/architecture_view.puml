@@ -1,0 +1,49 @@
+@startuml architecture_view
+title Municipal Report Management System — Use Case View (GR10-Q4)
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "User" as User
+actor "Authenticated User" as AuthUser
+actor "Citizen" as Citizen
+actor "Municipal Operator" as Operator
+
+AuthUser <|-- Citizen
+AuthUser <|-- Operator
+
+rectangle "Municipal reporting system" {
+  usecase "User Registration" as UC_Reg
+  usecase "Create New Report" as UC_Create
+  usecase "Add Additional Information" as UC_AddInfo
+  usecase "View Submitted Reports" as UC_ViewSub
+  usecase "View Received Reports" as UC_ViewRec
+  usecase "View Report Details" as UC_Details
+  usecase "Update Report Status" as UC_Status
+  usecase "Send Notification to Citizen" as UC_Notify
+  usecase "Monitor Activity Progress" as UC_Monitor
+  usecase "Add Internal Note" as UC_Note
+}
+
+User --> UC_Reg
+
+Citizen --> UC_Create
+Citizen --> UC_ViewSub
+
+Operator --> UC_ViewRec
+Operator --> UC_Status
+Operator --> UC_Monitor
+Operator --> UC_Note
+
+UC_AddInfo .up.> UC_Create : <<extend>>
+UC_Details .up.> UC_ViewSub : <<extend>>
+UC_Details .up.> UC_ViewRec : <<extend>>
+UC_Notify .up.> UC_Status : <<extend>>
+
+note right of UC_Status
+  Report lifecycle:
+  Submitted → Assigned →
+  In Progress → Resolved
+end note
+
+@enduml

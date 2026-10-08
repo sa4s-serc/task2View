@@ -1,0 +1,22 @@
+{
+  "request_id": "IS-seat-L2",
+  "strategy": "single-agent",
+  "files": [
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java", "reason": "owns makeReservation and booking validation rules"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java", "reason": "facade entry that delegates seat booking operations"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java", "reason": "automatic seat-assignment booking rule"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java", "reason": "strategy port for seat selection rules"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java", "reason": "room/time-slot/seat availability used before booking"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java", "reason": "persists and looks up reservations"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java", "reason": "resolves rooms, areas, and seats for booking"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java", "reason": "resolves students for booking ownership checks"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java", "reason": "seat availability checks against existing reservations"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java", "reason": "lists available seats in an area for booking"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java", "reason": "uniqueness rule for active/confirmed bookings"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java", "reason": "observer notified when reservations are created or change"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java", "reason": "notification delivery used after booking events"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationConfiguration.java", "reason": "wires NotificationServiceAdapter into NotificationManager"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java", "reason": "reservation aggregate attached to notification observers"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java", "reason": "HTTP entry that calls LibraryFacade.makeReservation"}
+  ]
+}

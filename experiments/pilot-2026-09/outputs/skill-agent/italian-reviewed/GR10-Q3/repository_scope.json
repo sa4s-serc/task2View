@@ -1,0 +1,22 @@
+{
+  "request_id": "GR10-Q3",
+  "strategy": "single-agent",
+  "files": [
+    {"path": "src/main/java/Entity/Segnalazione.java", "reason": "JPA report entity owning location, notes, state history, and user associations"},
+    {"path": "src/main/java/Entity/Utente.java", "reason": "abstract persisted user with credentials and role inheritance"},
+    {"path": "src/main/java/Entity/Cittadino.java", "reason": "citizen subtype linked as report author and notification recipient"},
+    {"path": "src/main/java/Entity/OperatoreComunale.java", "reason": "operator subtype assigned to reports, notes, and state updates"},
+    {"path": "src/main/java/Entity/Posizione.java", "reason": "embeddable location persisted inside Segnalazione"},
+    {"path": "src/main/java/Entity/CategoriaSegnalazione.java", "reason": "enum of report categories persisted as STRING"},
+    {"path": "src/main/java/Entity/StatoSegnalazione.java", "reason": "state interface; current state name is persisted on Segnalazione"},
+    {"path": "src/main/java/Entity/AggiornamentoStato.java", "reason": "persisted state-change history entity"},
+    {"path": "src/main/java/Entity/NotaInterna.java", "reason": "persisted internal note entity contained by Segnalazione"},
+    {"path": "src/main/java/Entity/Notifica.java", "reason": "persisted notification entity for report state changes"},
+    {"path": "src/main/java/Entity/Credenziali.java", "reason": "embeddable credentials persisted with Utente"},
+    {"path": "src/main/java/Entity/Inviata.java", "reason": "concrete initial report state reconstructing from persisted name"},
+    {"path": "src/main/java/Database/ServizioPersistenza.java", "reason": "generic JPA persistence facade used by entity services"},
+    {"path": "src/main/java/Entity/ServizioSegnalazioni.java", "reason": "facade that creates/updates reports and depends on ServizioPersistenza"},
+    {"path": "src/main/resources/META-INF/persistence.xml", "reason": "persistence unit listing managed entity classes"},
+    {"path": "src/main/java/Control/ControllerAggiornamentoStatoSegnalazione.java", "reason": "control type that depends on persisted report state updates via ServizioSegnalazioni"}
+  ]
+}

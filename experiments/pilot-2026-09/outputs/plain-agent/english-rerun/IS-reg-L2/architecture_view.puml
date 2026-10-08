@@ -1,0 +1,92 @@
+@startuml architecture_view
+title User Registration — Components & Integration Points (IS-reg-L2)
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+legend left
+  Focus: account creation (UC1)
+  Integration points to exercise:
+  1. Boundary → LibraryFacade.register
+  2. LibraryFacade → UserManager.register
+  3. UserManager validation + uniqueness vs UserRegistry
+  4. UserManager → UserFactory (StudentFactory | LibrarianFactory)
+  5. UserRegistry.registerUser → PersistenceManager.save → JPA
+  6. UserManager → UserDTO response
+endlegend
+
+package "Boundary (entry points)" {
+  [Registration\n(Swing UI)] as Registration
+  [AuthenticationController\nPOST /api/auth/register] as AuthController
+}
+
+package "Controller" {
+  [LibraryFacade] as LibraryFacade
+  [UserManager] as UserManager
+}
+
+package "Factory" {
+  [UserFactory] as UserFactory
+  [StudentFactory] as StudentFactory
+  [LibrarianFactory] as LibrarianFactory
+}
+
+package "Entity / Registry" {
+  [UserRegistry] as UserRegistry
+  [User] as User
+  [Student] as Student
+  [Librarian] as Librarian
+}
+
+package "DTO" {
+  [UserDTO] as UserDTO
+}
+
+package "Persistence" {
+  [PersistenceManager] as PersistenceManager
+  [JpaUtil] as JpaUtil
+  database "JPA / DB" as DB
+}
+
+' Entry → facade
+Registration --> LibraryFacade : register(role, name, surname,\nemail, password, identifier)
+AuthController --> LibraryFacade : register(...)
+
+' Facade → manager
+LibraryFacade --> UserManager : register(...)
+
+' Manager responsibilities
+UserManager --> UserRegistry : institutionalEmailExists\nfindStudentByStudentNumber\nfindLibrarianByCode
+UserManager --> UserFactory : createUser(...)
+StudentFactory ..|> UserFactory
+LibrarianFactory ..|> UserFactory
+StudentFactory --> Student : creates
+LibrarianFactory --> Librarian : creates
+Student --|> User
+Librarian --|> User
+
+' Persist
+UserManager --> UserRegistry : registerUser(newUser)
+UserRegistry --> PersistenceManager : save(User)
+PersistenceManager --> JpaUtil : EntityManager
+JpaUtil --> DB
+
+' Response
+UserManager --> UserDTO : toDTO(User)
+
+note right of UserManager
+  Responsibilities:
+  - validate role, name, surname,
+    email (@*.unina.it), password,
+    identifier (student ID / code)
+  - enforce uniqueness (email, identifier)
+  - choose Student vs Librarian factory
+  - map persisted User → UserDTO
+end note
+
+note right of UserRegistry
+  Integration seam to persistence:
+  lookups + registerUser
+end note
+
+@enduml

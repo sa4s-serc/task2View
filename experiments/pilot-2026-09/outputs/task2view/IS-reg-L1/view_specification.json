@@ -1,0 +1,186 @@
+{
+  "request_id": "IS-reg-L1",
+  "stakeholder": "tester-and-integrator",
+  "task_summary": "I am an integration tester. I need to test the user registration functionality and understand which system components are involved and how they interact. | test the user registration functionality | user registration functionality | The diagram must make clear which system components are involved and how they interact.",
+  "architectural_concerns": [
+    "connectivity",
+    "control-flow",
+    "functional-suitability"
+  ],
+  "selected_view": {
+    "view_type": "component_view",
+    "notation": "Component Diagram",
+    "diagram_language": "plantuml",
+    "granularity": "component_or_service_level",
+    "purpose": "Component-and-Connector Runtime View for am integration tester test user registration: runtime components and connectors. Relations: connectors and communication. Do not: source packages drawn as runtime nodes.",
+    "viewpoint_id": "cnc-runtime",
+    "grain_unit": "component",
+    "diagram_language_rule": "viewpoint agent chose plantuml: PlantUML provides robust support for drawing runtime components, connectors, and sequence-based interactions to answer connectivity and control-flow questions."
+  },
+  "required_information": [
+    {
+      "id": "RI-1",
+      "need": "runtime components and connectors for user registration functionality"
+    },
+    {
+      "id": "RI-2",
+      "need": "communication mechanisms among those components"
+    },
+    {
+      "id": "RI-3",
+      "need": "component that handles user registration functionality"
+    },
+    {
+      "id": "RI-4",
+      "need": "persistence or external connector used by user registration functionality"
+    }
+  ],
+  "architectural_questions": [
+    {
+      "id": "AQ1",
+      "text": "Which system components are involved in implementing the user registration functionality?",
+      "concern": "connectivity"
+    },
+    {
+      "id": "AQ2",
+      "text": "How do the participating system components communicate with each other during user registration?",
+      "concern": "connectivity"
+    },
+    {
+      "id": "AQ3",
+      "text": "What is the order of calls and execution flow when the user registration functionality runs?",
+      "concern": "control-flow"
+    },
+    {
+      "id": "AQ4",
+      "text": "Does the implementation of the user registration functionality meet the expected functional requirements for testing?",
+      "concern": "functional-suitability"
+    }
+  ],
+  "declared_gaps": [
+    "control-flow",
+    "functional-suitability"
+  ],
+  "unanswered_concerns": [
+    "control-flow",
+    "functional-suitability"
+  ],
+  "selection_trace": {
+    "method": "model-viewpoint",
+    "vb_candidates": [
+      {
+        "column": "decomposition",
+        "vb_name": "Decomposition",
+        "viewpoint_id": "module-decomposition",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      },
+      {
+        "column": "cnc",
+        "vb_name": "C&C (various)",
+        "viewpoint_id": "cnc-runtime",
+        "level": "s",
+        "rank": 2,
+        "beyond_views": false
+      },
+      {
+        "column": "deployment",
+        "vb_name": "Deployment",
+        "viewpoint_id": "allocation-deployment",
+        "level": "s",
+        "rank": 2,
+        "beyond_views": false
+      },
+      {
+        "column": "implementation",
+        "vb_name": "Implementation",
+        "viewpoint_id": "code-mapping",
+        "level": "s",
+        "rank": 2,
+        "beyond_views": false
+      },
+      {
+        "column": "context",
+        "vb_name": "Context",
+        "viewpoint_id": "context",
+        "level": "d",
+        "rank": 3,
+        "beyond_views": false
+      }
+    ],
+    "task_concerns": [
+      "connectivity",
+      "control-flow",
+      "functional-suitability"
+    ],
+    "preferred_viewpoints": [
+      "cnc-runtime"
+    ],
+    "ranked": [
+      {
+        "viewpoint_id": "cnc-runtime",
+        "view_type": "component_view",
+        "vb_column": "cnc",
+        "vb_level": "s",
+        "score": 12.0,
+        "reasons": [
+          "V&B detail rank 2",
+          "task-cue preferred viewpoint",
+          "integration-test task keeps a C&C runtime view"
+        ]
+      },
+      {
+        "viewpoint_id": "code-mapping",
+        "view_type": "class_view",
+        "vb_column": "implementation",
+        "vb_level": "s",
+        "score": 4.0,
+        "reasons": [
+          "V&B detail rank 2",
+          "stakeholder required viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "context",
+        "view_type": "context_view",
+        "vb_column": "context",
+        "vb_level": "d",
+        "score": 4.0,
+        "reasons": [
+          "V&B detail rank 3",
+          "stakeholder optional viewpoint"
+        ]
+      },
+      {
+        "viewpoint_id": "module-decomposition",
+        "view_type": "component_view",
+        "vb_column": "decomposition",
+        "vb_level": "d",
+        "score": 3.0,
+        "reasons": [
+          "V&B detail rank 3"
+        ]
+      },
+      {
+        "viewpoint_id": "allocation-deployment",
+        "view_type": "deployment_view",
+        "vb_column": "deployment",
+        "vb_level": "s",
+        "score": 2.0,
+        "reasons": [
+          "V&B detail rank 2"
+        ]
+      }
+    ],
+    "dropped_beyond_views": [
+      "uses",
+      "generalization",
+      "layered",
+      "interface-spec",
+      "mapping-between-views",
+      "variability",
+      "rationale"
+    ]
+  }
+}

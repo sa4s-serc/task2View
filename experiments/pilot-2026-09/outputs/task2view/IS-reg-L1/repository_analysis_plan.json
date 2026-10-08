@@ -1,0 +1,104 @@
+{
+  "analysis_goal": "The diagram must make clear which system components are involved and how they interact during user registration.",
+  "target_view": "cnc-runtime",
+  "target_granularity": "component",
+  "analysis_tasks": [
+    {
+      "id": "AT1",
+      "goal": "Identify which system components are involved in implementing the user registration functionality.",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java",
+        "JavaProject/src/main/java/it/unina/reservations/dto/UserDTO.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/User.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+      ],
+      "expected_evidence": [
+        "Runtime components and connectors involved in user registration"
+      ],
+      "addresses": [
+        "AQ1"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT2",
+      "goal": "Determine how the participating system components communicate with each other during user registration.",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "expected_evidence": [
+        "Connectors and communication paths between components during user registration"
+      ],
+      "addresses": [
+        "AQ2"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT3",
+      "goal": "Trace the order of calls and execution flow when the user registration functionality runs.",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/User.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+      ],
+      "expected_evidence": [
+        "Execution sequence and call order among runtime components"
+      ],
+      "addresses": [
+        "AQ3"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT4",
+      "goal": "Verify whether the implementation of the user registration functionality meets the expected functional requirements for testing.",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/User.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/User.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java",
+        "JavaProject/src/main/java/it/unina/reservations/dto/UserDTO.java"
+      ],
+      "expected_evidence": [
+        "Functional implementation details and constraints of user registration logic"
+      ],
+      "addresses": [
+        "AQ4"
+      ],
+      "target_view": "cnc-runtime"
+    }
+  ],
+  "constraints": [
+    "do not: source packages drawn as runtime nodes",
+    "source packages drawn as runtime nodes"
+  ]
+}

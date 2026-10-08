@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CODE = ROOT / "code"
-DATA = ROOT.parent / "data_points"
+DATA = ROOT / "data"
 IS = DATA / "Progetto-IS-main-English"
 GR10 = DATA / "progetto_ing_software_gr10-main-English"
 PY = CODE / ".venv" / "bin" / "python"

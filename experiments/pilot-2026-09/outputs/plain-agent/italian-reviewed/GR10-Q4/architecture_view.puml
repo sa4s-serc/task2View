@@ -1,0 +1,78 @@
+@startuml architecture_view
+title Sistema Comunale Gestione Segnalazioni — User roles, goals, and functional relationships
+skinparam packageStyle rectangle
+skinparam shadowing false
+left to right direction
+
+actor "Cittadino" as CIT
+actor "Operatore Comunale" as OP
+
+rectangle "Identity & access (shared)" {
+  usecase "Registrazione Utente\n(choose role)" as UC_REG
+  usecase "Accesso Utente\n(session with role)" as UC_ACC
+}
+
+rectangle "Citizen goals" {
+  usecase "Crea Nuova Segnalazione\n(territory issue + location/category)" as UC_CREA
+  usecase "Inserisci Informazioni Aggiuntive\n(only while stato = inviata)" as UC_AGG_INFO
+  usecase "Consulta Segnalazioni Inviate" as UC_INV
+  usecase "Visualizza Dettagli Segnalazione\n(own reports)" as UC_DET_C
+}
+
+rectangle "Municipal operator goals" {
+  usecase "Consulta Segnalazioni Ricevute" as UC_RIC
+  usecase "Ricerca / filtra Segnalazioni\n(e.g. by stato)" as UC_CER
+  usecase "Visualizza Dettagli Segnalazione\n(received reports)" as UC_DET_O
+  usecase "Aggiungi Nota Interna" as UC_NOTA
+  usecase "Aggiorna Stato Segnalazione" as UC_STATO
+  usecase "Monitora Andamento Attività\n(generale / in lavorazione / zona)" as UC_MON
+}
+
+rectangle "Cross-cutting report lifecycle" {
+  usecase "Lifecycle: inviata → presa_in_carico\n→ in_lavorazione → risolta" as UC_LIFE
+  usecase "Notifica al cittadino\n(on notificabile status change)" as UC_NOTIF
+}
+
+CIT --> UC_REG
+OP --> UC_REG
+CIT --> UC_ACC
+OP --> UC_ACC
+
+UC_ACC ..> UC_CREA : enables if Cittadino
+UC_ACC ..> UC_INV : enables if Cittadino
+UC_ACC ..> UC_RIC : enables if Operatore
+UC_ACC ..> UC_STATO : enables if Operatore
+UC_ACC ..> UC_MON : enables if Operatore
+
+CIT --> UC_CREA
+CIT --> UC_AGG_INFO
+CIT --> UC_INV
+CIT --> UC_DET_C
+
+OP --> UC_RIC
+OP --> UC_CER
+OP --> UC_DET_O
+OP --> UC_NOTA
+OP --> UC_STATO
+OP --> UC_MON
+
+UC_CREA ..> UC_LIFE : starts as inviata
+UC_AGG_INFO ..> UC_CREA : extends while editable
+UC_INV ..> UC_DET_C : select report
+UC_RIC ..> UC_CER : optional filter
+UC_RIC ..> UC_DET_O : select report
+UC_DET_O ..> UC_NOTA : optional
+UC_RIC ..> UC_STATO : select then advance
+UC_STATO ..> UC_LIFE : applies next transition
+UC_STATO ..> UC_NOTIF : when state is notificabile
+UC_NOTIF ..> CIT : informs reporter
+UC_MON ..> UC_LIFE : aggregates by stato / period / zona
+
+note right of UC_LIFE
+  Domain categories for reports include:
+  illuminazione_guasta, strada_dissestata,
+  rifiuti_abbandonati, pericolo_generico,
+  arredo_urbano_danneggiato
+end note
+
+@enduml

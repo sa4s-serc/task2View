@@ -1,0 +1,320 @@
+{
+  "request_id": "IS-seat-L3",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "LibraryFacade",
+      "kind": "module",
+      "role": "handles booking requests and delegates to reservation and study-room managers",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "makeReservation",
+        "excerpt": "public ReservationDTO makeReservation(ReservationRequestDTO request) { return ReservationManager.getInstance().makeReservation(request); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "ReservationManager",
+      "kind": "module",
+      "role": "applies booking rules, checks seat availability, creates and saves reservations, triggers notifications",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "makeReservation",
+        "excerpt": "List<Seat> available = availableSeats(area, date, timeSlot); Seat seat = selectSeat(seatId, date, timeSlot, available); Reservation reservation = createAndSave(...); notifyReservation(reservation);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "FirstAvailableAssignment",
+      "kind": "module",
+      "role": "booking rule that selects the first available seat when no seat is specified",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java",
+        "symbol": "selectSeat",
+        "excerpt": "public Seat selectSeat(List<Seat> availableSeats) { return availableSeats.getFirst(); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "ReservationRegistry",
+      "kind": "module",
+      "role": "manages and stores Reservation records via persistence",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+        "symbol": "saveReservation",
+        "excerpt": "public boolean saveReservation(Reservation reservation) { return persistenceManager.save(reservation); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "StudyRoomRegistry",
+      "kind": "module",
+      "role": "resolves rooms, areas, and seats used when checking booking availability",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java",
+        "symbol": "getAvailableSeats",
+        "excerpt": "public List<Seat> getAvailableSeats(Long areaId, LocalDate date, Long timeSlotId) { return area.getAvailableSeats(date, timeSlot); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "StudyRoomManager",
+      "kind": "module",
+      "role": "exposes study-room and time-slot availability queries for the booking flow",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java",
+        "symbol": "getAvailableStudyRooms",
+        "excerpt": "private final StudyRoomRegistry roomRegistry = StudyRoomRegistry.getInstance();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "NotificationManager",
+      "kind": "module",
+      "role": "observes reservation state changes and delivers notification messages",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "sendNotification",
+        "excerpt": "notificationService.sendNotification(recipients, message);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "NotificationServiceAdapter",
+      "kind": "module",
+      "role": "implements NotificationService and forwards messages to the external email gateway",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java",
+        "symbol": "sendNotification",
+        "excerpt": "int success = gateway.send(dto.getInstitutionalEmail(), \"UniNa Library - Notification\", message);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "PersistenceManager",
+      "kind": "module",
+      "role": "JPA persistence used to store and load reservations and rooms",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "save",
+        "excerpt": "public boolean save(Object object) { em.persist(object); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "ExternalEmailGateway",
+      "kind": "external_system",
+      "role": "external notification/email delivery stub used by the adapter",
+      "external": true,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "symbol": "send",
+        "excerpt": "public int send(String to, String subject, String body) { return 200; }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": "makeReservation",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "makeReservation",
+        "excerpt": "return ReservationManager.getInstance().makeReservation(request);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E1",
+      "to": "E6",
+      "kind": "uses",
+      "label": "getAvailableStudyRooms",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "getAvailableStudyRooms",
+        "excerpt": "return StudyRoomManager.getInstance().getAvailableStudyRooms(date);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "selectSeat",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "selectSeat",
+        "excerpt": "return assignmentStrategy.selectSeat(available);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E2",
+      "to": "E4",
+      "kind": "uses",
+      "label": "saveReservation",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "createAndSave",
+        "excerpt": "boolean success = reservationRegistry.saveReservation(reservation);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E2",
+      "to": "E5",
+      "kind": "uses",
+      "label": "findSeatById / resolveRoom",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "validateSeatInArea",
+        "excerpt": "Seat seat = roomRegistry.findSeatById(seatId);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E2",
+      "to": "E7",
+      "kind": "uses",
+      "label": "notifyReservation",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "notifyReservation",
+        "excerpt": "reservation.attach(NotificationManager.getInstance()); reservation.notifyObservers();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E6",
+      "to": "E5",
+      "kind": "uses",
+      "label": "roomRegistry",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java",
+        "symbol": "roomRegistry",
+        "excerpt": "private final StudyRoomRegistry roomRegistry = StudyRoomRegistry.getInstance();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E4",
+      "to": "E9",
+      "kind": "uses",
+      "label": "save",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+        "symbol": "saveReservation",
+        "excerpt": "return persistenceManager.save(reservation);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E5",
+      "to": "E9",
+      "kind": "uses",
+      "label": "findById",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java",
+        "symbol": "findRoomById",
+        "excerpt": "return persistenceManager.findById(StudyRoom.class, id);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R10",
+      "from": "E7",
+      "to": "E8",
+      "kind": "uses",
+      "label": "sendNotification",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "sendNotification",
+        "excerpt": "notificationService.sendNotification(recipients, message);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R11",
+      "from": "E8",
+      "to": "E10",
+      "kind": "uses",
+      "label": "send",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java",
+        "symbol": "sendNotification",
+        "excerpt": "gateway.send(dto.getInstitutionalEmail(), \"UniNa Library - Notification\", message);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": ["RI-2"],
+  "notes": [
+    "Seat availability is grounded in ReservationManager calling Area.getAvailableSeats / Seat.isAvailable via StudyRoomRegistry; Area and Seat kept in scope as evidence, not published as separate module boxes to avoid class inventory.",
+    "No nested containment among managers was observed; dependency structure is uses-only, so RI-2 containment hierarchy remains unanswered."
+  ]
+}

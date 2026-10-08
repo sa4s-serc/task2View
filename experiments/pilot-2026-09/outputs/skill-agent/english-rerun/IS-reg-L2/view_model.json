@@ -1,0 +1,218 @@
+{
+  "request_id": "IS-reg-L2",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "AuthenticationController",
+      "kind": "module",
+      "role": "REST entry that accepts /api/auth/register and forwards to LibraryFacade",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+        "symbol": "register",
+        "excerpt": "@PostMapping(\"/register\") public UserDTO register(...)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "LibraryFacade",
+      "kind": "module",
+      "role": "application facade that exposes register and delegates to UserManager",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "register",
+        "excerpt": "public UserDTO register(...) { return UserManager.getInstance().register(...); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "UserManager",
+      "kind": "module",
+      "role": "owns user registration: validates role/personal data, checks uniqueness, selects factory, persists via UserRegistry",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "public UserDTO register(String role, String name, String surname, String email, String password, String identifier)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "StudentFactory",
+      "kind": "module",
+      "role": "builds Student user instances with studentNumber identifier",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java",
+        "symbol": "createUser",
+        "excerpt": "Student student = new Student(); student.setStudentNumber(identifier); return student;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "LibrarianFactory",
+      "kind": "module",
+      "role": "builds Librarian user instances with internalIdentifierCode",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java",
+        "symbol": "createUser",
+        "excerpt": "Librarian librarian = new Librarian(); librarian.setInternalIdentifierCode(identifier); return librarian;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "UserRegistry",
+      "kind": "module",
+      "role": "checks institutional email and identifier uniqueness and registers the new user",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "symbol": "registerUser",
+        "excerpt": "public boolean registerUser(User newUser) { return persistenceManager.save(newUser); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "PersistenceManager",
+      "kind": "module",
+      "role": "JPA persistence of the newly created user",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "save",
+        "excerpt": "public boolean save(Object object) { ... em.persist(object); ... }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": "register",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+        "symbol": "register",
+        "excerpt": "return LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "register",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "register",
+        "excerpt": "return UserManager.getInstance().register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": "createUser (Student)",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory(); User newUser = factory.createUser(...);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E3",
+      "to": "E5",
+      "kind": "uses",
+      "label": "createUser (Librarian)",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E3",
+      "to": "E6",
+      "kind": "uses",
+      "label": "uniqueness + registerUser",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "symbol": "register",
+        "excerpt": "userRegistry.institutionalEmailExists(email); ... userRegistry.registerUser(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E6",
+      "to": "E7",
+      "kind": "contains",
+      "label": "persistenceManager",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "symbol": "UserRegistry",
+        "excerpt": "private final PersistenceManager persistenceManager; ... this.persistenceManager = new PersistenceManager();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E6",
+      "to": "E7",
+      "kind": "uses",
+      "label": "save",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "symbol": "registerUser",
+        "excerpt": "return persistenceManager.save(newUser);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "UserManager owns user registration (UC1).",
+    "Main integration points to exercise: AuthenticationController→LibraryFacade, LibraryFacade→UserManager, UserManager→factories, UserManager→UserRegistry, UserRegistry→PersistenceManager."
+  ]
+}

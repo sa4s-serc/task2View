@@ -1,0 +1,87 @@
+{
+  "role_id": "infrastructure-support-personnel",
+  "stakeholder_name": "Infrastructure support personnel",
+  "viewpoint_id": "allocation-deployment",
+  "view_type": "deployment_view",
+  "task_focus": "deploy",
+  "concerns": [
+    "deployment",
+    "connectivity",
+    "reliability"
+  ],
+  "task_concerns": [
+    "deployment",
+    "connectivity",
+    "reliability"
+  ],
+  "preferred_viewpoints": [
+    "allocation-deployment",
+    "code-mapping"
+  ],
+  "phrases": [
+    "deploy",
+    "database"
+  ],
+  "task": "I am a DevOps engineer. I need to deploy and configure the system in a new execution environment. Before preparing the deployment, I need to understand which runtime environments and software artifacts are required, where the application and its data are executed and stored, and how the main runtime elements communicate with each other. I also need to identify the technologies and runtime dependencies involved in the communication between the application and the database.",
+  "purpose": "Deployment / Allocation View for deploy: deployable artifacts, execution nodes, datastores. Relations: deploys or communicates. Do not: classes as deployment nodes.",
+  "diagram_language": "plantuml",
+  "diagram_language_rule": "viewpoint default: plantuml",
+  "unanswered_concerns": [
+    "connectivity"
+  ],
+  "decided_by": "model",
+  "grain": {
+    "viewpoint_id": "allocation-deployment",
+    "unit": "component",
+    "nodes": "deployable artifacts, execution nodes, datastores",
+    "relations": "deploys or communicates",
+    "forbid": "classes as deployment nodes"
+  },
+  "ranked": [
+    {
+      "viewpoint_id": "allocation-deployment",
+      "view_type": "deployment_view",
+      "vb_column": "deployment",
+      "vb_level": "s",
+      "score": 14.0,
+      "reasons": [
+        "V&B detail rank 2",
+        "task-cue preferred viewpoint",
+        "stakeholder required viewpoint",
+        "frames task concerns: deployment, reliability"
+      ]
+    },
+    {
+      "viewpoint_id": "code-mapping",
+      "view_type": "class_view",
+      "vb_column": "implementation",
+      "vb_level": "d",
+      "score": 12.0,
+      "reasons": [
+        "V&B detail rank 3",
+        "task-cue preferred viewpoint",
+        "stakeholder optional viewpoint"
+      ]
+    },
+    {
+      "viewpoint_id": "cnc-runtime",
+      "view_type": "component_view",
+      "vb_column": null,
+      "vb_level": null,
+      "score": 2.0,
+      "reasons": [
+        "stakeholder required viewpoint"
+      ]
+    },
+    {
+      "viewpoint_id": "module-decomposition",
+      "view_type": "component_view",
+      "vb_column": "decomposition",
+      "vb_level": "s",
+      "score": 2.0,
+      "reasons": [
+        "V&B detail rank 2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+@startuml architecture_view
+title Seat Booking Functionality — Components, Responsibilities & Rule Touchpoints
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontSize 12
+
+legend right
+  |= Color |= Meaning |
+  | <#LightBlue> | Entry / presentation |
+  | <#LightGreen> | Orchestration & booking rules |
+  | <#Wheat> | Domain entities holding rules |
+  | <#LightGray> | Persistence / registries |
+  | <#Pink> | Likely affected by new booking rules |
+endlegend
+
+package "Presentation (entry points)" #AliceBlue {
+  [SeatSelection] as SeatUI #LightBlue
+  [ReservationSummary] as SummaryUI #LightBlue
+  [AreaSelection] as AreaUI #LightBlue
+  [ReservationController\n(/api/reservations)] as RestAPI #LightBlue
+  [WizardState] as Wizard #LightBlue
+}
+
+package "Application controllers" #HoneyDew {
+  [LibraryFacade] as Facade #LightGreen
+  [ReservationManager] as ResMgr #Pink
+  [StudyRoomManager] as RoomMgr #Pink
+  [NotificationManager] as NotifMgr #LightGreen
+  [AssignmentStrategy] as AssignIface #Pink
+  [FirstAvailableAssignment] as FirstAssign #Pink
+}
+
+package "Domain (booking & availability)" #FloralWhite {
+  [Reservation] as Reservation #Pink
+  [Seat] as Seat #Pink
+  [Area] as Area #Pink
+  [StudyRoom] as StudyRoom #Pink
+  [Student] as Student #Pink
+  [TimeSlot] as TimeSlot #Wheat
+  [ActiveState] as ActiveState #Wheat
+}
+
+package "Registries & persistence" #WhiteSmoke {
+  [ReservationRegistry] as ResReg #LightGray
+  [StudyRoomRegistry] as RoomReg #LightGray
+  [UserRegistry] as UserReg #LightGray
+  [PersistenceManager] as Persist #LightGray
+}
+
+package "Transfer objects" #White {
+  [ReservationRequestDTO] as ReqDTO
+  [ReservationDTO] as ResDTO
+  [RoomDetailDTO / SeatDTO] as DetailDTO
+}
+
+' --- Wizard / UI flow leading to booking ---
+Wizard --> SeatUI : holds room, area,\ntime slot, seat choice
+AreaUI --> Facade : getRoomDetail(...)
+AreaUI --> SeatUI : next step
+SeatUI --> SummaryUI : next step\n(manual seat or auto)
+SummaryUI --> Facade : makeReservation(request)
+RestAPI --> Facade : makeReservation(request)
+
+' --- Facade routing ---
+Facade --> RoomMgr : availability queries\n(getAvailableStudyRooms,\ngetAvailableTimeSlots,\ngetRoomDetail)
+Facade --> ResMgr : makeReservation
+Facade --> NotifMgr : sendReminders (related)
+
+' --- Core makeReservation orchestration ---
+ResMgr --> UserReg : resolveStudent
+ResMgr --> RoomReg : resolveRoom / resolveArea /\nfindSeatById
+ResMgr --> StudyRoom : isActive, isOpenOnDate,\nscheduledTimeSlots
+ResMgr --> Student : hasActiveOrConfirmed\nReservationForDateAndSlot
+ResMgr --> Area : getAvailableSeats
+ResMgr --> Seat : isAvailable (specific seat)
+ResMgr --> AssignIface : selectSeat when seatId=0
+AssignIface <|.. FirstAssign
+ResMgr --> Reservation : create (ActiveState)
+ResMgr --> ResReg : saveReservation
+ResMgr --> NotifMgr : attach + notifyObservers
+ResMgr --> ResDTO : return
+
+RoomMgr --> RoomReg : load rooms / areas / seats
+RoomMgr --> Area : getAvailableSeats\n(for RoomDetailDTO)
+RoomMgr --> DetailDTO : seat availability UI
+
+' --- Domain collaborations ---
+Area --> Seat : owns seats
+Seat --> ResReg : findReservationsBySeat
+Student --> ResReg : findActiveReservations
+Reservation --> Seat
+Reservation --> Student
+Reservation --> TimeSlot
+Reservation --> ActiveState : initial state
+StudyRoom --> Area : contains
+StudyRoom --> TimeSlot : scheduled slots
+
+' --- Persistence ---
+ResReg --> Persist
+RoomReg --> Persist
+UserReg --> Persist
+
+note right of ResMgr
+  **Booking rules today (UC7)**
+  • room active & open on date (weekdays)
+  • time slot not past / started
+  • seat belongs to selected area
+  • one active/confirmed reservation
+    per student per date+slot
+  • area has available seats
+  • chosen seat still free, or
+    AssignmentStrategy auto-picks
+  **Primary place to change rules**
+end note
+
+note bottom of Seat
+  **Impact of new rules**
+  Availability logic also lives in
+  Seat.isAvailable, Area.getAvailableSeats,
+  Student uniqueness check, StudyRoom
+  open/active checks, and StudyRoomManager
+  room-detail queries used by the wizard.
+end note
+
+@enduml

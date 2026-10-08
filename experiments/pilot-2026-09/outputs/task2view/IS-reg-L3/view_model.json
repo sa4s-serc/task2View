@@ -1,0 +1,160 @@
+{
+  "request_id": "IS-reg-L3",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Registration",
+      "kind": "component",
+      "role": "The Registration boundary component collects user registration inputs, validates input fields, and invokes the registration service.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "symbol": "register",
+        "excerpt": "LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E2",
+      "name": "LibraryFacade",
+      "kind": "component",
+      "role": "LibraryFacade provides the register method to execute user registration and initiate role-specific data management.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "symbol": "register",
+        "excerpt": "LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E3",
+      "name": "ReservationManager",
+      "kind": "component",
+      "role": "ReservationManager controller handles reservation functionality, validating uniqueness and reservation parameters, and interacts with NotificationManager.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "ReservationManager",
+        "excerpt": "private final ReservationRegistry reservationRegistry = ReservationRegistry.getInstance();"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E4",
+      "name": "ReservationRegistry",
+      "kind": "component",
+      "role": "ReservationRegistry supports reservation and registration data checks.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "ReservationManager",
+        "excerpt": "private final ReservationRegistry reservationRegistry = ReservationRegistry.getInstance();"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E5",
+      "name": "NotificationManager",
+      "kind": "component",
+      "role": "NotificationManager manages sending notifications using a notificationService component.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "notifyReservation",
+        "excerpt": "reservation.attach(NotificationManager.getInstance());"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E6",
+      "name": "ExternalEmailGateway",
+      "kind": "component",
+      "role": "ExternalEmailGateway provides a send method to simulate HTTP communication for email delivery.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "symbol": "send",
+        "excerpt": "    public int send(String to, String subject, String body) {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E7",
+      "name": "NotificationService",
+      "kind": "component",
+      "role": "NotificationService receives notifications invoked by NotificationManager.",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "sendNotification",
+        "excerpt": "            notificationService.sendNotification(recipients, message);"
+      },
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R2",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E5",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R4",
+      "from": "E5",
+      "to": "E7",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "functional-suitability",
+    "control-flow",
+    "maintainability"
+  ],
+  "notes": [
+    "No evidence names were left out because all extracted components and relations directly correspond to the supported runtime elements and interactions identified in the evidence."
+  ]
+}

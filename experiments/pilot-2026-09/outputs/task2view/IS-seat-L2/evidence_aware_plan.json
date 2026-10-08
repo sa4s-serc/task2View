@@ -1,0 +1,42 @@
+{
+  "viewpoint_id": "module-decomposition",
+  "diagram_language": "plantuml",
+  "diagram_language_rule": "viewpoint agent chose plantuml: PlantUML can cleanly represent modules, subsystems, and their containment or uses relationships for the seat booking functionality.",
+  "questions": [
+    {
+      "id": "AQ1",
+      "text": "Which modules or classes in the codebase own the seat booking functionality?",
+      "support": "supported",
+      "rationale": "SeatSelection boundary and Seat entity classes are explicitly identified as owning the seat booking and availability check functionality."
+    },
+    {
+      "id": "AQ2",
+      "text": "What are the main components involved in the seat booking functionality and what are their specific responsibilities?",
+      "support": "supported",
+      "rationale": "SeatSelection, SeatDTO, Seat entity, and app.js are detailed with their specific responsibilities in the seat booking flow."
+    },
+    {
+      "id": "AQ3",
+      "text": "How do the components of the seat booking functionality connect and communicate with each other?",
+      "support": "supported",
+      "rationale": "SeatSelection communicates via SeatDTO, and Seat uses ReservationRegistry to verify availability."
+    },
+    {
+      "id": "AQ4",
+      "text": "What is the exact execution order and call sequence between parts when the seat booking functionality runs?",
+      "support": "partial",
+      "rationale": "Evidence shows individual methods and UI handling steps like grid building and availability queries, but lacks a complete end-to-end execution order and call sequence."
+    },
+    {
+      "id": "AQ5",
+      "text": "Which surrounding parts of the system depend on or may be affected by modifications to the seat booking functionality?",
+      "support": "supported",
+      "rationale": "SeatSelection's dependency on SeatDTO and Seat's dependencies on ReservationRegistry and TimeSlot are explicitly cited."
+    }
+  ],
+  "limitations": [
+    "No analysis gaps identified, but the grain is restricted to unit=component level and cannot show full end-to-end method invocation sequences."
+  ],
+  "unanswered": [],
+  "rationale": "This evidence can carry component-level responsibilities, containment, and structural connections for the seat booking functionality using PlantUML."
+}

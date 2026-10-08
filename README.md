@@ -44,7 +44,7 @@ task2view plugins          # list scopers, extractors, notations
 task2view compile --run-dir runs/demo
 ```
 
-Example goals for the two evaluation repos: [`input_example_task2view.txt`](input_example_task2view.txt). Batch runner:
+Example goals for the two evaluation repos: [`input_example_task2view.txt`](docs/input_example_task2view.txt). Batch runner:
 
 ```bash
 cd code
@@ -124,6 +124,12 @@ code/src/task2view/agents            runtime, schemas, orchestrator
 code/src/task2view/knowledge         catalogs and correspondence
 code/tests/                          pytest
 docs/architecture.md                 stage-by-stage description
+docs/design-review-2026-10.md        root causes of the pilot failures, redesign proposal
+docs/adr/                            decision log
+skill/                               Task2View skill (single-agent baseline)
+experiments/pilot-2026-09/           pilot: all three conditions' outputs, review, provenance
+tools/                               GR10 UML-vs-code analysis scripts
+data/                                English subject repositories (gitignored, local only)
 ```
 
 ## Tests

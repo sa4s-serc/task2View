@@ -1,0 +1,205 @@
+{
+  "request_id": "IS-reg-L3",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "BoundaryAutenticazione",
+      "kind": "module",
+      "role": "accepts the HTTP registration request and forwards parameters to the facade",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryAutenticazione.java",
+        "symbol": "registrazione",
+        "excerpt": "@PostMapping(\"/registrazione\") public UtenteDTO registrazione(...) { return BibliotecaFacade.getInstance().registrazione(...); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "BibliotecaFacade",
+      "kind": "module",
+      "role": "single controller entry for UC1 registration; delegates to GestoreUtenti",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+        "symbol": "registrazione",
+        "excerpt": "public UtenteDTO registrazione(...) { return GestoreUtenti.getInstance().registrazione(ruolo, nome, cognome, email, password, identificativo); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "GestoreUtenti",
+      "kind": "module",
+      "role": "validates personal information and role, checks uniqueness, selects role factory, and requests persistence",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+        "symbol": "registrazione",
+        "excerpt": "public UtenteDTO registrazione(...) { verificaValidita(ruolo, nome, password); ... if (registroUtenti.esisteEmailIstituzionale(email)) throw ...; UtenteFactory factory = studente ? new StudenteFactory() : new BibliotecarioFactory(); ... registroUtenti.registraUtente(nuovoUtente); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "StudenteFactory",
+      "kind": "module",
+      "role": "builds a Studente and assigns the student matricola identifier",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/StudenteFactory.java",
+        "symbol": "creaUtente",
+        "excerpt": "Studente studente = new Studente(); ... studente.setMatricola(identificativo); return studente;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "BibliotecarioFactory",
+      "kind": "module",
+      "role": "builds a Bibliotecario and assigns the librarian internal identifier",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/BibliotecarioFactory.java",
+        "symbol": "creaUtente",
+        "excerpt": "Bibliotecario bibliotecario = new Bibliotecario(); ... bibliotecario.setCodiceIdentificativoInterno(identificativo); return bibliotecario;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "RegistroUtenti",
+      "kind": "module",
+      "role": "verifies email and identifier uniqueness and hands the new user to persistence",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroUtenti.java",
+        "symbol": "registraUtente",
+        "excerpt": "public boolean registraUtente(Utente nuovoUtente) { return gestorePersistenza.salva(nuovoUtente); } ... public boolean esisteEmailIstituzionale(String email) { return cercaUtentePerEmail(email) != null; }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "GestorePersistenza",
+      "kind": "module",
+      "role": "persists the newly created user entity in a transaction",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java",
+        "symbol": "salva",
+        "excerpt": "public boolean salva(Object oggetto) { ... em.persist(oggetto); em.getTransaction().commit(); return true; }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": "registrazione",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryAutenticazione.java",
+        "symbol": "registrazione",
+        "excerpt": "return BibliotecaFacade.getInstance().registrazione(ruolo, nome, cognome, email, password, identificativo);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "registrazione",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+        "symbol": "registrazione",
+        "excerpt": "return GestoreUtenti.getInstance().registrazione(ruolo, nome, cognome, email, password, identificativo);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": "creaUtente (Studente)",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+        "symbol": "registrazione",
+        "excerpt": "UtenteFactory factory = studente ? new StudenteFactory() : new BibliotecarioFactory(); Utente nuovoUtente = factory.creaUtente(...);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E3",
+      "to": "E5",
+      "kind": "uses",
+      "label": "creaUtente (Bibliotecario)",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+        "symbol": "registrazione",
+        "excerpt": "UtenteFactory factory = studente ? new StudenteFactory() : new BibliotecarioFactory(); Utente nuovoUtente = factory.creaUtente(...);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E3",
+      "to": "E6",
+      "kind": "uses",
+      "label": "unicità e registraUtente",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+        "symbol": "registrazione",
+        "excerpt": "if (registroUtenti.esisteEmailIstituzionale(email)) throw ...; ... boolean esito = registroUtenti.registraUtente(nuovoUtente);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E6",
+      "to": "E7",
+      "kind": "uses",
+      "label": "salva",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroUtenti.java",
+        "symbol": "registraUtente",
+        "excerpt": "return gestorePersistenza.salva(nuovoUtente);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [
+    "RI-2"
+  ],
+  "notes": [
+    "Invalid and duplicate-user paths stay inside GestoreUtenti: IllegalArgumentException is thrown before factory creation or registraUtente when validation or uniqueness fails.",
+    "No structural containment hierarchy among the registration-owning modules was observed; only uses relations are published (RI-2 unanswered)."
+  ]
+}

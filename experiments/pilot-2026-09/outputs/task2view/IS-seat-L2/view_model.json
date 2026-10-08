@@ -1,0 +1,132 @@
+{
+  "request_id": "IS-seat-L2",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "SeatSelection",
+      "kind": "component",
+      "role": "UI component and boundary class providing workflow logic and grid building for seat selection",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "public class SeatSelection {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E2",
+      "name": "Seat",
+      "kind": "component",
+      "role": "Entity class implementing seat availability check logic and modeling individual seats",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "public class SeatSelection {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E3",
+      "name": "SeatDTO",
+      "kind": "component",
+      "role": "Data transfer object representing seat data transfer properties including identifier, number, area type, and availability status",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "public class SeatSelection {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E4",
+      "name": "ReservationRegistry",
+      "kind": "component",
+      "role": "Registry dependency used by Seat to verify seat availability against existing reservations",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "isAvailable",
+        "excerpt": "public boolean isAvailable(LocalDate date, TimeSlot timeSlot) {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E5",
+      "name": "WizardState",
+      "kind": "component",
+      "role": "Wizard state dependency handled during seat selection and automatic assignment options",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "selectPosto",
+        "excerpt": "status.setSeatId(posto.getId());"
+      },
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R3",
+      "from": "E1",
+      "to": "E3",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R4",
+      "from": "E1",
+      "to": "E5",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "connectivity",
+    "control-flow",
+    "functional-suitability"
+  ],
+  "notes": [
+    "No evidence names were left out, as all identified entities and components directly align with the supported module-decomposition viewpoint and grain."
+  ]
+}

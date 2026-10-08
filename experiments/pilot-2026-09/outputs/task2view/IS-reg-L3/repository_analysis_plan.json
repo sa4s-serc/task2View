@@ -1,0 +1,91 @@
+{
+  "analysis_goal": "The diagram must make clear the high-level architecture, main components, their responsibilities, interactions, dependencies, and collaboration when handling valid, invalid, or already existing user data for the registration process.",
+  "target_view": "cnc-runtime",
+  "target_granularity": "component",
+  "analysis_tasks": [
+    {
+      "id": "AT1",
+      "goal": "Which components are responsible for handling the user registration functionality and validating personal information, selected roles, and unique account data?",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java"
+      ],
+      "expected_evidence": [
+        "Runtime components responsible for handling user registration inputs and validating personal information, roles, and account uniqueness."
+      ],
+      "addresses": [
+        "AQ1"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT2",
+      "goal": "What is the exact order of calls and execution flow among components when the user registration functionality processes valid, invalid, or already existing user data?",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java"
+      ],
+      "expected_evidence": [
+        "Sequence of calls and execution flow across components during registration handling for valid, invalid, or duplicate data."
+      ],
+      "addresses": [
+        "AQ2"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT3",
+      "goal": "What are the specific interactions and communication pathways between the components involved in the user registration functionality?",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java"
+      ],
+      "expected_evidence": [
+        "Connectors and communication pathways detailing how components interact during the user registration process."
+      ],
+      "addresses": [
+        "AQ3"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT4",
+      "goal": "Which modules or classes own the persistence and role-specific data management logic for the user registration functionality?",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/StudentDashboard.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/LibrarianDashboard.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/StudentDashboard.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/LibrarianDashboard.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java"
+      ],
+      "expected_evidence": [
+        "Persistence and role-specific data management components responsible for storing and managing registered user records."
+      ],
+      "addresses": [
+        "AQ4"
+      ],
+      "target_view": "cnc-runtime"
+    }
+  ],
+  "constraints": [
+    "source packages drawn as runtime nodes"
+  ]
+}

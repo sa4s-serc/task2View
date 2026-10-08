@@ -1,0 +1,79 @@
+@startuml architecture_view
+title Progetto_Ing_Software_GR10 — Overall architecture (BCED layers)
+caption Evidence: src/main/java packages Boundary, Control, Entity, Database; persistence.xml; pom.xml; README.md
+
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam shadowing false
+left to right direction
+
+actor "Cittadino / Operatore comunale" as User
+
+package "Boundary (user-facing UI)" as Boundary {
+  component "GUIHomePage\n(entry point)" as Home
+  component "Auth GUIs\nGUIAccessoUtente\nGUIRegistrazioneUtente" as AuthGUI
+  component "GUIDashboardUtente\n(role-based navigation)" as Dash
+  component "Feature GUIs\nCreazione / Consultazione\nAggiornamentoStato / NotaInterna\nMonitoraggioAttivita" as FeatGUI
+}
+
+package "Control (application logic)" as Control {
+  component "ControllerServiziSistema\n(Facade — main use-case API)" as FacadeCtrl
+  component "Use-case controllers\nRegistrazione, Creazione,\nConsultazione, Dettaglio,\nAggiornamentoStato,\nNotaInterna, Monitoraggio" as UCCtrl
+  component "ControllerAccessoUtente\n(login; not via facade)" as LoginCtrl
+  component "ControllerNotifiche" as NotifCtrl
+}
+
+package "Entity (domain)" as Entity {
+  component "ServizioUtenti\n(Facade Entity — users)" as SvcUtenti
+  component "ServizioSegnalazioni\n(Facade Entity — reports)" as SvcSegn
+  component "Domain entities\nUtente / Cittadino /\nOperatoreComunale\nSegnalazione, NotaInterna,\nNotifica, AggiornamentoStato\nCredenziali, Posizione" as DomEnt
+  component "StatoSegnalazione\n(State pattern)\nInviata, PresaInCarico,\nInLavorazione, Risolta" as Stato
+}
+
+package "Database (persistence)" as Database {
+  component "ServizioPersistenza\n(generic JPA facade)" as SvcPers
+  component "JpaUtil\n(EntityManagerFactory singleton)" as JpaUtil
+}
+
+cloud "External" as Ext {
+  database "MySQL\nsegnalazioni_db" as MySQL
+  component "Hibernate / JPA\n(persistence.xml)" as Hibernate
+}
+
+User --> Home : Swing desktop
+Home --> AuthGUI
+AuthGUI --> Dash : after login
+Dash --> FeatGUI
+
+AuthGUI --> LoginCtrl : access
+AuthGUI --> FacadeCtrl : registration
+FeatGUI --> FacadeCtrl : use-case calls\n(simple Map/List DTOs)
+FacadeCtrl --> UCCtrl : delegates
+LoginCtrl --> SvcUtenti
+UCCtrl --> SvcUtenti
+UCCtrl --> SvcSegn
+NotifCtrl --> SvcSegn
+
+SvcUtenti --> DomEnt : creates / loads
+SvcSegn --> DomEnt : creates / loads
+SvcSegn --> Stato : advances status
+SvcUtenti --> SvcPers
+SvcSegn --> SvcPers
+SvcPers --> JpaUtil
+JpaUtil --> Hibernate
+Hibernate --> MySQL
+DomEnt ..> Hibernate : mapped entities
+
+note right of FacadeCtrl
+  Control does not import Database.
+  Boundary talks to Control facade
+  (except login → ControllerAccessoUtente).
+end note
+
+note bottom of Entity
+  Domain facades hide Entity instances
+  from Boundary; Control receives
+  Maps / simple data for UI.
+end note
+
+@enduml

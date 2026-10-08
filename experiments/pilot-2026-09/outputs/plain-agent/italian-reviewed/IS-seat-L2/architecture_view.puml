@@ -1,0 +1,96 @@
+@startuml architecture_view
+title Progetto-IS — Seat booking (UC7) components & interactions
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+legend right
+  |= Marker |= Meaning |
+  | <<rules>> | Hosts booking-rule logic (likely change impact) |
+  | <<boundary>> | UI / API entry |
+  | Solid arrows | Calls / delegates |
+  | Dashed arrows | Uses / queries |
+endlegend
+
+package "Boundary" {
+  [BoundaryPrenotazione\nREST /api/prenotazioni] as BP <<boundary>>
+  [BoundarySalaStudio\nfasce / dettaglio sala] as BS <<boundary>>
+  [RiepilogoPrenotazione\n(Swing wizard confirm)] as SW <<boundary>>
+}
+
+package "Controller" {
+  [BibliotecaFacade\nsingle entry; DTO only] as BF
+  [GestorePrenotazioni\nUC7: validate, V18, assign,\ncreate ATTIVA, notify] as GP <<rules>>
+  [GestoreSale\nUC6/7: available slots\n& seat detail] as GS <<rules>>
+  [StrategiaAssegnazione\n/ AssegnazionePrimaLibera] as STR <<rules>>
+  [GestoreNotifiche\nObserver on stato change] as GN
+}
+
+package "DTO" {
+  [RichiestaPrenotazioneDTO] as REQ
+  [PrenotazioneDTO] as RESP
+}
+
+package "Entity / Domain" {
+  [Prenotazione\nState + V07/V08] as PREN <<rules>>
+  [Studente\nV18 uniqueness] as STU <<rules>>
+  [Postazione\ndisponibilita()] as POS <<rules>>
+  [Area\ngetPostazioniDisponibili] as AREA
+  [SalaStudio + FasciaOraria] as SALA
+  [StatoAttiva\n(+ other Stati)] as STATO
+}
+
+package "Registers (entity facades)" {
+  [RegistroPrenotazioni] as RP
+  [RegistroSale] as RS
+  [RegistroUtenti] as RU
+}
+
+database "Persistence" {
+  [GestorePersistenza] as PERS
+}
+
+' --- Entry → Facade ---
+BP --> BF : effettuaPrenotazione\nannulla / checkin
+SW --> BF : effettuaPrenotazione
+BS --> BF : getFasceDisponibili\nselezionaDettaglioSala
+BF ..> REQ
+BF ..> RESP
+
+' --- Facade → Gestori ---
+BF --> GP : effettuaPrenotazione(DTO)
+BF --> GS : availability for wizard
+
+' --- UC7 orchestration ---
+GP --> RU : risolviStudente
+GP --> RS : risolviSala / Area / Fascia\ntrovaPostazione
+GP --> STU : verificaPrenotazione…\n(data, fascia) V18
+GP --> AREA : postazioniDisponibili
+AREA --> POS : disponibilita(data, fascia)
+POS ..> RP : cercaPrenotazioniPerPostazione\noccupaSlot?
+GP --> STR : selezionaPostazione\n(if idPostazione==0)
+GP --> PREN : crea (stato ATTIVA)
+PREN --> STATO
+GP --> RP : salvaPrenotazione
+GP --> GN : attach + notifyObservers
+
+' --- Wizard availability (same seat rules) ---
+GS --> RS
+GS ..> POS : disponibilita\n(for DettaglioSala / fasce)
+
+' --- Persistence ---
+RP --> PERS
+RS --> PERS
+RU --> PERS
+
+note bottom of GP
+  **Booking-rule hotspots for modification**
+  • Uniqueness V18, sync critical section
+  • Sala/area/fascia/date validation
+  • Explicit vs automatic seat choice
+  Changing “what counts as free” also
+  impacts Postazione + GestoreSale UI.
+end note
+
+@enduml

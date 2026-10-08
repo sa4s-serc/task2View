@@ -1,0 +1,111 @@
+{
+  "claims": [
+    {
+      "claim": "The application uses JPA Persistence with the persistence unit 'Municipal_Report_Management_System' to manage and store data.",
+      "source_element": "JpaUtil",
+      "target_element": "Municipal_Report_Management_System",
+      "relationship": "connects to",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/JpaUtil.java",
+          "symbol": "JpaUtil",
+          "excerpt": "this.emf = Persistence.createEntityManagerFactory(\"Municipal_Report_Management_System\");"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "ReportReviewController communicates with UserService",
+      "source_element": "ReportReviewController",
+      "target_element": "UserService",
+      "relationship": "communicates",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": "ReportReviewController",
+          "excerpt": "private UserService userService;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "ReportReviewController communicates with ReportService",
+      "source_element": "ReportReviewController",
+      "target_element": "ReportService",
+      "relationship": "communicates",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": "ReportReviewController",
+          "excerpt": "private ReportService reportService;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "The application uses Jakarta Persistence (JPA) via EntityManagerFactory and Persistence for database communication.",
+      "source_element": "JpaUtil",
+      "target_element": "Database",
+      "relationship": "communicates",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/JpaUtil.java",
+          "symbol": "JpaUtil",
+          "excerpt": "import jakarta.persistence.EntityManager;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    },
+    {
+      "claim": "PersistenceService uses EntityManager and EntityTransaction from Jakarta Persistence for database operations.",
+      "source_element": "PersistenceService",
+      "target_element": "Database",
+      "relationship": "communicates",
+      "order": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": "PersistenceService",
+          "excerpt": "import jakarta.persistence.EntityManager;"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ4"
+      ],
+      "analysis_task": "AT4"
+    }
+  ],
+  "elements": [
+    "JpaUtil",
+    "Municipal_Report_Management_System",
+    "ReportReviewController",
+    "UserService",
+    "ReportService",
+    "Database",
+    "PersistenceService"
+  ],
+  "notes": [
+    "AT1 unanswered: the plan named no file for AQ1"
+  ]
+}

@@ -1,0 +1,131 @@
+@startuml architecture_view
+title Persistence model for municipal report lifecycle (GR10-Q3)
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty methods
+hide circle
+
+package "Persisted entities (JPA / MySQL reports_db)" {
+
+  abstract class User <<table: users>> {
+    userId
+    name
+    lastName
+    phoneNumber
+    role (discriminator)
+    -- embeds Credentials --
+    email
+    password
+  }
+
+  class Citizen <<CITIZEN>> {
+  }
+
+  class MunicipalOperator <<MUNICIPAL_OPERATOR>> {
+  }
+
+  class Report <<table: reports>> {
+    reportId
+    title
+    description
+    category : ReportCategory
+    reportDate
+    attachedImage
+    currentStatusName
+    citizenEditable
+    -- embeds Location --
+    city
+    cap
+    street
+    streetNumber
+    municipalArea
+  }
+
+  class InternalNote <<table: internal_notes>> {
+    noteId
+    text
+    createdDate
+  }
+
+  class StatusUpdate <<table: status_updates>> {
+    updateId
+    updateDate
+    newStatus
+  }
+
+  class Notification <<table: notifications>> {
+    notificationId
+    sentDate
+    message
+    notifiedStatus
+  }
+
+  enum ReportCategory {
+    BROKEN_STREETLIGHT
+    DAMAGED_ROAD
+    ABANDONED_WASTE
+    GENERAL_HAZARD
+    DAMAGED_STREET_FURNITURE
+  }
+
+  note right of Report
+    currentStatusName lifecycle values
+    (persisted as String):
+    submitted → assigned →
+    in_progress → resolved
+    ReportStatus strategy objects
+    are @Transient (not stored)
+  end note
+}
+
+package "Application dependents on persisted data" {
+  class PersistenceService
+  class UserService
+  class ReportService
+  class ReportCreationController
+  class ReportReviewController
+  class ReportDetailsController
+  class ReportStatusUpdateController
+  class InternalNoteController
+  class NotificationController
+  class ActivityMonitoringController
+  class UserRegistrationController
+  class UserLoginController
+}
+
+User <|-- Citizen
+User <|-- MunicipalOperator
+
+Citizen "1" --> "*" Report : citizenReporting\n(citizen_id)
+MunicipalOperator "0..1" --> "*" Report : operator\n(operator_id)
+Report --> ReportCategory : category\n(STRING enum)
+
+Report "1" *-- "*" InternalNote : cascade ALL\n(report_id)
+Report "1" *-- "*" StatusUpdate : cascade ALL\n(report_id)
+Report "1" --> "*" Notification : report_id
+
+MunicipalOperator "1" --> "*" InternalNote : operator_id
+MunicipalOperator "1" --> "*" StatusUpdate : operator_id
+Citizen "1" --> "*" Notification : recipient\n(citizen_id)
+
+PersistenceService ..> User : save / find
+PersistenceService ..> Report : save / merge / find
+PersistenceService ..> InternalNote : find
+PersistenceService ..> StatusUpdate : find
+PersistenceService ..> Notification : save / find
+
+UserService --> PersistenceService
+ReportService --> PersistenceService
+
+UserRegistrationController --> UserService
+UserLoginController --> UserService
+ReportCreationController --> ReportService
+ReportReviewController --> ReportService
+ReportDetailsController --> ReportService
+ReportStatusUpdateController --> ReportService
+InternalNoteController --> ReportService
+NotificationController --> ReportService
+ActivityMonitoringController --> ReportService
+
+@enduml

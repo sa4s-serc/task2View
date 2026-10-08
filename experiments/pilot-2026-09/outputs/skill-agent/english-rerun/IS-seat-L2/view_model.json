@@ -1,0 +1,394 @@
+{
+  "request_id": "IS-seat-L2",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "LibraryFacade",
+      "kind": "module",
+      "role": "application facade that exposes seat booking and related operations",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "LibraryFacade",
+        "excerpt": "public ReservationDTO makeReservation(ReservationRequestDTO request) { return ReservationManager.getInstance().makeReservation(request); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "ReservationManager",
+      "kind": "module",
+      "role": "applies booking rules, assigns seats, and creates reservations",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "ReservationManager",
+        "excerpt": "public ReservationDTO makeReservation(ReservationRequestDTO request) { ... validateUniqueness(...); Seat seat = selectSeat(...); Reservation reservation = createAndSave(...); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "FirstAvailableAssignment",
+      "kind": "module",
+      "role": "booking rule that auto-selects the first available seat",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java",
+        "symbol": "FirstAvailableAssignment",
+        "excerpt": "public Seat selectSeat(List<Seat> availableSeats) { return availableSeats.getFirst(); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "StudyRoomManager",
+      "kind": "module",
+      "role": "provides room, time-slot, and seat availability used before booking",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java",
+        "symbol": "StudyRoomManager",
+        "excerpt": "public RoomDetailDTO getRoomDetail(Long roomId, Long timeSlotId, LocalDate date) { ... boolean available = p.isAvailable(date, timeSlot); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "ReservationRegistry",
+      "kind": "module",
+      "role": "persists and queries reservations",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+        "symbol": "ReservationRegistry",
+        "excerpt": "public boolean saveReservation(Reservation reservation) { return persistenceManager.save(reservation); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "StudyRoomRegistry",
+      "kind": "module",
+      "role": "resolves study rooms, areas, and seats for booking",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java",
+        "symbol": "StudyRoomRegistry",
+        "excerpt": "public Seat findSeatById(Long seatId)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "UserRegistry",
+      "kind": "module",
+      "role": "resolves students participating in booking",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+        "symbol": "UserRegistry",
+        "excerpt": "return persistenceManager.findById(Student.class, id);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "Seat",
+      "kind": "module",
+      "role": "checks whether a seat is free for a date and time slot",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "Seat",
+        "excerpt": "public boolean isAvailable(LocalDate date, TimeSlot timeSlot) { ... if (ReservationRegistry.occupiesSlot(p)) { return false; } }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "Student",
+      "kind": "module",
+      "role": "enforces one active/confirmed booking per student date and slot",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "Student",
+        "excerpt": "public boolean hasActiveOrConfirmedReservationForDateAndSlot(LocalDate date, String timeSlotLabel)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "NotificationManager",
+      "kind": "module",
+      "role": "notifies students when reservations are registered or change",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "NotificationManager",
+        "excerpt": "public void update(Reservation reservation) { sendNotification(List.of(toUserDTO(student)), messageForState(reservation)); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E11",
+      "name": "NotificationServiceAdapter",
+      "kind": "module",
+      "role": "delivers booking notifications through the email gateway",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java",
+        "symbol": "NotificationServiceAdapter",
+        "excerpt": "public void sendNotification(List<UserDTO> recipients, String message) { gateway.send(dto.getInstitutionalEmail(), ...)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "uses",
+      "label": "makeReservation",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "makeReservation",
+        "excerpt": "return ReservationManager.getInstance().makeReservation(request);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E1",
+      "to": "E4",
+      "kind": "uses",
+      "label": "getRoomDetail",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "getRoomDetail",
+        "excerpt": "return StudyRoomManager.getInstance().getRoomDetail(roomId, timeSlotId, date);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E1",
+      "to": "E10",
+      "kind": "uses",
+      "label": "sendReminders",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "symbol": "sendReminders",
+        "excerpt": "NotificationManager.getInstance().sendReminders();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "assignmentStrategy",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "setAssignmentStrategy",
+        "excerpt": "instance.setAssignmentStrategy(new FirstAvailableAssignment()); ... return assignmentStrategy.selectSeat(available);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E2",
+      "to": "E5",
+      "kind": "uses",
+      "label": "saveReservation",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "createAndSave",
+        "excerpt": "boolean success = reservationRegistry.saveReservation(reservation);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E2",
+      "to": "E6",
+      "kind": "uses",
+      "label": "findSeatById",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "roomRegistry",
+        "excerpt": "private final StudyRoomRegistry roomRegistry = StudyRoomRegistry.getInstance();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E2",
+      "to": "E7",
+      "kind": "uses",
+      "label": "findStudentById",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "resolveStudent",
+        "excerpt": "Student student = userRegistry.findStudentById(studentId);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E2",
+      "to": "E9",
+      "kind": "uses",
+      "label": "validateUniqueness",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "validateUniqueness",
+        "excerpt": "if(student.hasActiveOrConfirmedReservationForDateAndSlot(date, timeSlot.getLabel()))"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E2",
+      "to": "E8",
+      "kind": "uses",
+      "label": "isAvailable",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "selectSeat",
+        "excerpt": "if (!selected.isAvailable(date, timeSlot)) { throw new IllegalStateException(\"The selected seat is no longer available\"); }"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R10",
+      "from": "E2",
+      "to": "E10",
+      "kind": "uses",
+      "label": "notifyReservation",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "symbol": "notifyReservation",
+        "excerpt": "reservation.attach(NotificationManager.getInstance()); reservation.notifyObservers();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R11",
+      "from": "E4",
+      "to": "E6",
+      "kind": "uses",
+      "label": "getAreasForRoom",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java",
+        "symbol": "getRoomDetail",
+        "excerpt": "for (Area area : roomRegistry.getAreasForRoom(roomId))"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R12",
+      "from": "E8",
+      "to": "E5",
+      "kind": "uses",
+      "label": "findReservationsBySeat",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "isAvailable",
+        "excerpt": "for (Reservation p : registry.findReservationsBySeat(id, date, timeSlot.getId()))"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R13",
+      "from": "E9",
+      "to": "E5",
+      "kind": "uses",
+      "label": "findActiveReservations",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "symbol": "hasActiveOrConfirmedReservationForDateAndSlot",
+        "excerpt": "for (Reservation p : registry.findActiveReservations(studentNumber, date))"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R14",
+      "from": "E10",
+      "to": "E11",
+      "kind": "uses",
+      "label": "sendNotification",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationConfiguration.java",
+        "symbol": "configure",
+        "excerpt": "NotificationManager.getInstance().setNotificationService(new NotificationServiceAdapter());"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R15",
+      "from": "E10",
+      "to": "E5",
+      "kind": "uses",
+      "label": "getEndingReservations",
+      "order": null,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "symbol": "sendReminders",
+        "excerpt": "for (Reservation p : reservationRegistry.getEndingReservations())"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": ["RI-2"],
+  "notes": [
+    "Module Decomposition for seat booking: peer managers and registries related by uses; no nested module containment hierarchy was grounded in scoped sources.",
+    "FirstAvailableAssignment is the pluggable booking-rule module most likely to change for new assignment rules; ReservationManager owns the surrounding validation rules."
+  ]
+}

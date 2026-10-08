@@ -1,0 +1,187 @@
+{
+  "claims": [
+    {
+      "claim": "SeatSelection provides a graphical user interface boundary component for selecting a seat in the reservation wizard.",
+      "source_element": "SeatSelection",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "SeatSelection",
+          "excerpt": "public class SeatSelection {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "PersistenceManager handles database operations such as saving and querying entities for persistence.",
+      "source_element": "PersistenceManager",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+          "symbol": "PersistenceManager",
+          "excerpt": "public class PersistenceManager {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "ExternalEmailGateway provides an external email sending functionality/gateway stub.",
+      "source_element": "ExternalEmailGateway",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+          "symbol": "ExternalEmailGateway",
+          "excerpt": "public class ExternalEmailGateway {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ1"
+      ],
+      "analysis_task": "AT1"
+    },
+    {
+      "claim": "SeatSelection builds the seat grid by iterating over available seats in the selected area and creating action buttons for each seat.",
+      "source_element": "SeatSelection",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "costruisciGriglia",
+          "excerpt": "for (SeatDTO posto : area.getSeats()) { griglia.add(createBottonePosto(posto)); }"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "SeatSelection triggers the continuation of the wizard flow when the continue button is pressed and a seat is selected.",
+      "source_element": "SeatSelection",
+      "target_element": "ReservationSummary",
+      "relationship": "calls",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+          "symbol": "continueWizard",
+          "excerpt": "new ReservationSummary(status).openForm();"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "PersistenceManager handles entity persistence operations including save, update, find by ID, find by fields, custom queries, and deletion using an EntityManager.",
+      "source_element": "PersistenceManager",
+      "target_element": "EntityManager",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+          "symbol": "save",
+          "excerpt": "EntityManager em = JpaUtil.getInstance().getEntityManager();"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ2"
+      ],
+      "analysis_task": "AT2"
+    },
+    {
+      "claim": "Seat entity checks seat availability for a given date and time slot using the ReservationRegistry",
+      "source_element": "Seat",
+      "target_element": "ReservationRegistry",
+      "relationship": "uses",
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+          "symbol": "isAvailable",
+          "excerpt": "public boolean isAvailable(LocalDate date, TimeSlot timeSlot) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "SeatDTO holds properties related to seat representation such as id, number, areaType, and availability",
+      "source_element": "SeatDTO",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/dto/SeatDTO.java",
+          "symbol": "SeatDTO",
+          "excerpt": "public class SeatDTO {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    },
+    {
+      "claim": "app.js provides frontend client-side API communication utilities for interaction with the server",
+      "source_element": "app",
+      "target_element": null,
+      "relationship": null,
+      "order": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/resources/static/app.js",
+          "symbol": "api",
+          "excerpt": "async function api(method, path, params, isJson = false) {"
+        }
+      ],
+      "support_type": "directly_observed",
+      "question_ids": [
+        "AQ3"
+      ],
+      "analysis_task": "AT3"
+    }
+  ],
+  "elements": [
+    "SeatSelection",
+    "PersistenceManager",
+    "ExternalEmailGateway",
+    "ReservationSummary",
+    "EntityManager",
+    "Seat",
+    "ReservationRegistry",
+    "SeatDTO",
+    "app"
+  ],
+  "notes": []
+}

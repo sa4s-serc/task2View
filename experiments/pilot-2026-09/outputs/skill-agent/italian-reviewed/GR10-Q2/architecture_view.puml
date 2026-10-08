@@ -1,0 +1,25 @@
+@startuml
+title Deployment / Allocation View — system deployment and runtime environment
+
+node "JavaDesktopHost" as E1 {
+  artifact "ProgettoIngSoftwareGR10" as E3
+  artifact "PersistenceUnitConfig" as E4
+  artifact "MySQLConnectorJ" as E6
+  artifact "HibernateCore" as E7
+}
+
+node "MySQLServer" as E2 {
+  database "SegnalazioniDB" as E5
+}
+
+E1 --> E3 : deploys
+E1 --> E4 : deploys
+E1 --> E6 : deploys
+E1 --> E7 : deploys
+E2 --> E5 : deploys
+E3 --> E5 : JDBC via Hibernate/JPA
+E3 --> E4 : uses
+E4 --> E6 : com.mysql.cj.jdbc.Driver
+E4 --> E7 : HibernatePersistenceProvider
+
+@enduml

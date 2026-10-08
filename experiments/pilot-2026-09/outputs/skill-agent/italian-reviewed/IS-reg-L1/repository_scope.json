@@ -1,0 +1,20 @@
+{
+  "request_id": "IS-reg-L1",
+  "strategy": "single-agent",
+  "files": [
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java", "reason": "owns UC1 registration validation, factory selection, and persist call"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java", "reason": "sole controller entry that delegates registrazione to GestoreUtenti"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroUtenti.java", "reason": "user registry: uniqueness checks and registraUtente persistence"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryAutenticazione.java", "reason": "HTTP POST /api/auth/registrazione entry for registration"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/UtenteFactory.java", "reason": "factory method contract for role-based user creation"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/StudenteFactory.java", "reason": "creates Studente during student registration"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/BibliotecarioFactory.java", "reason": "creates Bibliotecario during librarian registration"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java", "reason": "JPA persistence connector used to save new users"},
+    {"path": "JavaProject/src/main/resources/META-INF/persistence.xml", "reason": "MySQL datastore binding for prenotazioniPU"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Utente.java", "reason": "base user entity persisted at registration"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Studente.java", "reason": "student subtype created for student registration"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Bibliotecario.java", "reason": "librarian subtype created for librarian registration"},
+    {"path": "JavaProject/src/test/java/it/unina/prenotazioni/controller/RegistrazioneTest.java", "reason": "integration tests exercise BibliotecaFacade.registrazione"},
+    {"path": "JavaProject/src/main/java/it/unina/prenotazioni/database/JpaUtil.java", "reason": "EntityManager factory used by GestorePersistenza"}
+  ]
+}

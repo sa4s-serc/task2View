@@ -1,0 +1,102 @@
+@startuml architecture_view
+title Seat Booking Architecture (UC7 focus) — Progetto-IS
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+together {
+  package "Boundary (API / UI)" as BOUNDARY {
+    [BoundaryPrenotazione\nPOST /api/prenotazioni/effettua] as BP
+    [BoundarySalaStudio\nUC6 availability browse] as BS
+    [Swing booking wizard\nSeleziona* / RiepilogoPrenotazione] as SW
+    [SchedulerNotifiche\nUC14 / UC16 timer] as SCH
+    [ConfigurazioneNotifiche] as CFG
+    [AdapterServizioNotifiche] as ADP
+    [GatewayEmailEsterno\n(external stub)] as GW
+  }
+}
+
+package "Controller" as CTRL {
+  [BibliotecaFacade] as FAC
+  [GestorePrenotazioni\nhandles booking requests &\nrules (UC7)] as GP
+  [GestoreSale\navailability consultation] as GS
+  [GestoreNotifiche\nObserver + delivery] as GN
+  interface ServizioNotifiche as SN
+  [StrategiaAssegnazione\n«AssegnazionePrimaLibera»] as STR
+}
+
+package "Entity / Registri" as ENT {
+  [Prenotazione\n(+ State / Subject)] as PRE
+  [Postazione\n.disponibilita()] as POS
+  [Area\n.getPostazioniDisponibili()] as AREA
+  [SalaStudio] as SALA
+  [Studente\nV18 uniqueness] as STU
+  [RegistroPrenotazioni] as RP
+  [RegistroSale] as RS
+  [RegistroUtenti] as RU
+}
+
+package "Persistence" as DB {
+  [GestorePersistenza\nJPA / Hibernate] as PERS
+  database "DB (prenotazione, ...)" as STORE
+}
+
+' --- Request entry ---
+BP --> FAC : effettuaPrenotazione(DTO)
+SW --> FAC : effettuaPrenotazione / browse
+BS --> FAC : sale / fasce / dettaglio
+SCH --> FAC : gestisciTermine /\ninviaPromemoria
+
+FAC --> GP : UC7 / UC9 / UC10 / UC16
+FAC --> GS : UC6 browse
+FAC --> GN : UC14 promemoria
+
+' --- Booking orchestration & rules ---
+GP --> RU : resolve Studente
+GP --> RS : resolve Sala / Area /\nPostazione / Fascia
+GP --> STU : verificaPrenotazioneAttiva...\n(V18 uniqueness)
+GP --> AREA : postazioniDisponibili
+AREA --> POS : disponibilita(data, fascia)
+POS --> RP : cercaPrenotazioniPerPostazione\n(ATTIVA/CONFERMATA occupy)
+GP --> STR : auto-assign if idPostazione=0
+GP --> PRE : create ATTIVA
+GP --> RP : salvaPrenotazione
+GP --> GN : attach + notifyObservers\n(after successful save)
+
+GS --> RS : sale / fasce / aree
+GS --> POS : disponibilita (browse)
+
+' --- Reservation lifecycle & notifications ---
+PRE ..> GN : Observer update on setStato
+GN --> SN : inviaNotifica
+CFG --> GN : setServizioNotifiche
+CFG --> ADP : new Adapter...
+ADP ..|> SN
+ADP --> GW : send(to, subject, body)
+
+' --- Storage ---
+RP --> PERS
+RS --> PERS
+RU --> PERS
+PERS --> STORE
+
+note right of GP
+  **Booking rules applied in UC7**
+  (synchronized block):
+  1. validate sala/area/fascia/date
+  2. uniqueness V18
+  3. seat availability
+  4. select postazione
+     (explicit or Strategy)
+  5. persist ATTIVA
+  6. notify student
+end note
+
+note bottom of GN
+  Delivery failures are swallowed;
+  booking succeeds even if email fails.
+  Gateway is a project stub (console).
+end note
+
+@enduml

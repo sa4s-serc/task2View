@@ -1,0 +1,182 @@
+@startuml architecture_view
+title Persistence architecture — municipal reports (segnalazioni)
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide empty methods
+
+legend left
+  Stakeholder: database engineer
+  Goal: entities, relationships, and what must persist
+  across the report lifecycle; dependents of persisted data
+  Evidence: JPA entities + persistence.xml + ServizioPersistenza
+  + Entity facades + Control controllers
+endlegend
+
+package "Database / JPA" as DB {
+  class ServizioPersistenza <<facade>> {
+    +salva(T)
+    +aggiorna(T)
+    +trovaPerId()
+    +cercaPerCampi()
+  }
+  note right of ServizioPersistenza
+    persistence-unit:
+    Sistema_Gestione_Segnalazioni_Comunali
+    MySQL: segnalazioni_db
+  end note
+}
+
+package "Persisted domain (tables)" as Persist {
+
+  entity "utenti\n(Utente SINGLE_TABLE)" as Utenti {
+    * id_utente : Long <<PK>>
+    --
+    * nome
+    * cognome
+    * recapito_telefonico
+    * ruolo : discriminator
+    --
+    <<embedded Credenziali>>
+    * email <<unique>>
+    * password
+  }
+
+  entity "Cittadino" as Cittadino {
+    ruolo = CITTADINO
+  }
+
+  entity "OperatoreComunale" as Operatore {
+    ruolo = OPERATORE_COMUNALE
+  }
+
+  Utenti <|-- Cittadino
+  Utenti <|-- Operatore
+
+  entity "segnalazioni\n(Segnalazione)" as Segnalazione {
+    * id_segnalazione : Long <<PK>>
+    --
+    * titolo
+    * descrizione
+    * categoria : CategoriaSegnalazione (STRING)
+    * stato_corrente : String
+    * modificabile_dal_cittadino : boolean
+    data_segnalazione
+    immagine_allegata
+    --
+    <<embedded Posizione>>
+    * citta
+    * cap
+    * strada
+    * numero_civico
+    * area_comunale
+    --
+    * id_cittadino : FK
+    id_operatore : FK (optional)
+  }
+
+  entity "note_interne\n(NotaInterna)" as Nota {
+    * id_nota : Long <<PK>>
+    * testo
+    * data_inserimento
+    * id_segnalazione : FK
+    * id_operatore : FK
+  }
+
+  entity "aggiornamenti_stato\n(AggiornamentoStato)" as Aggiornamento {
+    * id_aggiornamento : Long <<PK>>
+    * data_aggiornamento
+    * nuovo_stato : String
+    * id_segnalazione : FK
+    * id_operatore : FK
+  }
+
+  entity "Notifiche\n(Notifica)" as Notifica {
+    * id_notifica : Long <<PK>>
+    * data_invio
+    * messaggio
+    * stato_notificato : String
+    * id_cittadino : FK
+    * id_segnalazione : FK
+  }
+
+  enum CategoriaSegnalazione {
+    illuminazione_guasta
+    strada_dissestata
+    rifiuti_abbandonati
+    pericolo_generico
+    arredo_urbano_danneggiato
+  }
+
+  note as StateLifecycle
+    **Persisted state strings** (stato_corrente / nuovo_stato)
+    inviata → presa_in_carico → in_lavorazione → risolta
+    Notificabile: presa_in_carico, risolta
+    StatoSegnalazione objects are @Transient
+    (behavior only; rebuilt @PostLoad)
+  end note
+}
+
+' Associations
+Cittadino "1" <-- "0..*" Segnalazione : cittadinoSegnalante
+Operatore "0..1" <-- "0..*" Segnalazione : operatore
+Segnalazione "1" *-- "0..*" Nota : cascade ALL\norphanRemoval
+Segnalazione "1" *-- "0..*" Aggiornamento : cascade ALL\norphanRemoval
+Operatore "1" <-- "0..*" Nota : operatore
+Operatore "1" <-- "0..*" Aggiornamento : operatore
+Cittadino "1" <-- "0..*" Notifica : destinatario
+Segnalazione "1" <-- "0..*" Notifica : segnalazione
+Segnalazione --> CategoriaSegnalazione : categoria
+Segnalazione .. StateLifecycle
+
+package "Entity facades (persist dependents)" as Facades {
+  class ServizioUtenti {
+    register / find users
+    credential lookup
+  }
+  class ServizioSegnalazioni {
+    create / update reports
+    notes, state history
+    notifications
+    consultation / monitoring
+  }
+}
+
+package "Control (indirect dependents)" as Control {
+  class ControllerAccessoUtente
+  class ControllerRegistrazioneUtente
+  class ControllerCreazioneSegnalazione
+  class ControllerConsultazioneSegnalazioni
+  class ControllerDettaglioSegnalazione
+  class ControllerAggiornamentoStatoSegnalazione
+  class ControllerNotaInterna
+  class ControllerNotifiche
+  class ControllerMonitoraggioAttivita
+}
+
+ServizioUtenti --> ServizioPersistenza
+ServizioSegnalazioni --> ServizioPersistenza
+ServizioPersistenza ..> Persist : JPA entities
+
+ControllerAccessoUtente --> ServizioUtenti
+ControllerRegistrazioneUtente --> ServizioUtenti
+ControllerCreazioneSegnalazione --> ServizioUtenti
+ControllerCreazioneSegnalazione --> ServizioSegnalazioni
+ControllerConsultazioneSegnalazioni --> ServizioUtenti
+ControllerConsultazioneSegnalazioni --> ServizioSegnalazioni
+ControllerDettaglioSegnalazione --> ServizioUtenti
+ControllerDettaglioSegnalazione --> ServizioSegnalazioni
+ControllerAggiornamentoStatoSegnalazione --> ServizioUtenti
+ControllerAggiornamentoStatoSegnalazione --> ServizioSegnalazioni
+ControllerNotaInterna --> ServizioUtenti
+ControllerNotaInterna --> ServizioSegnalazioni
+ControllerNotifiche --> ServizioSegnalazioni
+ControllerMonitoraggioAttivita --> ServizioUtenti
+ControllerMonitoraggioAttivita --> ServizioSegnalazioni
+
+note bottom of Control
+  Controllers do not use ServizioPersistenza directly.
+  Boundary GUIs depend on Controllers only.
+end note
+
+@enduml

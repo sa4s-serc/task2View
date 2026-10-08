@@ -1,0 +1,32 @@
+@startuml
+title Module Decomposition View — seat booking
+
+component "LibraryFacade" as E1
+component "ReservationManager" as E2
+component "FirstAvailableAssignment" as E3
+component "StudyRoomManager" as E4
+component "ReservationRegistry" as E5
+component "StudyRoomRegistry" as E6
+component "UserRegistry" as E7
+component "Seat" as E8
+component "Student" as E9
+component "NotificationManager" as E10
+component "NotificationServiceAdapter" as E11
+
+E1 --> E2 : makeReservation
+E1 --> E4 : getRoomDetail
+E1 --> E10 : sendReminders
+E2 --> E3 : assignmentStrategy
+E2 --> E5 : saveReservation
+E2 --> E6 : findSeatById
+E2 --> E7 : findStudentById
+E2 --> E9 : validateUniqueness
+E2 --> E8 : isAvailable
+E2 --> E10 : notifyReservation
+E4 --> E6 : getAreasForRoom
+E8 --> E5 : findReservationsBySeat
+E9 --> E5 : findActiveReservations
+E10 --> E11 : sendNotification
+E10 --> E5 : getEndingReservations
+
+@enduml

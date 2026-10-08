@@ -1,0 +1,150 @@
+@startuml architecture_view
+title Municipal Report Management System — Overall Architecture (GR10-Q1)
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+legend left
+  BCED layered desktop application (Swing + JPA/Hibernate + MySQL).
+  Dependencies flow downward: Boundary → Control → Entity → Database.
+endlegend
+
+actor Citizen
+actor "Municipal Operator" as Operator
+
+package "Boundary (user-facing Swing UI)" as Boundary {
+  [HomePageGUI] as HomePage
+  [UserLoginGUI] as LoginGUI
+  [UserRegistrationGUI] as RegGUI
+  [UserDashboardGUI] as Dashboard
+  package "Citizen UIs" as CitizenUI {
+    [ReportCreationGUI]
+    [SubmittedReportsGUI]
+  }
+  package "Operator UIs" as OperatorUI {
+    [ReceivedReportsGUI]
+    [ReportStatusUpdateGUI]
+    [InternalNoteGUI]
+    [ActivityMonitoringGUI]
+  }
+}
+
+package "Control (application / use-case logic)" as Control {
+  [SystemServicesController] as SSC <<facade>>
+  [UserLoginController] as LoginCtrl
+  [UserRegistrationController] as RegCtrl
+  [ReportCreationController] as CreateCtrl
+  [ReportReviewController] as ReviewCtrl
+  [ReportDetailsController] as DetailsCtrl
+  [ReportStatusUpdateController] as StatusCtrl
+  [InternalNoteController] as NoteCtrl
+  [ActivityMonitoringController] as MonitorCtrl
+  [NotificationController] as NotifCtrl
+}
+
+package "Entity (domain model & domain services)" as EntityPkg {
+  [UserService] as UserSvc
+  [ReportService] as ReportSvc
+  package "Domain entities" as Domain {
+    [User]
+    [Citizen] as CitizenAccount
+    [MunicipalOperator]
+    [Credentials]
+    [Report]
+    [Location]
+    [InternalNote]
+    [Notification]
+    [StatusUpdate]
+    [ReportCategory]
+  }
+  package "Report lifecycle states" as States {
+    [Submitted]
+    [Assigned]
+    [InProgress]
+    [Resolved]
+    [ReportStatus]
+  }
+}
+
+package "Database (persistence)" as Database {
+  [PersistenceService] as Persist
+  [JpaUtil] as Jpa
+}
+
+database "MySQL\n(reports_db)" as MySQL
+
+' --- Actors to UI ---
+Citizen --> HomePage
+Citizen --> LoginGUI
+Citizen --> RegGUI
+Citizen --> Dashboard
+Citizen --> CitizenUI
+Operator --> HomePage
+Operator --> LoginGUI
+Operator --> Dashboard
+Operator --> OperatorUI
+
+' --- Boundary navigation / entry ---
+HomePage --> LoginGUI
+HomePage --> RegGUI
+LoginGUI --> Dashboard
+Dashboard --> CitizenUI
+Dashboard --> OperatorUI
+
+' --- Boundary → Control ---
+LoginGUI --> LoginCtrl : authenticates
+RegGUI --> SSC
+CitizenUI --> SSC
+OperatorUI --> SSC
+
+' --- Control orchestration ---
+SSC --> RegCtrl
+SSC --> CreateCtrl
+SSC --> ReviewCtrl
+SSC --> DetailsCtrl
+SSC --> StatusCtrl
+SSC --> NoteCtrl
+SSC --> MonitorCtrl
+StatusCtrl ..> NotifCtrl : notifies on status change
+
+' --- Control → Entity services ---
+LoginCtrl --> UserSvc
+RegCtrl --> UserSvc
+CreateCtrl --> ReportSvc
+CreateCtrl --> UserSvc
+ReviewCtrl --> ReportSvc
+ReviewCtrl --> UserSvc
+DetailsCtrl --> ReportSvc
+DetailsCtrl --> UserSvc
+StatusCtrl --> ReportSvc
+StatusCtrl --> UserSvc
+NoteCtrl --> ReportSvc
+NoteCtrl --> UserSvc
+MonitorCtrl --> ReportSvc
+MonitorCtrl --> UserSvc
+NotifCtrl --> ReportSvc
+
+' --- Domain services use entities ---
+UserSvc --> Domain
+ReportSvc --> Domain
+ReportSvc --> States
+
+' --- Entity → Database → MySQL ---
+UserSvc --> Persist
+ReportSvc --> Persist
+Persist --> Jpa
+Jpa --> MySQL : JPA / Hibernate\n(Municipal_Report_Management_System)
+
+note right of SSC
+  Facade used by most GUIs for:
+  registration, report create/review,
+  status updates, internal notes,
+  activity monitoring.
+end note
+
+note bottom of States
+  Lifecycle: Submitted → Assigned → In Progress → Resolved
+end note
+
+@enduml

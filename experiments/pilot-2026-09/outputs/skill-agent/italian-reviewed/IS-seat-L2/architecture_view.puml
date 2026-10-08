@@ -1,0 +1,25 @@
+@startuml
+component "BibliotecaFacade" as E1
+component "GestorePrenotazioni" as E2
+component "AssegnazionePrimaLibera" as E3
+component "GestoreSale" as E4
+component "RegistroPrenotazioni" as E5
+component "Prenotazione" as E6
+component "Postazione" as E7
+component "GestoreNotifiche" as E8
+component "GestorePersistenza" as E9
+component "Studente" as E10
+
+E1 --> E2 : effettuaPrenotazione
+E1 --> E4 : selezionaDettaglioSala
+E2 --> E3 : selezionaPostazione
+E2 --> E5 : salvaPrenotazione
+E2 --> E6 : creaESalva
+E2 --> E7 : postazioniDisponibili
+E2 --> E8 : notifica
+E2 --> E10 : verificaUnicita
+E5 --> E9 : salva
+E7 --> E5 : cercaPrenotazioniPerPostazione
+E4 --> E7 : disponibilita
+E10 --> E5 : cercaPrenotazioneAttiva
+@enduml

@@ -16,7 +16,7 @@ from task2view.phase4.seeds import cue_forms, forced_seed_candidates
 
 def _gr10() -> Path:
     for parent in Path(__file__).resolve().parents:
-        candidate = parent / "data_points" / "progetto_ing_software_gr10-main-English"
+        candidate = parent / "data" / "progetto_ing_software_gr10-main-English"
         if candidate.is_dir():
             return candidate
     raise FileNotFoundError("GR10 data point not found")

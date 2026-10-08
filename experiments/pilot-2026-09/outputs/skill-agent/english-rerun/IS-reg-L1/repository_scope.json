@@ -1,0 +1,21 @@
+{
+  "request_id": "IS-reg-L1",
+  "strategy": "single-agent",
+  "files": [
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java", "reason": "facade entry that delegates register to UserManager"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java", "reason": "owns UC1 registration validation, uniqueness checks, and user creation"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java", "reason": "registerUser and email/identifier uniqueness lookups"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java", "reason": "JPA persist connector used to save new users"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java", "reason": "creates Student instances during student registration"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java", "reason": "creates Librarian instances during librarian registration"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java", "reason": "factory interface used by UserManager for role-specific creation"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java", "reason": "REST /api/auth/register entry that calls LibraryFacade.register"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java", "reason": "Swing sign-up UI that calls LibraryFacade.register"},
+    {"path": "JavaProject/src/main/resources/META-INF/persistence.xml", "reason": "JPA unit and MySQL JDBC URL for reservationsdb"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java", "reason": "EntityManagerFactory for reservationsPU used by PersistenceManager"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/User.java", "reason": "persisted user base type created by factories"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java", "reason": "student role entity produced by StudentFactory"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Librarian.java", "reason": "librarian role entity produced by LibrarianFactory"},
+    {"path": "JavaProject/src/test/java/it/unina/reservations/controller/RegistrationTest.java", "reason": "integration tests exercise LibraryFacade.register paths"}
+  ]
+}

@@ -1,0 +1,31 @@
+@startuml
+class "User" as E1
+class "Citizen" as E2
+class "MunicipalOperator" as E3
+class "Report" as E4
+class "Location" as E5
+class "ReportCategory" as E6
+class "ReportStatus" as E7
+class "StatusUpdate" as E8
+class "InternalNote" as E9
+class "Notification" as E10
+class "PersistenceService" as E11
+class "ReportService" as E12
+
+E2 --|> E1 : extends
+E3 --|> E1 : extends
+E4 --> E2 : citizenReporting
+E4 --> E3 : operator
+E4 --> E5 : embedded location
+E4 --> E6 : category
+E4 --> E7 : currentStatus
+E4 *-- E8 : statusUpdates
+E4 *-- E9 : internalNotes
+E8 --> E3 : operator
+E9 --> E3 : operator
+E10 --> E4 : report
+E10 --> E2 : recipient
+E12 --> E11 : persist/query
+E12 --> E4 : save/update Report
+E12 --> E10 : save Notification
+@enduml

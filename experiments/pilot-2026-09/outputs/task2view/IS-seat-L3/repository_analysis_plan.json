@@ -1,0 +1,65 @@
+{
+  "analysis_goal": "The diagram must make clear the main components involved in the booking process, their responsibilities, interactions, and dependencies.",
+  "target_view": "cnc-runtime",
+  "target_granularity": "component",
+  "analysis_tasks": [
+    {
+      "id": "AT1",
+      "goal": "Identify connectors and communication channels linking the main components involved in the seat booking functionality.",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "expected_evidence": [
+        "Connectors and communication channels between UI, controllers, and persistence components."
+      ],
+      "addresses": [
+        "AQ1"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT2",
+      "goal": "Determine the sequence of calls between components when a request for the seat booking functionality runs.",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "expected_evidence": [
+        "Method invocation sequences across components during a seat booking request."
+      ],
+      "addresses": [
+        "AQ2"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT3",
+      "goal": "Identify which modules and types own the responsibilities for checking seat availability and applying booking rules within the seat booking functionality.",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java"
+      ],
+      "expected_evidence": [
+        "Classes and methods responsible for availability checks and business rules validation."
+      ],
+      "addresses": [
+        "AQ3"
+      ],
+      "target_view": "cnc-runtime"
+    }
+  ],
+  "constraints": [
+    "do not: source packages drawn as runtime nodes",
+    "source packages drawn as runtime nodes"
+  ]
+}

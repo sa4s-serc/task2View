@@ -1,0 +1,22 @@
+{
+  "request_id": "IS-seat-L1",
+  "strategy": "single-agent",
+  "files": [
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java", "reason": "owns makeReservation, seat selection, booking rules"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java", "reason": "façade entry that delegates seat booking to ReservationManager"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java", "reason": "room/time-slot availability used before booking"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java", "reason": "observer notified when a reservation is created or cancelled"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java", "reason": "seat assignment strategy interface used by ReservationManager"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java", "reason": "default strategy that selects the first available seat"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java", "reason": "saves and loads reservations for booking"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java", "reason": "resolves rooms, areas, and seats during booking"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java", "reason": "resolves the student who books a seat"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java", "reason": "JPA persistence behind the registries"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java", "reason": "seat availability check against existing reservations"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java", "reason": "lists available seats in an area for a slot"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java", "reason": "reservation aggregate attached to NotificationManager"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java", "reason": "REST boundary that invokes makeReservation on LibraryFacade"},
+    {"path": "JavaProject/src/main/java/it/unina/reservations/controller/NotificationService.java", "reason": "notification delivery port used by NotificationManager"},
+    {"path": "JavaProject/src/main/resources/META-INF/persistence.xml", "reason": "persistence unit backing seat and reservation storage"}
+  ]
+}

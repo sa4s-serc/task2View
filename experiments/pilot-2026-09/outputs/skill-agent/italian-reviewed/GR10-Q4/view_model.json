@@ -1,0 +1,146 @@
+{
+  "request_id": "GR10-Q4",
+  "view_type": "context_view",
+  "granularity": "system_or_context_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Cittadino",
+      "kind": "actor",
+      "role": "citizen who reports territorial issues and consults own reports",
+      "external": true,
+      "evidence": {
+        "file": "src/main/java/Entity/Cittadino.java",
+        "symbol": "Cittadino",
+        "excerpt": "Specializzazione di Utente che rappresenta il cittadino."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Operatore Comunale",
+      "kind": "actor",
+      "role": "municipal operator who manages received reports and monitors activity",
+      "external": true,
+      "evidence": {
+        "file": "src/main/java/Entity/OperatoreComunale.java",
+        "symbol": "OperatoreComunale",
+        "excerpt": "Specializzazione di Utente che rappresenta l'operatore comunale."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "Sistema Gestione Segnalazioni Comunali",
+      "kind": "system",
+      "role": "municipal problem reporting and management application",
+      "external": false,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "Sistema_Gestione_Segnalazioni_Comunali",
+        "excerpt": "<persistence-unit name=\"Sistema_Gestione_Segnalazioni_Comunali\" transaction-type=\"RESOURCE_LOCAL\">"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "segnalazioni_db",
+      "kind": "datastore",
+      "role": "MySQL store for users and municipal reports at the system boundary",
+      "external": true,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jdbc.url",
+        "excerpt": "jdbc:mysql://127.0.0.1:3306/segnalazioni_db"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E3",
+      "kind": "uses",
+      "label": "register; create/consult reports; view details",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUIDashboardUtente.java",
+        "symbol": "configuraDashboardCittadino",
+        "excerpt": "Puoi creare nuove segnalazioni e consultare quelle già inviate."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "consult/manage reports; update status; notes; monitor",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUIDashboardUtente.java",
+        "symbol": "configuraDashboardOperatore",
+        "excerpt": "Puoi consultare, gestire e monitorare le segnalazioni comunali."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": "persist users and segnalazioni",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jdbc.url",
+        "excerpt": "jdbc:mysql://127.0.0.1:3306/segnalazioni_db"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E1",
+      "to": "E3",
+      "kind": "uses",
+      "label": "receive status-change notifications",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioSegnalazioni.java",
+        "symbol": "generaNotificaCambioStato",
+        "excerpt": "Genera una notifica di cambio stato per il cittadino segnalante."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "register as municipal operator",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioUtenti.java",
+        "symbol": "creaUtenteDaDatiRegistrazione",
+        "excerpt": "if (\"operatore comunale\".equalsIgnoreCase(ruolo)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "Context view: two catalog actors, one product-named system, one boundary MySQL datastore",
+    "No third-party external systems observed beyond the database"
+  ]
+}

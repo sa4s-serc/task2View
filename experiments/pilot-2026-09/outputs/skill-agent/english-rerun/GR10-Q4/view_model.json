@@ -1,0 +1,131 @@
+{
+  "request_id": "GR10-Q4",
+  "view_type": "context_view",
+  "granularity": "system_or_context_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Citizen",
+      "kind": "actor",
+      "role": "registers, submits municipal problem reports, and reviews own submissions",
+      "external": true,
+      "evidence": {
+        "file": "src/main/java/Entity/Citizen.java",
+        "symbol": "Citizen",
+        "excerpt": "@DiscriminatorValue(\"CITIZEN\") public class Citizen extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Municipal Operator",
+      "kind": "actor",
+      "role": "reviews received reports, advances status, adds internal notes, and monitors activity",
+      "external": true,
+      "evidence": {
+        "file": "src/main/java/Entity/MunicipalOperator.java",
+        "symbol": "MunicipalOperator",
+        "excerpt": "@DiscriminatorValue(\"MUNICIPAL_OPERATOR\") public class MunicipalOperator extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "Municipal Report Management System",
+      "kind": "system",
+      "role": "application for reporting and managing municipal territory problems",
+      "external": false,
+      "evidence": {
+        "file": "README.md",
+        "symbol": "Municipal Report Management System",
+        "excerpt": "# Municipal Report Management System — Fully English Variant"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "MySQL reports_db",
+      "kind": "datastore",
+      "role": "boundary database storing users, reports, notes, and notifications",
+      "external": true,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "reports_db",
+        "excerpt": "jdbc:mysql://127.0.0.1:3306/reports_db"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E3",
+      "kind": "uses",
+      "label": "register, submit reports, review submitted reports",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "configureDashboardCitizen",
+        "excerpt": "You can create reports and view reports you have submitted."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E3",
+      "kind": "uses",
+      "label": "review received reports, update status, monitor activity, add internal notes",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/UserDashboardGUI.java",
+        "symbol": "configureDashboardOperator",
+        "excerpt": "You can view, manage, and monitor municipal reports."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E1",
+      "kind": "uses",
+      "label": "notify citizen of report status changes",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/NotificationController.java",
+        "symbol": "sendNotificationToCitizen",
+        "excerpt": "sendNotificationToCitizen(reportId, newStatus);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": "persist users and reports",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "Municipal_Report_Management_System",
+        "excerpt": "persistence-unit name=\"Municipal_Report_Management_System\""
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "Product name taken from README; HomePageGUI also labels the UI Municipal Issue Reporting System.",
+    "Actor goals summarized from UserDashboardGUI role panels and README overview; related through shared report lifecycle Submitted → Assigned → In Progress → Resolved."
+  ]
+}

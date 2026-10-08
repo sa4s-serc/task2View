@@ -1,0 +1,26 @@
+@startuml
+component "GUIHomePage" as E1
+component "GUICreazioneSegnalazione" as E2
+component "GUIRegistrazioneUtente" as E3
+component "ControllerServiziSistema" as E4
+component "ControllerCreazioneSegnalazione" as E5
+component "ControllerRegistrazioneUtente" as E6
+component "ServizioSegnalazioni" as E7
+component "ServizioUtenti" as E8
+component "Segnalazione" as E9
+component "ServizioPersistenza" as E10
+component "JpaUtil" as E11
+
+E1 --> E3 : opens registration
+E2 --> E4 : creaSegnalazione
+E3 --> E4 : registraUtente
+E4 --> E5 : delegates create-report
+E4 --> E6 : delegates registration
+E5 --> E7 : registraNuovaSegnalazione
+E5 --> E8 : verificaUtenteCittadino
+E6 --> E8 : registraUtente
+E7 --> E9 : creates report entity
+E7 --> E10 : salva
+E8 --> E10 : persist users
+E10 --> E11 : getEntityManager
+@enduml

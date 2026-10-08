@@ -1,0 +1,348 @@
+{
+  "request_id": "GR10-Q1",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "GUIHomePage",
+      "kind": "module",
+      "role": "user-facing entry screen for municipal report management",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUIHomePage.java",
+        "symbol": "GUIHomePage",
+        "excerpt": "label1.setText(\"Sistema Comunale Gestione Segnalazioni\");"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "GUICreazioneSegnalazione",
+      "kind": "module",
+      "role": "user-facing UI that collects report data and delegates to application logic",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUICreazioneSegnalazione.java",
+        "symbol": "GUICreazioneSegnalazione",
+        "excerpt": "delega la creazione al livello Control tramite ControllerServiziSistema"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "GUIRegistrazioneUtente",
+      "kind": "module",
+      "role": "user-facing registration UI",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUIRegistrazioneUtente.java",
+        "symbol": "GUIRegistrazioneUtente",
+        "excerpt": "private ControllerServiziSistema controllerServiziSistema;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "ControllerServiziSistema",
+      "kind": "module",
+      "role": "application-logic facade coordinating main use cases for boundaries",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerServiziSistema.java",
+        "symbol": "ControllerServiziSistema",
+        "excerpt": "Svolge il ruolo di Facade del package Control e rappresenta il punto unico di accesso"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "ControllerCreazioneSegnalazione",
+      "kind": "module",
+      "role": "application logic for the create-report use case",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerCreazioneSegnalazione.java",
+        "symbol": "ControllerCreazioneSegnalazione",
+        "excerpt": "Coordina il caso d'uso di creazione di una nuova segnalazione."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "ControllerRegistrazioneUtente",
+      "kind": "module",
+      "role": "application logic for the user-registration use case",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerRegistrazioneUtente.java",
+        "symbol": "ControllerRegistrazioneUtente",
+        "excerpt": "Coordina il caso d'uso di registrazione utente."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "ServizioSegnalazioni",
+      "kind": "module",
+      "role": "domain facade owning report lifecycle and related domain operations",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioSegnalazioni.java",
+        "symbol": "ServizioSegnalazioni",
+        "excerpt": "Facade Entity dedicato alla gestione delle segnalazioni del sistema."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "ServizioUtenti",
+      "kind": "module",
+      "role": "domain facade owning users, credentials, and role checks",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioUtenti.java",
+        "symbol": "ServizioUtenti",
+        "excerpt": "Facade Entity dedicato alla gestione degli utenti del sistema."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "Segnalazione",
+      "kind": "module",
+      "role": "domain entity representing a municipal report and its state",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "Segnalazione",
+        "excerpt": "Entity che rappresenta una segnalazione inserita da un cittadino."
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "ServizioPersistenza",
+      "kind": "module",
+      "role": "data-persistence facade encapsulating save/update/find over JPA",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Database/ServizioPersistenza.java",
+        "symbol": "ServizioPersistenza",
+        "excerpt": "facade generica di persistenza che incapsula l'accesso al database"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E11",
+      "name": "JpaUtil",
+      "kind": "module",
+      "role": "persistence infrastructure providing EntityManager access",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Database/JpaUtil.java",
+        "symbol": "JpaUtil",
+        "excerpt": "Persistence.createEntityManagerFactory(\"Sistema_Gestione_Segnalazioni_Comunali\")"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E3",
+      "kind": "uses",
+      "label": "opens registration",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUIHomePage.java",
+        "symbol": "registratiButton",
+        "excerpt": "GUIRegistrazioneUtente guiRegistrazione = new GUIRegistrazioneUtente();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E2",
+      "to": "E4",
+      "kind": "uses",
+      "label": "creaSegnalazione",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUICreazioneSegnalazione.java",
+        "symbol": "controllerServiziSistema",
+        "excerpt": "this.controllerServiziSistema = new ControllerServiziSistema();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": "registraUtente",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUIRegistrazioneUtente.java",
+        "symbol": "controllerServiziSistema",
+        "excerpt": "private ControllerServiziSistema controllerServiziSistema;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E4",
+      "to": "E5",
+      "kind": "contains",
+      "label": "delegates create-report",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerServiziSistema.java",
+        "symbol": "controllerCreazioneSegnalazione",
+        "excerpt": "this.controllerCreazioneSegnalazione = new ControllerCreazioneSegnalazione();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E4",
+      "to": "E6",
+      "kind": "contains",
+      "label": "delegates registration",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerServiziSistema.java",
+        "symbol": "controllerRegistrazioneUtente",
+        "excerpt": "this.controllerRegistrazioneUtente = new ControllerRegistrazioneUtente();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E5",
+      "to": "E7",
+      "kind": "uses",
+      "label": "registraNuovaSegnalazione",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerCreazioneSegnalazione.java",
+        "symbol": "servizioSegnalazioni",
+        "excerpt": "this.servizioSegnalazioni = new ServizioSegnalazioni();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E5",
+      "to": "E8",
+      "kind": "uses",
+      "label": "verificaUtenteCittadino",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerCreazioneSegnalazione.java",
+        "symbol": "servizioUtenti",
+        "excerpt": "this.servizioUtenti = new ServizioUtenti();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E6",
+      "to": "E8",
+      "kind": "uses",
+      "label": "registraUtente",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerRegistrazioneUtente.java",
+        "symbol": "servizioUtenti",
+        "excerpt": "return servizioUtenti.registraUtente(datiRegistrazione);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E7",
+      "to": "E9",
+      "kind": "uses",
+      "label": "creates report entity",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioSegnalazioni.java",
+        "symbol": "registraNuovaSegnalazione",
+        "excerpt": "Segnalazione segnalazione = new Segnalazione("
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R10",
+      "from": "E7",
+      "to": "E10",
+      "kind": "uses",
+      "label": "salva",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioSegnalazioni.java",
+        "symbol": "servizioPersistenza",
+        "excerpt": "servizioPersistenza.salva(segnalazione);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R11",
+      "from": "E8",
+      "to": "E10",
+      "kind": "uses",
+      "label": "persist users",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioUtenti.java",
+        "symbol": "servizioPersistenza",
+        "excerpt": "this.servizioPersistenza = new ServizioPersistenza();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R12",
+      "from": "E10",
+      "to": "E11",
+      "kind": "uses",
+      "label": "getEntityManager",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Database/ServizioPersistenza.java",
+        "symbol": "jpaUtil",
+        "excerpt": "this.jpaUtil = JpaUtil.getInstance();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "Module decomposition follows BCED separation: GUI* (user-facing), Controller* (application logic), Servizio*/Segnalazione (domain), ServizioPersistenza/JpaUtil (persistence)."
+  ]
+}

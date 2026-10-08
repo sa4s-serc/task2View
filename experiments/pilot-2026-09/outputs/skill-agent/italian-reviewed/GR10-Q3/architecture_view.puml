@@ -1,0 +1,41 @@
+@startuml
+title Code Mapping View — municipal reports persistence
+
+class "Segnalazione" as E1
+class "Utente" as E2
+class "Cittadino" as E3
+class "OperatoreComunale" as E4
+class "Posizione" as E5
+class "CategoriaSegnalazione" as E6
+class "StatoSegnalazione" as E7
+class "AggiornamentoStato" as E8
+class "NotaInterna" as E9
+class "Notifica" as E10
+class "Credenziali" as E11
+class "Inviata" as E12
+class "ServizioPersistenza" as E13
+class "ServizioSegnalazioni" as E14
+class "ControllerAggiornamentoStatoSegnalazione" as E15
+
+E3 --|> E2 : extends
+E4 --|> E2 : extends
+E2 *-- E11 : @Embedded credenziali
+E1 *-- E5 : @Embedded posizione
+E1 --> E6 : categoria
+E1 --> E3 : id_cittadino
+E1 --> E4 : id_operatore
+E1 *-- E9 : note_interne
+E1 *-- E8 : aggiornamenti_stato
+E1 --> E7 : statoCorrente
+E12 ..|> E7 : implements
+E8 --> E1 : id_segnalazione
+E8 --> E4 : id_operatore
+E9 --> E1 : id_segnalazione
+E9 --> E4 : id_operatore
+E10 --> E3 : id_cittadino
+E10 --> E1 : id_segnalazione
+E14 --> E13 : persist reports
+E14 --> E1 : registraNuovaSegnalazione
+E15 --> E14 : aggiornaStatoSegnalazione
+
+@enduml

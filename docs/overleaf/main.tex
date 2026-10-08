@@ -19,7 +19,7 @@ Subjects, Models, and Experimental Conditions}
 \maketitle
 
 \section{Pilot study}
-This pilot checks whether a stakeholder goal and a repository can be turned into one architecture view, before a larger evaluation. Three conditions receive the same two systems and the same ten goals. The diagrams are in \texttt{comparison/}: folder~1 is the agent with the skill, folder~2 is the plain agent, and folder~3 is Task2View. Folder~3 is the image set from Task2View architecture. Figure~\ref{fig:study} is the whole pilot: repositories, stakeholder queries, the three approaches with the model each one used, the views, and the review. Section~\ref{sec:results} is that last step. The Task2View diagrams were not in the review.
+This pilot checks whether a stakeholder goal and a repository can be turned into one architecture view, before a larger evaluation. Three conditions receive the same two systems and the same ten goals. The diagrams are in \texttt{experiments/pilot-2026-09/outputs/}: \texttt{skill-agent}, \texttt{plain-agent}, and \texttt{task2view}. The Task2View outputs are the pilot batch of the pipeline. Figure~\ref{fig:study} is the whole pilot: repositories, stakeholder queries, the three approaches with the model each one used, the views, and the review. Section~\ref{sec:results} is that last step. The Task2View diagrams were not in the review.
 
 \begin{figure}[ht]
 \centering
@@ -87,7 +87,7 @@ This pilot checks whether a stakeholder goal and a repository can be turned into
 \end{figure}
 
 \subsection{Subjects}
-Both subjects are the English variants under \texttt{data\_points/}. Each fits in one model call. The ten goals are a developer changing seat booking and a tester covering registration, each at three levels of detail, plus four GR10 roles: architect, DevOps engineer, database engineer, and business analyst.
+Both subjects are the English variants under \texttt{data/}. Each fits in one model call. The ten goals are a developer changing seat booking and a tester covering registration, each at three levels of detail, plus four GR10 roles: architect, DevOps engineer, database engineer, and business analyst.
 
 \begin{table}[h]
 \centering
@@ -128,13 +128,13 @@ Agent, both arms & Cursor general-purpose agent & same model in both arms & Read
 \subsection{Conditions}
 The repository and the goal stay fixed.
 
-\noindent\textbf{Plain agent} (\texttt{comparison/folder2}).
+\noindent\textbf{Plain agent} (\texttt{outputs/plain-agent}).
 The agent receives the repository path and the goal. It is given neither the skill, the viewpoint catalog, nor Task2View. It writes a PlantUML view, and on a few goals a short note.
 
-\noindent\textbf{Agent with the Task2View skill} (\texttt{comparison/folder1}).
-The same kind of agent follows \texttt{task2view-skill}. It interprets the stakeholder, chooses one catalog viewpoint, binds that viewpoint's grain, and publishes the phase JSON plus a diagram. It does not run \texttt{task2view}.
+\noindent\textbf{Agent with the Task2View skill} (\texttt{outputs/skill-agent}).
+The same kind of agent follows \texttt{skill/}. It interprets the stakeholder, chooses one catalog viewpoint, binds that viewpoint's grain, and publishes the phase JSON plus a diagram. It does not run \texttt{task2view}.
 
-\noindent\textbf{Task2View} (\texttt{comparison/folder3}, \texttt{runs/pilot}).
+\noindent\textbf{Task2View} (\texttt{outputs/task2view}).
 PageRank on the uses/calls graph (Aider RepoMap, damping 0.85) proposes files, and a token budget keeps a subset. This batch kept 2--8 files. The phases are separate Gemini calls:
 \begin{enumerate}
 \item interpret the stakeholder and task;
@@ -167,7 +167,7 @@ Model & Cursor agent & Same Cursor agent & Gemini 2.5 Flash, temperature 0.2 \\
 
 \section{Results}
 \label{sec:results}
-A reviewer wrote one comment on each of the ten goals for the skill agent and the plain agent, plus one comment covering all three seat-booking diagrams of the plain agent: 18 comments in \texttt{comparison\_review.txt}. Seven fit the goal, five are partial, and six miss it. Short goals are the ones accepted. The detailed stakeholder queries are the ones rejected. The Task2View diagrams in folder~3 were not reviewed.
+A reviewer wrote one comment on each of the ten goals for the skill agent and the plain agent, plus one comment covering all three seat-booking diagrams of the plain agent: 18 comments in \texttt{review/comparison\_review.txt}. Seven fit the goal, five are partial, and six miss it. Short goals are the ones accepted. The detailed stakeholder queries are the ones rejected. The Task2View diagrams in folder~3 were not reviewed.
 
 The seven themes fall into two buckets. \textbf{Meaning} is whether the diagram says the right architectural thing. \textbf{Form} is whether it is drawn as a proper view. Thirteen comments raise a meaning issue. Nine raise a form issue. Six raise both. Two plain-agent diagrams raise neither: the DevOps deployment view, and registration at the shortest stakeholder query.
 

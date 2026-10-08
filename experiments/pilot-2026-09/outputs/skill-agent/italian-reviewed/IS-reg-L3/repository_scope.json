@@ -1,0 +1,54 @@
+{
+  "request_id": "IS-reg-L3",
+  "strategy": "single-agent",
+  "files": [
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/GestoreUtenti.java",
+      "reason": "owns UC1 registration: validates role/personal data, uniqueness, factory selection, persist handoff"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/BibliotecaFacade.java",
+      "reason": "UC1 facade entry that delegates registrazione to GestoreUtenti"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/boundary/SpringBoot/BoundaryAutenticazione.java",
+      "reason": "HTTP /api/auth/registrazione request handler forwarding to BibliotecaFacade"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/RegistroUtenti.java",
+      "reason": "email/matricola/codice uniqueness lookups and registraUtente persistence handoff"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/database/GestorePersistenza.java",
+      "reason": "persists newly created Utente via salva"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/UtenteFactory.java",
+      "reason": "Factory Method interface for role-specific user creation at registration"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/StudenteFactory.java",
+      "reason": "creates Studente and sets matricola (student ID)"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/controller/factory/BibliotecarioFactory.java",
+      "reason": "creates Bibliotecario and sets codiceIdentificativoInterno"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Studente.java",
+      "reason": "student role entity holding unique matricola"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Bibliotecario.java",
+      "reason": "librarian role entity holding unique codiceIdentificativoInterno"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/entity/Utente.java",
+      "reason": "shared registered-user fields including unique emailIstituzionale"
+    },
+    {
+      "path": "JavaProject/src/main/java/it/unina/prenotazioni/database/JpaUtil.java",
+      "reason": "EntityManager factory used by GestorePersistenza for account persistence"
+    }
+  ]
+}

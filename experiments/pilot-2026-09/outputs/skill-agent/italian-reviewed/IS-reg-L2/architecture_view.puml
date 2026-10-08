@@ -1,0 +1,21 @@
+@startuml
+component "BibliotecaFacade" as E1
+component "GestoreUtenti" as E2
+component "UtenteFactory" as E3
+component "StudenteFactory" as E4
+component "BibliotecarioFactory" as E5
+component "RegistroUtenti" as E6
+component "GestorePersistenza" as E7
+component "Utente" as E8
+
+E1 --> E2 : registrazione
+E2 --> E4 : creaUtente (Studente)
+E2 --> E5 : creaUtente (Bibliotecario)
+E2 --> E6 : uniqueness + registraUtente
+E6 --> E7 : salva
+E4 --> E3 : implements UtenteFactory
+E5 --> E3 : implements UtenteFactory
+E4 --> E8 : creaUtente builds Studente
+E5 --> E8 : creaUtente builds Bibliotecario
+E6 --> E8 : registraUtente(Utente)
+@enduml

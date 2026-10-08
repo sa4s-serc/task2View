@@ -1,0 +1,85 @@
+@startuml architecture_view
+title User Registration Architecture (Integration-Test Focus)
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "Integration Tester / Client" as Client
+
+package "Boundary" {
+  [Registration\n(Swing UI)] as Registration
+  [registration.html\n(Web form)] as RegHtml
+  [AuthenticationController\nPOST /api/auth/register] as AuthController
+  [RestExceptionHandler] as RestEx
+}
+
+package "Controller" {
+  [LibraryFacade] as Facade
+  [UserManager] as UserMgr
+}
+
+package "Factory" {
+  interface UserFactory
+  [StudentFactory] as StudFactory
+  [LibrarianFactory] as LibFactory
+}
+
+package "Entity / Registry" {
+  [UserRegistry] as Registry
+  [User] as User
+  [Student] as Student
+  [Librarian] as Librarian
+}
+
+package "Persistence" {
+  [PersistenceManager] as Persist
+}
+
+package "DTO" {
+  [UserDTO] as UserDto
+}
+
+Client --> Registration : submit form\n(role, name, surname,\nemail, password, identifier)
+Client --> RegHtml : submit form
+RegHtml --> AuthController : POST /auth/register
+Registration --> Facade : register(...)
+AuthController --> Facade : register(...)
+Facade --> UserMgr : register(...)
+
+UserMgr --> UserMgr : validate role, name,\npassword, personal data\nand role-specific identifier
+UserMgr --> Registry : institutionalEmailExists(email)
+UserMgr --> Registry : findStudentByStudentNumber /\nfindLibrarianByCode
+UserMgr --> StudFactory : createUser(...)\n[role = Student]
+UserMgr --> LibFactory : createUser(...)\n[role = Librarian]
+StudFactory ..|> UserFactory
+LibFactory ..|> UserFactory
+StudFactory --> Student : builds
+LibFactory --> Librarian : builds
+Student --|> User
+Librarian --|> User
+
+UserMgr --> Registry : registerUser(newUser)
+Registry --> Persist : save(newUser)
+UserMgr --> UserDto : toDTO(newUser)\non success
+
+UserMgr ..> AuthController : IllegalArgumentException\n(invalid / duplicate data)
+UserMgr ..> Registration : RuntimeException\n(shown in UI dialog)
+AuthController ..> RestEx : maps IllegalArgumentException\nto HTTP 400
+
+note right of UserMgr
+  Responsibilities:
+  - accept registration request (via Facade)
+  - validate personal info + role
+  - validate student ID / librarian code
+  - check email & identifier uniqueness
+  - select factory and persist new user
+  - fail fast on invalid or existing data
+end note
+
+note bottom of Registry
+  Uniqueness & persistence gate:
+  email lookup, identifier lookup,
+  then PersistenceManager.save
+end note
+
+@enduml

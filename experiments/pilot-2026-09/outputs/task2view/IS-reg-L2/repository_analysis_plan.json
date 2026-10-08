@@ -1,0 +1,93 @@
+{
+  "analysis_goal": "The diagram must make clear the main components involved in registration, their responsibilities, how they interact when a new user creates an account, and the main integration points that should be exercised during the tests.",
+  "target_view": "cnc-runtime",
+  "target_granularity": "component",
+  "analysis_tasks": [
+    {
+      "id": "AT1",
+      "goal": "Identify the main components that implement the user registration functionality",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "expected_evidence": [
+        "Runtime components and connectors implementing user registration"
+      ],
+      "addresses": [
+        "AQ1"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT2",
+      "goal": "Determine the specific responsibilities of each module involved in the user registration functionality",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "JavaProject/src/main/java/it/unina/reservations/dto/UserDTO.java"
+      ],
+      "expected_evidence": [
+        "Responsibilities of modules involved in user registration"
+      ],
+      "addresses": [
+        "AQ2"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT3",
+      "goal": "Trace the exact sequence of calls between parts when a new user creates an account in the user registration functionality",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "expected_evidence": [
+        "Sequence of calls and interactions during account creation"
+      ],
+      "addresses": [
+        "AQ3"
+      ],
+      "target_view": "cnc-runtime"
+    },
+    {
+      "id": "AT4",
+      "goal": "Identify which connectors and communication paths link the components that handle the user registration functionality",
+      "starting_points": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "candidate_locations": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java"
+      ],
+      "expected_evidence": [
+        "Connectors and communication paths between registration components"
+      ],
+      "addresses": [
+        "AQ4"
+      ],
+      "target_view": "cnc-runtime"
+    }
+  ],
+  "constraints": [
+    "source packages drawn as runtime nodes"
+  ]
+}

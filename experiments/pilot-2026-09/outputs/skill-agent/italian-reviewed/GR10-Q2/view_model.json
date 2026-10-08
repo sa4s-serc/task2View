@@ -1,0 +1,248 @@
+{
+  "request_id": "GR10-Q2",
+  "view_type": "deployment_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "JavaDesktopHost",
+      "kind": "deployment_node",
+      "role": "JVM execution environment that runs the Swing desktop application (Java 23)",
+      "external": false,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "maven.compiler.source",
+        "excerpt": "<maven.compiler.source>23</maven.compiler.source>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "MySQLServer",
+      "kind": "deployment_node",
+      "role": "MySQL database server hosting application data at 127.0.0.1:3306",
+      "external": true,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jakarta.persistence.jdbc.url",
+        "excerpt": "jdbc:mysql://127.0.0.1:3306/segnalazioni_db"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "ProgettoIngSoftwareGR10",
+      "kind": "component",
+      "role": "Maven deployable software artifact for the municipal reports system",
+      "external": false,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "artifactId",
+        "excerpt": "<artifactId>Progetto_Ing_Software_GR10</artifactId>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "PersistenceUnitConfig",
+      "kind": "component",
+      "role": "JPA persistence-unit configuration deployed with the application",
+      "external": false,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "persistence-unit",
+        "excerpt": "<persistence-unit name=\"Sistema_Gestione_Segnalazioni_Comunali\" transaction-type=\"RESOURCE_LOCAL\">"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "SegnalazioniDB",
+      "kind": "datastore",
+      "role": "MySQL database that stores municipal report application data",
+      "external": false,
+      "evidence": {
+        "file": "README.md",
+        "symbol": "segnalazioni_db",
+        "excerpt": "CREATE DATABASE segnalazioni_db;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "MySQLConnectorJ",
+      "kind": "component",
+      "role": "JDBC driver runtime dependency used to communicate with MySQL",
+      "external": false,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "mysql-connector-j",
+        "excerpt": "<artifactId>mysql-connector-j</artifactId>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "HibernateCore",
+      "kind": "component",
+      "role": "Hibernate JPA ORM runtime dependency mediating persistence access",
+      "external": false,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "hibernate-core",
+        "excerpt": "<artifactId>hibernate-core</artifactId>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E3",
+      "kind": "deploys",
+      "label": "runs desktop artifact",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Boundary/GUIHomePage.java",
+        "symbol": "main",
+        "excerpt": "public static void main(String[] args) { JFrame frame = new JFrame();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E1",
+      "to": "E4",
+      "kind": "deploys",
+      "label": "ships persistence.xml",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "persistence-unit",
+        "excerpt": "<persistence-unit name=\"Sistema_Gestione_Segnalazioni_Comunali\""
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E1",
+      "to": "E6",
+      "kind": "deploys",
+      "label": "packs JDBC driver",
+      "order": null,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "mysql-connector-j",
+        "excerpt": "<artifactId>mysql-connector-j</artifactId>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E1",
+      "to": "E7",
+      "kind": "deploys",
+      "label": "packs Hibernate ORM",
+      "order": null,
+      "evidence": {
+        "file": "pom.xml",
+        "symbol": "hibernate-core",
+        "excerpt": "<artifactId>hibernate-core</artifactId>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E2",
+      "to": "E5",
+      "kind": "deploys",
+      "label": "hosts segnalazioni_db",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jdbc.url",
+        "excerpt": "jdbc:mysql://127.0.0.1:3306/segnalazioni_db"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E3",
+      "to": "E5",
+      "kind": "communicates",
+      "label": "JDBC via Hibernate/JPA",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Database/JpaUtil.java",
+        "symbol": "createEntityManagerFactory",
+        "excerpt": "Persistence.createEntityManagerFactory(\"Sistema_Gestione_Segnalazioni_Comunali\")"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": "loads persistence unit",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Database/JpaUtil.java",
+        "symbol": "Sistema_Gestione_Segnalazioni_Comunali",
+        "excerpt": "Persistence.createEntityManagerFactory(\"Sistema_Gestione_Segnalazioni_Comunali\")"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E4",
+      "to": "E6",
+      "kind": "uses",
+      "label": "com.mysql.cj.jdbc.Driver",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "jdbc.driver",
+        "excerpt": "value=\"com.mysql.cj.jdbc.Driver\""
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E4",
+      "to": "E7",
+      "kind": "uses",
+      "label": "HibernatePersistenceProvider",
+      "order": null,
+      "evidence": {
+        "file": "src/main/resources/META-INF/persistence.xml",
+        "symbol": "provider",
+        "excerpt": "<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "No Docker or compose files present; allocation is a local JVM desktop host plus an external MySQL server.",
+    "App-to-database communication uses JDBC (mysql-connector-j) with Hibernate as the JPA provider."
+  ]
+}

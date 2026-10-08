@@ -1,0 +1,28 @@
+{
+  "role_id": "analyst",
+  "stakeholder_name": "Analyst",
+  "viewpoint_id": "code-mapping",
+  "view_type": "class_view",
+  "task_focus": "municipal reports persistence",
+  "concerns": ["maintainability", "data-protection", "connectivity", "compatibility"],
+  "task_concerns": ["maintainability", "data-protection", "connectivity", "compatibility"],
+  "preferred_viewpoints": ["code-mapping", "module-decomposition", "context", "cnc-runtime"],
+  "phrases": ["persistence", "database", "data entities", "relationships", "municipal reports"],
+  "task": "modify the persistence layer to support future changes to municipal report management",
+  "purpose": "Code / Implementation Mapping View for municipal reports persistence: architecture elements mapped to implementing types. Relations: implements or located-in. Do not: entire-repository class dump.",
+  "unanswered_concerns": ["data-protection", "connectivity", "compatibility"],
+  "decided_by": "model",
+  "grain": {
+    "viewpoint_id": "code-mapping",
+    "unit": "type",
+    "nodes": "architecture elements mapped to implementing types",
+    "relations": "implements or located-in",
+    "forbid": "entire-repository class dump"
+  },
+  "ranked": [
+    {"viewpoint_id": "code-mapping", "view_type": "class_view", "score": 10.0, "reasons": ["type-level nodes match data entities and application dependents; data/persistence cues prefer code-mapping"]},
+    {"viewpoint_id": "module-decomposition", "view_type": "component_view", "score": 6.0, "reasons": ["frames maintainability; module grain weaker for entity relationships"]},
+    {"viewpoint_id": "context", "view_type": "context_view", "score": 4.0, "reasons": ["frames connectivity; does not show entity types"]},
+    {"viewpoint_id": "cnc-runtime", "view_type": "component_view", "score": 4.0, "reasons": ["frames connectivity; runtime connectors not entity mapping"]}
+  ]
+}

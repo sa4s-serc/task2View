@@ -1,0 +1,73 @@
+@startuml architecture_view
+title Seat Booking — Main Components (L1)
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor Student
+
+package "Presentation" {
+  [SeatSelection\n(Swing wizard)] as SeatSelection
+  [ReservationController\n(/api/reservations)] as ReservationController
+  [StudyRoomController\n(/api/rooms)] as StudyRoomController
+}
+
+package "Application" {
+  [LibraryFacade] as LibraryFacade
+}
+
+package "Controllers" {
+  [ReservationManager] as ReservationManager
+  [StudyRoomManager] as StudyRoomManager
+  [AssignmentStrategy\n(FirstAvailableAssignment)] as AssignmentStrategy
+  [NotificationManager] as NotificationManager
+}
+
+package "Domain" {
+  [StudyRoom] as StudyRoom
+  [Area] as Area
+  [Seat] as Seat
+  [Reservation] as Reservation
+  [Student] as StudentEntity
+  [TimeSlot] as TimeSlot
+}
+
+package "Registries / Persistence" {
+  [StudyRoomRegistry] as StudyRoomRegistry
+  [ReservationRegistry] as ReservationRegistry
+  [UserRegistry] as UserRegistry
+}
+
+Student --> SeatSelection : select room / area / seat
+Student --> ReservationController : POST /create
+Student --> StudyRoomController : rooms, slots, room detail
+
+SeatSelection --> LibraryFacade
+ReservationController --> LibraryFacade : makeReservation
+StudyRoomController --> LibraryFacade : getAvailableStudyRooms\ngetAvailableTimeSlots\ngetRoomDetail
+
+LibraryFacade --> ReservationManager : makeReservation
+LibraryFacade --> StudyRoomManager : availability & room detail
+
+ReservationManager --> StudyRoomManager : (via shared registries)
+ReservationManager --> AssignmentStrategy : selectSeat\n(when seatId = 0)
+ReservationManager --> UserRegistry : resolve Student
+ReservationManager --> StudyRoomRegistry : resolve room / area / seat
+ReservationManager --> ReservationRegistry : saveReservation
+ReservationManager --> NotificationManager : notify after create
+
+StudyRoomManager --> StudyRoomRegistry : rooms, areas, seats
+StudyRoomManager --> ReservationRegistry : occupancy checks
+
+StudyRoom *-- Area
+Area *-- Seat
+Reservation --> Seat
+Reservation --> StudentEntity
+Reservation --> TimeSlot
+Seat --> Area
+Area --> StudyRoom
+
+Seat ..> ReservationRegistry : isAvailable
+Area ..> StudyRoomRegistry : getAvailableSeats
+
+@enduml

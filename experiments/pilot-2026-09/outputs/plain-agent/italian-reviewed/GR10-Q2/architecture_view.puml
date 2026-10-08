@@ -1,0 +1,67 @@
+@startuml architecture_view
+title Architecture view — Runtime & deployment (DevOps)\nSistema Gestione Segnalazioni Comunali (GR10)
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+legend left
+  Stakeholder: DevOps engineer — deploy/configure in a new environment
+  Evidence: pom.xml, persistence.xml, README.md, Database/*, Boundary/GUIHomePage, Entity facades
+endlegend
+
+node "Execution host (desktop JVM)" as Host {
+  artifact "Maven artifact\nProgetto_Ing_Software_GR10:1.0-SNAPSHOT\n(Java 23)" as AppJar
+
+  package "Application runtime (same JVM process)" as App {
+    [Boundary\nSwing GUI\n(GUIHomePage entry)] as Boundary
+    [Control\ncontrollers] as Control
+    [Entity facades\nServizioUtenti /\nServizioSegnalazioni] as Entity
+    [Database\nServizioPersistenza +\nJpaUtil] as Database
+  }
+
+  package "Runtime libraries (Maven deps)" as Libs {
+    [Hibernate ORM\nhibernate-core 6.6.50\nJPA provider] as Hibernate
+    [MySQL Connector/J\nmysql-connector-j 9.4.0\ncom.mysql.cj.jdbc.Driver] as Connector
+    [IntelliJ forms_rt 7.0.3\nSwing GUI Designer] as Forms
+  }
+
+  artifact "Config artifact\nMETA-INF/persistence.xml\nPU: Sistema_Gestione_Segnalazioni_Comunali\nRESOURCE_LOCAL" as PersistCfg
+}
+
+node "MySQL server (data store)" as MySQLHost {
+  database "MySQL RDBMS\nport 3306" as MySQL {
+    folder "segnalazioni_db" as DB {
+      card "Mapped entities\n(Utente, Cittadino,\nOperatoreComunale,\nSegnalazione, NotaInterna,\nAggiornamentoStato, Notifica)\nhbm2ddl.auto=update" as Tables
+    }
+  }
+}
+
+' In-process call chain (BCED)
+Boundary --> Control : UI events / simple maps
+Control --> Entity : business delegation
+Entity --> Database : ServizioPersistenza API
+Database --> Hibernate : EntityManager / JPQL
+Hibernate --> Connector : JDBC API
+Forms ..> Boundary : GUI form runtime
+PersistCfg ..> Database : EMF bootstrap\n(JpaUtil)
+AppJar ..> App : runs on JVM 23
+
+' Cross-process app ↔ database
+Connector -[#blue]-> MySQL : JDBC\njdbc:mysql://127.0.0.1:3306/segnalazioni_db\nuser: segnalazioni_user
+
+note right of PersistCfg
+  Deploy-time config (persistence.xml):
+  - jakarta.persistence.jdbc.driver
+  - jdbc.url / user / password
+  - hibernate.hbm2ddl.auto=update
+  Align with MySQL DB + grants
+  (see README setup steps)
+end note
+
+note bottom of MySQLHost
+  Data is stored here.
+  Application executes on the desktop JVM host;
+  default shipped config targets localhost MySQL.
+end note
+
+@enduml

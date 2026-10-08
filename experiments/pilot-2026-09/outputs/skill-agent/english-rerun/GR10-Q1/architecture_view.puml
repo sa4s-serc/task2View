@@ -1,0 +1,25 @@
+@startuml
+component "UserDashboardGUI" as E1
+component "ReportCreationGUI" as E2
+component "UserLoginGUI" as E3
+component "SystemServicesController" as E4
+component "ReportCreationController" as E5
+component "UserLoginController" as E6
+component "ReportService" as E7
+component "UserService" as E8
+component "Report" as E9
+component "PersistenceService" as E10
+component "JpaUtil" as E11
+
+E1 --> E2 : opens ReportCreationGUI
+E2 --> E4 : delegates via SystemServicesController
+E3 --> E6 : verifyCredentialsLogin
+E4 --> E5 : owns ReportCreationController
+E5 --> E7 : registerNewReport
+E5 --> E8 : verifyUserCitizen
+E6 --> E8 : retrieveUserDataByCredentials
+E7 --> E9 : creates Report
+E7 --> E10 : save/find reports
+E8 --> E10 : persist users
+E10 --> E11 : getEntityManager
+@enduml

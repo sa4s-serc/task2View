@@ -1,0 +1,176 @@
+{
+  "request_id": "IS-seat-L1",
+  "view_type": "component_view",
+  "granularity": "component_or_service_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "SeatSelection",
+      "kind": "component",
+      "role": "provides a graphical user interface boundary component for selecting a seat in the reservation wizard",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "SeatSelection",
+        "excerpt": "public class SeatSelection {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E2",
+      "name": "ReservationSummary",
+      "kind": "component",
+      "role": "continuation target of the wizard flow when the continue button is pressed and a seat is selected",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "symbol": "continueWizard",
+        "excerpt": "new ReservationSummary(status).openForm();"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E3",
+      "name": "PersistenceManager",
+      "kind": "component",
+      "role": "handles database operations such as saving and querying entities for persistence",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "PersistenceManager",
+        "excerpt": "public class PersistenceManager {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E4",
+      "name": "EntityManager",
+      "kind": "component",
+      "role": "used by PersistenceManager for entity persistence operations including save, update, find by ID, find by fields, custom queries, and deletion",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "symbol": "save",
+        "excerpt": "EntityManager em = JpaUtil.getInstance().getEntityManager();"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E5",
+      "name": "ExternalEmailGateway",
+      "kind": "component",
+      "role": "provides an external email sending functionality/gateway stub",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java",
+        "symbol": "ExternalEmailGateway",
+        "excerpt": "public class ExternalEmailGateway {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E6",
+      "name": "Seat",
+      "kind": "component",
+      "role": "seat entity checks seat availability for a given date and time slot using the ReservationRegistry",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "isAvailable",
+        "excerpt": "public boolean isAvailable(LocalDate date, TimeSlot timeSlot) {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E7",
+      "name": "ReservationRegistry",
+      "kind": "component",
+      "role": "registry used by Seat entity to check seat availability",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "symbol": "isAvailable",
+        "excerpt": "public boolean isAvailable(LocalDate date, TimeSlot timeSlot) {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E8",
+      "name": "SeatDTO",
+      "kind": "component",
+      "role": "holds properties related to seat representation such as id, number, areaType, and availability",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/java/it/unina/reservations/dto/SeatDTO.java",
+        "symbol": "SeatDTO",
+        "excerpt": "public class SeatDTO {"
+      },
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "E9",
+      "name": "app",
+      "kind": "component",
+      "role": "provides frontend client-side API communication utilities for interaction with the server",
+      "external": false,
+      "evidence": {
+        "file": "JavaProject/src/main/resources/static/app.js",
+        "symbol": "api",
+        "excerpt": "async function api(method, path, params, isJson = false) {"
+      },
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E1",
+      "to": "E2",
+      "kind": "calls",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R2",
+      "from": "E3",
+      "to": "E4",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    },
+    {
+      "id": "R3",
+      "from": "E6",
+      "to": "E7",
+      "kind": "uses",
+      "label": null,
+      "order": null,
+      "evidence": null,
+      "support": "observed",
+      "agreement": null
+    }
+  ],
+  "unanswered": [
+    "control-flow",
+    "maintainability"
+  ],
+  "notes": [
+    "No evidence names were left out since all cited evidence elements conform to the runtime component and connector viewpoint grain."
+  ]
+}

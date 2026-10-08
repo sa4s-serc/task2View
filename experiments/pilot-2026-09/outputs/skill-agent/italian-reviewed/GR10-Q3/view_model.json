@@ -1,0 +1,525 @@
+{
+  "request_id": "GR10-Q3",
+  "view_type": "class_view",
+  "granularity": "class_or_code_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "Segnalazione",
+      "kind": "class",
+      "role": "persisted municipal report; owns location, notes, state history, category, and user links",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "Segnalazione",
+        "excerpt": "@Entity @Table(name = \"segnalazioni\") public class Segnalazione"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Utente",
+      "kind": "class",
+      "role": "abstract persisted user with embedded credentials and role discriminator",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Utente.java",
+        "symbol": "Utente",
+        "excerpt": "@Entity @Table(name = \"utenti\") @Inheritance(strategy = InheritanceType.SINGLE_TABLE)"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "Cittadino",
+      "kind": "class",
+      "role": "citizen user subtype; report author and notification recipient",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Cittadino.java",
+        "symbol": "Cittadino",
+        "excerpt": "@Entity @DiscriminatorValue(\"CITTADINO\") public class Cittadino extends Utente"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "OperatoreComunale",
+      "kind": "class",
+      "role": "municipal operator subtype assigned to reports, notes, and state updates",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/OperatoreComunale.java",
+        "symbol": "OperatoreComunale",
+        "excerpt": "@Entity @DiscriminatorValue(\"OPERATORE_COMUNALE\") public class OperatoreComunale extends Utente"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "Posizione",
+      "kind": "class",
+      "role": "embeddable location value object persisted inside Segnalazione",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Posizione.java",
+        "symbol": "Posizione",
+        "excerpt": "@Embeddable public class Posizione"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "CategoriaSegnalazione",
+      "kind": "class",
+      "role": "report category enumeration persisted as STRING on Segnalazione",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/CategoriaSegnalazione.java",
+        "symbol": "CategoriaSegnalazione",
+        "excerpt": "public enum CategoriaSegnalazione { illuminazione_guasta, strada_dissestata,"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "StatoSegnalazione",
+      "kind": "class",
+      "role": "behavioral state role; current state name is persisted on Segnalazione",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/StatoSegnalazione.java",
+        "symbol": "StatoSegnalazione",
+        "excerpt": "public interface StatoSegnalazione { void aggiornaStato(Segnalazione segnalazione);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "AggiornamentoStato",
+      "kind": "class",
+      "role": "persisted history row for each report state change",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/AggiornamentoStato.java",
+        "symbol": "AggiornamentoStato",
+        "excerpt": "@Entity @Table(name = \"aggiornamenti_stato\") public class AggiornamentoStato"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "NotaInterna",
+      "kind": "class",
+      "role": "persisted internal note contained by a report",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/NotaInterna.java",
+        "symbol": "NotaInterna",
+        "excerpt": "@Entity @Table(name = \"note_interne\") public class NotaInterna"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "Notifica",
+      "kind": "class",
+      "role": "persisted notification to citizen about a report state",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Notifica.java",
+        "symbol": "Notifica",
+        "excerpt": "@Entity @Table(name = \"Notifiche\") public class Notifica"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E11",
+      "name": "Credenziali",
+      "kind": "class",
+      "role": "embeddable email/password persisted with Utente",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Credenziali.java",
+        "symbol": "Credenziali",
+        "excerpt": "@Embeddable public class Credenziali"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E12",
+      "name": "Inviata",
+      "kind": "class",
+      "role": "initial concrete state reconstructed from persisted stato_corrente",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Inviata.java",
+        "symbol": "Inviata",
+        "excerpt": "public class Inviata implements StatoSegnalazione"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E13",
+      "name": "ServizioPersistenza",
+      "kind": "class",
+      "role": "JPA persistence facade for save/update/find of entity types",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Database/ServizioPersistenza.java",
+        "symbol": "ServizioPersistenza",
+        "excerpt": "public <T> void salva(T oggetto) { entityManager.persist(oggetto);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E14",
+      "name": "ServizioSegnalazioni",
+      "kind": "class",
+      "role": "entity facade that creates and updates reports via ServizioPersistenza",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioSegnalazioni.java",
+        "symbol": "ServizioSegnalazioni",
+        "excerpt": "this.servizioPersistenza = new ServizioPersistenza();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E15",
+      "name": "ControllerAggiornamentoStatoSegnalazione",
+      "kind": "class",
+      "role": "control type depending on persisted report state updates through ServizioSegnalazioni",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerAggiornamentoStatoSegnalazione.java",
+        "symbol": "ControllerAggiornamentoStatoSegnalazione",
+        "excerpt": "return servizioSegnalazioni.aggiornaStatoSegnalazione("
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E3",
+      "to": "E2",
+      "kind": "inherits",
+      "label": "extends",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Cittadino.java",
+        "symbol": "Cittadino",
+        "excerpt": "public class Cittadino extends Utente"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E4",
+      "to": "E2",
+      "kind": "inherits",
+      "label": "extends",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/OperatoreComunale.java",
+        "symbol": "OperatoreComunale",
+        "excerpt": "public class OperatoreComunale extends Utente"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E2",
+      "to": "E11",
+      "kind": "contains",
+      "label": "@Embedded credenziali",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Utente.java",
+        "symbol": "credenziali",
+        "excerpt": "@Embedded private Credenziali credenziali;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E1",
+      "to": "E5",
+      "kind": "contains",
+      "label": "@Embedded posizione",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "posizione",
+        "excerpt": "@Embedded private Posizione posizione;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E1",
+      "to": "E6",
+      "kind": "uses",
+      "label": "categoria",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "categoria",
+        "excerpt": "@Enumerated(EnumType.STRING) private CategoriaSegnalazione categoria;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E1",
+      "to": "E3",
+      "kind": "depends",
+      "label": "id_cittadino",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "cittadinoSegnalante",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"id_cittadino\") private Cittadino cittadinoSegnalante;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E1",
+      "to": "E4",
+      "kind": "depends",
+      "label": "id_operatore",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "operatore",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"id_operatore\") private OperatoreComunale operatore;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E1",
+      "to": "E9",
+      "kind": "contains",
+      "label": "note_interne",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "noteInterne",
+        "excerpt": "@OneToMany(mappedBy = \"segnalazione\", cascade = CascadeType.ALL) private List<NotaInterna> noteInterne"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E1",
+      "to": "E8",
+      "kind": "contains",
+      "label": "aggiornamenti_stato",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "aggiornamentiStato",
+        "excerpt": "@OneToMany(mappedBy = \"segnalazione\", cascade = CascadeType.ALL) private List<AggiornamentoStato> aggiornamentiStato"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R10",
+      "from": "E1",
+      "to": "E7",
+      "kind": "uses",
+      "label": "statoCorrente (@Transient); nomeStatoCorrente persisted",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Segnalazione.java",
+        "symbol": "nomeStatoCorrente",
+        "excerpt": "@Column(name = \"stato_corrente\") private String nomeStatoCorrente; @Transient private StatoSegnalazione statoCorrente;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R11",
+      "from": "E12",
+      "to": "E7",
+      "kind": "implements",
+      "label": "implements",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Inviata.java",
+        "symbol": "Inviata",
+        "excerpt": "public class Inviata implements StatoSegnalazione"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R12",
+      "from": "E8",
+      "to": "E1",
+      "kind": "depends",
+      "label": "id_segnalazione",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/AggiornamentoStato.java",
+        "symbol": "segnalazione",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"id_segnalazione\") private Segnalazione segnalazione;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R13",
+      "from": "E8",
+      "to": "E4",
+      "kind": "depends",
+      "label": "id_operatore",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/AggiornamentoStato.java",
+        "symbol": "operatore",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"id_operatore\") private OperatoreComunale operatore;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R14",
+      "from": "E9",
+      "to": "E1",
+      "kind": "depends",
+      "label": "id_segnalazione",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/NotaInterna.java",
+        "symbol": "segnalazione",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"id_segnalazione\") private Segnalazione segnalazione;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R15",
+      "from": "E9",
+      "to": "E4",
+      "kind": "depends",
+      "label": "id_operatore",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/NotaInterna.java",
+        "symbol": "operatore",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"id_operatore\") private OperatoreComunale operatore;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R16",
+      "from": "E10",
+      "to": "E3",
+      "kind": "depends",
+      "label": "id_cittadino",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Notifica.java",
+        "symbol": "destinatario",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"id_cittadino\") private Cittadino destinatario;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R17",
+      "from": "E10",
+      "to": "E1",
+      "kind": "depends",
+      "label": "id_segnalazione",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Notifica.java",
+        "symbol": "segnalazione",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"id_segnalazione\") private Segnalazione segnalazione;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R18",
+      "from": "E14",
+      "to": "E13",
+      "kind": "uses",
+      "label": "persist reports",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioSegnalazioni.java",
+        "symbol": "servizioPersistenza",
+        "excerpt": "this.servizioPersistenza = new ServizioPersistenza();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R19",
+      "from": "E14",
+      "to": "E1",
+      "kind": "uses",
+      "label": "registraNuovaSegnalazione",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ServizioSegnalazioni.java",
+        "symbol": "registraNuovaSegnalazione",
+        "excerpt": "Segnalazione segnalazione = new Segnalazione("
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R20",
+      "from": "E15",
+      "to": "E14",
+      "kind": "uses",
+      "label": "aggiornaStatoSegnalazione",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Control/ControllerAggiornamentoStatoSegnalazione.java",
+        "symbol": "aggiornaStatoSegnalazione",
+        "excerpt": "return servizioSegnalazioni.aggiornaStatoSegnalazione("
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "StatoSegnalazione implementations beyond Inviata (PresaInCarico, InLavorazione, Risolta) exist but are omitted to stay within max_elements",
+    "persistence.xml maps Utente, Cittadino, OperatoreComunale, Segnalazione, NotaInterna, AggiornamentoStato, Notifica"
+  ]
+}

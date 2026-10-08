@@ -1,0 +1,423 @@
+{
+  "request_id": "GR10-Q3",
+  "view_type": "class_view",
+  "granularity": "class_or_code_level",
+  "groups": [],
+  "elements": [
+    {
+      "id": "E1",
+      "name": "User",
+      "kind": "class",
+      "role": "persisted base user mapped to users table",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/User.java",
+        "symbol": "User",
+        "excerpt": "@Entity @Table(name = \"users\") public abstract class User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E2",
+      "name": "Citizen",
+      "kind": "class",
+      "role": "citizen user subtype that authors reports",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Citizen.java",
+        "symbol": "Citizen",
+        "excerpt": "@Entity @DiscriminatorValue(\"CITIZEN\") public class Citizen extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E3",
+      "name": "MunicipalOperator",
+      "kind": "class",
+      "role": "operator user subtype that updates reports and notes",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/MunicipalOperator.java",
+        "symbol": "MunicipalOperator",
+        "excerpt": "@Entity @DiscriminatorValue(\"MUNICIPAL_OPERATOR\") public class MunicipalOperator extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E4",
+      "name": "Report",
+      "kind": "class",
+      "role": "persisted municipal report aggregate through its lifecycle",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "Report",
+        "excerpt": "@Entity @Table(name = \"reports\") public class Report"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E5",
+      "name": "Location",
+      "kind": "class",
+      "role": "embeddable location fields stored with each report",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Location.java",
+        "symbol": "Location",
+        "excerpt": "@Embeddable public class Location"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E6",
+      "name": "ReportCategory",
+      "kind": "class",
+      "role": "enumerated category persisted on each report",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportCategory.java",
+        "symbol": "ReportCategory",
+        "excerpt": "public enum ReportCategory"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E7",
+      "name": "ReportStatus",
+      "kind": "class",
+      "role": "status lifecycle behaviour reconstructed from persisted current_status",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportStatus.java",
+        "symbol": "ReportStatus",
+        "excerpt": "public interface ReportStatus { void updateStatus(Report report);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E8",
+      "name": "StatusUpdate",
+      "kind": "class",
+      "role": "persisted history of report state changes",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/StatusUpdate.java",
+        "symbol": "StatusUpdate",
+        "excerpt": "@Entity @Table(name = \"status_updates\") public class StatusUpdate"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E9",
+      "name": "InternalNote",
+      "kind": "class",
+      "role": "persisted operator notes attached to a report",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/InternalNote.java",
+        "symbol": "InternalNote",
+        "excerpt": "@Entity @Table(name = \"internal_notes\") public class InternalNote"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E10",
+      "name": "Notification",
+      "kind": "class",
+      "role": "persisted citizen notification for notifiable status changes",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/Notification.java",
+        "symbol": "Notification",
+        "excerpt": "@Entity @Table(name = \"notifications\") public class Notification"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E11",
+      "name": "PersistenceService",
+      "kind": "class",
+      "role": "JPA gateway that saves, updates, and finds persisted entities",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Database/PersistenceService.java",
+        "symbol": "PersistenceService",
+        "excerpt": "public <T> void save(T object) { entityManager.persist(object);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "E12",
+      "name": "ReportService",
+      "kind": "class",
+      "role": "application service that creates, updates, and queries report persistence",
+      "external": false,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportService.java",
+        "symbol": "ReportService",
+        "excerpt": "persistenceService.save(report);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "from": "E2",
+      "to": "E1",
+      "kind": "inherits",
+      "label": "extends",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Citizen.java",
+        "symbol": "Citizen",
+        "excerpt": "public class Citizen extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R2",
+      "from": "E3",
+      "to": "E1",
+      "kind": "inherits",
+      "label": "extends",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/MunicipalOperator.java",
+        "symbol": "MunicipalOperator",
+        "excerpt": "public class MunicipalOperator extends User"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R3",
+      "from": "E4",
+      "to": "E2",
+      "kind": "depends",
+      "label": "citizenReporting",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "citizenReporting",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"citizen_id\") private Citizen citizenReporting"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R4",
+      "from": "E4",
+      "to": "E3",
+      "kind": "depends",
+      "label": "operator",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "operator",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"operator_id\") private MunicipalOperator operator"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R5",
+      "from": "E4",
+      "to": "E5",
+      "kind": "depends",
+      "label": "embedded location",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "location",
+        "excerpt": "@Embedded private Location location;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R6",
+      "from": "E4",
+      "to": "E6",
+      "kind": "depends",
+      "label": "category",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "category",
+        "excerpt": "@Enumerated(EnumType.STRING) @Column(name = \"category\") private ReportCategory category"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R7",
+      "from": "E4",
+      "to": "E7",
+      "kind": "depends",
+      "label": "currentStatus",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "currentStatus",
+        "excerpt": "@Transient private ReportStatus currentStatus;"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R8",
+      "from": "E4",
+      "to": "E8",
+      "kind": "contains",
+      "label": "statusUpdates",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "statusUpdates",
+        "excerpt": "@OneToMany(mappedBy = \"report\") private List<StatusUpdate> statusUpdates"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R9",
+      "from": "E4",
+      "to": "E9",
+      "kind": "contains",
+      "label": "internalNotes",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Report.java",
+        "symbol": "internalNotes",
+        "excerpt": "@OneToMany(mappedBy = \"report\") private List<InternalNote> internalNotes"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R10",
+      "from": "E8",
+      "to": "E3",
+      "kind": "depends",
+      "label": "operator",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/StatusUpdate.java",
+        "symbol": "operator",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"operator_id\") private MunicipalOperator operator"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R11",
+      "from": "E9",
+      "to": "E3",
+      "kind": "depends",
+      "label": "operator",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/InternalNote.java",
+        "symbol": "operator",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"operator_id\") private MunicipalOperator operator"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R12",
+      "from": "E10",
+      "to": "E4",
+      "kind": "depends",
+      "label": "report",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Notification.java",
+        "symbol": "report",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"report_id\") private Report report"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R13",
+      "from": "E10",
+      "to": "E2",
+      "kind": "depends",
+      "label": "recipient",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/Notification.java",
+        "symbol": "destinatario",
+        "excerpt": "@ManyToOne @JoinColumn(name = \"citizen_id\") private Citizen destinatario"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R14",
+      "from": "E12",
+      "to": "E11",
+      "kind": "uses",
+      "label": "persist/query",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportService.java",
+        "symbol": "persistenceService",
+        "excerpt": "this.persistenceService = new PersistenceService();"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R15",
+      "from": "E12",
+      "to": "E4",
+      "kind": "depends",
+      "label": "save/update Report",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportService.java",
+        "symbol": "registerNewReport",
+        "excerpt": "persistenceService.save(report);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    },
+    {
+      "id": "R16",
+      "from": "E12",
+      "to": "E10",
+      "kind": "depends",
+      "label": "save Notification",
+      "order": null,
+      "evidence": {
+        "file": "src/main/java/Entity/ReportService.java",
+        "symbol": "generateStatusChangeNotification",
+        "excerpt": "persistenceService.save(notification);"
+      },
+      "support": "observed",
+      "agreement": 1.0
+    }
+  ],
+  "unanswered": [],
+  "notes": [
+    "ReportStatus is transient in memory; current_status string is the persisted state column on Report",
+    "persistence.xml maps User, Citizen, MunicipalOperator, Report, InternalNote, StatusUpdate, Notification"
+  ]
+}
