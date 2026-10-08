@@ -59,9 +59,10 @@ class Viewpoint(BaseModel):
 class Role(BaseModel):
     id: str
     label: str
-    vb_row: str
+    vb_row: str | None
     aliases: list[str]
-    priors: dict[str, float]
+    priors: dict[str, float]  # derived from V&B Table 9.1, or the extension priors
+    prior_source: str
 
 
 class Catalog(BaseModel):
@@ -72,6 +73,7 @@ class Catalog(BaseModel):
     viewpoints: dict[str, Viewpoint]  # in catalog order
     roles: dict[str, Role]
     cnc_style_priority: list[str]
+    detail_rule: dict[str, int]
 
     def viewpoint(self, viewpoint_id: str) -> Viewpoint:
         try:
@@ -102,14 +104,36 @@ class Catalog(BaseModel):
         return best[1] if best else None
 
 
-def _read(name: str) -> dict:
-    text = resources.files("task2view.knowledge.data").joinpath("vb", name).read_text(encoding="utf-8")
-    return yaml.safe_load(text) or {}
+def _read(name: str, folder: str | None = "vb") -> dict:
+    root = resources.files("task2view.knowledge.data")
+    path = root.joinpath(folder, name) if folder else root.joinpath(name)
+    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+
+def _role_priors(row: dict, roles_doc: dict, viewpoints: dict[str, Viewpoint], table: dict) -> tuple[dict[str, float], str]:
+    """Prior per need = highest Table 9.1 detail weight over the columns whose viewpoint frames it."""
+    if row.get("vb_row") is None:
+        return dict(row.get("extension_priors") or {}), f"extension: {row.get('extension_reason', '')}"
+    cells = table["rows"].get(row["vb_row"])
+    if cells is None:
+        raise PipelineError(f"role row {row['vb_row']!r} is not in V&B Table 9.1")
+    weights = roles_doc["detail_weights"]
+    priors: dict[str, float] = {}
+    for column, level in cells.items():
+        if column == "vb_label":
+            continue
+        vp_id = roles_doc["table_9_1_columns"].get(column)
+        if not vp_id:
+            continue
+        for need in viewpoints[vp_id].frames:
+            priors[need] = max(priors.get(need, 0.0), float(weights[level]))
+    return priors, f"V&B Table 9.1 row {row['vb_row']!r}"
 
 
 @lru_cache(maxsize=1)
 def load_catalog() -> Catalog:
     needs_doc, vp_doc, roles_doc = _read("needs.yaml"), _read("viewpoints.yaml"), _read("roles.yaml")
+    table = _read("vb_table_9_1.yaml", folder=None)
     needs = {row["id"]: Need(**row) for row in needs_doc["needs"]}
     families = vp_doc.get("families") or {}
     viewpoints: dict[str, Viewpoint] = {}
@@ -120,7 +144,14 @@ def load_catalog() -> Catalog:
         if vp.id in viewpoints:
             raise PipelineError(f"duplicate viewpoint id {vp.id!r}")
         viewpoints[vp.id] = vp
-    roles = {rid: Role(id=rid, **row) for rid, row in roles_doc["roles"].items()}
+    for column, vp_id in roles_doc["table_9_1_columns"].items():
+        if vp_id and vp_id not in viewpoints:
+            raise PipelineError(f"Table 9.1 column {column!r} maps to unknown viewpoint {vp_id!r}")
+    roles = {}
+    for rid, row in roles_doc["roles"].items():
+        priors, source = _role_priors(row, roles_doc, viewpoints, table)
+        roles[rid] = Role(id=rid, label=row["label"], vb_row=row.get("vb_row"), aliases=row["aliases"],
+                          priors=priors, prior_source=source)
     catalog = Catalog(
         needs=needs,
         quality_attributes=list(needs_doc.get("quality_attributes") or []),
@@ -129,6 +160,7 @@ def load_catalog() -> Catalog:
         viewpoints=viewpoints,
         roles=roles,
         cnc_style_priority=list(vp_doc.get("cnc_style_priority") or []),
+        detail_rule=dict(needs_doc["detail_levels"]),
     )
     _validate(catalog)
     return catalog

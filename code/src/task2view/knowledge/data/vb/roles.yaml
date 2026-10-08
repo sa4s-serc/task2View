@@ -1,56 +1,87 @@
-# Stakeholder roles as PRIORS over information needs (V&B Table 9.1, read as
-# "which needs this role usually has"). A prior never overrides a need stated in
-# the goal: it fills in when the goal states none, and it breaks ties.
-# Weights are 0..1.
+# Stakeholder roles. A role is a PRIOR over information needs: it fills in when
+# the goal states no need and breaks ties between equally good view sets. It never
+# overrides a need the goal states.
+#
+# Priors are DERIVED, not hand-set: for a role with a `vb_row`, the prior of a need
+# is the highest V&B Table 9.1 detail level (d / s / o / x, see ../vb_table_9_1.yaml)
+# over the Table 9.1 columns whose viewpoint frames that need. Table 9.1 has no
+# behaviour columns, so behavioural needs get no V&B prior.
+#
+# Roles V&B does not list carry `extension_priors` instead, with the reason.
+
+detail_weights: {d: 1.0, s: 0.66, o: 0.33, x: 0.33}
+
+# Table 9.1 column -> catalog viewpoint (columns with no viewpoint give no prior).
+table_9_1_columns:
+  decomposition: decomposition
+  uses: uses
+  generalization: generalization
+  layered: layered
+  cnc: cnc-generic
+  deployment: deployment
+  implementation: implementation
+  work-assignment: work-assignment
+  interface-spec: interfaces
+  context: context
+  variability: variation-points
+  rationale: decisions
+  mapping-between-views: null
+  analysis-results: null
 
 roles:
   developer:
     label: Software developer
     vb_row: member-of-development-team
     aliases: [software developer, developer, programmer, software engineer, implementer]
-    priors: {collaboration: 0.9, decomposition: 0.8, interaction-order: 0.7, change-impact: 0.7, code-location: 0.6, interface-contract: 0.6}
   tester:
     label: Tester / integrator
     vb_row: tester-and-integrator
     aliases: [integration tester, tester, test engineer, qa engineer, integrator]
-    priors: {collaboration: 0.9, interaction-order: 0.9, interface-contract: 0.7, boundary: 0.5}
   maintainer:
     label: Maintainer
     vb_row: maintainer
     aliases: [maintainer, maintenance engineer]
-    priors: {change-impact: 0.9, dependencies: 0.8, decomposition: 0.7, code-location: 0.7}
   architect:
     label: Software architect
     vb_row: current-and-future-architect
     aliases: [software architect, architect, solution architect, enterprise architect]
-    priors: {decomposition: 0.9, layering: 0.8, dependencies: 0.8, collaboration: 0.7, rationale: 0.6, deployment: 0.5}
   devops:
-    label: DevOps / infrastructure engineer
+    label: Infrastructure support (DevOps, operations)
     vb_row: infrastructure-support-personnel
     aliases: [devops engineer, devops, dev-ops, infrastructure engineer, system administrator, sysadmin, site reliability engineer, sre, operations engineer]
-    priors: {deployment: 0.9, build-packaging: 0.8, boundary: 0.5, concurrency: 0.4}
-  data-engineer:
-    label: Database / data engineer
+  analyst:
+    label: Analyst (quality attributes, e.g. security, performance)
     vb_row: analyst
-    aliases: [database engineer, dba, database administrator, data engineer, data architect]
-    priors: {data-structure: 0.9, data-storage: 0.8, change-impact: 0.5, deployment: 0.4}
-  security-analyst:
-    label: Security analyst
-    vb_row: analyst
-    aliases: [security analyst, security engineer, penetration tester]
-    priors: {boundary: 0.8, crosscutting: 0.7, deployment: 0.6, interface-contract: 0.6}
-  business-analyst:
-    label: Business analyst / customer
-    vb_row: customer
-    aliases: [business analyst, customer, product owner, domain expert, client]
-    priors: {actors-goals: 0.9, process-flow: 0.6, boundary: 0.5, requirement-traceability: 0.4}
+    aliases: [security analyst, security engineer, performance analyst, performance engineer, quality analyst]
   project-manager:
     label: Project manager
     vb_row: project-manager
     aliases: [project manager, manager, team lead]
-    priors: {decomposition: 0.7, ownership: 0.7, deployment: 0.4}
+  customer:
+    label: Customer
+    vb_row: customer
+    aliases: [customer, client, acquirer]
   end-user:
     label: End user
     vb_row: end-user
     aliases: [end user, user]
-    priors: {actors-goals: 0.8, process-flow: 0.5}
+  designer-of-other-systems:
+    label: Designer of other systems
+    vb_row: designer-of-other-systems
+    aliases: [external developer, api consumer, integrating system designer]
+  product-line-application-builder:
+    label: Product line application builder
+    vb_row: product-line-application-builder
+    aliases: [product line engineer, application builder]
+  data-engineer:
+    label: Database / data engineer
+    vb_row: null
+    aliases: [database engineer, dba, database administrator, data engineer, data architect]
+    extension_priors: {data-structure: 1.0, data-storage: 1.0, deployment: 0.33}
+    extension_reason: "Not a V&B Table 9.1 row. Priors are the needs framed by the data-model (V&B 2.6) and data-stores (5.5) viewpoints, plus deployment at overview level."
+  business-analyst:
+    label: Business analyst
+    vb_row: null
+    aliases: [business analyst, product owner, domain expert, requirements engineer]
+    extension_priors: {actors-goals: 1.0, process-flow: 0.66, boundary: 0.66}
+    extension_reason: "Not a V&B Table 9.1 row. Priors are the needs framed by the use-case and activity (V&B 8.3.1) and context (6.3) viewpoints."

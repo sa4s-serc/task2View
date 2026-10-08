@@ -4,7 +4,9 @@
 #          the goal text by validate_needs, so evidence must be verbatim).
 # expect:  the views the expert's pilot review implies
 #          (experiments/pilot-2026-09/review/comparison_review.txt), the overlays,
-#          and the detail level computed from the goal.
+#          and the detail level the general rule gives for that Phase 1 output.
+# This is a regression set for the general design, not its specification:
+# nothing in the catalog, prompts or rules may be tuned to these ten goals.
 # facts:   repository signals, checked by hand on data/ (2026-10-08); the
 #          Phase 0 card computes these in step 2.
 
@@ -136,7 +138,7 @@ cases:
         - {text: "domain entities", needs: [layering]}
         - {text: "data persistence", needs: [layering]}
     expect:
-      detail_level: feature
+      detail_level: detailed
       views: [decomposition, cnc-generic]
       overlays: {decomposition: [layered], cnc-generic: [layered]}
 
@@ -187,5 +189,5 @@ cases:
         - {need: actors-goals, evidence: "the main types of users that interact with the system, the main goals they can achieve through it"}
       subjects: []
     expect:
-      detail_level: feature
+      detail_level: overview
       views: [use-case]

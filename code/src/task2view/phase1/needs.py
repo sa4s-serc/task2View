@@ -4,8 +4,8 @@ The agent reads only the goal. It types what the stakeholder must see with the
 closed needs vocabulary and copies the enumerated subjects verbatim. Everything
 it returns is checked against the goal text: a need whose evidence is not in the
 goal, or a subject the goal does not contain, is dropped and recorded. The
-detail level is computed from the goal text, not chosen by the model, so
-L1/L2/L3 goals map to the same granularity on every run.
+detail level is computed from the verified needs and subjects, not chosen by
+the model and not from the length of the text.
 """
 
 from __future__ import annotations
@@ -43,32 +43,18 @@ USER DESCRIPTION
 {goal}
 
 DECISION
-- role_label: the words they used for themselves. role: one role id, or null.
+- role_label: the words they used for themselves. role: one role id, or null when no id fits.
 - needs: every information need the description asks for, each with "evidence": the exact words from the description that ask for it.
-  Reason: every need becomes part of a diagram, so a need the person did not ask for adds a diagram nobody wanted. Copy the words exactly.
-  List a need only when the person asks to SEE that information. A word that merely names a thing is not a need:
-  "the persistence layer" names what they will change, it does not ask how the system is layered; "the lifecycle of a report" in a question about stored data asks what is stored, not for the report's states;
-  "runtime dependencies" or "technologies" in a deployment question are deployment facts, not dependencies between parts of the code.
-
-  Pairs that are easy to confuse:
-  - collaboration vs decomposition. "the components involved in <a feature>, their responsibilities" is collaboration: the parts that work together for that feature, each shown with what it does.
-    decomposition is only for how the WHOLE system is split into subsystems or modules ("overall organization", "how the system is decomposed").
-  - collaboration vs interaction-order. collaboration is which parts work together and through which interfaces. interaction-order is the order of the calls in a scenario.
-    "how they interact" in a short request that asks nothing else is collaboration only. "how they interact with each other" asked together with responsibilities, or "how they interact when <something happens>", or "what happens when <invalid or failing case>", is interaction-order as well.
-  - collaboration vs actors-goals. People or user roles that use the system ("users that interact with the system", "what each user can do", "how the functionalities are related") are actors-goals, not collaboration.
-  - dependencies vs change-impact. "dependencies among them" is dependencies. "which parts may be affected by the change" or "which parts depend on <what I will change>" is change-impact.
-  - "integration points" or "interfaces between them" is interface-contract.
-
-  Examples from other systems:
-  - "I am a developer. I need to change the checkout feature and understand the components involved, their responsibilities, and how they interact with each other."
-    needs: collaboration ("the components involved, their responsibilities"), interaction-order ("how they interact with each other").
-  - "I am an operations engineer. I need to move the clinic booking system to a new server and know which artifacts are deployed where and which database drivers it needs."
-    needs: deployment ("which artifacts are deployed where"), build-packaging ("artifacts"). The drivers are deployment facts, not dependencies.
-  - "I am a product owner. I want to know which kinds of users use the ticketing portal and what each of them can do."
-    needs: actors-goals ("which kinds of users use the ticketing portal and what each of them can do").
-- subjects: the specific things the description enumerates (for example "refund handling", "payment provider"), copied exactly, each with the need ids it belongs to.
+  Reason: every need becomes part of a diagram, so a need nobody asked for adds a diagram nobody wanted. Copy the words exactly.
+  Use the meanings in INFORMATION NEEDS, not word matching:
+  - A need is information the person asks to SEE. Words that only name the thing they will work on, or describe their situation, are not a need.
+  - Structural needs are about which parts exist and how they relate. Behavioural needs (interaction-order, process-flow, lifecycle, actors-goals) are about what happens:
+    the order of steps, the flow of a process, the states something goes through, or who uses the system for what.
+    List a behavioural need only when the description asks about that dynamic aspect.
+  - People who use the system are actors (actors-goals); software parts that work together are collaboration.
+- subjects: the items the description enumerates as part of what they want to understand (for example a list of sub-functions, data items, or cases), copied exactly, each with the need ids it belongs to.
   Reason: each subject must appear in a view, so the details of a long description are not lost.
-  Do not list the system, the feature being changed, or the need wording itself as a subject. A short request usually has no subjects.
+  The system, the feature being changed, and the stakeholder are not subjects. A description that enumerates nothing has no subjects.
 - quality_attributes: quality ids the description stresses, or an empty list. They do not choose diagrams.
 
 OUTPUT
@@ -111,19 +97,17 @@ def _norm(text: str) -> str:
     return " ".join(re.sub(r"[^\w\s/-]", " ", text.casefold()).split())
 
 
-_DETAIL_CUES = ("in particular", "specifically", "in detail")
+def detail_level(need_count: int, subject_count: int, rule: dict) -> str:
+    """overview / feature / detailed from the verified profile, not from wording or length.
 
-
-def detail_level(goal: str) -> str:
-    """overview / feature / detailed from the goal text alone (L1 / L2 / L3).
-
-    Computed from the text, not from the model's subject list, so the same goal
-    always gets the same granularity.
+    detailed: the request enumerates specific items (subjects) to understand.
+    feature:  it asks for several kinds of information about the parts.
+    overview: it asks for one kind of information and enumerates nothing.
+    Thresholds come from the catalog (needs.yaml `detail_levels`).
     """
-    words = len(goal.split())
-    if words >= 110 or any(cue in goal.casefold() for cue in _DETAIL_CUES):
+    if subject_count >= rule["detailed_min_subjects"]:
         return "detailed"
-    if words >= 45:
+    if need_count >= rule["feature_min_needs"] or subject_count >= 1:
         return "feature"
     return "overview"
 
@@ -188,6 +172,6 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
         needs=needs,
         subjects=subjects,
         quality_attributes=qualities,
-        detail_level=detail_level(goal),
+        detail_level=detail_level(len(needs), len(subjects), catalog.detail_rule),
         dropped=dropped,
     )

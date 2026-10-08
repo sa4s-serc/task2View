@@ -109,8 +109,26 @@ def test_missing_evidence_is_selected_and_reported_as_gap():
 
 
 def test_role_prior_fills_in_when_goal_states_no_need():
+    role = CATALOG.roles["devops"]
+    top = max(role.priors.values())
     plan = select_views(SelectionInput(needs=[], role="devops"), CATALOG, _facts("gr10"))
-    assert plan.needs_from_role and [v.viewpoint_id for v in plan.views] == ["deployment"]
+    assert plan.needs_from_role
+    assert set(plan.needs) == {n for n, w in role.priors.items() if w == top}
+    assert "Table 9.1" in plan.notes[0]
+
+
+def test_role_priors_are_derived_from_vb_table_9_1():
+    tester = CATALOG.roles["tester"]
+    assert tester.vb_row == "tester-and-integrator" and "Table 9.1" in tester.prior_source
+    # Table 9.1: tester-and-integrator has interface-spec "d" and C&C "s".
+    assert tester.priors["interface-contract"] == 1.0
+    assert tester.priors["collaboration"] == 0.66
+    # Table 9.1 has no behaviour column, so no V&B role has a behavioural prior.
+    behavioural = {n for n, need in CATALOG.needs.items() if need.category == "behavior"}
+    for role in CATALOG.roles.values():
+        if role.vb_row:
+            assert not behavioural & set(role.priors), role.id
+    assert CATALOG.roles["data-engineer"].prior_source.startswith("extension")
 
 
 def test_view_cap_reports_uncovered_needs():
@@ -126,11 +144,12 @@ def test_layering_alone_on_unlayered_repo_is_not_an_overlay():
 
 # ---------------------------------------------------------------- Phase 1 validation
 
-def test_detail_level_rule():
-    assert detail_level("short goal") == "overview"
-    assert detail_level(" ".join(["word"] * 50)) == "feature"
-    assert detail_level(" ".join(["word"] * 120)) == "detailed"
-    assert detail_level("In particular, x") == "detailed"
+def test_detail_level_rule_uses_profile_not_wording():
+    rule = CATALOG.detail_rule
+    assert detail_level(1, 0, rule) == "overview"
+    assert detail_level(2, 0, rule) == "feature"
+    assert detail_level(1, 1, rule) == "feature"
+    assert detail_level(1, 2, rule) == "detailed"
 
 
 def test_phase1_drops_unsupported_needs_and_subjects():

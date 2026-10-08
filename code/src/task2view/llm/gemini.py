@@ -18,6 +18,9 @@ from task2view.llm.registry import register_provider
 load_dotenv()
 
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+# Falling back to other models hides which model produced a result, so it is
+# off unless explicitly enabled (experiments must record the model that answered).
+ALLOW_FALLBACK = os.environ.get("GEMINI_ALLOW_FALLBACK", "").lower() in {"1", "true", "yes"}
 FALLBACK_MODELS = [
     DEFAULT_MODEL,
     "gemini-2.5-flash-lite",
@@ -35,7 +38,7 @@ class GeminiClient(LLMClient):
     def complete_text(self, prompt: str, *, system: str | None = None, json_mode: bool = False) -> str:
         parts = [p for p in (system, JSON_INSTRUCTION if json_mode else None) if p]
         text = "\n\n".join([*parts, prompt]) if parts else prompt
-        return generate_text(text, model=self.model, json_mime=json_mode)
+        return generate_text(text, model=self.model, json_mime=json_mode, fallback=ALLOW_FALLBACK)
 
 
 def api_key() -> str:
@@ -54,11 +57,12 @@ def generate_text(
     model: str | None = None,
     timeout: int = 180,
     json_mime: bool = False,
+    fallback: bool = True,
 ) -> str:
     key = api_key()
     tried: list[str] = []
     models: list[str] = [model] if model else []
-    for candidate in FALLBACK_MODELS:
+    for candidate in FALLBACK_MODELS if (fallback or not models) else []:
         if candidate and candidate not in models:
             models.append(candidate)
     last_error = "no model attempted"

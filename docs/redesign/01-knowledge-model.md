@@ -112,7 +112,7 @@ Every catalog entry frames one or more needs. A goal may raise several.
 | `rationale` | decisions |
 | `requirement-traceability` | requirements-mapping |
 
-**Implemented (step 1):** 22 needs. Dependencies and change-impact are separate ids, both framed by `uses`. Each need has a category (structure / behavior / allocation / beyond), and behaviour viewpoints never cover structural needs. This encodes the expert's "second view" finding.
+**Implemented (step 1):** 23 needs. Dependencies and change-impact are separate ids, both framed by `uses`; variability (V&B 6.4) is separate from inheritance-extension (2.3). Each need has a category (structure / behavior / allocation / beyond), and behaviour viewpoints never cover structural needs. This encodes the expert's "second view" finding.
 
 **C&C style resolution.** `collaboration` is framed by `cnc-generic`. If the repository card shows a style (for example client-server from a REST controller plus a GUI client, or publish-subscribe from listeners), the most specific applicable style replaces `cnc-generic`. The style is decided from repository evidence, not from goal wording.
 
@@ -146,10 +146,12 @@ Every catalog entry frames one or more needs. A goal may raise several.
 ### 5.2 Phase 1 profile additions
 - `needs: [{need, evidence_span}]`: closed vocabulary from §4. Each need cites the words of the goal that raise it.
 - `subjects: [..]`: the enumerated items of the goal, e.g. "checking seat availability", "notification service". One per item.
-- `detail_level: overview | feature | detailed`.
+- `detail_level: overview | feature | detailed`. *Implemented:* computed from the verified profile, not from wording or length: `detailed` when the request enumerates ≥2 subjects, `feature` when it asks for ≥2 needs or enumerates one subject, else `overview`. The thresholds are in `needs.yaml`.
 - `quality_attributes: [..]`: ISO 25010, for emphasis only.
 
 ### 5.3 Stakeholder roles as priors
+*Implemented:* priors are derived, not hand-set. A need's prior is the highest V&B Table 9.1 level (d = 1.0, s = 0.66, o/x = 0.33) over the Table 9.1 columns whose viewpoint frames it. Table 9.1 has no behaviour columns, so behavioural needs get no V&B prior. Roles outside Table 9.1 (data engineer, business analyst) carry explicit extension priors with their reason. When a goal states no need, all needs at the role's top prior are used and covering picks the views.
+
 Roles carry V&B Table 9.1 weights per viewpoint family (`d`, `s`, `o`). A role prior is used only when the goal states no need, and to break ties. Alias fix: "database engineer" becomes a `data-engineer` role whose prior favours `data-model` and `data-stores`.
 
 ## 6. Pipeline order (ADR-005 kept)
@@ -185,7 +187,7 @@ Notes:
 - The second view for GR10-Q3 is V&B's **uses** style. "Which parts depend on X" is exactly what the uses relation answers, and it is drawn at component grain. The expert criticised extra *layers* in the plain agent's diagram, not a separate dependency view.
 - Change-impact on IS-seat-L2/L3 brings in `uses` as a third view. If three views is too many, the cap or the role prior can drop it, and its content moves to the traceability appendix.
 
-These ten rows are the golden tests in `code/tests/fixtures/pilot_goals.yaml` / `test_selection.py`, which run without an LLM by fixing the Phase 1 output. The table reflects the implemented selection.
+These ten rows are a **regression set**, not the specification. Nothing in the catalog, prompts or rules is tuned to them. They are the golden tests in `code/tests/fixtures/pilot_goals.yaml` / `test_selection.py`, which run without an LLM by fixing the Phase 1 output. The table reflects the implemented selection.
 
 ## 8. Settled points (2026-10-08)
 

@@ -9,91 +9,105 @@ needs:
   - id: actors-goals
     category: behavior
     description: who uses the system and what each user type can achieve with it
-    cues: [user roles, types of users, what users can do, goals of users, functionalities available to each]
+    cues: [user roles, kinds of users, what each user can do, user goals, use cases]
   - id: boundary
     category: structure
     description: the system edge, external systems and services, datastores at the boundary
-    cues: [external services, third-party, interacts with, outside the system]
+    cues: [external systems, third-party services, system boundary, what is outside the system]
   - id: decomposition
     category: structure
     description: the parts of the system, their responsibilities, and how they are contained in subsystems
-    cues: [main components, subsystems, modules, responsibilities, overall organization, decomposed]
+    cues: [overall organization, subsystems, modules, how the system is split, top-level parts]
   - id: layering
     category: structure
     description: how the parts are separated into layers and which layer may use which
-    cues: [layers, presentation, application logic, persistence layer, separated]
+    cues: [layers, tiers, separation of presentation and logic and data, which layer may use which]
   - id: dependencies
     category: structure
     description: which parts depend on which other parts
-    cues: [dependencies among, depends on, relies on]
+    cues: [dependencies between parts, depends on, relies on, coupling]
   - id: change-impact
     category: structure
     description: which parts are affected when a given part changes
-    cues: [affected by the modification, impact of the change, which parts need to be modified]
+    cues: [impact of a change, affected parts, ripple effects, what else must change]
   - id: inheritance-extension
     category: structure
-    description: type hierarchies, specialisations and extension points
-    cues: [extends, specialisation, subtypes, extension points, plug-ins]
+    description: type hierarchies, specialisations, and interfaces with their implementations
+    cues: [type hierarchy, specialisation, subtypes, interfaces and their implementations]
+  - id: variability
+    category: structure
+    description: where and how the system can vary (configuration options, variation points, feature flags, plug-ins)
+    cues: [configuration options, variants, feature flags, variation points, plug-in mechanism]
   - id: crosscutting
     category: structure
     description: concerns that cut across many parts (logging, security checks, transactions)
-    cues: [logging, cross-cutting, interceptors, transactions everywhere]
+    cues: [cross-cutting concerns, logging, security checks, transactions, interceptors]
   - id: collaboration
     category: structure
     description: which parts work together for a feature and through which interfaces or connectors
-    cues: [components involved, how they interact, integration points, collaborate, interactions among]
+    cues: [parts involved in a feature, how parts work together, interfaces between parts, connectors]
   - id: interaction-order
     category: behavior
     description: the order of calls in a scenario, including alternative and failure paths
-    cues: [in which order, sequence, flow of the request, when invalid data, failure paths, step by step]
+    cues: [order of calls, sequence of interactions, request flow, what happens when, alternative and error paths]
   - id: process-flow
     category: behavior
     description: the steps and decisions of a business or technical process
-    cues: [workflow, process steps, procedure, activities]
+    cues: [workflow, process steps, procedure, activities and decisions]
   - id: lifecycle
     category: behavior
     description: the states an element goes through and the transitions between them
-    cues: [lifecycle, status changes, states, transitions]
+    cues: [states, status transitions, lifecycle of an object]
   - id: data-structure
     category: structure
     description: the data entities, their attributes, keys, and relationships
-    cues: [data entities, relationships among them, attributes, fields, schema]
+    cues: [data entities, attributes, relationships between entities, data schema]
   - id: data-storage
     category: allocation
     description: where and how data is persisted (databases, schemas, stores)
-    cues: [persisted, stored, database, persistence]
+    cues: [where data is stored, databases, persistence technology, storage schema]
   - id: concurrency
     category: structure
     description: processes, threads, scheduling and their synchronisation
-    cues: [concurrent, threads, scheduled, asynchronous, background jobs]
+    cues: [concurrency, threads, background jobs, scheduling, asynchronous processing]
   - id: deployment
     category: allocation
     description: runtime nodes and environments, what runs where, and how they communicate
-    cues: [deploy, execution environment, runtime environments, where it runs, servers, communication with the database]
+    cues: [deployment, runtime environment, servers and nodes, what runs where, network communication]
   - id: build-packaging
     category: allocation
     description: the deployable artifacts and how they are built and packaged
-    cues: [software artifacts, build, package, jar, container image]
+    cues: [build artifacts, packaging, binaries, container images, installation]
   - id: code-location
     category: allocation
     description: where in the source tree each architectural element is implemented
-    cues: [where is it implemented, which files, which classes implement]
+    cues: [where it is implemented, source files, which code implements it]
   - id: ownership
     category: allocation
     description: which team or person is responsible for which part
-    cues: [team, owner, responsible developer, work assignment]
+    cues: [who owns which part, teams, responsibilities of people]
   - id: interface-contract
     category: structure
     description: the operations an element provides or requires, with their parameters, semantics and errors
-    cues: [API, endpoints, interface, operations provided, contract]
+    cues: [APIs, endpoints, interface operations, contracts, integration points]
   - id: rationale
     category: beyond
     description: the architectural decisions and the reasons behind them
-    cues: [why, decision, rationale, trade-off]
+    cues: [design decisions, why it was built this way, trade-offs, alternatives]
   - id: requirement-traceability
     category: beyond
     description: which requirements are realised by which architectural elements
-    cues: [requirements, use cases realised by, traceability]
+    cues: [which requirements are realised where, traceability to requirements]
+
+# Detail level of a request, computed by Phase 1 from the verified profile
+# (phase1/needs.py detail_level), never from the length of the text:
+#   detailed  the request enumerates specific items (subjects) to understand
+#   feature   it asks for several kinds of information about the parts
+#   overview  it asks for one kind of information and enumerates nothing
+# Each level selects a viewpoint's granularity row (viewpoints.yaml).
+detail_levels:
+  detailed_min_subjects: 2
+  feature_min_needs: 2
 
 # ISO/IEC 25010 product quality characteristics (emphasis only, never selection).
 quality_attributes:

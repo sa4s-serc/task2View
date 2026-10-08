@@ -56,11 +56,12 @@ Prompt tuning cannot fix contracts that cannot carry the information.
 
 - Every drawn mark traces to an AEM id, so Phase 8's checks are lookups. A pass now means the view is faithful, well-formed and covers its questions, not only that names resolve.
 - **More model calls per run** (tool loops, several views). This is acceptable with a stronger model, and every call is attributable to a phase and a view.
-- **The pilot's Task2View batch is not comparable** with runs under this ADR. The next evaluation re-runs all conditions on the same code and goals.
+- **The pilot's Task2View batch is not comparable** with runs under this ADR.
+- **Generality is a design requirement.** Rules, priors and thresholds come from general sources (V&B, ISO 42010, the catalog definitions) or from config with stated provenance, never from fitting the pilot. The pilot goals are a regression set; evaluation uses goal sets and repositories beyond it.
 - **Implementation order:**
   1. knowledge model and selection (golden tests on the 10 pilot goals)
   2. Phase 0 card
   3. AEM with Phases 4–5
   4. View format v2, projection and renderers
   5. Phases 6 and 8
-  6. re-run the pilot
+  6. evaluate on goal sets across repositories, roles and models (the pilot is one regression set)

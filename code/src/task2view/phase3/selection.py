@@ -88,9 +88,13 @@ def select_views(
     needs_from_role = False
     priors = catalog.roles[request.role].priors if request.role in catalog.roles else {}
     if not needs and priors:
-        needs = [max(priors, key=lambda n: (priors[n], -list(catalog.needs).index(n)))]
+        top = max(priors.values())
+        needs = [n for n in catalog.needs if priors.get(n) == top]
         needs_from_role = True
-        notes.append(f"goal states no need; used the strongest prior of role {request.role!r}: {needs[0]}")
+        notes.append(
+            f"goal states no need; used the needs role {request.role!r} has at the highest prior "
+            f"({catalog.roles[request.role].prior_source}): {', '.join(needs)}"
+        )
 
     layered = catalog.viewpoints.get("layered")
     layered_overlay_ok = layered is not None and applicable(layered, facts)
