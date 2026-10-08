@@ -209,3 +209,50 @@ def test_select_views_cli_with_fake_provider(capsys):
     assert code == 0
     assert [v["viewpoint_id"] for v in out["plan"]["views"]] == ["data-model", "uses"]
     assert main(["select-views", "--goal", "x", "--signals", "not-a-signal"]) == 2
+
+
+# ---------------------------------------------------------------- primary / secondary needs
+
+def test_secondary_need_never_adds_a_view():
+    request = SelectionInput(needs=["data-structure"], secondary_needs=["lifecycle", "change-impact"])
+    plan = select_views(request, CATALOG, _facts("gr10"))
+    assert [v.viewpoint_id for v in plan.views] == ["data-model"]
+    assert plan.secondary_not_shown == ["lifecycle", "change-impact"]
+    assert plan.uncovered_needs == []
+
+
+def test_secondary_need_is_shown_when_a_chosen_view_covers_it():
+    request = SelectionInput(needs=["collaboration"], secondary_needs=["dependencies"])
+    plan = select_views(request, CATALOG, _facts("progetto-is"))
+    assert [v.viewpoint_id for v in plan.views] == ["client-server"]
+    assert "dependencies" in plan.views[0].needs and plan.secondary_not_shown == []
+
+
+def test_secondary_coverage_breaks_ties_between_equally_small_sets():
+    # decomposition and layered both frame decomposition; only layered also covers layering.
+    request = SelectionInput(needs=["decomposition"], secondary_needs=["layering"])
+    plan = select_views(request, CATALOG, _facts("gr10"))
+    assert len(plan.views) == 1 and plan.secondary_not_shown == []
+
+
+def test_all_secondary_needs_are_promoted():
+    plan = select_views(SelectionInput(needs=[], secondary_needs=["deployment"]), CATALOG, _facts("gr10"))
+    assert [v.viewpoint_id for v in plan.views] == ["deployment"]
+    assert "treated as primary" in plan.notes[0]
+
+
+def test_phase1_salience_splits_selection_input():
+    goal = CASES["GR10-Q3"]["goal"]
+    raw = {
+        "role_label": "database engineer",
+        "needs": [
+            {"need": "data-structure", "evidence": "the main data entities stored by the system", "salience": "primary"},
+            {"need": "lifecycle", "evidence": "throughout the lifecycle of a report", "salience": "secondary"},
+            {"need": "change-impact", "evidence": "which parts of the application depend on this persisted information"},
+        ],
+    }
+    profile = validate_needs(goal, raw, CATALOG)
+    request = profile.selection_input()
+    assert request.needs == ["data-structure", "change-impact"]
+    assert request.secondary_needs == ["lifecycle"]
+    assert profile.detail_level == "feature"

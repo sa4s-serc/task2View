@@ -4,10 +4,12 @@ Design: docs/redesign/01-knowledge-model.md §6.
 
 1. Applicable viewpoints: generic ones, plus style viewpoints whose
    ``applies_when`` signal is present in the repository facts.
-2. Choose the smallest set (cap ``max_views``) that covers the most needs.
-   ``layering`` may be covered by a layered overlay on a host view instead of a
-   view of its own. Ties: more needs framed as primary, then role prior, then
-   catalog order.
+2. Choose the smallest set (cap ``max_views``) that covers the most PRIMARY
+   needs. Secondary needs never add a view: among equally small sets, the one
+   that also covers more secondary needs wins, and the rest are reported as not
+   shown. ``layering`` may be covered by a layered overlay on a host view instead
+   of a view of its own. Further ties: more needs framed (not just covered),
+   then role prior, then catalog order.
 3. Specialise a selected ``cnc-generic`` view to the first applicable C&C style.
 4. Apply overlays (``combine_with``) that apply to this repository.
 5. A view whose ``evidence`` signals are all absent stays selected and carries a
@@ -40,7 +42,8 @@ class GoalSubject(BaseModel):
 
 
 class SelectionInput(BaseModel):
-    needs: list[str]
+    needs: list[str]  # primary: what the request is centrally about
+    secondary_needs: list[str] = Field(default_factory=list)  # mentioned in passing; never adds a view
     subjects: list[GoalSubject] = Field(default_factory=list)
     role: str | None = None
     detail_level: str = "feature"
@@ -63,8 +66,10 @@ class PlannedView(BaseModel):
 class ViewPlan(BaseModel):
     views: list[PlannedView]
     needs: list[str]
+    secondary_needs: list[str] = Field(default_factory=list)
     needs_from_role: bool = False
-    uncovered_needs: list[str] = Field(default_factory=list)
+    uncovered_needs: list[str] = Field(default_factory=list)  # primary needs no view answers
+    secondary_not_shown: list[str] = Field(default_factory=list)
     detail_level: str
     notes: list[str] = Field(default_factory=list)
 
@@ -82,9 +87,13 @@ def select_views(
 ) -> ViewPlan:
     notes: list[str] = []
     needs = [n for n in dict.fromkeys(request.needs) if n in catalog.needs]
-    unknown = [n for n in request.needs if n not in catalog.needs]
+    secondary = [n for n in dict.fromkeys(request.secondary_needs) if n in catalog.needs and n not in needs]
+    unknown = [n for n in request.needs + request.secondary_needs if n not in catalog.needs]
     if unknown:
         notes.append(f"ignored unknown needs: {', '.join(unknown)}")
+    if not needs and secondary:
+        needs, secondary = secondary, []
+        notes.append("no need was marked primary; all stated needs are treated as primary")
     needs_from_role = False
     priors = catalog.roles[request.role].priors if request.role in catalog.roles else {}
     if not needs and priors:
@@ -103,17 +112,17 @@ def select_views(
         if applicable(vp, facts) and vp.covers() & set(needs) and vp.style_of is None
     ]
 
-    def covered(views: tuple[Viewpoint, ...]) -> set[str]:
-        got = set().union(*(vp.covers() for vp in views)) & set(needs)
-        if "layering" in needs and layered_overlay_ok and any("layered" in vp.combine_with for vp in views):
+    def covered(views: tuple[Viewpoint, ...], wanted: list[str] = needs) -> set[str]:
+        got = set().union(*(vp.covers() for vp in views)) & set(wanted)
+        if "layering" in wanted and layered_overlay_ok and any("layered" in vp.combine_with for vp in views):
             got.add("layering")
         return got
 
     def score(views: tuple[Viewpoint, ...]):
-        primary = sum(len(set(vp.frames) & set(needs)) for vp in views)
+        framed = sum(len(set(vp.frames) & set(needs)) for vp in views)
         prior = sum(max((priors.get(n, 0.0) for n in vp.covers() & set(needs)), default=0.0) for vp in views)
         order = sum(catalog.order(vp.id) for vp in views)
-        return (len(covered(views)), -len(views), primary, prior, -order)
+        return (len(covered(views)), -len(views), len(covered(views, secondary)), framed, prior, -order)
 
     best: tuple[Viewpoint, ...] = ()
     for size in range(1, max_views + 1):
@@ -124,10 +133,11 @@ def select_views(
     uncovered = [n for n in needs if n not in covered(tuple(chosen))]
     if uncovered:
         notes.append(f"needs not covered within {max_views} views: {', '.join(uncovered)}")
+    not_shown = [n for n in secondary if n not in covered(tuple(chosen), secondary)]
 
     views: list[PlannedView] = []
     for vp in chosen:
-        own = [n for n in needs if n in covered((vp,))]
+        own = [n for n in needs if n in covered((vp,))] + [n for n in secondary if n in covered((vp,), secondary)]
         final, specialised_from = _specialise(vp, catalog, facts)
         overlays = [o for o in final.combine_with if applicable(catalog.viewpoint(o), facts)]
         gap = None
@@ -151,8 +161,10 @@ def select_views(
     return ViewPlan(
         views=views,
         needs=needs,
+        secondary_needs=secondary,
         needs_from_role=needs_from_role,
         uncovered_needs=uncovered,
+        secondary_not_shown=not_shown,
         detail_level=request.detail_level,
         notes=notes,
     )

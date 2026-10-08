@@ -11,6 +11,7 @@ the model and not from the length of the text.
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -52,6 +53,10 @@ DECISION
     the order of steps, the flow of a process, the states something goes through, or who uses the system for what.
     List a behavioural need only when the description asks about that dynamic aspect.
   - People who use the system are actors (actors-goals); software parts that work together are collaboration.
+  Give each need a "salience":
+  - "primary": the request is about this. It states it as something they need to understand, identify, or see.
+  - "secondary": it is mentioned in passing, gives context, or is only implied by a primary need.
+  Reason: only primary needs may add a diagram. A secondary need is answered only if a diagram chosen for a primary need already shows it.
 - subjects: the items the description enumerates as part of what they want to understand (for example a list of sub-functions, data items, or cases), copied exactly, each with the need ids it belongs to.
   Reason: each subject must appear in a view, so the details of a long description are not lost.
   The system, the feature being changed, and the stakeholder are not subjects. A description that enumerates nothing has no subjects.
@@ -62,7 +67,7 @@ Return only this JSON.
 {{
   "role_label": "label as the user said it",
   "role": "one role id, or null",
-  "needs": [{{"need": "need id", "evidence": "exact words"}}],
+  "needs": [{{"need": "need id", "evidence": "exact words", "salience": "primary or secondary"}}],
   "subjects": [{{"text": "exact words", "needs": ["need id"]}}],
   "quality_attributes": []
 }}
@@ -72,6 +77,7 @@ Return only this JSON.
 class NeedEvidence(BaseModel):
     need: str
     evidence: str
+    salience: Literal["primary", "secondary"] = "primary"
 
 
 class NeedProfile(BaseModel):
@@ -86,7 +92,8 @@ class NeedProfile(BaseModel):
 
     def selection_input(self) -> SelectionInput:
         return SelectionInput(
-            needs=[n.need for n in self.needs],
+            needs=[n.need for n in self.needs if n.salience == "primary"],
+            secondary_needs=[n.need for n in self.needs if n.salience == "secondary"],
             subjects=self.subjects,
             role=self.role,
             detail_level=self.detail_level,
@@ -150,7 +157,11 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
         elif not evidence or _norm(evidence) not in norm_goal:
             dropped.append(f"need {need!r}: evidence {evidence!r} is not in the goal")
         elif need not in {n.need for n in needs}:
-            needs.append(NeedEvidence(need=need, evidence=evidence))
+            salience = str((row or {}).get("salience") or "primary").strip().lower()
+            if salience not in {"primary", "secondary"}:
+                dropped.append(f"need {need!r}: salience {salience!r} unknown, treated as primary")
+                salience = "primary"
+            needs.append(NeedEvidence(need=need, evidence=evidence, salience=salience))
 
     subjects: list[GoalSubject] = []
     for row in raw.get("subjects") or []:
@@ -172,6 +183,6 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
         needs=needs,
         subjects=subjects,
         quality_attributes=qualities,
-        detail_level=detail_level(len(needs), len(subjects), catalog.detail_rule),
+        detail_level=detail_level(sum(n.salience == "primary" for n in needs), len(subjects), catalog.detail_rule),
         dropped=dropped,
     )

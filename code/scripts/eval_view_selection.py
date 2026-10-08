@@ -26,6 +26,7 @@ import yaml
 
 from task2view.agents.runtime import AgentRuntime
 from task2view.knowledge.catalog import load_catalog
+from task2view.llm import get_client
 from task2view.phase1.needs import extract_needs
 from task2view.phase3.selection import RepoFacts, select_views
 
@@ -43,18 +44,22 @@ def main() -> int:
     fixture = yaml.safe_load(Path(args.goals).read_text(encoding="utf-8"))
     catalog = load_catalog()
     runtime = AgentRuntime(model=args.llm)
+    llm_spec = get_client(args.llm).spec
+    print(f"model: {llm_spec}", flush=True)
     rows = []
     for run in range(1, args.runs + 1):
         for case_id, case in fixture["cases"].items():
             facts = RepoFacts(signals=set(fixture["facts"][case["system"]]["signals"]))
             want = (case.get("expect") or {}).get("views")
-            row = {"run": run, "case": case_id, "want": want}
+            row = {"run": run, "case": case_id, "llm": llm_spec, "want": want}
             try:
                 profile = extract_needs(case["goal"], runtime, catalog=catalog)
                 plan = select_views(profile.selection_input(), catalog, facts)
                 row.update(
                     got=[v.viewpoint_id for v in plan.views],
-                    needs=[n.need for n in profile.needs],
+                    needs=[n.need for n in profile.needs if n.salience == "primary"],
+                    secondary=[n.need for n in profile.needs if n.salience == "secondary"],
+                    secondary_not_shown=plan.secondary_not_shown,
                     detail=profile.detail_level,
                     dropped=profile.dropped,
                 )
@@ -63,7 +68,7 @@ def main() -> int:
                 row.update(ok=False, error=str(exc)[:300])
             rows.append(row)
             mark = {True: "OK ", False: "NO ", None: "-- "}[row["ok"]]
-            print(f"run {run} {case_id:11} {mark} got={row.get('got')} needs={row.get('needs')}"
+            print(f"run {run} {case_id:11} {mark} got={row.get('got')} primary={row.get('needs')} secondary={row.get('secondary')}"
                   + (f" error={row['error']}" if "error" in row else ""), flush=True)
         scored = [r for r in rows if r["run"] == run and r["ok"] is not None]
         ok = sum(r["ok"] for r in scored)
