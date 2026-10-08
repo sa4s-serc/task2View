@@ -6,18 +6,34 @@ Two inputs: a local repo (`--code`) and a free-text goal (`--goal`). One output:
 
 ## Setup
 
-Python 3.11+ and a [Google AI Studio](https://aistudio.google.com/apikey) key.
+Python 3.11+ and a key for at least one LLM provider.
 
 ```bash
 cd code
 python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
-cp .env.example .env   # put GEMINI_API_KEY in .env — never commit it
+pip install -e ".[dev,all-llms]"   # or .[dev,anthropic] / .[dev,openai]
+cp .env.example .env               # put your keys in .env — never commit it
 pytest
 ```
 
-Optional: `GEMINI_MODEL=gemini-2.5-flash` (default).
+### Choosing the model
+
+Every phase calls the model through one interface (`code/src/task2view/llm/`): one adapter per provider, picked from a `provider:model` spec.
+
+| Provider | Spec example | Credentials |
+|---|---|---|
+| Gemini (default) | `gemini:gemini-2.5-flash` | `GEMINI_API_KEY` |
+| Anthropic | `anthropic:claude-opus-5-5` | `ANTHROPIC_API_KEY` or `ant auth login` |
+| OpenAI | `openai:<model>` | `OPENAI_API_KEY` |
+| OpenRouter | `openrouter:<vendor>/<model>` | `OPENROUTER_API_KEY` |
+| Ollama | `ollama:<model>` | `OLLAMA_BASE_URL` (default localhost:11434) |
+| vLLM | `vllm:<served-model>` | `VLLM_BASE_URL` (default localhost:8000) |
+| Any OpenAI-compatible server | `openai-compatible:<model>` | `OPENAI_COMPAT_BASE_URL`, `OPENAI_COMPAT_API_KEY` |
+
+Set it with `--llm`, with `llm:` in the run config, or with `TASK2VIEW_LLM`. Precedence is in that order. On Anthropic, `TASK2VIEW_LLM_EFFORT` sets the effort level (default `high`). Requests to Claude Opus 5.5 and the other current models opt into Anthropic's server-side refusal fallback.
+
+Adding a provider means writing an `LLMClient` subclass with `complete_text` and registering it with `@register_provider`.
 
 ## Run
 
@@ -72,7 +88,7 @@ Input 1  stakeholder / task description
 Input 2  software repository
     │
     └─► 4  Repository Analysis                  phase4/  graph + scoper
-        5  Evidence Extraction and Grounding    phase5/  gemini / ciao / archagent
+        5  Evidence Extraction and Grounding    phase5/  packed / ciao / archagent
         6  Need–Evidence Reconciliation         phase6/  notes only
         7  Specialized View Generation          phase7/  PlantUML / Mermaid / …
         8  Validation and Consistency           phase8/  evidence gate
@@ -85,7 +101,7 @@ Input 2  software repository
 | Kind | Default | Others |
 |---|---|---|
 | Scoper | `composite` | `pagerank`, `graph1`, `locagent`, `central`, `layer`, `grep`, `lexical`, `dataflow`, `full` |
-| Extractor | `gemini` | `ciao`, `archagent` |
+| Extractor | `packed` (alias `gemini`) | `ciao`, `archagent` |
 | Notation | viewpoint / goal / config | `plantuml`, `mermaid`, `d2`, `c4plantuml`, `structurizr`, `graphviz`, `nomnoml`, `excalidraw`, `bpmn` |
 
 PageRank scoping can **force up to 8 files** from required-information cues (IDF-filtered so common tokens do not swallow the repo), then fills to 16 with PageRank.
@@ -94,7 +110,7 @@ PageRank scoping can **force up to 8 files** from required-information cues (IDF
 
 Static knowledge is YAML under `code/src/task2view/knowledge/data/` (stakeholders, viewpoints, required information, task cues, view projection, CIAO prompt). It is loaded every run.
 
-Live Gemini agents do **not** call repository tools. Each call is one JSON completion with evidence stuffed into the prompt (catalog text, scoped file bodies, graph summary). `RepoTools` (`list_tree`, `search`, `read`, `graph_query`, …) exists on `AgentRuntime.tool_loop` but is unused on the default path.
+The LLM agents do **not** call repository tools. Each call is one JSON completion with evidence stuffed into the prompt (catalog text, scoped file bodies, graph summary). `RepoTools` (`list_tree`, `search`, `read`, `graph_query`, …) exists on `AgentRuntime.tool_loop` but is unused on the default path.
 
 There is no vector store and no memory across runs. `code/runs/` is write-only output.
 

@@ -6,14 +6,14 @@ from collections.abc import Callable
 
 from task2view.agents.tools import RepoTools
 from task2view.contracts.models import PipelineError
-from task2view.llm.gemini import generate_json as gemini_json
+from task2view.llm import generate_json
 
 GenerateFn = Callable[..., dict]
 
 
 class AgentRuntime:
     def __init__(self, generate: GenerateFn | None = None, *, model: str | None = None):
-        self.generate = generate or gemini_json
+        self.generate = generate or generate_json
         self.model = model
 
     def complete_json(self, prompt: str) -> dict:

@@ -9,7 +9,7 @@ from typing import Any, Protocol, runtime_checkable
 from task2view.contracts.models import PipelineError, RepositoryScope, ViewModel, ViewSpecification
 from task2view.phase4.graph import RepositoryGraph
 from task2view.phase5.extract import EXTRACT_PROMPT, extract_view
-from task2view.llm.gemini import generate_json
+from task2view.llm import generate_json
 
 
 @runtime_checkable
@@ -37,9 +37,13 @@ def register_extractor(cls: type) -> type:
     return cls
 
 
+# Former name of "packed", from when the only model was Gemini.
+_ALIASES = {"gemini": "packed"}
+
+
 def get_extractor(name: str) -> Extractor:
     try:
-        return EXTRACTORS[name]()
+        return EXTRACTORS[_ALIASES.get(name, name)]()
     except KeyError as exc:
         raise KeyError(f"Unknown extractor {name!r}. Registered: {sorted(EXTRACTORS)}") from exc
 
@@ -101,10 +105,10 @@ def _run(
 
 
 @register_extractor
-class GeminiExtractor:
-    """Graph summary plus the scoped source files."""
+class PackedExtractor:
+    """Graph summary plus the scoped source files, packed into one prompt."""
 
-    name = "gemini"
+    name = "packed"
 
     def extract(self, view_spec, scope, graph, repo_root, *, model=None, samples=1, generate=generate_json, analysis_plan=None):
         return _run(

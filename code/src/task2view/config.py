@@ -1,4 +1,4 @@
-"""Run-profile YAML: swap scoper / extractor / notation without code changes."""
+"""Run-profile YAML: swap LLM / scoper / extractor / notation without code changes."""
 
 from __future__ import annotations
 
@@ -29,6 +29,8 @@ def apply_pipeline_config(raw: UserRequest, data: dict[str, Any] | None) -> User
         raw.scope_strategy = str(data.get("scoper") or data.get("scope_strategy") or "") or None
     if not raw.extract_backend:
         raw.extract_backend = str(data.get("extractor") or data.get("extract_backend") or "") or None
+    if not raw.llm and data.get("llm"):
+        raw.llm = str(data["llm"])
     if not raw.diagram_language:
         raw.diagram_language = data.get("diagram_language") or data.get("notation")
     if data.get("skip_critic"):

@@ -1,5 +1,11 @@
-"""Gemini client shared by the phase agents and the extractor."""
+"""LLM providers shared by the phase agents and the extractors.
 
-from task2view.llm.gemini import DEFAULT_MODEL, generate_json
+``generate_json(prompt, model=spec)`` dispatches to the adapter named by the
+``provider:model`` spec (registry.py). Importing this package registers every
+adapter; SDKs are imported only when an adapter is instantiated.
+"""
 
-__all__ = ["DEFAULT_MODEL", "generate_json"]
+from task2view.llm.registry import default_spec, generate_json, get_client, parse_spec, providers
+from task2view.llm import claude, gemini, openai_compat  # noqa: F401  (register adapters)
+
+__all__ = ["default_spec", "generate_json", "get_client", "parse_spec", "providers"]

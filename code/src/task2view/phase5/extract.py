@@ -21,7 +21,7 @@ from task2view.contracts.models import (
     canonical_relation_kind,
 )
 from task2view.phase4.graph import RepositoryGraph
-from task2view.llm.gemini import DEFAULT_MODEL, generate_json
+from task2view.llm import generate_json
 
 _VIEWTYPE_VIEWPOINT = {
     "context_view": "context",
@@ -379,7 +379,7 @@ def extract_view(
     )
     built: list[ViewModel] = []
     for _ in range(max(1, samples)):
-        raw = generate(prompt, model=model or DEFAULT_MODEL)
+        raw = generate(prompt, model=model)
         if isinstance(raw, dict):
             raw = {k: v for k, v in raw.items() if not str(k).startswith("_")}
         built.append(_model_from_dict(raw, view_spec.request_id, view_spec))

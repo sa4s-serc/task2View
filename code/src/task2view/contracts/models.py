@@ -273,7 +273,7 @@ class UserRequest(BaseModel):
     max_views: int = 1
     scope_token_budget: int = 120_000
     scope_strategy: str | None = None
-    gemini_model: str | None = None
+    llm: str | None = None  # provider:model spec, see task2view.llm.registry
     samples: int = 1
     skip_extract: bool = False
     extract_workers: int = 2

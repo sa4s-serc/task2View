@@ -88,7 +88,7 @@ def run_agentic(raw: UserRequest, *, generate=None):
 
         raw = apply_pipeline_config(raw, load_pipeline_config(raw.config))
     raw.request_id = raw.request_id or new_request_id()
-    runtime = AgentRuntime(generate=generate, model=raw.gemini_model)
+    runtime = AgentRuntime(generate=generate, model=raw.llm)
     corpus = clean_repository(raw.code or raw.repository or "", request_id=raw.request_id)
     profile = interpret_stakeholder_task(raw.goal or "", runtime, knowledge=knowledge)
     request = _normalized(raw, profile, knowledge, corpus)
@@ -176,9 +176,9 @@ def run_agentic(raw: UserRequest, *, generate=None):
         )
         extras["architecture_evidence_model.json"] = evidence.model_dump(mode="json")
     else:
-        extractor = get_extractor(raw.extract_backend or "gemini")
+        extractor = get_extractor(raw.extract_backend or "packed")
         extract_kw = dict(
-            model=raw.gemini_model,
+            model=raw.llm,
             samples=raw.samples,
         )
         if generate is not None:

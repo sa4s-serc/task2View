@@ -11,6 +11,7 @@ from task2view.pipeline import run_pipeline, write_result
 
 
 def _plugin_names() -> dict[str, list[str]]:
+    from task2view.llm import providers
     from task2view.phase4 import SCOPERS
     from task2view.phase5 import EXTRACTORS
     from task2view.phase7 import ADAPTERS
@@ -19,6 +20,7 @@ def _plugin_names() -> dict[str, list[str]]:
         "scopers": sorted(SCOPERS),
         "extractors": sorted(EXTRACTORS),
         "notations": sorted(ADAPTERS),
+        "llm_providers": [f"{name}:{model or '<model>'}" for name, model in providers().items()],
     }
 
 
@@ -61,12 +63,17 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--extract-backend",
         default=None,
-        help="Phase 5 extractor plug-in: gemini (default), archagent, ciao",
+        help="Phase 5 extractor plug-in: packed (default), archagent, ciao",
     )
     run.add_argument(
+        "--llm",
         "--model",
-        dest="gemini_model",
-        help="Gemini model id (default: GEMINI_MODEL or gemini-2.5-flash)",
+        dest="llm",
+        help=(
+            "LLM as provider:model, e.g. anthropic:claude-opus-5-5, gemini:gemini-2.5-flash, "
+            "openai:<model>, ollama:<model>, vllm:<model>, openrouter:<model> "
+            "(default: TASK2VIEW_LLM, else gemini)"
+        ),
     )
     run.add_argument(
         "--samples",
@@ -176,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
             scope_token_budget=args.scope_token_budget,
             scope_strategy=args.scope_strategy,
             extract_backend=args.extract_backend,
-            gemini_model=args.gemini_model,
+            llm=args.llm,
             samples=args.samples,
             skip_extract=args.skip_extract,
             skip_critic=args.skip_critic,

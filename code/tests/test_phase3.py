@@ -129,8 +129,11 @@ def test_registered_plugin_names():
     names = _plugin_names()
     for scoper in ("composite", "graph1", "locagent", "pagerank", "grep", "dataflow", "full"):
         assert scoper in names["scopers"]
-    for extractor in ("gemini", "archagent", "ciao"):
+    for extractor in ("packed", "archagent", "ciao"):
         assert extractor in names["extractors"]
+    from task2view.phase5 import get_extractor
+
+    assert get_extractor("gemini").name == "packed"
     for notation in (
         "plantuml",
         "mermaid",
