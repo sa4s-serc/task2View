@@ -40,7 +40,7 @@ class PythonExtractor(LanguageExtractor):
         root = tree.root_node
         mid = module_id(path)
         package = mid.rsplit(".", 1)[0] if "." in mid else ""
-        unit = FileUnit(path=path, language="python", package=package, module_id=mid)
+        unit = FileUnit(path=path, language="python", package=package)
         module = Symbol(id=mid, name=mid.rsplit(".", 1)[-1], kind="module", file=path, start_line=1,
                         end_line=root.end_point[0] + 1, language="python", package=package, is_test=is_test)
         unit.symbols.append(module)
@@ -57,7 +57,7 @@ class PythonExtractor(LanguageExtractor):
                     elif child.type == "aliased_import":
                         name = text(child.child_by_field_name("name"), source)
                         alias = text(child.child_by_field_name("alias"), source)
-                        unit.imports.append(Import(name, n.start_point[0] + 1, alias=alias))
+                        unit.imports.append(Import(name, n.start_point[0] + 1))
                         local_names[alias] = name
                         unit.refs.append(RawRef(mid, name, "imports", n.start_point[0] + 1))
             elif n.type == "import_from_statement":
@@ -73,7 +73,7 @@ class PythonExtractor(LanguageExtractor):
                     else:
                         name = alias = text(c, source)
                     full = f"{mod}.{name}" if mod else name
-                    unit.imports.append(Import(full, n.start_point[0] + 1, alias=alias))
+                    unit.imports.append(Import(full, n.start_point[0] + 1))
                     local_names[alias] = full
                     unit.refs.append(RawRef(mid, full, "imports", n.start_point[0] + 1))
 
@@ -131,7 +131,11 @@ class PythonExtractor(LanguageExtractor):
                         if left is not None and left.type == "identifier":
                             ftype = text(type_node, src) if type_node is not None else (
                                 text(right.child_by_field_name("function"), src) if right is not None and right.type == "call" else None)
-                            symbol.fields.append(Field_(name=text(left, src), type=ftype, line=a.start_point[0] + 1))
+                            args = right.child_by_field_name("arguments") if right is not None and right.type == "call" else None
+                            symbol.fields.append(Field_(  # call arguments, e.g. ForeignKey("t.id"), primary_key=True
+                                name=text(left, src), type=ftype, line=a.start_point[0] + 1,
+                                annotations=[text(c, src) for c in (args.named_children if args else [])
+                                             if c.type in {"call", "keyword_argument"}]))
                             if type_node is not None:
                                 for ident in walk(type_node):
                                     if ident.type == "identifier":
@@ -153,8 +157,6 @@ class PythonExtractor(LanguageExtractor):
                     target = local_names[name]
                     kind = "instantiates" if name[:1].isupper() else "calls"
                     unit.refs.append(RawRef(source_id, target, kind, line, detail))
-                    if method is not None:
-                        method.calls.append(target)
             elif fn.type == "attribute":
                 obj = fn.child_by_field_name("object")
                 attr = fn.child_by_field_name("attribute")
@@ -163,8 +165,6 @@ class PythonExtractor(LanguageExtractor):
                     if head in local_names:
                         target = f"{local_names[head]}.{text(attr, src)}"
                         unit.refs.append(RawRef(source_id, target, "calls", line, detail))
-                        if method is not None:
-                            method.calls.append(target)
 
     def _entries(self, decorators: list[str], sid: str, line: int, unit: FileUnit) -> None:
         for d in decorators:

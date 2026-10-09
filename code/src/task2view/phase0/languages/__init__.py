@@ -48,7 +48,7 @@ def supported_languages() -> set[str]:
 
 def generic_unit(path: str, language: str, *, lines: int, is_test: bool) -> FileUnit:
     mid = path.rsplit(".", 1)[0].replace("/", ".")
-    unit = FileUnit(path=path, language=language, package=mid.rsplit(".", 1)[0] if "." in mid else "", module_id=mid)
+    unit = FileUnit(path=path, language=language, package=mid.rsplit(".", 1)[0] if "." in mid else "")
     unit.symbols.append(Symbol(id=mid, name=mid.rsplit(".", 1)[-1], kind="module", file=path, start_line=1,
                                end_line=max(lines, 1), language=language, package=unit.package, is_test=is_test))
     return unit

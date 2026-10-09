@@ -8,6 +8,7 @@ raised it, so a reader can check why a style viewpoint was offered.
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import re
 import xml.etree.ElementTree as ET
@@ -18,12 +19,23 @@ import yaml
 
 from task2view.contracts.card import BuildUnit, DeployUnit, Edge, Entity, EntityField, EntryPoint, RepositoryCard, Symbol
 
-_SQL_TABLE = re.compile(r"create\s+table\s+(?:if\s+not\s+exists\s+)?[`\"\[]?([\w.]+)[`\"\]]?\s*\((.*?)\)\s*;", re.I | re.S)
+_SQL_TABLE = re.compile(r"create\s+table\s+(?:if\s+not\s+exists\s+)?[`\"\[]?([\w.]+)[`\"\]]?\s*\(", re.I)
 _SQL_FK = re.compile(r"foreign\s+key\s*\(\s*[`\"]?(\w+)[`\"]?\s*\)\s*references\s+[`\"]?([\w.]+)", re.I)
 _SQL_INLINE_REF = re.compile(r"^[`\"]?(\w+)[`\"]?\s+[\w()]+.*?references\s+[`\"]?([\w.]+)", re.I)
-_PY_ORM_BASES = {"Base", "DeclarativeBase", "Model", "models.Model", "db.Model", "SQLModel", "Document"}
+_PY_DECLARATIVE = {"DeclarativeBase", "DeclarativeBaseNoMeta"}  # SQLAlchemy 2: subclasses are bases, not tables
+_PY_ORM_BASES = {"Base", "models.Model", "db.Model", "SQLModel", "Document"}
 _PY_RELATIONS = {"relationship": "relation", "ForeignKey": "many-to-one", "models.ForeignKey": "many-to-one",
                  "models.OneToOneField": "one-to-one", "models.ManyToManyField": "many-to-many"}
+
+
+def _sql_tables(sql: str):
+    """(table, body) for each CREATE TABLE, reading to the matching parenthesis (dumps add options after it)."""
+    for m in _SQL_TABLE.finditer(sql):
+        depth, i = 1, m.end()
+        while i < len(sql) and depth:
+            depth += {"(": 1, ")": -1}.get(sql[i], 0)
+            i += 1
+        yield m.group(1), sql[m.end():i - 1]
 
 
 def _ann(name: str) -> str:
@@ -45,13 +57,15 @@ def entities_from_symbols(symbols: dict[str, Symbol], edges: list[Edge], rules: 
     for e in edges:
         if e.kind == "field":
             field_targets.setdefault((e.source, e.detail), e.target)
+    py_bases = _PY_ORM_BASES | {s.name for s in symbols.values() if set(s.extends) & _PY_DECLARATIVE}
     out: list[Entity] = []
     for s in symbols.values():
         if s.is_test:
             continue
         names = {_ann(a) for a in s.annotations}
         is_java_entity = s.language == "java" and bool(names & (entity_anns - {"Table"}))
-        is_py_model = s.language == "python" and s.kind == "class" and any(b in _PY_ORM_BASES for b in s.extends)
+        is_py_model = (s.language == "python" and s.kind == "class" and not set(s.extends) & _PY_DECLARATIVE
+                       and bool(set(s.extends) & py_bases))
         if not (is_java_entity or is_py_model):
             continue
         table = next((_ann_arg(a, "name") for a in s.annotations if _ann(a) == "Table"), None)
@@ -61,15 +75,16 @@ def entities_from_symbols(symbols: dict[str, Symbol], edges: list[Edge], rules: 
             if f.static or "Transient" in fanns:
                 continue  # not persisted under any ORM convention
             relation = next((relation_anns[a] for a in fanns if a in relation_anns), None)
-            if relation is None and s.language == "python" and f.type:
-                relation = next((v for k, v in _PY_RELATIONS.items() if f.type.endswith(k)), None)
-            target = field_targets.get((s.id, f.name))
             fk = next((_ann_arg(a, "name") for a in f.annotations if _ann(a) == "JoinColumn"), None)
-            entity.fields.append(EntityField(
-                name=f.name, type=f.type, key=bool(fanns & key_anns),
-                relation=relation if (relation or target) else None, target=target if relation else None,
-                foreign_key=fk,
-            ))
+            key = bool(fanns & key_anns)
+            if s.language == "python":  # Column(ForeignKey("t.id"), primary_key=True): the call's arguments
+                relation = relation or next((v for k, v in _PY_RELATIONS.items()
+                                             for t in [f.type or "", *fanns] if t.endswith(k)), None)
+                fk = next((a.split("(", 1)[1].strip("\"')") for a in f.annotations if _ann(a).endswith("ForeignKey")), fk)
+                key = key or any(a.replace(" ", "") == "primary_key=True" for a in f.annotations)
+            target = field_targets.get((s.id, f.name))
+            entity.fields.append(EntityField(name=f.name, type=f.type, key=key, relation=relation,
+                                             target=target if relation else None, foreign_key=fk))
         out.append(entity)
     return out
 
@@ -81,8 +96,7 @@ def entities_from_schema(files: list[tuple[Path, str]]) -> list[Entity]:
             sql = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        for m in _SQL_TABLE.finditer(sql):
-            table, body = m.group(1), m.group(2)
+        for table, body in _sql_tables(sql):
             entity = Entity(name=table.split(".")[-1], table=table, source="schema", file=rel)
             fks = {col.lower(): ref for col, ref in _SQL_FK.findall(body)}
             for raw in re.split(r",\s*(?![^()]*\))", body):
@@ -96,7 +110,7 @@ def entities_from_schema(files: list[tuple[Path, str]]) -> list[Entity]:
                 ref = fks.get(col.lower()) or (inline.group(2) if inline else None)
                 entity.fields.append(EntityField(
                     name=col, type=parts[1] if len(parts) > 1 else None, key="primary key" in low,
-                    relation="many-to-one" if ref else None, target=None, foreign_key=col if ref else None,
+                    relation="many-to-one" if ref else None, target=None, foreign_key=ref,
                 ))
             for pk in re.findall(r"primary\s+key\s*\(([^)]*)\)", body, re.I):
                 for col in (c.strip(' `"') for c in pk.split(",")):
@@ -122,25 +136,8 @@ def deploy_units(files: list[tuple[Path, str]]) -> list[DeployUnit]:
                                    if l.upper().startswith(k + " ") and len(l.split(None, 1)) > 1]
                        for k in ("FROM", "EXPOSE", "CMD", "ENTRYPOINT")}
             out.append(DeployUnit(kind="dockerfile", name=rel, file=rel, details={k: v for k, v in details.items() if v}))
-        elif name.endswith((".yml", ".yaml")) and ("compose" in name or "services:" in content):
-            try:
-                doc = yaml.safe_load(content) or {}
-            except yaml.YAMLError:
-                continue
-            if isinstance(doc, dict) and isinstance(doc.get("services"), dict):
-                for svc, spec in doc["services"].items():
-                    spec = spec or {}
-                    details = {
-                        "image": str(spec.get("image", "")), "build": str(spec.get("build", "")) if spec.get("build") else "",
-                        "ports": [str(p) for p in spec.get("ports", []) or []],
-                        "depends_on": list(spec.get("depends_on", []) or []) if not isinstance(spec.get("depends_on"), dict) else list(spec["depends_on"]),
-                    }
-                    out.append(DeployUnit(kind="compose-service", name=str(svc), file=rel, details={k: v for k, v in details.items() if v}))
-            elif isinstance(doc, dict) and doc.get("kind") and doc.get("apiVersion"):
-                out.append(DeployUnit(kind="k8s", name=str((doc.get("metadata") or {}).get("name", rel)), file=rel,
-                                      details={"kind": str(doc["kind"])}))
-        elif name == "persistence.xml":
-            out.extend(_persistence_units(content, rel))
+        elif name in {"jenkinsfile", ".gitlab-ci.yml"} or "/.github/workflows/" in f"/{rel}":
+            out.append(DeployUnit(kind="ci", name=rel, file=rel))
         elif name.startswith("application") and name.endswith((".properties", ".yml", ".yaml")):
             details = {}
             for key in ("spring.datasource.url", "server.port", "spring.profiles.active", "spring.jpa.database-platform"):
@@ -148,8 +145,26 @@ def deploy_units(files: list[tuple[Path, str]]) -> list[DeployUnit]:
                 if m:
                     details[key] = m.group(1).strip()
             out.append(DeployUnit(kind="app-config", name=rel, file=rel, details=details))
-        elif name in {"jenkinsfile", ".gitlab-ci.yml"} or "/.github/workflows/" in f"/{rel}":
-            out.append(DeployUnit(kind="ci", name=rel, file=rel))
+        elif name == "persistence.xml":
+            out.extend(_persistence_units(content, rel))
+        elif name.endswith((".yml", ".yaml")):
+            try:
+                docs = [d for d in yaml.safe_load_all(content) if isinstance(d, dict)]
+            except yaml.YAMLError:
+                continue
+            for doc in docs:
+                if doc.get("kind") and doc.get("apiVersion"):
+                    out.append(DeployUnit(kind="k8s", name=str((doc.get("metadata") or {}).get("name", rel)), file=rel,
+                                          details={"kind": str(doc["kind"])}))
+                    continue
+                for svc, spec in (doc["services"] if isinstance(doc.get("services"), dict) else {}).items():
+                    spec = spec or {}
+                    details = {
+                        "image": str(spec.get("image", "")), "build": str(spec.get("build", "")) if spec.get("build") else "",
+                        "ports": [str(p) for p in spec.get("ports", []) or []],
+                        "depends_on": list(spec.get("depends_on", []) or []) if not isinstance(spec.get("depends_on"), dict) else list(spec["depends_on"]),
+                    }
+                    out.append(DeployUnit(kind="compose-service", name=str(svc), file=rel, details={k: v for k, v in details.items() if v}))
     return out
 
 
@@ -220,7 +235,7 @@ def assign_layers(symbols: dict[str, Symbol], rules: dict) -> dict[str, list[str
     for s in symbols.values():
         if s.is_test or s.kind == "module" and s.language == "java":
             continue
-        segments = [p for p in (s.package.split(".") if s.package else [])] + s.file.split("/")[:-1]
+        segments = s.package.split(".") if s.package else s.file.split("/")[:-1]  # a build-module folder (app/) is no layer
         layer = next((alias_to_layer[seg.lower()] for seg in reversed(segments) if seg.lower() in alias_to_layer), None)
         s.layer = layer
         if layer:
@@ -250,12 +265,11 @@ def _name_hits(named: list[tuple[str, str]], markers: list[str]) -> list[str]:
     return [f"{owner} {name}" for owner, name in named if name in wanted]
 
 
-def derive_signals(card: RepositoryCard, imports: list[str], rules: dict, root: Path) -> dict[str, list[str]]:
+def derive_signals(card: RepositoryCard, imports: list[str], rules: dict) -> dict[str, list[str]]:
     mk = rules["markers"]
     prod = [s for s in card.symbols.values() if not s.is_test]
-    annotations = [(s.id, "@" + _ann(a).rsplit(".", 1)[-1]) for s in prod for a in s.annotations] + \
-                  [(f"{s.id}.{m.name}", "@" + _ann(a).rsplit(".", 1)[-1]) for s in prod for m in s.methods for a in m.annotations]
-    annotations = [(owner, name.lstrip("@")) for owner, name in annotations]
+    annotations = [(s.id, _ann(a).rsplit(".", 1)[-1]) for s in prod for a in s.annotations] + \
+                  [(f"{s.id}.{m.name}", _ann(a).rsplit(".", 1)[-1]) for s in prod for m in s.methods for a in m.annotations]
     supertypes = [(s.id, t.split("<", 1)[0].rsplit(".", 1)[-1]) for s in prod for t in s.extends + s.implements]
 
     def code_hits(markers: list[str], *, use_imports=True, use_annotations=True, use_supertypes=True) -> list[str]:
@@ -309,7 +323,6 @@ def derive_signals(card: RepositoryCard, imports: list[str], rules: dict, root: 
     add("build-config", [f"{u.tool} {u.file}" for u in card.build])
     owners = [f.path for f in card.files if f.path.rsplit("/", 1)[-1] == "CODEOWNERS"]
     add("ownership", owners)
-    import fnmatch
     adr = [f.path for f in card.files if f.file_class == "docs" and (
         any(fnmatch.fnmatch(f.path.rsplit("/", 1)[-1].lower(), p) for p in rules["decision_record_names"])
         or {p.lower() for p in f.path.split("/")[:-1]} & set(rules["decision_record_paths"]))]
@@ -322,10 +335,13 @@ def derive_signals(card: RepositoryCard, imports: list[str], rules: dict, root: 
     return sig
 
 
+_GUI_WIDGETS = {"JPanel", "JComponent", "QWidget"}  # parts of a window, not windows a user opens
+
+
 def gui_entry_points(card: RepositoryCard, rules: dict) -> list[EntryPoint]:
     supers = set(rules["markers"]["gui-supertypes"])
     out = []
     for s in card.symbols.values():
-        if not s.is_test and any(t.split(".")[-1].split("<")[0] in supers for t in s.extends):
+        if not s.is_test and any(t.split(".")[-1].split("<")[0] in supers - _GUI_WIDGETS for t in s.extends):
             out.append(EntryPoint(kind="gui", symbol=s.id, file=s.file, line=s.start_line, detail=s.extends[0]))
     return out

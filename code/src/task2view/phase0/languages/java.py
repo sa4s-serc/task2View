@@ -103,7 +103,9 @@ class JavaExtractor(LanguageExtractor):
             unit.refs.append(RawRef(sid, t, "extends", superclass.start_point[0] + 1))
         for child in node.children:
             if child.type in {"super_interfaces", "extends_interfaces"}:
-                for t in _type_names(child, src):
+                types = next((c for c in child.named_children if c.type == "type_list"), child)
+                # the outer type of each entry: JpaRepository<Order, Long> extends JpaRepository, not Order
+                for t in [n for entry in types.named_children for n in _type_names(entry, src)[:1]]:
                     if node.type == "interface_declaration":
                         symbol.extends.append(t)
                         unit.refs.append(RawRef(sid, t, "extends", child.start_point[0] + 1))
@@ -181,8 +183,11 @@ class JavaExtractor(LanguageExtractor):
         params = node.child_by_field_name("parameters")
         for p in (params.children if params else []):
             if p.type in {"formal_parameter", "spread_parameter"}:
-                t = p.child_by_field_name("type")
-                n = p.child_by_field_name("name")
+                # varargs (String... args) have no type/name fields: the type is the first child, the name a declarator
+                t = p.child_by_field_name("type") or next(
+                    (c for c in p.named_children if c.type not in {"modifiers", "variable_declarator"}), None)
+                decl = next((c for c in p.named_children if c.type == "variable_declarator"), None)
+                n = p.child_by_field_name("name") or (decl.child_by_field_name("name") if decl else None)
                 if t is not None:
                     method.params.append(text(t, src))
                     for tn in _type_names(t, src):
@@ -210,6 +215,9 @@ class JavaExtractor(LanguageExtractor):
                 for child in n.children:
                     if child.type == "variable_declarator":
                         vn = child.child_by_field_name("name")
+                        value = child.child_by_field_name("value")
+                        if type_text == "var" and value is not None and value.type == "object_creation_expression":
+                            type_text = text(value.child_by_field_name("type"), src)  # var x = new Other()
                         if vn is not None:
                             local_types[text(vn, src)] = type_text
                 vn = n.child_by_field_name("name")
@@ -235,7 +243,6 @@ class JavaExtractor(LanguageExtractor):
                     if base:
                         target = f"{base}.{text(mname, src)}"
                         unit.refs.append(RawRef(symbol.id, target, "calls", n.start_point[0] + 1, method.name))
-                        method.calls.append(target)
 
     def _entry(self, anns: list[str], symbol: Symbol, method: Method, unit: FileUnit, node) -> None:
         line = node.start_point[0] + 1

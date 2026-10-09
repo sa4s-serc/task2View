@@ -2,7 +2,7 @@
 
 An extractor turns one source file into raw facts: its package/module, its
 imports, the symbols it declares, and unresolved references from those symbols
-to type or module names. ``phase0/graph.py`` resolves the references against
+to type or module names. ``phase0/resolve.py`` resolves the references against
 the whole repository, so extractors never need global knowledge.
 """
 
@@ -18,7 +18,6 @@ class Import:
     name: str  # fully qualified (java) or dotted module (python) or resolved module id (js)
     line: int
     wildcard: bool = False
-    alias: str | None = None  # local name the import binds (python/js)
 
 
 @dataclass
@@ -47,7 +46,6 @@ class FileUnit:
     symbols: list[Symbol] = field(default_factory=list)
     refs: list[RawRef] = field(default_factory=list)
     entries: list[RawEntry] = field(default_factory=list)
-    module_id: str | None = None  # python/js module symbol id
 
 
 class LanguageExtractor:

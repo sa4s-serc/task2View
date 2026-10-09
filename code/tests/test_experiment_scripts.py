@@ -34,7 +34,8 @@ def test_prepare_subject_drops_models_and_images(tmp_path):
     assert not (dst / "docs" / "model.vpp").exists() and not (dst / "docs" / "class-diagram.png").exists()
     assert not (dst / ".git").exists()
     assert {r["path"] for r in record["removed"]} == {"docs/model.vpp", "docs/class-diagram.png"}
-    assert json.loads((dst / "PREPARED.json").read_text())["copied_files"] == 2
+    assert not (dst / "PREPARED.json").exists()
+    assert json.loads(dst.with_name(f"{dst.name}.PREPARED.json").read_text())["copied_files"] == 2
 
 
 def test_judge_outputs_scores_pipeline_and_plain_runs(tmp_path, monkeypatch):

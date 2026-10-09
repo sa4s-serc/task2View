@@ -22,7 +22,7 @@ UML models and exported diagrams are the evaluation reference, so no condition m
 cd Task2View/code
 .venv/bin/python scripts/prepare_subject.py --src ../data/<repo> --dst /tmp/t2v-subjects/<run-id>/<repo>
 ```
-The script copies the repository without UML models, diagram images, binaries or VCS folders, and writes `PREPARED.json` listing what it removed. The pipeline never reads such files anyway, so the copy changes nothing for it; it makes the agent conditions equal to it.
+The script copies the repository without UML models, diagram images, binaries or VCS folders, and writes `<copy>.PREPARED.json` beside the copy (never inside it) listing what it removed. IntelliJ `.form` GUI files are kept: they are source, not diagrams. The pipeline never reads such files anyway, so the copy changes nothing for it; it makes the agent conditions equal to it.
 
 ## 3. Run
 

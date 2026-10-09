@@ -80,7 +80,7 @@ def build_card(repo: str | Path) -> RepositoryCard:
     card.build = facts.build_units(by_class["build"])
     card.layers = facts.assign_layers(card.symbols, rules)
     imports = sorted({imp.name for unit in units for imp in unit.imports})
-    card.signals = facts.derive_signals(card, imports, rules, root)
+    card.signals = facts.derive_signals(card, imports, rules)
     return card
 
 
@@ -108,7 +108,7 @@ def render_card(card: RepositoryCard, *, max_items: int = 12) -> str:
     if card.entities:
         lines.append(f"persisted entities ({len(card.entities)}):")
         for ent in card.entities[:max_items]:
-            fields = ", ".join(f"{f.name}{'*' if f.key else ''}{'→' + (f.target or '').rsplit('.', 1)[-1] if f.relation else ''}"
+            fields = ", ".join(f"{f.name}{'*' if f.key else ''}{'→' + (f.target.rsplit('.', 1)[-1] if f.target else f.foreign_key or '') if f.relation else ''}"
                                for f in ent.fields[:8])
             lines.append(f"  {ent.name} [{ent.source}] {fields}")
     if card.deploy:

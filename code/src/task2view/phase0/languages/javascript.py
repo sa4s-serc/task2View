@@ -53,8 +53,7 @@ class JavaScriptExtractor(LanguageExtractor):
     def extract(self, path: str, source: bytes, *, is_test: bool) -> FileUnit:
         root = self._parser.parse(source).root_node
         mid = module_id(path)
-        unit = FileUnit(path=path, language=self.language, package=mid.rsplit(".", 1)[0] if "." in mid else "",
-                        module_id=mid)
+        unit = FileUnit(path=path, language=self.language, package=mid.rsplit(".", 1)[0] if "." in mid else "")
         unit.symbols.append(Symbol(id=mid, name=mid.rsplit(".", 1)[-1], kind="module", file=path, start_line=1,
                                    end_line=root.end_point[0] + 1, language=self.language, package=unit.package,
                                    is_test=is_test))
@@ -75,8 +74,11 @@ class JavaScriptExtractor(LanguageExtractor):
                             local[text(alias, source)] = f"{target}.{text(name, source)}"
                     elif spec.type in {"import_clause", "namespace_import"}:
                         for ident in spec.children:
-                            if ident.type == "identifier":  # default or namespace import binds the module
-                                local[text(ident, source)] = target
+                            if ident.type == "identifier":
+                                # `* as ns` binds the module; a default import binds the module's symbol of the
+                                # same name when there is one (resolution falls back to the module otherwise)
+                                name = text(ident, source)
+                                local[name] = target if spec.type == "namespace_import" else f"{target}.{name}"
             elif n.type == "call_expression":
                 fn = n.child_by_field_name("function")
                 args = n.child_by_field_name("arguments")
@@ -104,16 +106,25 @@ class JavaScriptExtractor(LanguageExtractor):
             if node.type in {"class_declaration", "class"}:
                 self._class(node, source, unit, mid, local, is_test)
             elif node.type == "function_declaration":
-                name = text(node.child_by_field_name("name"), source)
-                local.setdefault(name, f"{mid}.{name}")
-                fn = Symbol(id=f"{mid}.{name}", name=name, kind="function", file=path,
-                            start_line=node.start_point[0] + 1, end_line=node.end_point[0] + 1,
-                            language=self.language, package=mid, is_test=is_test)
-                method = Method(name=name, start_line=fn.start_line, end_line=fn.end_line)
-                self._calls(node, source, unit, fn.id, method, local)
-                fn.methods.append(method)
-                unit.symbols.append(fn)
+                self._function(node, text(node.child_by_field_name("name"), source), source, unit, mid, local, is_test)
+            elif node.type in {"lexical_declaration", "variable_declaration"} and _arrow(node):
+                decl = _arrow(node)  # const f = () => ...
+                self._function(decl.child_by_field_name("value"), text(decl.child_by_field_name("name"), source),
+                               source, unit, mid, local, is_test)
+            elif node.type != "import_statement":  # top-level statements: app.use(new Router()), wiring code
+                self._calls(node, source, unit, mid, Method(name="<module>", start_line=node.start_point[0] + 1,
+                                                            end_line=node.end_point[0] + 1), local)
         return unit
+
+    def _function(self, node, name: str, src: bytes, unit: FileUnit, mid: str, local, is_test: bool) -> None:
+        local.setdefault(name, f"{mid}.{name}")
+        fn = Symbol(id=f"{mid}.{name}", name=name, kind="function", file=unit.path,
+                    start_line=node.start_point[0] + 1, end_line=node.end_point[0] + 1,
+                    language=self.language, package=mid, is_test=is_test)
+        method = Method(name=name, start_line=fn.start_line, end_line=fn.end_line)
+        self._calls(node, src, unit, fn.id, method, local)
+        fn.methods.append(method)
+        unit.symbols.append(fn)
 
     def _class(self, node, src: bytes, unit: FileUnit, mid: str, local, is_test: bool) -> None:
         name_node = node.child_by_field_name("name")
@@ -125,13 +136,12 @@ class JavaScriptExtractor(LanguageExtractor):
         symbol = Symbol(id=sid, name=name, kind="class", file=unit.path, start_line=node.start_point[0] + 1,
                         end_line=node.end_point[0] + 1, language=self.language, package=mid, is_test=is_test)
         for child in node.children:
-            if child.type == "class_heritage":
-                for ident in walk(child):
-                    if ident.type in {"identifier", "type_identifier"}:
-                        base = text(ident, src)
-                        symbol.extends.append(base)
-                        unit.refs.append(RawRef(sid, local.get(base, base), "extends", child.start_point[0] + 1))
-                        break
+            if child.type == "class_heritage" and child.named_children:
+                base = text(child.named_children[0], src)  # Base or ns.Base
+                head, _, tail = base.partition(".")
+                symbol.extends.append(base)
+                unit.refs.append(RawRef(sid, local.get(head, head) + (f".{tail}" if tail else ""), "extends",
+                                        child.start_point[0] + 1))
         body = node.child_by_field_name("body")
         for m in (body.children if body else []):
             if m.type == "method_definition":
@@ -155,4 +165,12 @@ class JavaScriptExtractor(LanguageExtractor):
                 if head in local:
                     target = local[head] + ("." + text(fn, src).split(".", 1)[1] if "." in text(fn, src) else "")
                     unit.refs.append(RawRef(source_id, target, "calls", n.start_point[0] + 1, method.name))
-                    method.calls.append(target)
+
+
+def _arrow(node):
+    """The declarator of `const f = () => ...` / `= function () {}`, else None."""
+    decl = next((c for c in node.named_children if c.type == "variable_declarator"), None)
+    value = decl.child_by_field_name("value") if decl is not None else None
+    name = decl.child_by_field_name("name") if decl is not None else None
+    ok = value is not None and value.type in {"arrow_function", "function_expression", "function"}
+    return decl if ok and name is not None and name.type == "identifier" else None

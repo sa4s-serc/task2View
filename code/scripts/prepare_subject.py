@@ -2,8 +2,8 @@
 
 Removes UML models and exported diagrams (they are the evaluation reference), other
 binaries (images, PDFs, archives), and VCS / build folders, using the same corpus
-rules as the pipeline's Phase 0. Writes PREPARED.json in the copy listing what was
-left out, so the preparation is part of the run record.
+rules as the pipeline's Phase 0. Writes <dst>.PREPARED.json next to the copy (not inside
+it, where Phase 0 would read the names of the removed diagrams) listing what was left out.
 
     .venv/bin/python scripts/prepare_subject.py --src ../data/<repo> --dst /tmp/t2v-subjects/<run-id>/<repo>
 """
@@ -15,7 +15,7 @@ import json
 import shutil
 from pathlib import Path
 
-from task2view.phase0.corpus import classify, corpus_rules
+from task2view.phase0.corpus import scan
 
 EXCLUDED_CLASSES = {"model", "binary"}
 
@@ -23,25 +23,19 @@ EXCLUDED_CLASSES = {"model", "binary"}
 def prepare(src: Path, dst: Path) -> dict:
     if dst.exists() and any(dst.iterdir()):
         raise SystemExit(f"destination {dst} is not empty; use a fresh folder per run")
-    skip_dirs = {d.lower() for d in corpus_rules()["skip_directories"]}
     copied, removed = 0, []
-    for path in sorted(src.rglob("*")):
-        if not path.is_file():
+    for path, f in scan(src):
+        if f.file_class in EXCLUDED_CLASSES:
+            removed.append({"path": f.path, "class": f.file_class})
             continue
-        rel = path.relative_to(src)
-        if {p.lower() for p in rel.parts[:-1]} & skip_dirs:
-            continue
-        cls, _ = classify(rel.as_posix())
-        if cls in EXCLUDED_CLASSES:
-            removed.append({"path": rel.as_posix(), "class": cls})
-            continue
-        target = dst / rel
+        target = dst / f.path
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, target)
         copied += 1
     record = {"source": str(src.resolve()), "copied_files": copied, "removed": removed,
               "rule": "files classified as model or binary by knowledge/data/vb/corpus.yaml"}
-    (dst / "PREPARED.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
+    dst.mkdir(parents=True, exist_ok=True)
+    dst.with_name(f"{dst.name}.PREPARED.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
     return record
 
 

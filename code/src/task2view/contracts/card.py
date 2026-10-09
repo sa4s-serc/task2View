@@ -27,7 +27,6 @@ class SourceFile(BaseModel):
 class Field_(BaseModel):
     name: str
     type: str | None = None
-    type_refs: list[str] = Field(default_factory=list)  # resolved internal symbol ids
     annotations: list[str] = Field(default_factory=list)
     static: bool = False
     line: int = 0
@@ -126,9 +125,6 @@ class RepositoryCard(BaseModel):
     layers: dict[str, list[str]] = Field(default_factory=dict)  # layer id -> packages/directories
     signals: dict[str, list[str]] = Field(default_factory=dict)  # signal -> evidence
     notes: list[str] = Field(default_factory=list)
-
-    def files_of(self, *classes: str) -> list[SourceFile]:
-        return [f for f in self.files if f.file_class in classes]
 
     def by_simple_name(self, name: str) -> list[Symbol]:
         return [s for s in self.symbols.values() if s.name == name]

@@ -38,7 +38,14 @@ def _edges(card, kind=None):
     ("README.md", "docs"),
     ("docs/model.vpp", "model"),
     ("docs/diagram.png", "binary"),
-    ("tests/data.json", "config"),
+    ("tests/data.json", "test"),
+    ("src/test/resources/META-INF/persistence.xml", "test"),
+    ("src/main/java/com/x/charts/ChartService.java", "code"),
+    ("src/main/java/com/x/MigrationService.java", "code"),
+    ("src/main/java/com/x/spec/Specification.java", "code"),
+    ("web/src/App.tsx", "code"),
+    ("src/main/java/a/Main.form", "other"),
+    ("k8s/deployment.yaml", "deploy"),
 ])
 def test_every_file_gets_a_class(path, cls):
     assert classify(path)[0] == cls
@@ -125,7 +132,7 @@ def test_python_modules_classes_and_edges(tasks):
     assert s["tasks.models"].kind == "module" and s["tasks.models.Task"].kind == "class"
     edges = _edges(tasks)
     assert ("tasks.service.TaskService", "tasks.models.Task", "instantiates") in edges
-    assert ("tasks.service.TaskService", "tasks.store", "calls") in edges
+    assert ("tasks.service.TaskService", "tasks.store.save", "calls") in edges  # the function, not its module
     assert ("tasks.models.Task", "tasks.models.Base", "extends") in edges
     assert ("tasks.api", "tasks.service.TaskService", "imports") in edges  # from-import binds the class
 

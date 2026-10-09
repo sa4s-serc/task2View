@@ -19,11 +19,9 @@ from task2view.phase0.languages.base import FileUnit
 class Resolver:
     def __init__(self, units: list[FileUnit]):
         self.symbols: dict[str, Symbol] = {}
-        self.unit_of: dict[str, FileUnit] = {}
         for unit in units:
             for s in unit.symbols:
                 self.symbols.setdefault(s.id, s)
-                self.unit_of.setdefault(s.id, unit)
         self.by_simple: dict[str, list[str]] = defaultdict(list)
         for sid, s in self.symbols.items():
             if s.kind != "module":
@@ -50,11 +48,11 @@ class Resolver:
         same_pkg = f"{unit.package}.{simple}" if unit.package else simple
         if same_pkg in self.symbols:
             return same_pkg
-        enclosing = source_id
-        while "." in enclosing:
-            enclosing = enclosing.rsplit(".", 1)[0]
+        enclosing = source_id  # the type itself first: Outer.Builder from Outer
+        while enclosing:
             if f"{enclosing}.{simple}" in self.symbols:
                 return f"{enclosing}.{simple}"
+            enclosing = enclosing.rpartition(".")[0]
         for imp in unit.imports:
             if imp.wildcard and f"{imp.name}.{simple}" in self.symbols:
                 return f"{imp.name}.{simple}"
@@ -83,7 +81,9 @@ def build_edges(units: list[FileUnit], resolver: Resolver) -> list[Edge]:
     seen: set[tuple] = set()
     for unit in units:
         for ref in unit.refs:
-            if ref.kind == "calls":
+            if ref.kind == "calls" and unit.language != "java" and ref.target in resolver.symbols:
+                target, detail = ref.target, ""  # a module-level function: the edge ends at the function
+            elif ref.kind == "calls":
                 type_part, _, method = ref.target.rpartition(".")
                 target = resolver.resolve(type_part, unit, ref.source) if type_part else None
                 detail = f"{method}" if target else ""
@@ -111,7 +111,7 @@ def build_edges(units: list[FileUnit], resolver: Resolver) -> list[Edge]:
     resolved_calls: dict[tuple[str, int], list[str]] = defaultdict(list)
     for e in edges:
         if e.kind == "calls":
-            resolved_calls[(e.source, e.line)].append(f"{e.target}.{e.detail}")
+            resolved_calls[(e.source, e.line)].append(f"{e.target}.{e.detail}" if e.detail else e.target)
     for unit in units:
         for s in unit.symbols:
             for m in s.methods:

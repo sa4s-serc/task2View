@@ -18,7 +18,7 @@ def corpus_rules() -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def _matches(rule: dict, rel: str, name: str, ext: str, dirs: set[str], languages: dict) -> bool:
+def _matches(rule: dict, name: str, ext: str, dirs: set[str], languages: dict) -> bool:
     if rule.get("language_extensions") and ext in languages:
         return True
     if ext and ext in {e.lower() for e in rule.get("extensions", [])}:
@@ -39,13 +39,17 @@ def classify(rel: str, rules: dict | None = None) -> tuple[str, str | None]:
     dirs = {p.lower() for p in path.parts[:-1]}
     languages = rules["languages"]
     language = languages.get(ext)
+    cls = "other"
     for rule in rules["classes"]:
-        if _matches(rule, rel, name, ext, dirs, languages):
+        if language and rule["class"] not in {"test", "web", "code"}:
+            continue  # a source file's folder or name (deploy/, *migration*) never makes it config or deploy
+        if _matches(rule, name, ext, dirs, languages):
             cls = rule["class"]
-            if cls == "test" and language is None:
-                continue  # test-folder data files keep their own class
-            return cls, language if cls in {"code", "test", "web"} else None
-    return "other", None
+            break
+    test_dirs = {p.lower() for r in rules["classes"] if r["class"] == "test" for p in r.get("paths", [])}
+    if cls not in {"model", "binary"} and dirs & test_dirs:
+        cls = "test"  # test resources (a test persistence.xml, test properties) are not evidence of production
+    return cls, language if cls in {"code", "test", "web"} else None
 
 
 def scan(root: Path) -> list[tuple[Path, SourceFile]]:
@@ -61,7 +65,8 @@ def scan(root: Path) -> list[tuple[Path, SourceFile]]:
         rel = "/".join(rel_parts)
         cls, language = classify(rel, rules)
         try:
-            lines = path.read_bytes().count(b"\n") + 1 if cls not in {"binary", "model"} else 0
+            data = path.read_bytes() if cls not in {"binary", "model"} else b""
+            lines = data.count(b"\n") + (bool(data) and not data.endswith(b"\n"))
         except OSError:
             lines = 0
         out.append((path, SourceFile(path=rel, file_class=cls, language=language, lines=lines)))
