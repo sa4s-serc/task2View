@@ -73,3 +73,64 @@ def test_judge_outputs_scores_pipeline_and_plain_runs(tmp_path, monkeypatch):
     assert all(r["judge"] == "judge-fixture:j" and r["score_answers-questions"] == "4" for r in rows)
     assert any("component OrderService" in p for p in seen)
     assert json.loads((plain / "judge.json").read_text())["view-1"]["status"] == "scored"
+
+    # a blind rating sheet, one rater's scores, and their agreement with the judge
+    out = tmp_path / "rating"
+    monkeypatch.setattr(sys, "argv", ["make_rating_sheet.py", "--runs", str(runs), "--goals", str(goals),
+                                      "--out", str(out), "--rater", "r1"])
+    assert _script("make_rating_sheet").main() == 0
+    sheet = list(csv.DictReader((out / "rating_sheet.csv").open()))
+    assert len(sheet) == 3 and "condition" not in sheet[0] and (out / "items" / "I001.puml").exists()
+    for i, row in enumerate(sheet):
+        row["answers-questions"] = "3" if i == 0 else "4"
+    with (tmp_path / "ratings.csv").open("w", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=list(sheet[0]))
+        writer.writeheader()
+        writer.writerows(sheet)
+    lines = _script("judge_agreement").from_ratings(tmp_path / "ratings.csv", out / "rating_key.csv",
+                                                    tmp_path / "judge_summary.csv")
+    assert any(line.startswith("answers-questions | r1 vs judge | 3 |") for line in lines)
+
+
+def test_weighted_kappa():
+    kappa = _script("judge_agreement").weighted_kappa
+    assert kappa([1, 3, 5], [1, 3, 5]) == 1.0
+    assert kappa([1, 5], [5, 1]) < 0
+    assert kappa([3], [3]) is None
+
+
+def test_expert_labels_are_compared_descriptively(tmp_path):
+    run = tmp_path / "outputs" / "plain-agent" / "italian-reviewed" / "G1"
+    run.mkdir(parents=True)
+    (run / "judge.json").write_text(json.dumps({"view-1": {"scores": {"layout": {"reason": "r", "score": 2}}}}))
+    labels = tmp_path / "review" / "expert_labels.yaml"
+    labels.parent.mkdir()
+    labels.write_text(yaml.safe_dump({"rater": "e1", "rubric": "v1", "entries": [
+        {"condition": "plain-agent", "case": "G1", "run_dir": "outputs/plain-agent/italian-reviewed/G1",
+         "problems": ["layout"], "praised": []}]}))
+    lines = _script("judge_agreement").from_labels(labels)
+    assert "layout | 1, 2.00, 100% | 0" in lines
+
+
+def test_pilot_expert_labels_cover_the_reviewed_outputs():
+    doc = yaml.safe_load((CODE.parent / "experiments" / "pilot-2026-09" / "review" / "expert_labels.yaml").read_text())
+    from task2view.phase8.judge import THEMES
+    assert len(doc["entries"]) == 20
+    for e in doc["entries"]:
+        assert set(e["problems"]) | set(e["praised"]) <= set(THEMES)
+        assert (CODE.parent / "experiments" / "pilot-2026-09" / e["run_dir"]).is_dir()
+
+
+def test_run_stability_compares_repeated_runs(tmp_path, capsys, monkeypatch):
+    import shutil
+
+    from task2view.agents.run_v2 import run_v2
+    from task2view.agents.write_v2 import write_run_v2
+
+    from .test_run_v2 import GOAL, SHOP, scripted
+
+    first = write_run_v2(run_v2(GOAL, str(SHOP), generate=scripted), tmp_path / "task2view" / "CASE-1@1")
+    shutil.copytree(first, tmp_path / "task2view" / "CASE-1@2")
+    monkeypatch.setattr(sys, "argv", ["run_stability.py", "--runs", str(tmp_path)])
+    assert _script("run_stability").main() == 0
+    assert "task2view | CASE-1 | 2 | 1/1 | 1.00 | 1.00" in capsys.readouterr().out

@@ -1,0 +1,82 @@
+# Expert labels for the reviewed pilot outputs (one expert, 18 comments, 20 outputs).
+#
+# Source: review/comparison_review.txt (Folder 1 = skill-agent, Folder 2 = plain-agent), about the
+# runs in outputs/<condition>/italian-reviewed/<case>/. Each entry keeps the comment verbatim
+# (abridged with …) beside its coding, so the coding can be checked against the words.
+#
+# Coding (by Claude from the comment text, 2026-10-09; to be confirmed by the expert):
+#   verdict:  fit | partial | miss, only where the comment states usefulness; null otherwise.
+#   problems: rubric-v1 themes the comment names as a problem (judge themes:
+#             answers-questions, second-view, layers, placement, layout).
+#   other:    problems outside the judge rubric, checked by rules instead (notation, grain, names, scope).
+#   praised:  themes the comment names as done well.
+# A theme a comment does not mention is unknown, not "fine".
+#
+# Use: descriptive comparison with judge scores (scripts/judge_agreement.py --labels). The rubric
+# themes were derived from these comments, so agreement on them is not a validation of the judge;
+# validation needs new outputs rated by at least two people (--ratings).
+
+rater: expert-1
+rubric: v1
+entries:
+  - {condition: skill-agent, case: GR10-Q1, run_dir: outputs/skill-agent/italian-reviewed/GR10-Q1, verdict: partial,
+     problems: [layers, placement, answers-questions], other: [], praised: [],
+     comment: "generally correct … expected an additional higher-level decomposition … responsibilities are currently represented as labels on the associations … potentially oversimplifying the actual responsibilities"}
+  - {condition: skill-agent, case: GR10-Q2, run_dir: outputs/skill-agent/italian-reviewed/GR10-Q2, verdict: fit,
+     problems: [layout], other: [], praised: [],
+     comment: "Apart from some arrows whose source is not clearly defined … elements and the chosen level of granularity seem adequate"}
+  - {condition: skill-agent, case: GR10-Q3, run_dir: outputs/skill-agent/italian-reviewed/GR10-Q3, verdict: miss,
+     problems: [placement, answers-questions], other: [notation], praised: [],
+     comment: "neither sufficiently clear nor fully correct … incorrect use of aggregation/composition … id_cittadino … should normally appear as an attribute … does not show the attributes"}
+  - {condition: skill-agent, case: GR10-Q4, run_dir: outputs/skill-agent/italian-reviewed/GR10-Q4, verdict: fit,
+     problems: [], other: [notation], praised: [answers-questions],
+     comment: "does not follow the classical notation of a UML Use Case Diagram … a good representation in terms of both the information provided and the selected level of granularity"}
+  - {condition: skill-agent, case: IS-reg-L1, run_dir: outputs/skill-agent/italian-reviewed/IS-reg-L1, verdict: fit,
+     problems: [layers], other: [], praised: [answers-questions],
+     comment: "a good general overview … would have expected the presence of higher-level packages or architectural layers"}
+  - {condition: skill-agent, case: IS-reg-L2, run_dir: outputs/skill-agent/italian-reviewed/IS-reg-L2, verdict: partial,
+     problems: [second-view, answers-questions], other: [], praised: [],
+     comment: "more detailed … not particularly helpful … expected both a component-oriented view … and a sequence diagram"}
+  - {condition: skill-agent, case: IS-reg-L3, run_dir: outputs/skill-agent/italian-reviewed/IS-reg-L3, verdict: miss,
+     problems: [answers-questions], other: [grain], praised: [],
+     comment: "essentially ineffective … extremely high-level and does not explain how the functionality is actually implemented"}
+  - {condition: skill-agent, case: IS-seat-L1, run_dir: outputs/skill-agent/italian-reviewed/IS-seat-L1, verdict: fit,
+     problems: [layers], other: [], praised: [answers-questions],
+     comment: "appropriate for satisfying the user's concise request … would benefit from a higher-level organization … into architectural layers or packages"}
+  - {condition: skill-agent, case: IS-seat-L2, run_dir: outputs/skill-agent/italian-reviewed/IS-seat-L2, verdict: partial,
+     problems: [second-view], other: [], praised: [],
+     comment: "would probably be more useful if complemented by a sequence diagram"}
+  - {condition: skill-agent, case: IS-seat-L3, run_dir: outputs/skill-agent/italian-reviewed/IS-seat-L3, verdict: miss,
+     problems: [answers-questions, second-view], other: [], praised: [],
+     comment: "These details cannot be understood from the proposed view … expected a combination of two complementary views"}
+  - {condition: plain-agent, case: GR10-Q1, run_dir: outputs/plain-agent/italian-reviewed/GR10-Q1, verdict: partial,
+     problems: [placement, second-view], other: [notation], praised: [],
+     comment: "not stereotyped … generic boxes … mixes architectural element names with descriptions of their functionality … still useful … more as a flowchart-like representation"}
+  - {condition: plain-agent, case: GR10-Q2, run_dir: outputs/plain-agent/italian-reviewed/GR10-Q2, verdict: fit,
+     problems: [], other: [], praised: [answers-questions],
+     comment: "No particular issues were identified. The diagram is appropriate and satisfactory"}
+  - {condition: plain-agent, case: GR10-Q3, run_dir: outputs/plain-agent/italian-reviewed/GR10-Q3, verdict: partial,
+     problems: [], other: [scope], praised: [placement],
+     comment: "much closer to the type of result I expected … Entity stereotype … the upper part … is unnecessary for the specific user request"}
+  - {condition: plain-agent, case: GR10-Q4, run_dir: outputs/plain-agent/italian-reviewed/GR10-Q4, verdict: fit,
+     problems: [layout], other: [], praised: [answers-questions],
+     comment: "Apart from a somewhat confusing graphical layout … good level of detail and is acceptable"}
+  - {condition: plain-agent, case: IS-reg-L1, run_dir: outputs/plain-agent/italian-reviewed/IS-reg-L1, verdict: fit,
+     problems: [], other: [], praised: [answers-questions, layout],
+     comment: "significantly better … clearer and, overall, I consider it a good representation"}
+  - {condition: plain-agent, case: IS-reg-L2, run_dir: outputs/plain-agent/italian-reviewed/IS-reg-L2, verdict: null,
+     problems: [second-view, placement], other: [notation], praised: [],
+     comment: "blocks are not properly stereotyped … contain textual descriptions of actions … mixes structural and behavioral information"}
+  - {condition: plain-agent, case: IS-reg-L3, run_dir: outputs/plain-agent/italian-reviewed/IS-reg-L3, verdict: null,
+     problems: [second-view], other: [notation], praised: [],
+     comment: "same main problems … Structural and behavioral information are mixed … difficult to interpret as a canonical architectural diagram"}
+  # one overall comment covers the three plain-agent IS-seat outputs
+  - {condition: plain-agent, case: IS-seat-L1, run_dir: outputs/plain-agent/italian-reviewed/IS-seat-L1, verdict: null,
+     problems: [second-view, placement], other: [names, grain], praised: [layers],
+     comment: "Overall: different abstraction levels are mixed … decomposition into higher-level macro-components is generally well performed … names … do not always directly correspond to recognizable elements in the source code"}
+  - {condition: plain-agent, case: IS-seat-L2, run_dir: outputs/plain-agent/italian-reviewed/IS-seat-L2, verdict: null,
+     problems: [second-view, placement], other: [names, grain], praised: [layers],
+     comment: "Overall comment for IS-seat (see IS-seat-L1)"}
+  - {condition: plain-agent, case: IS-seat-L3, run_dir: outputs/plain-agent/italian-reviewed/IS-seat-L3, verdict: null,
+     problems: [second-view, placement], other: [names, grain], praised: [layers],
+     comment: "Overall comment for IS-seat; IS-seat-L3 adds association labels and code-level snippets"}

@@ -35,19 +35,24 @@ Then check the claim itself:
 **Support** is decided by these checks, not by your opinion:
 - `documented`: every passing citation is in documentation files.
 - For a relation or interaction:
-  - `observed`: the source code depends on the target (a call, field, parameter, instantiation or inheritance), or the excerpt contains the target's name or the called method.
+  - `observed`: the source code depends on the target **in that direction** (a call, field, parameter, instantiation or inheritance), or the excerpt contains the target's name or the called method as a whole word.
   - `inferred`: otherwise. Cap its confidence at 0.7.
-- For an element: `observed`.
+- For an element: `observed` when a passing citation is in the file that declares its symbol, else `inferred`.
+- `observed` means the cited code exists where the claim says. It does not prove the wording: responsibilities are your reading of that code.
+- A `Type.member` reference counts only if the type has that method, field or constant. A simple name that matches several symbols counts only if exactly one of them is in a cited file.
 
 Keep rejected claims in `rejected_claims` as `{"task", "claim", "reason"}`.
 
 ## 3. Evidence model (consolidation)
 Build it from the verified claims and the repository card only.
 
-**Components**
+**Components.** The grain follows the goal's detail level:
+- **overview:** one component per package (Python/JS: module) that holds a candidate: id `cmp:<package>`, name = the package's last segment, `realized_by` = its candidates. Skip the anchor rules below.
+- **feature / detailed:** the anchor rules below.
+
 - Every non-test code symbol that a claim is about (as `symbol`, `source` or `target`) is a candidate.
 - **Merge** an interface with exactly one implementation among the candidates into that implementation.
-- **Helpers** are enums, records, and names ending in `Exception`, `Error`, `DTO`, `Dto`, `Request` or `Response`. They do not become components: attach each helper to the candidate it has the most code links with. A helper linked to no candidate stays its own component.
+- **Helpers** are enums, records, and names ending in `Exception`, `Error`, `DTO`, `Dto`, `Request` or `Response`. They do not become components: attach each helper to the one candidate it has code links with. A helper linked to several candidates, or to none, stays its own component.
 - Every other candidate is a component:
   - id `cmp:<symbol id>`;
   - **name = the class or module's simple name**;
@@ -62,6 +67,7 @@ Build it from the verified claims and the repository card only.
 - Label: the most frequent called method names (at most 2).
 - Keep the member dependencies as `member_edges`, written `src -kind-> tgt (file:line)`.
 - A relation claim between two elements adds its claim id to the matching relation, or creates one.
+- **Reflexion:** list every relation between two components under `reflexion` as `convergence` (it has member edges and claims), `divergence` (member edges, no claim: a possible omission) or `absence` (claims, no member edge).
 
 **Non-code elements from claims:** actors, use cases and similar get the id `<kind>:<slug of name>`.
 

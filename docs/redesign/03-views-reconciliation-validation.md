@@ -130,17 +130,12 @@ Decisions are **rule-based and logged**. The LLM writes only the limitation sent
 | 2 Viewpoint constraints | The named predicates from 01 §5.1, e.g. `no_package_or_directory_element`, `lifeline_is_component_or_actor`, `messages_ordered`, `association_not_fk_field`, `component_has_responsibility`, `element_kind_allowed`, `max_elements` | hard |
 | 3 Faithfulness | Every mark has an AEM id with support ≥ `inferred`; names are a member symbol or a marked phrase; no two marks share an AEM id; every lifted relation has a member edge; excerpts verified (from 02 §5.2) | hard |
 | 4 Coverage and consistency | Every assigned question has its required kinds for each subject; the same AEM id has the same name in every view; correspondences resolve | hard for missing kinds, else gap |
-| 5 Task fit (Track 2) | An LLM judge scores the rendered view against the profile and the questions on the expert's seven themes. It gives a score and a reason per theme, and does not decide pass/fail on its own until it is calibrated | soft |
+| 5 Task fit (Track 2) | An LLM judge from another model family scores the view on rubric v1 (answers-questions, second-view, layers, placement, layout), one theme per call, reason before score, against anchored levels. Notation, names and grain are left to layers 1–3. It does not decide pass/fail until validated against human ratings | soft |
 
 - **Verdict:** `fail` on any hard check; `pass_with_limitations` when gaps or limitations are declared; else `pass`.
 - **Repair:** a failed layer 1–3 check re-runs the projection with the offending marks fixed or removed, at most 2 times. A failure that needs evidence goes back to Phase 6 as `request_evidence`.
 - **Independence:** the task-fit judge uses a different model from the generator by default. The pluggable LLM layer makes this a setting.
-- **Calibration of layer 5:**
-  - the 18 expert comments on the pilot;
-  - the CodeToDiagram ground-truth diagrams (340+);
-  - the GR10 Visual Paradigm model, via `tools/compare_gr10.py`.
-
-  This is Track 2.
+- **Validation of layer 5 (Track 2):** blind ratings of pilot outputs by at least two people, compared with the judge by weighted kappa (`scripts/make_rating_sheet.py`, `scripts/judge_agreement.py`). The 18 expert comments are coded in `experiments/pilot-2026-09/review/expert_labels.yaml` and used descriptively only, because the themes came from them. No external diagram dataset is used.
 
 ## 7. The expert's themes, mapped to mechanisms
 
@@ -185,7 +180,7 @@ Per run directory:
    | bpmn | A | A | A | A | N | A | A | A | A | A |
 
    \* c4plantuml includes PlantUML, so the non-C4 kinds use the plain PlantUML constructs.
-3. **Task-fit judge:** uses a different model from the generator by default. It is soft, reported but not gating, until calibrated on the expert reviews, CodeToDiagram and the GR10 UML model.
+3. **Task-fit judge:** uses a model from a different family than every generator. It is soft, reported but not gating, until validated against blind ratings by at least two people (ADR-006 addendum A6).
 4. **Repair budget:** 2 projection retries and 2 evidence rounds per view.
 
 ## 10. Implementation status (2026-10-08)

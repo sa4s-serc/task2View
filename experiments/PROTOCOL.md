@@ -1,19 +1,30 @@
 # Experiment protocol: three conditions
 
-How to run one goal set through the three conditions so the results can be compared. It works for any goal set and any repositories; the pilot set is `code/tests/fixtures/pilot_goals.yaml` (goal texts for agents: `skill/references/goal-sets.md`).
+How to run one goal set through the conditions so the results can be compared. It works for any goal set and any repositories.
+
+**The pilot** is `experiments/pilot-2026-09/goals.yaml`: the 2 repositories and their 10 goals, 3 runs per goal and condition. The goals were used while Task2View was designed, so the pilot is **exploratory**: it reports effect sizes with intervals and describes what happened, and makes no claim of generalisation or significance. No external diagram dataset is used.
 
 | Condition | Who produces the views | Instruction |
 |---|---|---|
 | **plain-agent** | One coding agent with the repository and the goal | §3.1 |
 | **skill-agent** | The same agent and model, plus the Task2View skill (`skill/`) | §3.2 |
 | **task2view** | The Task2View pipeline (ADR-006) | §3.3 |
+| **task2view-retrieval** | The pipeline with one call over retrieved code instead of tool-loop agents (baseline) | §3.3 |
+
+## 0. Before generating anything
+Fix these in writing, with a date, before the first run (a short pre-registration):
+1. **Expected facts:** for each goal, the expert lists the facts a good answer must show, in `goals.yaml` under `expected:` (e.g. "ReservationController calls ReservationService.makeReservation"). They are written from the code and the goal, never from any output.
+2. **Primary outcome:** the share of a goal's expected facts that its views show, rated by people (§4). Everything else is secondary.
+3. **Primary contrast:** task2view vs plain-agent; the other pairs are secondary. Change this here, before running, if the study needs a different main question.
+4. **Rubric:** rubric v1 of `code/src/task2view/phase8/judge.py` (answers-questions, second-view, layers, placement, layout), frozen.
 
 ## 1. Hold fixed across conditions
 - **The same repositories:** a prepared copy of each subject (§2), one fresh copy per run.
 - **The same goals:** pasted verbatim, with the same run ids.
-- **The same model** wherever possible: run both agent conditions on the same model as the pipeline's `--llm` (e.g. `claude-sonnet-4-5`), and record the exact model id for every run.
+- **The same generator model in every condition:** run both agent conditions on the same model as the pipeline's `--llm` (`anthropic:claude-sonnet-4-5` for the pilot), and record the exact model id for every run. A condition on another model confounds the comparison.
+- **Three runs per goal and condition**, with run ids `<case>@1`, `<case>@2`, `<case>@3`: model output varies between runs even at temperature 0.
 - **The same notation:** PlantUML.
-- **The same judge:** one judge model, different from the generator, scores all conditions afterwards (§4).
+- **The same judge:** one judge model from a **different model family** than the generator (not Anthropic when the generator is Claude) scores all conditions afterwards (§4).
 - **Nothing shared between runs:** no agent sees another run's output or any `Task2View/` folder.
 
 ## 2. Prepare the subjects
@@ -55,10 +66,12 @@ Use the task2view skill.
 ### 3.3 task2view
 ```bash
 cd Task2View/code
-.venv/bin/python scripts/run_goal_set.py --goals <goal set>.yaml --out ../experiments/<name>/outputs/task2view \
-  --llm <provider:model> --notations plantuml
+.venv/bin/python scripts/run_goal_set.py --goals ../experiments/pilot-2026-09/goals.yaml --repeat 3 \
+  --out ../experiments/pilot-2026-09/outputs/task2view --llm anthropic:claude-sonnet-4-5 --notations plantuml
+.venv/bin/python scripts/run_goal_set.py --goals ../experiments/pilot-2026-09/goals.yaml --repeat 3 --evidence retrieval \
+  --out ../experiments/pilot-2026-09/outputs/task2view-retrieval --llm anthropic:claude-sonnet-4-5 --notations plantuml
 ```
-In the goal-set file, `systems:` should point to the prepared copies (or use `code:` per case). Leave `--judge-llm` out here; all conditions are judged together in §4.
+In the goal-set file, `systems:` should point to the prepared copies (or use `code:` per case). Leave `--judge-llm` out here; all conditions are judged together in §4. Each run's `run.log` records the tool use of every evidence task, and its README the component relations that code and claims agree on, the ones only in code (possible omissions), and the ones only claimed.
 
 ### Collect
 Copy each agent run's `task2view-out/<run-id>/` to `experiments/<name>/outputs/<condition>/<run-id>/`. Record one line per run in `experiments/<name>/runs.csv`:
@@ -80,7 +93,21 @@ This writes `judge.json` per run and `experiments/<name>/judge_summary.csv`.
 - grounding (`evidence_model.json`: verified vs rejected claims);
 - the validation verdicts (`validation_report.json`).
 
-**Human review:** give reviewers the rendered diagrams with conditions anonymised, in a random order per goal. Use the seven themes of `code/src/task2view/prompts/phase8_judge.md` and the same 1–5 scale, so the judge can later be calibrated against the human scores.
+**Human rating (primary outcome and judge validation):** at least **two** raters, working independently and blind to the condition.
+```bash
+.venv/bin/python scripts/make_rating_sheet.py --runs ../experiments/pilot-2026-09/outputs \
+  --goals ../experiments/pilot-2026-09/goals.yaml --out ../experiments/pilot-2026-09/rating --rater <name>
+```
+Each rater gets `rating_sheet.csv` and `items/` (anonymised, shuffled per goal); `rating_key.csv` stays with the organiser. Per item, a rater records `facts_shown` (how many of the goal's expected facts the view shows) and a 1–5 score per rubric theme. Rate all items, or a random sample of 60–100 views when that is too many. Then:
+```bash
+.venv/bin/python scripts/judge_agreement.py --ratings ratings.csv --key ../experiments/pilot-2026-09/rating/rating_key.csv \
+  --judge ../experiments/pilot-2026-09/judge_summary.csv
+```
+This prints the weighted kappa of the judge against each rater and between raters, with 95% bootstrap intervals. The judge stays a reported, non-gating signal; a theme could become a gate only if judge–human agreement comes close to human–human agreement.
+
+**The earlier expert review** (`pilot-2026-09/review/expert_labels.yaml`, 18 comments on 20 outputs) is compared with the judge only descriptively (`judge_agreement.py --labels …`): the rubric themes came from those comments, so they cannot validate it.
+
+**Run stability:** `scripts/run_stability.py --runs ../experiments/pilot-2026-09/outputs` reports, per condition and goal, how often repeated runs chose the same views, and the overlap of their elements and relations.
 
 ## 5. Report
 For every number reported, state:
@@ -90,4 +117,4 @@ For every number reported, state:
 - the repositories and how they were prepared;
 - the number of runs per goal.
 
-The pilot goals were used while designing Task2View, so results on them are a regression check. Claims about generalisation need goals and repositories that were not used during design.
+**Analysis for the exploratory pilot:** pair conditions by goal (the mean over its 3 runs); report the per-goal differences in the primary outcome, their mean and a 95% bootstrap interval; report secondary outcomes descriptively (judge themes, verdicts, grounding, reflexion counts, stability, tokens and cost). With 10 goals on 2 repositories, only large differences are detectable, and nothing generalises beyond these systems. Claims about generalisation need goals and repositories that were not used during design.

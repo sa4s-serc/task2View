@@ -23,6 +23,19 @@ _MAX_OBSERVATION = 12000
 _FINAL_NUDGE = "Step budget reached. Return {\"final\": {\"claims\": [...]}} now with the claims you can cite."
 
 
+def _prompt(task: InvestigationTask, questions: list[Question], card_text: str, viewpoint_name: str) -> str:
+    return load_prompt("phase5_evidence").render(
+        goal=task.goal,
+        questions="\n".join(f"- {q.id}: {q.text}" for q in questions if q.id in task.question_ids),
+        viewpoint=viewpoint_name,
+        elements=", ".join(task.expect_elements),
+        relations=", ".join(task.expect_relations),
+        card=card_text,
+        symbols=", ".join(task.seeds.symbols) or "none",
+        paths=", ".join(task.seeds.paths) or "none",
+    )
+
+
 def run_evidence_task(
     task: InvestigationTask,
     questions: list[Question],
@@ -37,16 +50,7 @@ def run_evidence_task(
 ) -> tuple[list[dict], list[str], Counter]:
     """Run one task. Returns (raw claim dicts, files opened, tool-call counts)."""
     tools = CardTools(card, task.seeds.classes, max_read_lines=max_read_lines, max_hits=max_hits)
-    prompt = load_prompt("phase5_evidence").render(
-        goal=task.goal,
-        questions="\n".join(f"- {q.id}: {q.text}" for q in questions if q.id in task.question_ids),
-        viewpoint=viewpoint_name,
-        elements=", ".join(task.expect_elements),
-        relations=", ".join(task.expect_relations),
-        card=card_text,
-        symbols=", ".join(task.seeds.symbols) or "none",
-        paths=", ".join(task.seeds.paths) or "none",
-    )
+    prompt = _prompt(task, questions, card_text, viewpoint_name)
     blocks = [prompt]  # the prompt, then one block per step: older results are masked, the prefix stays cacheable
     results: list[int] = []  # indexes of blocks holding a full tool result
     seen_calls: set[str] = set()
@@ -81,3 +85,36 @@ def run_evidence_task(
             blocks[i] = f"{head}\nRESULT: [result elided to save context; repeat a read to see it again]"
     tools.calls["budget-exhausted"] += 1
     return [], sorted(tools.opened), tools.calls
+
+
+_RETRIEVAL = ("RETRIEVED CODE. Tools are not available in this mode: cite only the numbered lines below "
+              "and return {\"final\": {\"claims\": [...]}} now.")
+
+
+def run_retrieval_task(
+    task: InvestigationTask,
+    questions: list[Question],
+    card: RepositoryCard,
+    runtime: AgentRuntime,
+    *,
+    card_text: str,
+    viewpoint_name: str,
+    max_read_lines: int = 200,
+    max_symbols: int = 6,
+) -> tuple[list[dict], list[str], Counter]:
+    """Baseline without the tool loop: the seed symbols' code is retrieved up front and the model
+    answers in one call. Comparing it with run_evidence_task shows what agentic exploration adds."""
+    tools = CardTools(card, task.seeds.classes, max_read_lines=max_read_lines)
+    prompt = _prompt(task, questions, card_text, viewpoint_name)
+    chunks = []
+    for sid in task.seeds.symbols[:max_symbols]:
+        s = card.symbols.get(sid)
+        if s is not None:
+            chunks.append(f"--- {s.file} ({sid})\n" + tools.read(s.file, s.start_line, s.end_line))
+    for path in task.seeds.paths[:2]:
+        chunks.append(f"--- {path}\n" + tools.read(path))
+    reply = runtime.complete_json([prompt, _RETRIEVAL + "\n\n" + ("\n\n".join(chunks) or "none")],
+                                  purpose=f"phase5-retrieval:{task.id}")
+    final = reply.get("final")
+    claims = final.get("claims") if isinstance(final, dict) else final
+    return [c for c in claims if isinstance(c, dict)] if isinstance(claims, list) else [], sorted(tools.opened), Counter()

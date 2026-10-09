@@ -14,7 +14,7 @@ Goal-set format (same as scripts/eval_view_selection.py):
     .venv/bin/python scripts/run_goal_set.py --goals goals.yaml --out runs/my-eval \\
         --llm anthropic:claude-sonnet-4-5 --judge-llm openai:<model> --notations plantuml,mermaid
 
-Writes <out>/<case-id>/ (see agents/write_v2.py) and <out>/summary.jsonl. Each
+Writes <out>/<run-id>/ (run id = case id, or <case>@<k> with --repeat; see agents/write_v2.py) and <out>/summary.jsonl. Each
 line records the generator and judge models, so results from different models
 are never mixed silently.
 """
@@ -40,7 +40,9 @@ def main() -> int:
     parser.add_argument("--judge-llm")
     parser.add_argument("--notations", default="plantuml")
     parser.add_argument("--max-views", type=int, default=3)
+    parser.add_argument("--evidence", choices=["agent", "retrieval"], default="agent", help="retrieval = baseline B1")
     parser.add_argument("--only", help="Comma-separated case ids")
+    parser.add_argument("--repeat", type=int, default=1, help="Runs per case; with more than 1, run ids are <case>@<k>")
     args = parser.parse_args()
 
     doc = yaml.safe_load(Path(args.goals).read_text(encoding="utf-8"))
@@ -49,17 +51,19 @@ def main() -> int:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     summary = (out / "summary.jsonl").open("a", encoding="utf-8")
-    for case_id, case in doc["cases"].items():
-        if only and case_id not in only:
-            continue
+    runs = [(cid, case, f"{cid}@{k}" if args.repeat > 1 else cid)
+            for k in range(1, args.repeat + 1) for cid, case in doc["cases"].items() if not only or cid in only]
+    for case_id, case, run_id in runs:
         code = case.get("code") or systems.get(case.get("system", ""))
-        row = {"case": case_id, "llm": args.llm, "judge_llm": args.judge_llm, "code": code}
+        row = {"case": case_id, "run_id": run_id, "llm": args.llm, "judge_llm": args.judge_llm,
+               "evidence": args.evidence, "code": code}
         try:
             if not code:
                 raise ValueError(f"no repository path for {case_id} (set `code:` or a `systems:` entry)")
             result = run_v2(case["goal"], code, llm=args.llm, judge_llm=args.judge_llm, max_views=args.max_views,
+                            evidence_mode=args.evidence,
                             languages=[n.strip() for n in args.notations.split(",") if n.strip()])
-            write_run_v2(result, out / case_id)
+            write_run_v2(result, out / run_id)
             got = [v.viewpoint_id for v in result.viewset.views]
             want = (case.get("expect") or {}).get("views")
             row.update(views=got, expected=want, match=None if want is None else got == want,

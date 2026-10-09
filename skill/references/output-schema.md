@@ -77,12 +77,13 @@ Write these files under `--out`, with exactly these names and fields. They are t
                "attributes": [], "details": {}, "support": "observed", "claims": ["C1"], "named_by": "symbol"}},
  "relations": {"rel:…": {"id": "rel:…", "kind": "uses", "source": "cmp:…OrderController", "target": "cmp:…OrderService", "label": "pay",
                 "multiplicity": null, "member_edges": ["…OrderController -calls-> …OrderService (src/…:15)"], "claims": [], "support": "observed"}},
- "scenarios": {"scn:pay-order": {"id": "scn:pay-order", "name": "pay order", "subject": null,
+ "scenarios": {"scn:pay-order": {"id": "scn:pay-order", "name": "pay order",
                "steps": [{"order": 1, "source": "cmp:…OrderController", "target": "cmp:…OrderService", "message": "pay(id)", "kind": "call", "fragment": null, "claims": ["C3"]}],
                "fragments": [{"id": "scn:pay-order:alt1", "kind": "alt", "guard": "order status is NEW"}]}},
  "component_of": {"com.example.orders.OrderService": "cmp:com.example.orders.OrderService"},
  "correspondences": [{"rule": "entity-realized-by-component", "elements": ["ent:…Order", "cmp:…Order"], "note": ""}],
- "notes": ["IT1: 6 claims, read 3 files"]}
+ "reflexion": {"convergence": ["rel:…"], "divergence": ["rel:…"], "absence": []},
+ "notes": ["IT1: 6 claims, read 3 files; read 3, search 2, symbol 1"]}
 ```
 
 ## reconciliation.json
@@ -111,7 +112,7 @@ Write these files under `--out`, with exactly these names and fields. They are t
 ```json
 {"system": "repo-name", "stakeholder": "tester", "goal": "<verbatim>", "views": [ … ],
  "correspondences": [{"rule": "same-element", "elements": ["V1-client-server:cmp:…", "V2-sequence:cmp:…"]}],
- "declared_gaps": [], "uncovered_needs": [], "secondary_not_shown": []}
+ "correspondence_gaps": [], "declared_gaps": [], "uncovered_needs": [], "secondary_not_shown": []}
 ```
 
 ## validation_report.json
@@ -120,7 +121,7 @@ Write these files under `--out`, with exactly these names and fields. They are t
   "notation": {"status": "pass", "language": "plantuml", "approximated": false, "model_kind_matches": true},
   "constraints": [{"constraint": "component_has_responsibility", "severity": "warning", "mark": "cmp:…", "message": "… shows no responsibility"}],
   "faithfulness": [], "coverage": [{"question": "AQ1", "status": "supported", "claims": ["C1"], "note": ""}],
-  "task_fit": {"status": "not-run", "model": null, "independent": null, "scores": {}, "overall": null, "summary": "a different model must judge"},
+  "task_fit": {"status": "not-run", "model": null, "rubric": "v1", "independent": null, "scores": {}, "summary": "a different model must judge"},
   "errors": 0, "warnings": 1, "repair_marks": []}}
 ```
 

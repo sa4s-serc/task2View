@@ -63,6 +63,7 @@ def run_v2(
     max_views: int = 3,
     languages: list[str] | None = None,
     compile_enabled: bool = True,
+    evidence_mode: str = "agent",
     generate=None,
     judge_generate=None,
 ) -> RunV2Result:
@@ -74,7 +75,7 @@ def run_v2(
     judge_runtime = None
     if judge_llm or judge_generate is not None:
         judge_runtime = AgentRuntime(generate=judge_generate, model=judge_llm)
-    log: list[str] = [f"generator: {llm_spec}", f"judge: {judge_llm or ('scripted' if judge_generate else 'none')}"]
+    log: list[str] = [f"generator: {llm_spec}", f"evidence: {evidence_mode}", f"judge: {judge_llm or ('scripted' if judge_generate else 'none')}"]
 
     card = build_card(code)
     card_text = render_card(card)
@@ -83,7 +84,8 @@ def run_v2(
     questions = derive_view_questions(profile, plan, catalog)
     tasks = plan_investigation(plan, questions, card, catalog, target=profile.target, runtime=runtime, card_text=card_text)
     grain = "package" if profile.detail_level == "overview" else "class"
-    aem = collect_evidence(tasks, questions, card, runtime, catalog, card_text=card_text, grain=grain)
+    aem = collect_evidence(tasks, questions, card, runtime, catalog, card_text=card_text, grain=grain,
+                           mode=evidence_mode)
     log.append(f"round 1: {len(tasks)} tasks, {len(aem.claims)} claims, {len(aem.rejected_claims)} rejected; "
                f"{grain}-level components")
 
@@ -107,7 +109,7 @@ def run_v2(
                 t.id = f"R{round_no}-{t.id}"
             tasks += extra
             aem = collect_evidence(extra, questions, card, runtime, catalog, card_text=card_text,
-                                   previous=aem, grain=grain)
+                                   previous=aem, grain=grain, mode=evidence_mode)
             log.append(f"round {round_no}: {len(extra)} tasks for {len(wanted)} unsupported question(s)")
             continue
         if to_fold - folded:

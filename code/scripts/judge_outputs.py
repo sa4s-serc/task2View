@@ -1,6 +1,6 @@
 """Score every view of every condition with one judge model (Phase 8 layer 5, applied after the runs).
 
-Layout expected (experiments/PROTOCOL.md):  <runs>/<condition>/<run-id>/...
+Layout expected (experiments/PROTOCOL.md):  <runs>/<condition>/<run-id>/...  (run id = <case> or <case>@<k>)
 - Task2View and skill runs: V*/view.json + V*/view.puml
 - plain-agent runs:         view-<n>.puml (no view.json; the judge reads the source only)
 
@@ -26,17 +26,16 @@ from task2view.phase8.judge import judge_view
 
 
 def _views(run: Path) -> list[tuple[ArchitectureView, str, list[Question]]]:
-    questions = []
-    qfile = run / "architectural_questions.json"
-    if qfile.exists():
-        questions = [Question(**q) for q in json.loads(qfile.read_text())]
     out = []
-    for vfile in sorted(run.glob("V*/view.json")):
+    view_files = sorted(run.glob("V*/view.json"))
+    qfile = run / "architectural_questions.json"
+    questions = [Question(**q) for q in json.loads(qfile.read_text())] if view_files and qfile.exists() else []
+    for vfile in view_files:
         view = ArchitectureView(**json.loads(vfile.read_text()))
         src = next(iter(sorted(vfile.parent.glob("view.puml"))), None)
         out.append((view, src.read_text() if src else "", questions))
-    if not out:  # plain agent: diagram source only
-        for i, src in enumerate(sorted(run.glob("view-*.puml")), 1):
+    if not out:  # diagram source only: plain agents, and runs written before the current output format
+        for i, src in enumerate(sorted(run.glob("view-*.puml")) or sorted(run.glob("architecture_view*.puml")), 1):
             view = ArchitectureView(id=f"view-{i}", viewpoint_id="unspecified", viewpoint_name="(not declared)", vb_ref="",
                                     model_kind="unspecified", title=src.stem, purpose="", detail_level="", max_elements=0)
             out.append((view, src.read_text(), []))
@@ -57,7 +56,8 @@ def main() -> int:
     rows = []
     for condition in sorted(p for p in root.iterdir() if p.is_dir()):
         for run in sorted(p for p in condition.iterdir() if p.is_dir()):
-            goal = goals.get(run.name)
+            case = run.name.split("@")[0]  # repeated runs of one goal: <case>@<k>
+            goal = goals.get(case)
             if goal is None:
                 print(f"skip {condition.name}/{run.name}: not in the goal set")
                 continue
@@ -66,7 +66,7 @@ def main() -> int:
             for view, source, questions in _views(run):
                 report = judge_view(view, questions, goal, source, "plantuml", runtime,
                                     judge_spec=runtime.spec, generator_spec=None,
-                                    expected=cases[run.name].get("expected"))
+                                    expected=cases[case].get("expected"))
                 results[view.id] = report.model_dump()
                 rows.append({"condition": condition.name, "run_id": run.name, "view": view.id,
                              "viewpoint": view.viewpoint_id, "judge": runtime.spec, "status": report.status,

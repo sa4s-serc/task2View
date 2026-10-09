@@ -10,13 +10,14 @@ A view is drawn from the evidence model only:
 
 | Viewpoint family | What to draw |
 |---|---|
-| decomposition, layered, client-server and other C&C, uses, generalization | Components (kind `component`, or `module` / `class` where the viewpoint uses those), with `stereotype` = layer and `responsibilities` inside. **Layered overlay:** add a group element per layer used (`id: group:layer:<layer>`, `kind: layer`, `group: true`) and set each component's `parent`. **Decomposition without layers:** group by package (`group:module:<package>`). **uses:** the focus components plus what depends on them, then what they depend on. **generalization:** only components in an inheritance relation, with `is-a` relations. Relations: the model's `uses` relations between drawn elements (`allowed-to-use` in layered). C&C views also draw datastores when a persistence-layer component is drawn. |
+| decomposition, layered, client-server and other C&C, uses, generalization | Components (kind `component`, or `module` / `class` where the viewpoint uses those), with `stereotype` = layer and `responsibilities` inside. **Layered overlay:** add a group element per layer used (`id: group:layer:<layer>`, `kind: layer`, `group: true`) and set each component's `parent`. **Decomposition without layers:** group by the enclosing package (`group:module:<package>`): a class component in its package, a package component in its parent package. **uses:** the focus components plus what depends on them, then what they depend on. **generalization:** only components in an inheritance relation, with `is-a` relations. Relations: the model's `uses` relations between drawn elements (`allowed-to-use` in layered). C&C views also draw datastores when a persistence-layer component is drawn; datastores count toward the cap. An empty view reports the gap "no components evidenced". |
+| context | One `system` element for the analysed system (named after the repository), with the actors, external systems and datastores around it; `uses` edges where a relation links one of them to a component inside the system. |
 | data model | Entities with attributes, `{PK}` and `{FK}` marks; associations with multiplicity; composition; generalization between entities. Foreign-key fields stay attributes. |
 | sequence, communication, activity | One scenario per view, the most relevant one; list the others as limitations. Lifelines are the participants in order of first appearance (actors as `actor`). Interactions keep their order. Fragments allowed by the detail level (sequence: overview none, feature `alt`, detailed `alt`/`opt`/`loop`). |
 | state machine | One machine (states of the most relevant enum or state hierarchy) and transitions from claims; with no transitions, add the limitation "transitions were not evidenced". |
 | use case | A system group named after the repository, actors outside it, use cases inside it, associations / include / extend. |
-| deployment, install, data stores | Nodes, environments, artifacts and datastores, with artifacts nested in their node; communicates and deploys relations. |
-| tables (interfaces, decisions, requirements, work assignment, implementation) | One row per element. |
+| deployment, install, data stores | Nodes, environments, artifacts and datastores, with artifacts nested in their node (that nesting replaces the deploys edge); communicates relations. |
+| tables (interfaces, decisions, requirements, work assignment, implementation) | One row per element of the table's own kinds (interfaces, decision records, requirements, …); implementation lists components with their files. No such element: report the gap, do not fall back to components. |
 
 Every view lists, in `traceability`, each element's files and symbols.
 
@@ -57,10 +58,11 @@ Then decide, checking these rules in order:
 3. **Faithfulness:**
    - every element is in the evidence model (or is a group or fold of evidence-model elements) and is not weakly supported;
    - names are unchanged;
-   - no element is drawn twice, and no symbol is drawn by two elements;
+   - no element is drawn twice, and no symbol is drawn by two elements (states of one enum share its symbol and are exempt);
    - every interaction is a step of a recovered scenario.
 4. **Coverage:** the Phase 6 table. A view with questions and at least two elements must draw at least one relation or interaction.
-5. **Task fit:** `{"status": "not-run"}`. A different model scores it.
+5. **Task fit:** `{"status": "not-run"}`. A model from another family scores it afterwards, one theme per call (rubric v1: answers-questions, second-view, layers, placement, layout).
+6. **Correspondence:** list in `viewset.json` `correspondence_gaps` every component of a sequence, communication or activity view that no structural view of the set draws.
 
 **Verdict:**
 - `fail` on any error in layers 1–4;

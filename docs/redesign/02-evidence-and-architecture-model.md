@@ -142,3 +142,4 @@ One entry per real symbol, keyed by fully qualified name. Aliases (`InternalNote
    - **Strategy:** the adapter is chosen at run time from a `provider:model` spec, set by `--llm`, config `llm:`, or `TASK2VIEW_LLM`.
    - **Interface today:** `complete_json` only. Native tool calling for the Phase 5 loop gets added to this same interface when Phase 5 is rebuilt.
 4. **Component abstraction: deterministic clustering, then LLM naming.** Every member of a component must be a real symbol.
+   *Revised 2026-10-09 (ADR-006 addendum A2):* names come from code, not from an LLM: overview goals get one component per package, feature and detailed goals one per claimed class with its helpers. A helper used by several anchors stays its own component. Component relations are also classified as convergence, divergence or absence against the claims (A4).

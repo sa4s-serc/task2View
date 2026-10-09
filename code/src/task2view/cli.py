@@ -23,6 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--judge-llm", help="provider:model for the task-fit judge; use a different model; omit to skip")
     run.add_argument("--notations", default="plantuml", help="Comma-separated notations to write for every view")
     run.add_argument("--max-views", type=int, default=3)
+    run.add_argument("--evidence", choices=["agent", "retrieval"], default="agent",
+                     help="Phase 5: tool-loop agents, or one call over retrieved seed code (baseline)")
     run.add_argument("--no-compile-check", action="store_true", help="Skip compiling diagrams in Phase 8 layer 1")
     run.add_argument("--images", default="", help="Also render images, e.g. svg,png (local compilers; see compile)")
     run.add_argument("--kroki-url", help="Allow rendering through this Kroki server when no local compiler exists")
@@ -54,7 +56,7 @@ def _run(args) -> dict:
 
     notations = [n.strip() for n in args.notations.split(",") if n.strip()]
     result = run_v2(args.goal, args.code, llm=args.llm, judge_llm=args.judge_llm, max_views=args.max_views,
-                    languages=notations, compile_enabled=not args.no_compile_check)
+                    languages=notations, compile_enabled=not args.no_compile_check, evidence_mode=args.evidence)
     out = write_run_v2(result, args.out)
     images = compile_run_dir(out, formats=parse_formats(args.images), kroki_url=args.kroki_url) if args.images else None
     return {
