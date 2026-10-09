@@ -12,23 +12,10 @@ import urllib.error
 import urllib.request
 
 from task2view.contracts.models import PipelineError
-from task2view.llm.base import JSON_INSTRUCTION, LLMClient, Usage, load_dotenv
+from task2view.llm.base import JSON_INSTRUCTION, LLMClient, Usage
 from task2view.llm.registry import register_provider
 
-load_dotenv()
-
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
-# Falling back to other models hides which model produced a result, so it is
-# off unless explicitly enabled (experiments must record the model that answered).
-ALLOW_FALLBACK = os.environ.get("GEMINI_ALLOW_FALLBACK", "").lower() in {"1", "true", "yes"}
-FALLBACK_MODELS = [
-    DEFAULT_MODEL,
-    "gemini-2.5-flash-lite",
-    "gemini-flash-lite-latest",
-    "gemini-flash-latest",
-    "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
-]
 
 
 @register_provider("gemini", default_model=DEFAULT_MODEL)
@@ -39,7 +26,7 @@ class GeminiClient(LLMClient):
         parts = [p for p in (system, JSON_INSTRUCTION if json_mode else None) if p]
         text = "\n\n".join([*parts, prompt]) if parts else prompt
         usage: dict = {}
-        out = generate_text(text, model=self.model, json_mime=json_mode, fallback=ALLOW_FALLBACK, usage_out=usage)
+        out = _generate(self.model, text, json_mime=json_mode, usage_out=usage)
         cached = int(usage.get("cachedContentTokenCount", 0) or 0)
         self.last_usage = Usage(input_tokens=int(usage.get("promptTokenCount", 0) or 0) - cached,
                                 output_tokens=int(usage.get("candidatesTokenCount", 0) or 0)
@@ -58,44 +45,22 @@ def api_key() -> str:
     return key.strip()
 
 
-def generate_text(
-    prompt: str,
-    *,
-    model: str | None = None,
-    timeout: int = 180,
-    json_mime: bool = False,
-    fallback: bool = True,
-    usage_out: dict | None = None,
-) -> str:
+def _generate(model: str, prompt: str, *, json_mime: bool, usage_out: dict, timeout: int = 180) -> str:
+    """One model only, so results always name the model that produced them."""
     key = api_key()
-    tried: list[str] = []
-    models: list[str] = [model] if model else []
-    for candidate in FALLBACK_MODELS if (fallback or not models) else []:
-        if candidate and candidate not in models:
-            models.append(candidate)
-    last_error = "no model attempted"
-    mime_order = (True, False) if json_mime else (False,)
-    for name in models:
-        tried.append(name)
-        for use_json_mime in mime_order:
-            try:
-                payload = _post(name, prompt, key, timeout, use_json_mime=use_json_mime)
-            except urllib.error.HTTPError as exc:
-                detail = exc.read().decode("utf-8", errors="replace")[:500]
-                last_error = f"{name}: HTTP {exc.code} {detail}"
-                if exc.code in {404, 400} and use_json_mime:
-                    continue
-                if exc.code in {404, 400}:
-                    break
-                raise PipelineError(f"Gemini request failed ({name}: HTTP {exc.code})") from exc
-            except urllib.error.URLError as exc:
-                raise PipelineError(f"Gemini request failed: {exc}") from exc
-            if usage_out is not None:
-                usage_out.update(payload.get("usageMetadata") or {})
-            return _first_text(payload)
-    raise PipelineError(
-        f"Gemini models failed ({', '.join(tried)}). Last error: {last_error}"
-    )
+    for use_json_mime in (True, False) if json_mime else (False,):
+        try:
+            payload = _post(model, prompt, key, timeout, use_json_mime=use_json_mime)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 400 and use_json_mime:  # model without JSON mode: retry as plain text
+                continue
+            detail = exc.read().decode("utf-8", errors="replace")[:300]
+            raise PipelineError(f"Gemini request failed ({model}: HTTP {exc.code}) {detail}") from exc
+        except urllib.error.URLError as exc:
+            raise PipelineError(f"Gemini request failed: {exc}") from exc
+        usage_out.update(payload.get("usageMetadata") or {})
+        return _first_text(payload)
+    raise PipelineError(f"Gemini request failed ({model}): JSON mode rejected")
 
 
 def _post(name: str, prompt: str, key: str, timeout: int, *, use_json_mime: bool) -> dict:

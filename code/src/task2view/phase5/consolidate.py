@@ -204,18 +204,16 @@ def _entities(aem: EvidenceModel, card: RepositoryCard, claims: list[Claim]) -> 
             if ent.symbol in aem.component_of:
                 aem.correspondences.append(Correspondence(rule="entity-realized-by-component",
                                                           elements=[eid, aem.component_of[ent.symbol]]))
-    seen_pairs: set[frozenset] = set()
+    drawn_from: dict[tuple[frozenset, str], str] = {}  # a bidirectional pair is drawn from one side only
     for ent in card.entities:
         src = by_symbol.get(ent.symbol or "")
         for f in ent.fields:
             if not (f.relation and f.target in by_symbol and src):
                 continue
             tgt = by_symbol[f.target]
-            pair = frozenset((src, tgt, f.relation if f.relation == "embedded" else "assoc"))
-            if pair in seen_pairs:
-                continue
-            seen_pairs.add(pair)
             kind = "composition" if f.relation == "embedded" else "association"
+            if drawn_from.setdefault((frozenset((src, tgt)), kind), src) != src:
+                continue
             mult = _ASSOC.get(f.relation)
             rid = f"rel:{slug(src)}:{kind}:{slug(tgt)}:{slug(f.name)}"
             aem.relations[rid] = ArchRelation(id=rid, kind=kind, source=src, target=tgt, label=f.name,

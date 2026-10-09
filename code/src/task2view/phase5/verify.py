@@ -3,7 +3,7 @@
 A claim enters the Architecture Evidence Model only if at least one of its
 citations checks out:
 - the cited file exists and is not a UML model or binary,
-- the cited lines exist,
+- the first cited line exists,
 - the excerpt occurs in the file (whitespace-insensitive) within the cited
   lines, give or take a small slack,
 - a cited or claimed symbol exists in the repository card.
@@ -31,6 +31,17 @@ _RELATION_EDGE_KINDS = {"calls", "field", "instantiates", "param", "returns", "e
 
 def _norm(text: str) -> str:
     return " ".join(text.split())
+
+
+def _number(value, default):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _as_list(value) -> list:
+    return value if isinstance(value, list) else [value] if value else []
 
 
 class SymbolIndex:
@@ -72,7 +83,7 @@ class ClaimVerifier:
         if kind not in {"element", "relation", "interaction", "state", "transition"}:
             return None, f"unknown claim kind {kind!r}"
         refs, problems = [], []
-        for ev in raw.get("evidence") or []:
+        for ev in _as_list(raw.get("evidence")):
             ok, reason = self._check_ref(ev)
             if ok:
                 refs.append(EvidenceRef(file=ev["file"], symbol=self.index.resolve(ev.get("symbol")) or ev.get("symbol"),
@@ -85,12 +96,12 @@ class ClaimVerifier:
         claim = Claim(
             id=claim_id, task=task_id, kind=kind, question_ids=question_ids,
             element_kind=raw.get("element_kind"), name=raw.get("name"),
-            responsibilities=[str(r).strip() for r in raw.get("responsibilities") or [] if str(r).strip()],
-            attributes=[a for a in raw.get("attributes") or [] if isinstance(a, dict) and a.get("name")],
+            responsibilities=[str(r).strip() for r in _as_list(raw.get("responsibilities")) if str(r).strip()],
+            attributes=[a for a in _as_list(raw.get("attributes")) if isinstance(a, dict) and a.get("name")],
             source=raw.get("source"), target=raw.get("target"), relation=raw.get("relation"), label=raw.get("label"),
-            order=raw.get("order") if isinstance(raw.get("order"), int) else None,
+            order=int(raw["order"]) if str(raw.get("order", "")).strip().isdigit() else None,
             scenario=raw.get("scenario"), condition=raw.get("condition") or None,
-            evidence=refs, confidence=max(0.0, min(1.0, float(raw.get("confidence") or 0.5))),
+            evidence=refs, confidence=max(0.0, min(1.0, _number(raw.get("confidence"), 0.5))),
         )
         if kind == "element":
             claim.symbol = self.index.resolve(raw.get("symbol")) or self.index.resolve(raw.get("name"))
@@ -111,7 +122,7 @@ class ClaimVerifier:
     def _check_ref(self, ev) -> tuple[bool, str]:
         if not isinstance(ev, dict) or not ev.get("file"):
             return False, "citation without file"
-        path = str(ev["file"]).lstrip("./")
+        path = str(ev["file"]).removeprefix("./")
         cls = self.classes.get(path)
         if cls is None:
             return False, f"{path}: not in the repository"
@@ -125,8 +136,8 @@ class ClaimVerifier:
             return False, f"{path}: lines must be [start, end]"
         if span and (span[0] < 1 or span[0] > len(lines)):
             return False, f"{path}: line {span[0]} does not exist"
-        if not excerpt:
-            return False, f"{path}: empty excerpt"
+        if not re.search(r"\w{3}", excerpt):
+            return False, f"{path}: excerpt too short to locate"
         lo, hi = (1, len(lines))
         if span:
             lo = max(1, span[0] - self.slack)
@@ -145,12 +156,11 @@ class ClaimVerifier:
             return "documented"
         if claim.kind in {"relation", "interaction"}:
             src, tgt = claim.source, claim.target
-            if (src, tgt) in self.edges or (tgt, src) in self.edges and claim.kind == "relation":
+            if (src, tgt) in self.edges:
                 return "observed"
-            target_name = (tgt or "").rsplit(".", 1)[-1]
-            method = re.split(r"[(\s]", claim.label or "", maxsplit=1)[0]
-            if any(target_name and target_name in r.excerpt or method and len(method) > 2 and method in r.excerpt
-                   for r in claim.evidence):
+            names = [n for n in ((tgt or "").rsplit(".", 1)[-1], re.split(r"[(\s]", claim.label or "", maxsplit=1)[0])
+                     if len(n) > 2]
+            if any(re.search(rf"\b{re.escape(n)}\b", r.excerpt) for n in names for r in claim.evidence):
                 return "observed"
             return "inferred"
         return "observed"

@@ -25,14 +25,14 @@ def collect_evidence(
     catalog: Catalog,
     *,
     card_text: str,
-    previous: list[Claim] | None = None,
+    previous: EvidenceModel | None = None,
 ) -> EvidenceModel:
     cfg = pipeline_config()
     ev = cfg["evidence"]
     verifier = ClaimVerifier(card, slack=ev["excerpt_line_slack"], min_confidence=ev["min_confidence"])
-    claims: list[Claim] = list(previous or [])
-    rejected: list[dict] = []
-    notes: list[str] = []
+    claims: list[Claim] = list(previous.claims.values()) if previous else []
+    rejected: list[dict] = list(previous.rejected_claims) if previous else []
+    notes: list[str] = list(previous.notes) if previous else []
     for task in tasks:
         try:
             raw_claims, opened = run_evidence_task(
@@ -53,5 +53,5 @@ def collect_evidence(
                 claims.append(claim)
     model = build_evidence_model(claims, card, cfg["consolidation"])
     model.rejected_claims = rejected
-    model.notes = notes + model.notes
+    model.notes = notes
     return model

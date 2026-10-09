@@ -8,7 +8,7 @@ Rule-based and logged; no model call. For each projected view:
    - drop               nothing to draw and no evidence will come
    - gap                the viewpoint's evidence is absent from the repository: keep
                         what exists and report the declared gap (decision 01 §8)
-   - request_evidence   questions unsupported and evidence rounds remain
+   - request_evidence   nothing drawn yet and evidence rounds remain
    - simplify           the selection overflows the detail-level cap: coarser grain
    - confirm            otherwise (limitations stay visible)
 
@@ -97,18 +97,17 @@ def decide(
     unsupported = [c.question for c in cov if c.status == "unsupported"]
     base = dict(view_id=view.id, coverage=cov, unsupported_questions=unsupported)
     if not view.content_elements():
-        if planned.evidence_gap or view.gaps:
-            return ViewDecision(decision="gap", reason="; ".join(view.gaps) or planned.evidence_gap or "", **base)
-        if evidence_rounds_left > 0:
-            return ViewDecision(decision="request_evidence", reason="nothing to draw yet", **base)
+        if planned.evidence_gap:
+            return ViewDecision(decision="gap", reason=planned.evidence_gap, **base)
+        if evidence_rounds_left > 0 and cov:  # an empty view asks again for every question it was assigned
+            return ViewDecision(decision="request_evidence", reason="nothing to draw yet",
+                                **base | {"unsupported_questions": [c.question for c in cov]})
+        if view.gaps:
+            return ViewDecision(decision="gap", reason="; ".join(view.gaps), **base)
         return ViewDecision(decision="drop", reason="no evidence for this view after all rounds", **base)
-    if unsupported and evidence_rounds_left > 0:
-        return ViewDecision(decision="request_evidence",
-                            reason=f"{len(unsupported)} question(s) without evidence: {', '.join(unsupported)}", **base)
     if view.overflow and not already_simplified and view.model_kind in {"uml-component", "uml-package"}:
         return ViewDecision(decision="simplify",
                             reason=f"{len(view.overflow)} element(s) over the {view.detail_level} cap", **base)
     if view.gaps or planned.evidence_gap:
         return ViewDecision(decision="gap", reason="; ".join(view.gaps) or planned.evidence_gap or "", **base)
-    return ViewDecision(decision="confirm", reason="all assigned questions have evidence in the view"
-                        if not unsupported else "evidence rounds exhausted; unanswered questions are reported", **base)
+    return ViewDecision(decision="confirm", reason="all assigned questions have evidence in the view", **base)

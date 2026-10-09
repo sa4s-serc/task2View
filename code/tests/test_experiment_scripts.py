@@ -70,6 +70,6 @@ def test_judge_outputs_scores_pipeline_and_plain_runs(tmp_path, monkeypatch):
     rows = list(csv.DictReader((tmp_path / "judge_summary.csv").open()))
     assert {(r["condition"], r["view"]) for r in rows} == {
         ("plain-agent", "view-1"), ("task2view", "V1-client-server"), ("task2view", "V2-sequence")}
-    assert all(r["judge"] == "judge-fixture" and r["score_answers-questions"] == "4" for r in rows)
+    assert all(r["judge"] == "judge-fixture:j" and r["score_answers-questions"] == "4" for r in rows)
     assert any("component OrderService" in p for p in seen)
     assert json.loads((plain / "judge.json").read_text())["view-1"]["status"] == "scored"

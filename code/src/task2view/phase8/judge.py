@@ -61,6 +61,7 @@ def judge_view(view: ArchitectureView, questions: list[Question], goal: str, sou
     if isinstance(raw.get("answers_questions"), dict):
         scores["answers-questions"] = raw["answers_questions"]
     overall = raw.get("overall") if isinstance(raw.get("overall"), int) else None
-    independent = None if judge_spec is None or generator_spec is None else judge_spec != generator_spec
+    known = {judge_spec, generator_spec}.isdisjoint({None, "scripted"})  # scripted test models have no identity
+    independent = judge_spec != generator_spec if known else None
     return JudgeReport(status="scored", model=judge_spec, independent=independent,
                        scores=json.loads(json.dumps(scores)), overall=overall, summary=str(raw.get("summary") or ""))

@@ -26,7 +26,7 @@ import yaml
 
 from task2view.agents.runtime import AgentRuntime
 from task2view.knowledge.catalog import load_catalog
-from task2view.llm import get_client
+from task2view.phase0.card import build_card, repo_facts
 from task2view.phase1.needs import extract_needs
 from task2view.phase3.selection import RepoFacts, select_views
 
@@ -44,15 +44,16 @@ def main() -> int:
     fixture = yaml.safe_load(Path(args.goals).read_text(encoding="utf-8"))
     catalog = load_catalog()
     runtime = AgentRuntime(model=args.llm)
-    llm_spec = get_client(args.llm).spec
+    llm_spec = runtime.spec
     print(f"model: {llm_spec}", flush=True)
     rows = []
     for run in range(1, args.runs + 1):
         for case_id, case in fixture["cases"].items():
-            facts = RepoFacts(signals=set(fixture["facts"][case["system"]]["signals"]))
             want = (case.get("expect") or {}).get("views")
             row = {"run": run, "case": case_id, "llm": llm_spec, "want": want}
             try:
+                facts = (repo_facts(build_card(case["code"])) if case.get("code")
+                         else RepoFacts(signals=set(fixture["facts"][case["system"]]["signals"])))
                 profile = extract_needs(case["goal"], runtime, catalog=catalog)
                 plan = select_views(profile.selection_input(), catalog, facts)
                 row.update(

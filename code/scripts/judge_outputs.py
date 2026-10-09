@@ -64,10 +64,10 @@ def main() -> int:
             first_call = len(runtime.ledger.calls)
             for view, source, questions in _views(run):
                 report = judge_view(view, questions, goal, source, "plantuml", runtime,
-                                    judge_spec=args.judge_llm, generator_spec=None)
+                                    judge_spec=runtime.spec, generator_spec=None)
                 results[view.id] = report.model_dump()
                 rows.append({"condition": condition.name, "run_id": run.name, "view": view.id,
-                             "viewpoint": view.viewpoint_id, "judge": args.judge_llm, "status": report.status,
+                             "viewpoint": view.viewpoint_id, "judge": runtime.spec, "status": report.status,
                              "overall": report.overall,
                              **{f"score_{k}": (v or {}).get("score") for k, v in report.scores.items()}})
             (run / "judge.json").write_text(json.dumps(results, indent=2), encoding="utf-8")

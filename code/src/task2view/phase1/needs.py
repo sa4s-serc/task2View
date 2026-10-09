@@ -96,14 +96,15 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
 
     needs: list[NeedEvidence] = []
     for row in raw.get("needs") or []:
-        need = str((row or {}).get("need") or "").strip()
-        evidence = str((row or {}).get("evidence") or "").strip()
+        row = row if isinstance(row, dict) else {"need": row}
+        need = str(row.get("need") or "").strip()
+        evidence = str(row.get("evidence") or "").strip()
         if need not in catalog.needs:
             dropped.append(f"need {need!r}: not in the catalog")
         elif not evidence or _norm(evidence) not in norm_goal:
             dropped.append(f"need {need!r}: evidence {evidence!r} is not in the goal")
         elif need not in {n.need for n in needs}:
-            salience = str((row or {}).get("salience") or "primary").strip().lower()
+            salience = str(row.get("salience") or "primary").strip().lower()
             if salience not in {"primary", "secondary"}:
                 dropped.append(f"need {need!r}: salience {salience!r} unknown, treated as primary")
                 salience = "primary"
@@ -111,9 +112,12 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
 
     subjects: list[GoalSubject] = []
     for row in raw.get("subjects") or []:
-        text = str((row or {}).get("text") or "").strip()
+        row = row if isinstance(row, dict) else {"text": row}
+        text = str(row.get("text") or "").strip()
         if not text or _norm(text) not in norm_goal:
             dropped.append(f"subject {text!r}: not in the goal")
+            continue
+        if text in {s.text for s in subjects}:
             continue
         subject_needs = [n for n in (row.get("needs") or []) if n in catalog.needs]
         subjects.append(GoalSubject(text=text, needs=subject_needs))

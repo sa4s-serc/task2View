@@ -18,6 +18,7 @@ from importlib import resources
 import yaml
 
 from task2view.agents.runtime import AgentRuntime
+from task2view.contracts.models import PipelineError
 from task2view.contracts.aem import InvestigationTask, Question, Seeds
 from task2view.contracts.card import RepositoryCard
 from task2view.knowledge.catalog import Catalog
@@ -104,6 +105,18 @@ def suggest_seeds(card: RepositoryCard, about: str, *, limit: int, neighbours: i
     return out
 
 
+def _plan_reply(runtime: AgentRuntime, prompt: str, purpose: str) -> dict:
+    """Seed choice is optional: on a failed or malformed reply the code's own suggestions stand."""
+    try:
+        return runtime.complete_json(prompt, purpose=purpose)
+    except PipelineError:
+        return {}
+
+
+def _strings(value) -> list[str]:
+    return [v for v in value if isinstance(v, str)] if isinstance(value, list) else []
+
+
 def plan_investigation(
     plan: ViewPlan,
     questions: list[Question],
@@ -130,15 +143,15 @@ def plan_investigation(
             goal = f"Collect evidence for: {'; '.join(q.text for q in group)}"
             suggested_by = sorted({o for _, o in suggestions}) or ["none"]
             if runtime is not None:
-                raw = runtime.complete_json(load_prompt("phase4_investigate").render(
+                raw = _plan_reply(runtime, load_prompt("phase4_investigate").render(
                     card=card_text, viewpoint=f"{vp.name} ({vp.vb_ref})",
                     elements=", ".join(vp.element_kinds), relations=", ".join(vp.relation_kinds),
                     questions="\n".join(f"- {q.id}: {q.text}" for q in group),
                     suggestions="\n".join(f"- {s} ({o})" for s, o in suggestions) or "- none",
                     limit=cfg["seed_symbols_per_task"],
-                ), purpose=f"phase4:{vid}:task{len(tasks) + 1}")
-                picked = [s for s in raw.get("symbols") or [] if s in card.symbols]
-                paths = [p for p in raw.get("paths") or [] if p in known_paths]
+                ), f"phase4:{vid}:task{len(tasks) + 1}")
+                picked = [s for s in _strings(raw.get("symbols")) if s in card.symbols]
+                paths = [p for p in _strings(raw.get("paths")) if p in known_paths]
                 if picked or paths:
                     seeds = Seeds(symbols=picked[: cfg["seed_symbols_per_task"]], paths=paths, classes=seeds.classes)
                     suggested_by = sorted(set(suggested_by) | {"planning-agent"})

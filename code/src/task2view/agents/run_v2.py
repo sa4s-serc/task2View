@@ -105,7 +105,7 @@ def run_v2(
                 t.id = f"R{round_no}-{t.id}"
             tasks += extra
             aem = collect_evidence(extra, questions, card, runtime, catalog, card_text=card_text,
-                                   previous=list(aem.claims.values()))
+                                   previous=aem)
             log.append(f"round {round_no}: {len(extra)} tasks for {len(wanted)} unsupported question(s)")
             continue
         if to_fold - folded:
@@ -133,7 +133,7 @@ def run_v2(
             view = project_view(vid, planned[vid], questions, aem, card, catalog, target=profile.target,
                                 fold=vid in folded, exclude=excluded)
         judge = judge_view(view, questions, goal, render.source, render.language, judge_runtime,
-                           judge_spec=judge_llm, generator_spec=llm_spec) if judge_runtime else JudgeReport(
+                           judge_spec=judge_runtime.spec, generator_spec=llm_spec) if judge_runtime else JudgeReport(
             status="not-run", summary="no judge model configured (--judge-llm)")
         result.task_fit = judge.model_dump()
         final_views[vid] = view

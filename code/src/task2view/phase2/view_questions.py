@@ -26,20 +26,21 @@ def derive_view_questions(profile: NeedProfile, plan: ViewPlan, catalog: Catalog
     for index, view in enumerate(plan.views):
         vp = catalog.viewpoint(view.viewpoint_id)
         vid = view_id(index, vp.id)
-        for need_id in view.needs:
-            need = catalog.needs[need_id]
-            subjects = [s for s in view.subjects if need_id in subject_needs.get(s, [])]
-            for subject in subjects or [None]:
-                about = subject or target
-                questions.append(Question(
-                    id=f"AQ{len(questions) + 1}",
-                    view_id=vid,
-                    viewpoint_id=vp.id,
-                    need=need_id,
-                    subject=subject,
-                    element_kinds=list(vp.element_kinds),
-                    relation_kinds=list(vp.relation_kinds),
-                    fragments=list(vp.fragments),
-                    text=f"For {about}: {need.description}?",
-                ))
+        pairs = [(need_id, s) for need_id in view.needs
+                 for s in [s for s in view.subjects if need_id in subject_needs.get(s, [])] or [None]]
+        # a subject without needs of this view is still asked about, under the view's first need
+        asked = {s for _, s in pairs}
+        pairs += [(view.needs[0], s) for s in view.subjects if s not in asked and view.needs]
+        for need_id, subject in pairs:
+            questions.append(Question(
+                id=f"AQ{len(questions) + 1}",
+                view_id=vid,
+                viewpoint_id=vp.id,
+                need=need_id,
+                subject=subject,
+                element_kinds=list(vp.element_kinds),
+                relation_kinds=list(vp.relation_kinds),
+                fragments=list(vp.fragments),
+                text=f"For {subject or target}: {catalog.needs[need_id].description}?",
+            ))
     return questions
