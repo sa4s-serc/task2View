@@ -1,0 +1,54 @@
+// Task2View pipeline (ADR-006). Render: dot -Tsvg pipeline-v2.dot -o pipeline-v2.svg
+digraph task2view {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=11, nodesep=0.35, ranksep=0.45, labelloc=t,
+         label="Task2View pipeline (ADR-006): goal + repository -> validated architecture views\n"];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#555555"];
+  edge  [fontname="Helvetica", fontsize=9, color="#555555"];
+
+  goal [label="Input 1\nstakeholder goal (free text)", shape=note, fillcolor="#f2f2f2"];
+  repo [label="Input 2\nrepository", shape=folder, fillcolor="#f2f2f2"];
+
+  subgraph cluster_understand {
+    label="A. Understand the request  (what must be shown?)"; style="rounded,dashed"; color="#7a7a7a"; fontsize=10;
+    p1 [label="Phase 1  Interpret  [LLM]\nneeds (primary / secondary), subjects, target, role\nevery item quoted from the goal", fillcolor="#e8f0fe"];
+    p3 [label="Phase 3  Select viewpoints  [rules]\nsmallest set of V&B viewpoints covering the primary needs (max 3)\n+ C&C style and layer overlay from repository signals", fillcolor="#fff4e5"];
+    p2 [label="Phase 2  Questions  [rules]\none question per view and subject", fillcolor="#fff4e5"];
+  }
+
+  subgraph cluster_evidence {
+    label="B. Find the evidence  (what does the code actually contain?)"; style="rounded,dashed"; color="#7a7a7a"; fontsize=10;
+    p0 [label="Phase 0  Repository card  [rules, tree-sitter]\nfile classes, symbols, dependency graph,\nentry points, entities, deployment, layers, signals", fillcolor="#fff4e5"];
+    p4 [label="Phase 4  Investigation plan  [rules + optional LLM]\ntasks per view and subject, starting points", fillcolor="#e8f0fe"];
+    p5 [label="Phase 5  Evidence agents  [LLM + tools]\nread code, return cited claims", fillcolor="#e8f0fe"];
+    v5 [label="Verify claims  [rules]\nfile, lines, quoted code, symbol exist?\nrejected claims kept with reason", fillcolor="#fff4e5"];
+    aem [label="Architecture Evidence Model\ncomponents (named after classes), relations from the graph,\nentities, deployment, states, ordered scenarios", shape=cylinder, fillcolor="#e6f4ea"];
+  }
+
+  subgraph cluster_views {
+    label="C. Draw and check the views"; style="rounded,dashed"; color="#7a7a7a"; fontsize=10;
+    p6 [label="Phase 6  Decide per view  [rules]\nconfirm / simplify / request evidence / gap / drop", fillcolor="#fff4e5"];
+    p7 [label="Phase 7  Project + render  [rules]\nview from the model only; 9 notations", fillcolor="#fff4e5"];
+    p8 [label="Phase 8  Validate  [rules + LLM judge]\nnotation, constraints, faithfulness, coverage;\ntask-fit judge = different model, reported only", fillcolor="#fff4e5"];
+  }
+
+  out [label="Output\nviews (PlantUML, Mermaid, ...), traceability,\nvalidation report, usage and cost", shape=note, fillcolor="#f2f2f2"];
+  legend [shape=plaintext, label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#e8f0fe">language model call</td><td bgcolor="#fff4e5">deterministic code</td><td bgcolor="#e6f4ea">shared model</td></tr></table>>];
+
+  goal -> p1;
+  repo -> p0;
+  p0 -> p3 [label="signals"];
+  p1 -> p3 [label="needs"];
+  p3 -> p2;
+  p2 -> p4;
+  p0 -> p4 [label="card"];
+  p4 -> p5;
+  p5 -> v5;
+  v5 -> aem;
+  aem -> p6;
+  p6 -> p4 [label="request evidence\n(<= 2 rounds)", style=dashed, constraint=false];
+  p6 -> p7;
+  p7 -> p8;
+  p8 -> p7 [label="repair\n(<= 2)", style=dashed, constraint=false];
+  p8 -> out;
+}
