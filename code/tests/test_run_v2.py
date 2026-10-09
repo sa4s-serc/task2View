@@ -147,7 +147,7 @@ def test_cli_run_v2_writes_package(tmp_path, capsys):
 
     out = tmp_path / "cli-run"
     code = main(["run", "--code", str(SHOP), "--goal", GOAL, "--out", str(out), "--llm", "scripted-run",
-                 "--notations", "plantuml,mermaid", "--skip-render", "--no-compile-check"])
+                 "--notations", "plantuml,mermaid", "--no-compile-check"])
     summary = json.loads(capsys.readouterr().out)
     assert code == 0
     assert [v["viewpoint"] for v in summary["views"]] == ["client-server", "sequence"]

@@ -134,7 +134,7 @@ def _role_priors(row: dict, roles_doc: dict, viewpoints: dict[str, Viewpoint], t
 @lru_cache(maxsize=1)
 def load_catalog() -> Catalog:
     needs_doc, vp_doc, roles_doc = _read("needs.yaml"), _read("viewpoints.yaml"), _read("roles.yaml")
-    table = _read("vb_table_9_1.yaml", folder=None)
+    table = _read("vb_table_9_1.yaml")
     needs = {row["id"]: Need(**row) for row in needs_doc["needs"]}
     families = vp_doc.get("families") or {}
     viewpoints: dict[str, Viewpoint] = {}

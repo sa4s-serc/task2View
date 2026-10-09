@@ -78,8 +78,3 @@ def _client(provider: str, model: str) -> LLMClient:
 
 def get_client(spec: str | None = None) -> LLMClient:
     return _client(*parse_spec(spec))
-
-
-def generate_json(prompt: str, *, model: str | None = None) -> dict:
-    """Single JSON completion. ``model`` is a spec; None means the default spec."""
-    return get_client(model).complete_json(prompt)

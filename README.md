@@ -47,14 +47,15 @@ task2view run \
   --notations plantuml,mermaid
 ```
 
-The pipeline is ADR-006 (stages below). `--engine legacy` runs the pre-ADR-006 single-view pipeline with its scoper/extractor plug-ins.
+The pipeline is ADR-006 (stages below). The earlier single-view pipeline was removed; it is in git history before commit `befee66`.
 
 Inspect individual stages without running the whole pipeline:
 
 ```bash
 task2view card --code /path/to/repo                                   # Phase 0 repository card
 task2view select-views --goal "..." --code /path/to/repo --llm ...    # Phase 1 + viewpoint selection
-task2view plugins                                                     # notations, LLM providers, legacy plug-ins
+task2view plugins                                                     # notations and LLM providers
+task2view compile --run-dir runs/demo --formats svg,png               # images (local compilers; --kroki-url to allow remote)
 ```
 
 Goal sets (any repositories; the pilot set is `code/tests/fixtures/pilot_goals.yaml`):

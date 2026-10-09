@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from task2view.contracts.models import PipelineError
-from task2view.llm import generate_json, get_client, parse_spec, providers
+from task2view.llm import get_client, parse_spec, providers
 from task2view.llm.base import LLMClient, parse_json
 from task2view.llm.registry import register_provider
 
@@ -36,7 +36,7 @@ def test_all_providers_registered():
     assert {"anthropic", "gemini", "openai", "openrouter", "ollama", "vllm", "openai-compatible"} <= set(providers())
 
 
-def test_generate_json_dispatches_to_registered_adapter():
+def test_spec_dispatches_to_registered_adapter():
     @register_provider("fake-test", default_model="m1")
     class FakeClient(LLMClient):
         provider = "fake-test"
@@ -44,7 +44,7 @@ def test_generate_json_dispatches_to_registered_adapter():
         def complete_text(self, prompt, *, system=None, json_mode=False):
             return f'```json\n{{"model": "{self.model}", "json_mode": {str(json_mode).lower()}}}\n```'
 
-    assert generate_json("hi", model="fake-test") == {"model": "m1", "json_mode": True}
+    assert get_client("fake-test").complete_json("hi") == {"model": "m1", "json_mode": True}
     assert get_client("fake-test:m2").spec == "fake-test:m2"
 
 
