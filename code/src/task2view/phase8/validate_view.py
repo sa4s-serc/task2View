@@ -22,6 +22,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from collections import Counter
+
 from pydantic import BaseModel, Field
 
 from task2view.contracts.aem import EvidenceModel
@@ -72,8 +74,7 @@ def compile_check(render: RenderResult, *, enabled: bool = True) -> dict:
 def _faithfulness(view: ArchitectureView, aem: EvidenceModel) -> list[dict]:
     out = []
     seen_symbols: dict[str, str] = {}
-    ids = [e.id for e in view.elements]
-    for dup in {i for i in ids if ids.count(i) > 1}:
+    for dup in sorted(i for i, n in Counter(e.id for e in view.elements).items() if n > 1):
         out.append({"mark": dup, "severity": "error", "message": "element drawn more than once"})
     for e in view.content_elements():
         if e.id.startswith("fold:"):
@@ -82,6 +83,8 @@ def _faithfulness(view: ArchitectureView, aem: EvidenceModel) -> list[dict]:
                 out.append({"mark": e.id, "severity": "error", "message": f"folded element lists unknown members {missing}"})
             continue
         el = aem.elements.get(e.id)
+        if el is None and e.kind == "system":  # the analysed system itself (context view)
+            continue
         if el is None:
             out.append({"mark": e.id, "severity": "error", "message": f"{e.name} is not in the evidence model"})
             continue
@@ -89,7 +92,7 @@ def _faithfulness(view: ArchitectureView, aem: EvidenceModel) -> list[dict]:
             out.append({"mark": e.id, "severity": "error", "message": f"{e.name} is only weakly supported"})
         if e.name != el.name:
             out.append({"mark": e.id, "severity": "error", "message": f"renamed: {el.name!r} drawn as {e.name!r}"})
-        for sym in el.realized_by:
+        for sym in el.realized_by if e.kind != "state" else []:  # an enum's states share its symbol
             if sym in seen_symbols and seen_symbols[sym] != e.id:
                 out.append({"mark": e.id, "severity": "error",
                             "message": f"symbol {sym} is drawn by two elements ({seen_symbols[sym]}, {e.id})"})

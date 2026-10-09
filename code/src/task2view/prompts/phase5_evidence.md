@@ -93,7 +93,7 @@ For a person or role that uses the system, use `"element_kind": "actor"`. For a 
 1. **Cite only what you have read.** Copy each excerpt exactly from lines you opened with `read`, and give those line numbers.
    *Why:* a citation whose excerpt is not in the cited lines is rejected.
 2. **Use the code's names.** `name`, `symbol`, `source` and `target` are class, module or symbol names as the code writes them. A responsibility is a short phrase in its own field, never part of a name.
-   *Why:* an element whose name is not a symbol in the repository is rejected (except actors and use cases), and names are what readers look up in the code.
+   *Why:* an element whose name is not a symbol in the repository is rejected (except non-code kinds such as actors, use cases, nodes, datastores and states), and names are what readers look up in the code.
 3. **One fact per claim.** Report several small claims rather than one large one.
 4. **Interactions:** number them with `order` in the sequence the code executes them, give the same `scenario` name to steps of the same scenario, and put the guard of an alternative or failure path in `condition`.
 5. **Leave unanswered rather than guess.** If the code does not show something, do not claim it.

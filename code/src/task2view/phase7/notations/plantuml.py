@@ -42,7 +42,7 @@ class PlantUMLRenderer(Renderer):
     # ---------------------------------------------------------- structure
     def _structure(self, view: ArchitectureView) -> list[str]:
         tree = children(view)
-        lines: list[str] = []
+        lines: list[str] = ["allowmixing"]  # classes next to databases or components
         if view.model_kind == "uml-deployment":
             lines.append("left to right direction")
         else:

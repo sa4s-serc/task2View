@@ -23,9 +23,10 @@ Rules:
 ## 2. Verification (do this for every claim)
 Reject the claim, with the reason, unless **at least one** citation passes all of these checks:
 1. The file exists in the repository and is not a UML model or binary.
-2. The cited lines exist.
-3. The excerpt occurs, ignoring whitespace differences, within the cited lines (3 lines of slack either side).
-4. If the citation names a symbol, that symbol exists.
+2. The first cited line exists.
+3. The excerpt contains at least one word of 3 or more characters (`}` alone locates nothing).
+4. The excerpt occurs, ignoring whitespace differences, within the cited lines (3 lines of slack either side).
+5. If the citation names a symbol, that symbol exists.
 
 Then check the claim itself:
 - An **element** claim must name a real symbol, except `actor`, `use_case`, `node`, `execution_env`, `artifact`, `datastore`, `external_system`, `system`, `state` and the other non-code kinds.

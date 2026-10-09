@@ -43,13 +43,13 @@ For each question of the view:
 
 Then decide, checking these rules in order:
 1. The view draws nothing:
-   - with an evidence gap → `gap`;
-   - else, if a round remains → `request_evidence`;
+   - the viewpoint's evidence is absent from the repository (planned evidence gap) → `gap`;
+   - else, if a round remains → `request_evidence` for all of the view's questions (at most 2 extra rounds of Phase 4–5);
+   - else, if projection reported why it is empty → `gap`;
    - else → `drop`.
-2. Some questions are `unsupported` and a round remains → `request_evidence` (at most 2 extra rounds of Phase 4–5, only for those questions).
-3. A component or package view overflows its cap → `simplify`: one element per layer, or per package when there are no layers, listing its components; relations between groups are labelled "<n> dependencies".
-4. The view has an evidence gap → `gap` (keep the view, report the gap).
-5. Otherwise → `confirm`.
+2. A component or package view overflows its cap → `simplify`: one element per layer, or per package when there are no layers, listing its components; relations between groups are labelled "<n> dependencies".
+3. The view has an evidence gap → `gap` (keep the view, report the gap).
+4. Otherwise → `confirm`.
 
 ## Phase 8 validation
 1. **Notation:** the source is well formed in its language (compile it if you can), and the model kind matches the viewpoint.

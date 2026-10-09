@@ -11,7 +11,10 @@ Write these files under `--out`, with exactly these names and fields. They are t
   viewset.json                 validation_report.json
   traceability.md              README.md
   usage.json                   (tokens and cost; agents: what your tool reports, else omit)
+  run.log                      (pipeline only: one line per phase decision)
   V1-<viewpoint id>/view.json  V1-<viewpoint id>/view.puml   (one folder per view)
+  V1-<viewpoint id>/view.<notation>.<ext>                   (each further notation asked for)
+  V1-<viewpoint id>/render_notes.json                       (only when a notation could not draw something)
 ```
 
 ## repository_card.json

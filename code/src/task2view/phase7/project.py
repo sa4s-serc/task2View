@@ -35,7 +35,6 @@ def project_view(
     catalog: Catalog,
     *,
     target: str = "",
-    max_elements: int | None = None,
     fold: bool = False,
     exclude: set[str] | None = None,
 ) -> ArchitectureView:
@@ -43,7 +42,7 @@ def project_view(
     ``exclude`` (Phase 8 repair) leaves out marks that failed validation."""
     vp = catalog.viewpoint(planned.viewpoint_id)
     qids = [q.id for q in questions if q.view_id == view_id]
-    cap = int(max_elements or planned.granularity.get("max_elements") or 10)
+    cap = int(planned.granularity.get("max_elements") or 10)
     focus = " ".join([target, *planned.subjects])
     view = ArchitectureView(
         id=view_id, viewpoint_id=vp.id, viewpoint_name=vp.name, vb_ref=vp.vb_ref, model_kind=vp.model_kind,
@@ -59,6 +58,8 @@ def project_view(
         _states(view, aem, focus)
     elif vp.model_kind == "uml-usecase":
         _use_cases(view, aem, card)
+    elif vp.id == "context":
+        _context(view, aem, card)
     elif vp.model_kind == "uml-deployment":
         _deployment(view, vp, aem)
     elif "entity" in vp.element_kinds:
@@ -85,8 +86,9 @@ def _relevance(aem: EvidenceModel, el: ArchElement, qids: list[str], focus_token
     return (claimed, named, len(el.responsibilities), len(el.claims))
 
 
-def _cap(view: ArchitectureView, ranked: list[ArchElement]) -> list[ArchElement]:
-    kept, rest = ranked[: view.max_elements], ranked[view.max_elements:]
+def _cap(view: ArchitectureView, ranked: list[ArchElement], reserve: int = 0) -> list[ArchElement]:
+    room = max(view.max_elements - reserve, 0)
+    kept, rest = ranked[:room], ranked[room:]
     view.overflow = [e.id for e in rest]
     if rest:
         view.limitations.append(f"{len(rest)} further element(s) exceed the {view.detail_level} cap of {view.max_elements}")
@@ -115,7 +117,7 @@ def _layers(view: ArchitectureView, elements: list[ViewElement]) -> None:
     view.elements[:0] = groups
 
 
-def _packages(view: ArchitectureView, elements: list[ViewElement], aem: EvidenceModel) -> None:
+def _packages(view: ArchitectureView, elements: list[ViewElement]) -> None:
     """Nest components in the package (module) of their anchor symbol when there is more than one."""
     packages = {e.id: e.realized_by[0].rsplit(".", 1)[0] for e in elements if e.realized_by and "." in e.realized_by[0]}
     if len(set(packages.values())) < 2:
@@ -162,27 +164,29 @@ def _structure(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel, qids: 
     if fold:
         _folded(view, vp, aem, ranked)
         return
-    kept = _cap(view, ranked)
+    stores = [e for e in aem.elements.values() if e.kind == "datastore"] if "datastore" in vp.element_kinds else []
+    stores = stores if any(e.layer == "persistence" for e in ranked) else []
+    kept = _cap(view, ranked, reserve=len(stores))
     elements = [_element(el, _view_kind(el, vp), stereotype=el.layer) for el in kept]
     view.elements.extend(elements)
-    if "datastore" in vp.element_kinds:
-        if any(e.stereotype == "persistence" for e in elements):
-            for store in (e for e in aem.elements.values() if e.kind == "datastore"):
-                view.elements.append(_element(store, "datastore"))
-                for e in elements:
-                    if e.stereotype == "persistence":
-                        view.relations.append(ViewRelation(id=f"rel:{e.id}:writes:{store.id}", kind="writes" if "writes" in vp.relation_kinds else "uses",
-                                                           source=e.id, target=store.id, support="inferred"))
+    writers = [e for e in elements if e.stereotype == "persistence"]
+    store_kind = next((k for k in ("writes", "uses") if k in vp.relation_kinds), vp.relation_kinds[0])
+    for store in stores if writers else []:
+        view.elements.append(_element(store, "datastore"))
+        view.relations.extend(ViewRelation(id=f"rel:{e.id}:{store_kind}:{store.id}", kind=store_kind, source=e.id,
+                                           target=store.id, support="inferred") for e in writers)
     if vp.id == "generalization":
         _relations(view, aem, {"generalization"}, {"generalization": "is-a"})
     elif vp.id == "layered":
         _relations(view, aem, {"uses"}, {"uses": "allowed-to-use"})
     elif "uses" in vp.relation_kinds or vp.family == "cnc":
         _relations(view, aem, {"uses"}, {"uses": "uses" if "uses" in vp.relation_kinds else vp.relation_kinds[0]})
+    if not elements:
+        view.gaps.append(f"no components evidenced for the {vp.name.lower()} view")
     # decomposition draws is-part-of as nesting, not as edges
     _layers(view, elements)
     if vp.id == "decomposition" and "layered" not in view.overlays:
-        _packages(view, elements, aem)
+        _packages(view, elements)
 
 
 def _folded(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel, ranked: list[ArchElement]) -> None:
@@ -194,7 +198,12 @@ def _folded(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel, ranked: l
         groups.setdefault(key, []).append(el)
     member_of = {}
     kind = "module" if "module" in vp.element_kinds else _view_kind(ranked[0], vp) if ranked else "component"
-    for key, members in list(groups.items())[: view.max_elements]:
+    keys = list(groups)
+    if len(keys) > view.max_elements:
+        view.overflow = [m.id for k in keys[view.max_elements:] for m in groups[k]]
+        view.limitations.append(f"{len(keys) - view.max_elements} further group(s) exceed the cap of {view.max_elements}")
+    for key in keys[: view.max_elements]:
+        members = groups[key]
         fid = f"fold:{key}"
         for m in members:
             member_of[m.id] = fid
@@ -250,7 +259,8 @@ def _data_model(view: ArchitectureView, aem: EvidenceModel, card: RepositoryCard
     for edge in card.edges:
         if edge.kind == "extends" and edge.source in sym_to_ent and edge.target in sym_to_ent:
             view.relations.append(ViewRelation(id=f"rel:{edge.source}:generalization:{edge.target}", kind="generalization",
-                                               source=sym_to_ent[edge.source], target=sym_to_ent[edge.target]))
+                                               source=sym_to_ent[edge.source], target=sym_to_ent[edge.target],
+                                               support="inferred"))
     if not entities:
         view.gaps.append("no persisted entities found in the repository")
 
@@ -329,6 +339,26 @@ def _use_cases(view: ArchitectureView, aem: EvidenceModel, card: RepositoryCard)
         view.gaps.append("no use cases were evidenced")
 
 
+def _context(view: ArchitectureView, aem: EvidenceModel, card: RepositoryCard) -> None:
+    """The system as one box; actors, external systems and datastores around it, linked where evidence links them."""
+    outer = {"actor", "external_system", "datastore"}
+    system = ViewElement(id="system", kind="system", name=card.name, realized_by=[card.name])
+    kept = _cap(view, [e for e in aem.elements.values() if e.kind in outer], reserve=1)
+    view.elements += [system, *(_element(e, e.kind) for e in kept)]
+    ids = {e.id for e in kept}
+    inside = {e.id for e in aem.elements.values() if e.kind not in outer}
+    edges = {(system.id, e.id) for e in kept if e.kind == "datastore"}
+    for r in aem.relations.values():
+        if r.source in ids and r.target in inside:
+            edges.add((r.source, system.id))
+        elif r.target in ids and r.source in inside:
+            edges.add((system.id, r.target))
+    view.relations += [ViewRelation(id=f"rel:{a}:uses:{b}", kind="uses", source=a, target=b, support="inferred")
+                       for a, b in sorted(edges)]
+    if not kept:
+        view.gaps.append("no actors, external systems or datastores were evidenced")
+
+
 def _deployment(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel) -> None:
     kinds = set(vp.element_kinds)
     picked = [e for e in aem.elements.values() if e.kind in kinds]
@@ -338,15 +368,16 @@ def _deployment(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel) -> No
     for r in aem.relations.values():
         if r.kind == "deploys" and r.source in ids and r.target in ids:
             view.element(r.source).parent = r.target  # node ⊃ artifact
-    _relations(view, aem, {"communicates", "deploys", "contains"})
+    _relations(view, aem, {"communicates", "contains"})  # deploys is drawn as nesting
     if not picked:
         view.gaps.append("no deployment descriptors or build units found")
 
 
 def _table(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel) -> None:
-    rows = [e for e in aem.elements.values() if e.kind in set(vp.element_kinds) - {"module", "component"}]
-    if vp.id == "implementation" or not rows:
-        rows = rows or [e for e in aem.elements.values() if e.kind == "component"]
+    if vp.id == "implementation":  # components, mapped to their files by the traceability table
+        rows = [e for e in aem.elements.values() if e.kind == "component"]
+    else:  # modules and components alone do not answer an interface, decision or requirement table
+        rows = [e for e in aem.elements.values() if e.kind in set(vp.element_kinds) - {"module", "component"}]
     view.elements.extend(_element(e, _view_kind(e, vp)) for e in _cap(view, rows))
     if not rows:
         view.gaps.append(f"no evidence for {vp.name.lower()}")
@@ -361,7 +392,7 @@ def _traceability(view: ArchitectureView, aem: EvidenceModel, card: RepositoryCa
         files = sorted({card.symbols[s].file for s in symbols})
         el = aem.elements.get(e.id)
         if el is not None and not files:
-            files = sorted({ref.file for c in el.claims for ref in aem.claims[c].evidence if c in aem.claims})
+            files = sorted({ref.file for c in el.claims if c in aem.claims for ref in aem.claims[c].evidence})
             if not files and el.details.get("file"):
                 files = [el.details["file"]]
         view.traceability.append(TraceRow(element=e.id, name=e.name, files=files, symbols=symbols))

@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from task2view.agents.run_v2 import RunV2Result
+from task2view.phase0.card import render_card
 
 
 def _dump(path: Path, data) -> None:
@@ -20,7 +21,7 @@ def write_run_v2(result: RunV2Result, out: str | Path) -> Path:
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     _dump(out / "repository_card.json", result.card)
-    (out / "repository_card.txt").write_text(_card_text(result), encoding="utf-8")
+    (out / "repository_card.txt").write_text(render_card(result.card) + "\n", encoding="utf-8")
     _dump(out / "stakeholder_profile.json", result.profile)
     _dump(out / "view_plan.json", result.plan)
     _dump(out / "architectural_questions.json", result.questions)
@@ -37,16 +38,13 @@ def write_run_v2(result: RunV2Result, out: str | Path) -> Path:
         for render in result.renders.get(view.id, []):
             name = f"view.{render.language}.{render.extension}" if render.language != "plantuml" else f"view.{render.extension}"
             (vdir / name).write_text(render.source, encoding="utf-8")
+        notes = {r.language: r.note for r in result.renders.get(view.id, []) if r.note}
+        if notes:  # what a notation could not draw
+            _dump(vdir / "render_notes.json", notes)
     (out / "traceability.md").write_text(_traceability(result), encoding="utf-8")
     (out / "README.md").write_text(_readme(result), encoding="utf-8")
     (out / "run.log").write_text("\n".join(result.log) + "\n", encoding="utf-8")
     return out
-
-
-def _card_text(result: RunV2Result) -> str:
-    from task2view.phase0.card import render_card
-
-    return render_card(result.card) + "\n"
 
 
 def _traceability(result: RunV2Result) -> str:
