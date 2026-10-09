@@ -101,7 +101,7 @@ class ArchElement(BaseModel):
     details: dict[str, str] = Field(default_factory=dict)
     support: Support = "observed"
     claims: list[str] = Field(default_factory=list)
-    named_by: Literal["symbol", "model", "fact"] = "symbol"
+    named_by: Literal["symbol", "package", "model", "fact"] = "symbol"
 
 
 class ArchRelation(BaseModel):
@@ -135,7 +135,6 @@ class Fragment(BaseModel):
 class Scenario(BaseModel):
     id: str
     name: str
-    subject: str | None = None
     steps: list[Step] = Field(default_factory=list)
     fragments: list[Fragment] = Field(default_factory=list)
 
@@ -154,8 +153,6 @@ class EvidenceModel(BaseModel):
     rejected_claims: list[dict] = Field(default_factory=list)  # {claim, reason}
     component_of: dict[str, str] = Field(default_factory=dict)  # symbol id -> element id
     correspondences: list[Correspondence] = Field(default_factory=list)
+    # convergence / divergence / absence -> relation ids (code edges vs claims, between components)
+    reflexion: dict[str, list[str]] = Field(default_factory=dict)
     notes: list[str] = Field(default_factory=list)
-
-    def element_for_symbol(self, symbol: str) -> ArchElement | None:
-        eid = self.component_of.get(symbol)
-        return self.elements.get(eid) if eid else None

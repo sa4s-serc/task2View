@@ -9,9 +9,12 @@ citations checks out:
 - a cited or claimed symbol exists in the repository card.
 
 Support is then decided here, not by the agent:
-- observed:   a code citation shows it (a relation is also backed by a graph
-              edge between the two symbols, or the excerpt names the target)
-- inferred:   cited, but the relation is not visible in the graph or excerpt
+- observed:   a code citation shows it: an element is cited in the file that declares
+              it; a relation is backed by a graph edge in its direction, or the
+              excerpt names the target as a word
+- inferred:   cited, but not in that way
+Observed means the cited code exists where the claim says; it does not prove the
+claim's wording (responsibilities are the agent's reading of that code).
 - documented: backed only by documentation files
 - weak:       confidence below the configured floor
 """
@@ -53,19 +56,28 @@ class SymbolIndex:
             for i in range(len(parts)):
                 self.suffix.setdefault(".".join(parts[i:]), set()).add(sid)
 
-    def resolve(self, ref: str | None) -> str | None:
+    def resolve(self, ref: str | None, files: set[str] = frozenset()) -> str | None:
+        """A symbol id for an id, a dotted suffix, or ``Type.member`` when the type has that member.
+        An ambiguous name resolves only if exactly one candidate is declared in one of ``files``."""
         if not ref:
             return None
-        ref = ref.strip()
+        ref = ref.strip().split("(", 1)[0]
         if ref in self.card.symbols:
             return ref
         candidates = self.suffix.get(ref) or set()
+        if len(candidates) > 1:
+            candidates = {c for c in candidates if self.card.symbols[c].file in files}
         if len(candidates) == 1:
             return next(iter(candidates))
-        head = ref.rsplit(".", 1)[0] if "." in ref else None  # "Type.method" -> Type
-        if head:
-            return self.resolve(head) if head != ref else None
+        head, _, member = ref.rpartition(".")
+        owner = self.resolve(head, files) if head else None
+        if owner is not None and member in self._members(owner):
+            return owner
         return None
+
+    def _members(self, sid: str) -> set[str]:
+        s = self.card.symbols[sid]
+        return {m.name for m in s.methods} | {f.name for f in s.fields} | set(s.enum_constants)
 
 
 class ClaimVerifier:
@@ -86,7 +98,7 @@ class ClaimVerifier:
         for ev in _as_list(raw.get("evidence")):
             ok, reason = self._check_ref(ev)
             if ok:
-                refs.append(EvidenceRef(file=ev["file"], symbol=self.index.resolve(ev.get("symbol")) or ev.get("symbol"),
+                refs.append(EvidenceRef(file=ev["file"], symbol=self.index.resolve(ev.get("symbol"), {ev["file"]}) or ev.get("symbol"),
                                         lines=list(ev.get("lines") or [])[:2], excerpt=str(ev.get("excerpt") or "")))
             else:
                 problems.append(reason)
@@ -104,11 +116,13 @@ class ClaimVerifier:
             evidence=refs, confidence=max(0.0, min(1.0, _number(raw.get("confidence"), 0.5))),
         )
         if kind == "element":
-            claim.symbol = self.index.resolve(raw.get("symbol")) or self.index.resolve(raw.get("name"))
+            files = {r.file for r in refs}
+            claim.symbol = self.index.resolve(raw.get("symbol"), files) or self.index.resolve(raw.get("name"), files)
             if claim.symbol is None and (claim.element_kind or "") not in _NON_CODE_KINDS:
                 return None, f"element {raw.get('name')!r} is not a symbol in the repository"
         if kind in {"relation", "interaction"}:
-            src, tgt = self.index.resolve(claim.source), self.index.resolve(claim.target)
+            files = {r.file for r in refs}
+            src, tgt = self.index.resolve(claim.source, files), self.index.resolve(claim.target, files)
             if tgt is None or (src is None and kind == "relation"):
                 return None, f"{kind} endpoint not in the repository: {claim.source!r} -> {claim.target!r}"
             claim.source, claim.target = src or claim.source, tgt
@@ -146,7 +160,7 @@ class ClaimVerifier:
         if excerpt not in window:
             return False, f"{path}: excerpt not found at lines {span or 'any'}"
         sym = ev.get("symbol")
-        if sym and self.index.resolve(sym) is None:
+        if sym and self.index.resolve(sym, {path}) is None:
             return False, f"{path}: symbol {sym!r} not in the repository"
         return True, ""
 
@@ -163,6 +177,8 @@ class ClaimVerifier:
             if any(re.search(rf"\b{re.escape(n)}\b", r.excerpt) for n in names for r in claim.evidence):
                 return "observed"
             return "inferred"
+        if claim.symbol and claim.symbol in self.card.symbols:  # an element is observed only where it is declared
+            return "observed" if self.card.symbols[claim.symbol].file in {r.file for r in claim.evidence} else "inferred"
         return "observed"
 
     def _lines(self, path: str) -> list[str]:

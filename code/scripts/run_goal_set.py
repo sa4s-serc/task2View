@@ -64,7 +64,8 @@ def main() -> int:
             want = (case.get("expect") or {}).get("views")
             row.update(views=got, expected=want, match=None if want is None else got == want,
                        verdicts={vid: v.verdict for vid, v in result.validation.items()},
-                       judge={vid: v.task_fit.get("overall") for vid, v in result.validation.items()},
+                       judge={vid: {k: s["score"] for k, s in v.task_fit.get("scores", {}).items()}
+                              for vid, v in result.validation.items()},
                        claims=len(result.aem.claims), rejected=len(result.aem.rejected_claims),
                        usage=result.usage.get("total", {}))
         except Exception as exc:  # one failing case must not stop the set; the error is recorded

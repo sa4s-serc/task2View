@@ -7,6 +7,7 @@ from collections.abc import Callable
 
 from task2view.contracts.models import PipelineError
 from task2view.llm import get_client
+from task2view.llm.base import Prompt, joined
 from task2view.llm.usage import UsageLedger
 
 GenerateFn = Callable[..., dict]
@@ -25,12 +26,12 @@ class AgentRuntime:
         self.generate = generate or (lambda prompt, model=None: self._client.complete_json(prompt))
         self.spec = self._client.spec if self._client is not None else (model or "scripted")
 
-    def complete_json(self, prompt: str, *, purpose: str = "") -> dict:
+    def complete_json(self, prompt: Prompt, *, purpose: str = "") -> dict:
         start = time.monotonic()
         if self._client is not None:
             self._client.last_usage = None
         try:
-            raw = self.generate(prompt, model=self.model)
+            raw = self.generate(prompt if self._client is not None else joined(prompt), model=self.model)
         finally:
             usage = self._client.last_usage if self._client is not None else None
             self.ledger.record(purpose or "unlabelled", self.spec, usage, time.monotonic() - start)

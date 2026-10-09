@@ -118,8 +118,9 @@ def _layers(view: ArchitectureView, elements: list[ViewElement]) -> None:
 
 
 def _packages(view: ArchitectureView, elements: list[ViewElement]) -> None:
-    """Nest components in the package (module) of their anchor symbol when there is more than one."""
-    packages = {e.id: e.realized_by[0].rsplit(".", 1)[0] for e in elements if e.realized_by and "." in e.realized_by[0]}
+    """Nest components in their enclosing package when there is more than one: a class component in its
+    package, a package component in its parent package."""
+    packages = {e.id: e.id[4:].rsplit(".", 1)[0] for e in elements if e.id.startswith("cmp:") and "." in e.id[4:]}
     if len(set(packages.values())) < 2:
         return
     groups = []

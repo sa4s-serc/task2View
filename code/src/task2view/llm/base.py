@@ -17,6 +17,12 @@ from task2view.contracts.models import PipelineError
 
 JSON_INSTRUCTION = "Reply with exactly one JSON object and nothing else."
 
+Prompt = str | list[str]  # a list is one prompt in blocks: a stable prefix first, then what each step added
+
+
+def joined(prompt: Prompt) -> str:
+    return prompt if isinstance(prompt, str) else "\n\n".join(prompt)
+
 
 def load_dotenv() -> None:
     """Copy KEY=value lines from the nearest .env into os.environ (unset keys only)."""
@@ -62,7 +68,10 @@ class LLMClient(ABC):
     def complete_text(self, prompt: str, *, system: str | None = None, json_mode: bool = False) -> str:
         """Return the model's text reply to a single user prompt."""
 
-    def complete_json(self, prompt: str, *, system: str | None = None) -> dict:
+    caches_blocks = False  # adapters that can cache a block prefix receive the blocks, others the joined text
+
+    def complete_json(self, prompt: Prompt, *, system: str | None = None) -> dict:
+        prompt = prompt if self.caches_blocks else joined(prompt)
         return parse_json(self.complete_text(prompt, system=system, json_mode=True), self.spec)
 
 

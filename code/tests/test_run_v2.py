@@ -38,7 +38,7 @@ def scripted(prompt, model=None):
 
 def judge(prompt, model=None):
     assert "Phase 8: Task-fit review" in prompt
-    return {"scores": {"grain": {"score": 4, "reason": "fits"}}, "overall": 4, "summary": "ok"}
+    return {"reason": "fits", "score": 4}
 
 
 @pytest.fixture(scope="module")

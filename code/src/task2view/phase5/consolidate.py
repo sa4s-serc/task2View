@@ -1,13 +1,18 @@
 """Phase 5b — consolidate verified claims and card facts into the Architecture Evidence Model.
 
 Deterministic (design 02 §6; ADR-006 D2: cluster deterministically, names from members):
-- Components: every non-test code symbol a verified claim is about becomes the
-  anchor of one component. Helper types (enums, records, exceptions, DTOs, and
-  interfaces with a single implementer) are attached to the anchor that uses them
-  most instead of becoming components. A component is named after its anchor
-  symbol, so every name exists in the code.
+- Components (grain follows the goal's detail level; names always exist in the code):
+  - overview: one component per package (module) holding the claimed symbols, named
+    after the package. Class-level boxes are finer than any recovered architecture.
+  - feature / detailed: every non-test code symbol a verified claim is about anchors
+    one component named after it. Helper types (enums, records, exceptions, DTOs,
+    single-implementation interfaces) join the one anchor that uses them; a helper
+    shared by several anchors, or used by none, stays its own component.
 - Relations between components are lifted from dependency-graph edges between
   their members; each keeps the member edges behind it.
+- Reflexion (Murphy et al.): each component relation is a convergence (a claim and
+  a code edge agree), a divergence (code edge no claim mentions) or an absence
+  (claimed, no code edge), so omissions and unsupported claims are both visible.
 - Entities and their attributes and associations come from persistence facts.
   Foreign-key fields stay attributes; associations follow object references.
 - Deployment elements come from deploy and build units.
@@ -36,12 +41,16 @@ def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-") or "x"
 
 
-def build_evidence_model(claims: list[Claim], card: RepositoryCard, cfg: dict) -> EvidenceModel:
+def build_evidence_model(claims: list[Claim], card: RepositoryCard, cfg: dict, *, grain: str = "class") -> EvidenceModel:
     aem = EvidenceModel(claims={c.id: c for c in claims})
-    _components(aem, claims, card, cfg)
+    if grain == "package":
+        _package_components(aem, claims, card)
+    else:
+        _components(aem, claims, card, cfg)
     _component_relations(aem, card)
     _claim_elements(aem, claims)
     _claim_relations(aem, claims)
+    _reflexion(aem)
     _entities(aem, card, claims)
     _deployment(aem, card)
     _states(aem, card, claims)
@@ -95,17 +104,21 @@ def _components(aem: EvidenceModel, claims: list[Claim], card: RepositoryCard, c
             links[(e.source, e.target)] += 1
             links[(e.target, e.source)] += 1
     for h in helpers:
-        best = max(anchors, key=lambda a: (links[(a, h)], -anchors.index(a)), default=None)
-        if best is not None and links[(best, h)]:
-            eid = aem.component_of[best]
+        users = [a for a in anchors if links[(a, h)]]
+        if len(users) == 1:  # a helper shared by several anchors is not forced into one of them
+            eid = aem.component_of[users[0]]
             aem.elements[eid].realized_by.append(h)
             aem.component_of[h] = eid
-        else:  # used by no anchor: keep it visible as its own element
+        else:  # shared, or used by no anchor: keep it visible as its own element
             s = card.symbols[h]
             eid = f"cmp:{h}"
             aem.elements[eid] = ArchElement(id=eid, kind="component", name=s.name, realized_by=[h], layer=s.layer,
                                             named_by="symbol")
             aem.component_of[h] = eid
+    _attach_claims(aem, claims)
+
+
+def _attach_claims(aem: EvidenceModel, claims: list[Claim]) -> None:
     for c in claims:
         if c.kind == "element" and c.symbol in aem.component_of:
             el = aem.elements[aem.component_of[c.symbol]]
@@ -113,6 +126,21 @@ def _components(aem: EvidenceModel, claims: list[Claim], card: RepositoryCard, c
             for text in c.responsibilities:
                 if text.lower() not in {r.text.lower() for r in el.responsibilities}:
                     el.responsibilities.append(Responsibility(text=text, claims=[c.id]))
+
+
+def _package_components(aem: EvidenceModel, claims: list[Claim], card: RepositoryCard) -> None:
+    by_package: dict[str, list[str]] = defaultdict(list)
+    for sid in _claim_symbols(claims, card):
+        by_package[card.symbols[sid].package or card.symbols[sid].file.rsplit("/", 1)[0]].append(sid)
+    for package, members in by_package.items():
+        eid = f"cmp:{package}"
+        layers = Counter(card.symbols[m].layer for m in members if card.symbols[m].layer)
+        aem.elements[eid] = ArchElement(id=eid, kind="component", name=package.rsplit(".", 1)[-1] or package,
+                                        realized_by=members, layer=layers.most_common(1)[0][0] if layers else None,
+                                        support="observed", named_by="package")
+        for m in members:
+            aem.component_of[m] = eid
+    _attach_claims(aem, claims)
 
 
 def _component_relations(aem: EvidenceModel, card: RepositoryCard) -> None:
@@ -360,3 +388,11 @@ def _actor(aem: EvidenceModel, name: str | None) -> str | None:
         return None
     eid = next((e.id for e in aem.elements.values() if e.kind == "actor" and e.name.lower() == name.lower()), None)
     return eid
+
+
+def _reflexion(aem: EvidenceModel) -> None:
+    for r in aem.relations.values():
+        if aem.elements[r.source].kind != "component" or aem.elements[r.target].kind != "component":
+            continue
+        status = ("convergence" if r.member_edges and r.claims else "divergence" if r.member_edges else "absence")
+        aem.reflexion.setdefault(status, []).append(r.id)

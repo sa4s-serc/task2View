@@ -9,6 +9,7 @@ reference diagrams a view will be evaluated against.
 from __future__ import annotations
 
 import re
+from collections import Counter
 from pathlib import Path
 
 from task2view.contracts.card import RepositoryCard
@@ -23,8 +24,10 @@ class CardTools:
         self.max_read_lines = max_read_lines
         self.max_hits = max_hits
         self.opened: set[str] = set()
+        self.calls: Counter = Counter()  # telemetry: how often each tool was used
 
     def dispatch(self, name: str, args: dict) -> str:
+        self.calls[name if name in TOOLS else "unknown-tool"] += 1
         try:
             if name == "list_tree":
                 return self.list_tree(str(args.get("path", ".")), int(args.get("depth", 2)))
@@ -76,10 +79,21 @@ class CardTools:
         self.opened.add(path)
         return "\n".join(f"{i:5d}  {lines[i - 1]}" for i in range(start, end + 1)) or "empty"
 
+    def _lookup(self, ref: str):
+        """(symbol, error): an id, or a simple name that names exactly one symbol."""
+        if ref in self.card.symbols:
+            return self.card.symbols[ref], ""
+        found = self.card.by_simple_name(ref)
+        if len(found) == 1:
+            return found[0], ""
+        if found:
+            return None, f"error: {ref!r} is ambiguous; use one of: {', '.join(sorted(s.id for s in found)[:10])}"
+        return None, f"error: no symbol {ref!r}"
+
     def symbol(self, ref: str) -> str:
-        sym = self.card.symbols.get(ref) or next(iter(self.card.by_simple_name(ref)), None)
+        sym, error = self._lookup(ref)
         if sym is None:
-            return f"error: no symbol {ref!r}"
+            return error
         out = [f"{sym.id} [{sym.kind}] {sym.file}:{sym.start_line}-{sym.end_line} layer={sym.layer}"]
         if sym.annotations:
             out.append("annotations: " + ", ".join(sym.annotations))
@@ -93,9 +107,9 @@ class CardTools:
         return "\n".join(out)
 
     def neighbours(self, ref: str, direction: str = "out") -> str:
-        sym = self.card.symbols.get(ref) or next(iter(self.card.by_simple_name(ref)), None)
+        sym, error = self._lookup(ref)
         if sym is None:
-            return f"error: no symbol {ref!r}"
+            return error
         edges = [e for e in self.card.edges if (e.source if direction == "out" else e.target) == sym.id and e.kind != "imports"]
         rows = sorted({f"{e.source} -{e.kind}{'(' + e.detail + ')' if e.detail else ''}-> {e.target}  [{e.file}:{e.line}]"
                        for e in edges})

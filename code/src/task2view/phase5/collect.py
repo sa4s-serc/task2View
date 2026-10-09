@@ -26,7 +26,9 @@ def collect_evidence(
     *,
     card_text: str,
     previous: EvidenceModel | None = None,
+    grain: str = "class",
 ) -> EvidenceModel:
+    """``grain``: "package" (overview goals) or "class" component boundaries; see consolidate.py."""
     cfg = pipeline_config()
     ev = cfg["evidence"]
     verifier = ClaimVerifier(card, slack=ev["excerpt_line_slack"], min_confidence=ev["min_confidence"])
@@ -35,15 +37,16 @@ def collect_evidence(
     notes: list[str] = list(previous.notes) if previous else []
     for task in tasks:
         try:
-            raw_claims, opened = run_evidence_task(
+            raw_claims, opened, calls = run_evidence_task(
                 task, questions, card, runtime, card_text=card_text,
                 viewpoint_name=catalog.viewpoint(task.viewpoint_id).name,
-                max_read_lines=ev["max_read_lines"], max_hits=ev["max_search_hits"],
+                max_read_lines=ev["max_read_lines"], max_hits=ev["max_search_hits"], keep_results=ev["keep_results"],
             )
         except PipelineError as exc:
             notes.append(f"{task.id} failed: {exc}")
             continue
-        notes.append(f"{task.id}: {len(raw_claims)} claims, read {len(opened)} files")
+        used = ", ".join(f"{k} {v}" for k, v in sorted(calls.items())) or "no tools"
+        notes.append(f"{task.id}: {len(raw_claims)} claims, read {len(opened)} files; {used}")
         for raw in raw_claims:
             claim, reason = verifier.verify(raw, claim_id=f"C{len(claims) + 1}", task_id=task.id,
                                             question_ids=task.question_ids)
@@ -51,7 +54,7 @@ def collect_evidence(
                 rejected.append({"task": task.id, "claim": raw, "reason": reason})
             else:
                 claims.append(claim)
-    model = build_evidence_model(claims, card, cfg["consolidation"])
+    model = build_evidence_model(claims, card, cfg["consolidation"], grain=grain)
     model.rejected_claims = rejected
     model.notes = notes
     return model

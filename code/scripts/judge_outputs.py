@@ -50,7 +50,8 @@ def main() -> int:
     parser.add_argument("--judge-llm", required=True)
     args = parser.parse_args()
 
-    goals = {cid: c["goal"] for cid, c in yaml.safe_load(Path(args.goals).read_text())["cases"].items()}
+    cases = yaml.safe_load(Path(args.goals).read_text())["cases"]
+    goals = {cid: c["goal"] for cid, c in cases.items()}
     runtime = AgentRuntime(model=args.judge_llm)
     root = Path(args.runs)
     rows = []
@@ -64,11 +65,11 @@ def main() -> int:
             first_call = len(runtime.ledger.calls)
             for view, source, questions in _views(run):
                 report = judge_view(view, questions, goal, source, "plantuml", runtime,
-                                    judge_spec=runtime.spec, generator_spec=None)
+                                    judge_spec=runtime.spec, generator_spec=None,
+                                    expected=cases[run.name].get("expected"))
                 results[view.id] = report.model_dump()
                 rows.append({"condition": condition.name, "run_id": run.name, "view": view.id,
                              "viewpoint": view.viewpoint_id, "judge": runtime.spec, "status": report.status,
-                             "overall": report.overall,
                              **{f"score_{k}": (v or {}).get("score") for k, v in report.scores.items()}})
             (run / "judge.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
             run_ledger = UsageLedger(calls=runtime.ledger.calls[first_call:])
@@ -78,7 +79,7 @@ def main() -> int:
     print(f"judge usage: {total['calls']} calls, ${total['cost_usd']:.4f}"
           + ("" if total["cost_complete"] else " (incomplete: no usage or no price for some calls)"))
     if rows:
-        fields = sorted({k for r in rows for k in r}, key=lambda k: (not k.startswith(("condition", "run_id", "view", "viewpoint", "judge", "status", "overall")), k))
+        fields = sorted({k for r in rows for k in r}, key=lambda k: (not k.startswith(("condition", "run_id", "view", "viewpoint", "judge", "status")), k))
         with (root.parent / "judge_summary.csv").open("w", newline="", encoding="utf-8") as fh:
             writer = csv.DictWriter(fh, fieldnames=fields)
             writer.writeheader()

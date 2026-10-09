@@ -30,7 +30,7 @@ from task2view.phase4.investigate import pipeline_config, plan_investigation
 from task2view.phase5.collect import collect_evidence
 from task2view.phase6.decide import ViewDecision, coverage, decide
 from task2view.phase7.notations import get_renderer
-from task2view.phase7.project import project_view
+from task2view.phase7.project import SCENARIO_KINDS, project_view
 from task2view.phase8.judge import JudgeReport, judge_view
 from task2view.phase8.validate_view import ViewValidation, validate_view
 
@@ -82,8 +82,10 @@ def run_v2(
     plan = select_views(profile.selection_input(), catalog, repo_facts(card), max_views=max_views)
     questions = derive_view_questions(profile, plan, catalog)
     tasks = plan_investigation(plan, questions, card, catalog, target=profile.target, runtime=runtime, card_text=card_text)
-    aem = collect_evidence(tasks, questions, card, runtime, catalog, card_text=card_text)
-    log.append(f"round 1: {len(tasks)} tasks, {len(aem.claims)} claims, {len(aem.rejected_claims)} rejected")
+    grain = "package" if profile.detail_level == "overview" else "class"
+    aem = collect_evidence(tasks, questions, card, runtime, catalog, card_text=card_text, grain=grain)
+    log.append(f"round 1: {len(tasks)} tasks, {len(aem.claims)} claims, {len(aem.rejected_claims)} rejected; "
+               f"{grain}-level components")
 
     planned = {view_id(i, v.viewpoint_id): v for i, v in enumerate(plan.views)}
     folded: set[str] = set()
@@ -105,7 +107,7 @@ def run_v2(
                 t.id = f"R{round_no}-{t.id}"
             tasks += extra
             aem = collect_evidence(extra, questions, card, runtime, catalog, card_text=card_text,
-                                   previous=aem)
+                                   previous=aem, grain=grain)
             log.append(f"round {round_no}: {len(extra)} tasks for {len(wanted)} unsupported question(s)")
             continue
         if to_fold - folded:
@@ -142,7 +144,7 @@ def run_v2(
 
     viewset = ViewSet(
         system=card.name, stakeholder=profile.role, goal=goal, views=list(final_views.values()),
-        correspondences=_correspondences(final_views),
+        correspondences=_correspondences(final_views), correspondence_gaps=_correspondence_gaps(final_views),
         declared_gaps=[f"{vid}: {d.reason}" for vid, d in decisions.items() if d.decision in {"gap", "drop"}],
         uncovered_needs=plan.uncovered_needs, secondary_not_shown=plan.secondary_not_shown,
     )
@@ -158,6 +160,18 @@ def run_v2(
     return RunV2Result(goal=goal, card=card, profile=profile, plan=plan, questions=questions, tasks=tasks, aem=aem,
                        decisions=decisions, viewset=viewset, renders=renders, validation=validation,
                        llm=llm_spec, judge_llm=judge_runtime.spec if judge_runtime else None, usage=usage, log=log)
+
+
+def _correspondence_gaps(views: dict[str, ArchitectureView]) -> list[str]:
+    """A behavioural view's components should be elements of a structural view in the same set."""
+    structural = [v for v in views.values() if v.model_kind not in SCENARIO_KINDS | {"uml-state", "table"}]
+    if not structural:
+        return []
+    drawn = {e.id for v in structural for e in v.content_elements()} | \
+            {m for v in structural for e in v.content_elements() for m in e.realized_by}
+    return [f"{vid}: {e.name} is in no structural view of this set"
+            for vid, v in views.items() if v.model_kind in SCENARIO_KINDS
+            for e in v.content_elements() if e.id.startswith("cmp:") and e.id not in drawn]
 
 
 def _correspondences(views: dict[str, ArchitectureView]) -> list[ViewCorrespondence]:

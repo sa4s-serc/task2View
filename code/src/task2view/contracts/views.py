@@ -103,6 +103,8 @@ class ViewSet(BaseModel):
     goal: str
     views: list[ArchitectureView] = Field(default_factory=list)
     correspondences: list[ViewCorrespondence] = Field(default_factory=list)
+    # behavioural participants that no structural view of the set draws (42010 correspondence check)
+    correspondence_gaps: list[str] = Field(default_factory=list)
     declared_gaps: list[str] = Field(default_factory=list)
     uncovered_needs: list[str] = Field(default_factory=list)
     secondary_not_shown: list[str] = Field(default_factory=list)

@@ -15,7 +15,7 @@ from __future__ import annotations
 import os
 
 from task2view.contracts.models import PipelineError
-from task2view.llm.base import JSON_INSTRUCTION, LLMClient, Usage
+from task2view.llm.base import JSON_INSTRUCTION, LLMClient, Prompt, Usage
 from task2view.llm.registry import register_provider
 
 DEFAULT_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5-5")
@@ -30,6 +30,7 @@ _NO_EFFORT_PREFIXES = ("claude-haiku-4-5", "claude-sonnet-4-5")
 @register_provider("anthropic", default_model=DEFAULT_MODEL)
 class AnthropicClient(LLMClient):
     provider = "anthropic"
+    caches_blocks = True
 
     def __init__(self, model: str):
         super().__init__(model)
@@ -43,13 +44,13 @@ class AnthropicClient(LLMClient):
         self._client = anthropic.Anthropic()
         self.effort = os.environ.get("TASK2VIEW_LLM_EFFORT", "high")
 
-    def complete_text(self, prompt: str, *, system: str | None = None, json_mode: bool = False) -> str:
+    def complete_text(self, prompt: Prompt, *, system: str | None = None, json_mode: bool = False) -> str:
         sdk = self._sdk
         system_text = "\n\n".join(p for p in (system, JSON_INSTRUCTION if json_mode else None) if p)
         params: dict = {
             "model": self.model,
             "max_tokens": MAX_TOKENS,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": _content(prompt)}],
         }
         if system_text:
             params["system"] = system_text
@@ -83,3 +84,14 @@ class AnthropicClient(LLMClient):
         if response.stop_reason == "max_tokens":
             raise PipelineError(f"Anthropic reply hit max_tokens={MAX_TOKENS} ({self.model})")
         return "".join(block.text for block in response.content if block.type == "text")
+
+
+def _content(prompt: Prompt) -> str | list[dict]:
+    """Blocks get cache breakpoints on the first (prompt and card) and the last block, so each
+    tool-loop step reads the earlier steps from the cache instead of paying for them again."""
+    if isinstance(prompt, str):
+        return prompt
+    blocks = [{"type": "text", "text": text} for text in prompt]
+    for i in {0, len(blocks) - 1}:
+        blocks[i]["cache_control"] = {"type": "ephemeral"}
+    return blocks

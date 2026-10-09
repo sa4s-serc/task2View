@@ -54,8 +54,7 @@ def test_judge_outputs_scores_pipeline_and_plain_runs(tmp_path, monkeypatch):
 
         def complete_text(self, prompt, *, system=None, json_mode=False):
             seen.append(prompt)
-            return json.dumps({"scores": {"grain": {"score": 3, "reason": "r"}},
-                               "answers_questions": {"score": 4, "reason": "r"}, "overall": 3, "summary": "s"})
+            return json.dumps({"reason": "r", "score": 4})
 
     runs = tmp_path / "outputs"
     write_run_v2(run_v2(GOAL, str(SHOP), generate=scripted), runs / "task2view" / "CASE-1")

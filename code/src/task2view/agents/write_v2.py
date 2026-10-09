@@ -82,10 +82,14 @@ def _readme(result: RunV2Result) -> str:
     lines += [f"- {g}" for g in gaps] or ["- none"]
     for view in result.viewset.views:
         lines += [f"- {view.id}: {lim}" for lim in view.limitations + view.gaps]
+    lines += [f"- correspondence: {g}" for g in result.viewset.correspondence_gaps]
+    rx = {k: len(result.aem.reflexion.get(k, [])) for k in ("convergence", "divergence", "absence")}
     lines += ["", "## Evidence", "",
               f"- {len(result.aem.claims)} verified claims, {len(result.aem.rejected_claims)} rejected; "
               f"{len(result.aem.elements)} model elements; {len(result.aem.relations)} relations; "
-              f"{len(result.aem.scenarios)} scenarios", ""]
+              f"{len(result.aem.scenarios)} scenarios",
+              f"- Component relations, code vs claims: {rx['convergence']} agree, {rx['divergence']} only in code "
+              f"(possible omissions), {rx['absence']} only claimed (no code edge)", ""]
     lines += _usage_section(result.usage)
     return "\n".join(lines)
 
