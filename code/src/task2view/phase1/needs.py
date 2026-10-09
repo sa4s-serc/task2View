@@ -85,7 +85,7 @@ def extract_needs(goal: str, runtime: AgentRuntime, *, catalog: Catalog | None =
         needs=_render_needs(catalog),
         roles=_render_roles(catalog),
         qualities=", ".join(catalog.quality_attributes),
-    ))
+    ), purpose="phase1")
     return validate_needs(goal, raw, catalog)
 
 

@@ -29,6 +29,7 @@ def write_run_v2(result: RunV2Result, out: str | Path) -> Path:
     _dump(out / "reconciliation.json", {vid: d.model_dump(mode="json") for vid, d in result.decisions.items()})
     _dump(out / "viewset.json", result.viewset)
     _dump(out / "validation_report.json", {vid: v.model_dump(mode="json") for vid, v in result.validation.items()})
+    _dump(out / "usage.json", result.usage)
     for view in result.viewset.views:
         vdir = out / view.id
         vdir.mkdir(exist_ok=True)
@@ -87,4 +88,22 @@ def _readme(result: RunV2Result) -> str:
               f"- {len(result.aem.claims)} verified claims, {len(result.aem.rejected_claims)} rejected; "
               f"{len(result.aem.elements)} model elements; {len(result.aem.relations)} relations; "
               f"{len(result.aem.scenarios)} scenarios", ""]
+    lines += _usage_section(result.usage)
     return "\n".join(lines)
+
+
+def _usage_section(usage: dict) -> list[str]:
+    if not usage:
+        return []
+    total = usage["total"]
+    lines = ["## Tokens, time and cost", "",
+             f"Total: {total['calls']} calls, {total['input_tokens']:,} input + {total['cache_read_tokens']:,} cache-read + "
+             f"{total['cache_write_tokens']:,} cache-write + {total['output_tokens']:,} output tokens, "
+             f"{total['seconds']} s, **${total['cost_usd']:.4f}**"
+             + ("" if total["cost_complete"] else " (incomplete: some calls had no reported usage or no price)"), "",
+             "| Phase | Calls | Input | Output | Seconds | Cost (USD) |", "|---|---|---|---|---|---|"]
+    for phase, b in usage["by_phase"].items():
+        lines.append(f"| {phase} | {b['calls']} | {b['input_tokens'] + b['cache_read_tokens'] + b['cache_write_tokens']:,} | "
+                     f"{b['output_tokens']:,} | {b['seconds']} | {b['cost_usd']:.4f} |")
+    lines += ["", f"Prices: {usage.get('pricing_source', '')}", ""]
+    return lines

@@ -15,7 +15,7 @@ from __future__ import annotations
 import os
 
 from task2view.contracts.models import PipelineError
-from task2view.llm.base import JSON_INSTRUCTION, LLMClient
+from task2view.llm.base import JSON_INSTRUCTION, LLMClient, Usage
 from task2view.llm.registry import register_provider
 
 DEFAULT_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5-5")
@@ -69,6 +69,13 @@ class AnthropicClient(LLMClient):
         except sdk.APIConnectionError as exc:
             raise PipelineError(f"Anthropic connection failed: {exc}") from exc
 
+        u = getattr(response, "usage", None)
+        self.last_usage = None if u is None else Usage(
+            input_tokens=getattr(u, "input_tokens", 0) or 0,
+            output_tokens=getattr(u, "output_tokens", 0) or 0,
+            cache_read_tokens=getattr(u, "cache_read_input_tokens", 0) or 0,
+            cache_write_tokens=getattr(u, "cache_creation_input_tokens", 0) or 0,
+        )
         if response.stop_reason == "refusal":
             details = getattr(response, "stop_details", None)
             category = getattr(details, "category", None) if details else None

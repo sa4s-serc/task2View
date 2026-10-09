@@ -21,7 +21,7 @@ from task2view.contracts.aem import EvidenceModel, InvestigationTask, Question
 from task2view.contracts.card import RepositoryCard
 from task2view.contracts.views import ArchitectureView, RenderResult, ViewCorrespondence, ViewSet
 from task2view.knowledge.catalog import load_catalog
-from task2view.llm import get_client
+from task2view.llm.usage import UsageLedger
 from task2view.phase0.card import build_card, render_card, repo_facts
 from task2view.phase1.needs import NeedProfile, extract_needs
 from task2view.phase2.view_questions import derive_view_questions, view_id
@@ -50,6 +50,7 @@ class RunV2Result:
     validation: dict[str, ViewValidation]
     llm: str | None = None
     judge_llm: str | None = None
+    usage: dict = field(default_factory=dict)  # UsageLedger.summary(); calls in usage["calls"]
     log: list[str] = field(default_factory=list)
 
 
@@ -69,7 +70,7 @@ def run_v2(
     cfg = pipeline_config()
     languages = languages or ["plantuml"]
     runtime = AgentRuntime(generate=generate, model=llm)
-    llm_spec = (llm or "scripted") if generate is not None else get_client(llm).spec
+    llm_spec = runtime.spec
     judge_runtime = None
     if judge_llm or judge_generate is not None:
         judge_runtime = AgentRuntime(generate=judge_generate, model=judge_llm)
@@ -145,9 +146,18 @@ def run_v2(
         declared_gaps=[f"{vid}: {d.reason}" for vid, d in decisions.items() if d.decision in {"gap", "drop"}],
         uncovered_needs=plan.uncovered_needs, secondary_not_shown=plan.secondary_not_shown,
     )
+    ledger = UsageLedger()
+    ledger.extend(runtime.ledger)
+    if judge_runtime is not None:
+        ledger.extend(judge_runtime.ledger)
+    usage = ledger.summary() | {"calls": [c.model_dump() for c in ledger.calls]}
+    total = usage["total"]
+    log.append(f"usage: {total['calls']} calls, {total['input_tokens']} input / {total['output_tokens']} output / "
+               f"{total['cache_read_tokens']} cache-read tokens, ${total['cost_usd']:.4f}"
+               + ("" if total["cost_complete"] else " (incomplete: some calls had no reported usage or no price)"))
     return RunV2Result(goal=goal, card=card, profile=profile, plan=plan, questions=questions, tasks=tasks, aem=aem,
                        decisions=decisions, viewset=viewset, renders=renders, validation=validation,
-                       llm=llm_spec, judge_llm=judge_llm, log=log)
+                       llm=llm_spec, judge_llm=judge_runtime.spec if judge_runtime else None, usage=usage, log=log)
 
 
 def _correspondences(views: dict[str, ArchitectureView]) -> list[ViewCorrespondence]:

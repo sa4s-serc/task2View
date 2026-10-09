@@ -19,7 +19,7 @@ import os
 from dataclasses import dataclass
 
 from task2view.contracts.models import PipelineError
-from task2view.llm.base import JSON_INSTRUCTION, LLMClient
+from task2view.llm.base import JSON_INSTRUCTION, LLMClient, Usage
 from task2view.llm.registry import register_provider
 
 
@@ -82,6 +82,12 @@ class OpenAICompatibleClient(LLMClient):
             raise PipelineError(f"{self.spec} request failed (HTTP {exc.status_code})") from exc
         except sdk.APIConnectionError as exc:
             raise PipelineError(f"{self.spec} connection failed: {exc}") from exc
+        u = getattr(response, "usage", None)
+        if u is not None:
+            details = getattr(u, "prompt_tokens_details", None)
+            cached = (getattr(details, "cached_tokens", 0) or 0) if details is not None else 0
+            self.last_usage = Usage(input_tokens=(getattr(u, "prompt_tokens", 0) or 0) - cached,
+                                    output_tokens=getattr(u, "completion_tokens", 0) or 0, cache_read_tokens=cached)
         choice = response.choices[0]
         if choice.finish_reason == "length":
             raise PipelineError(f"{self.spec} reply was cut off (finish_reason=length)")

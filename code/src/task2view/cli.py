@@ -196,6 +196,7 @@ def _run_v2(args: argparse.Namespace) -> int:
         "declared_gaps": result.viewset.declared_gaps,
         "claims": len(result.aem.claims),
         "rejected_claims": len(result.aem.rejected_claims),
+        "usage": result.usage.get("total", {}),
         "images": images,
     }
     print(json.dumps(summary, indent=2))

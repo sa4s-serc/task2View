@@ -48,7 +48,7 @@ def run_evidence_task(
     for step in range(task.budget_steps + 1):
         if step == task.budget_steps:
             history += "\n\n" + _FINAL_NUDGE
-        reply = runtime.complete_json(history)
+        reply = runtime.complete_json(history, purpose=f"phase5:{task.id}")
         if "final" in reply:
             claims = (reply.get("final") or {}).get("claims") or []
             return [c for c in claims if isinstance(c, dict)], sorted(tools.opened)

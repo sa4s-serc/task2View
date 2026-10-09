@@ -21,6 +21,7 @@ import yaml
 from task2view.agents.runtime import AgentRuntime
 from task2view.contracts.aem import Question
 from task2view.contracts.views import ArchitectureView
+from task2view.llm.usage import UsageLedger
 from task2view.phase8.judge import judge_view
 
 
@@ -60,6 +61,7 @@ def main() -> int:
                 print(f"skip {condition.name}/{run.name}: not in the goal set")
                 continue
             results = {}
+            first_call = len(runtime.ledger.calls)
             for view, source, questions in _views(run):
                 report = judge_view(view, questions, goal, source, "plantuml", runtime,
                                     judge_spec=args.judge_llm, generator_spec=None)
@@ -69,7 +71,12 @@ def main() -> int:
                              "overall": report.overall,
                              **{f"score_{k}": (v or {}).get("score") for k, v in report.scores.items()}})
             (run / "judge.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
+            run_ledger = UsageLedger(calls=runtime.ledger.calls[first_call:])
+            (run / "judge_usage.json").write_text(json.dumps(run_ledger.summary(), indent=2), encoding="utf-8")
             print(f"{condition.name}/{run.name}: {len(results)} view(s) judged")
+    total = runtime.ledger.summary()["total"]
+    print(f"judge usage: {total['calls']} calls, ${total['cost_usd']:.4f}"
+          + ("" if total["cost_complete"] else " (incomplete: no usage or no price for some calls)"))
     if rows:
         fields = sorted({k for r in rows for k in r}, key=lambda k: (not k.startswith(("condition", "run_id", "view", "viewpoint", "judge", "status", "overall")), k))
         with (root.parent / "judge_summary.csv").open("w", newline="", encoding="utf-8") as fh:

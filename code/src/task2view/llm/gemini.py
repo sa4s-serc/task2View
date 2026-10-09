@@ -12,7 +12,7 @@ import urllib.error
 import urllib.request
 
 from task2view.contracts.models import PipelineError
-from task2view.llm.base import JSON_INSTRUCTION, LLMClient, load_dotenv
+from task2view.llm.base import JSON_INSTRUCTION, LLMClient, Usage, load_dotenv
 from task2view.llm.registry import register_provider
 
 load_dotenv()
@@ -38,7 +38,14 @@ class GeminiClient(LLMClient):
     def complete_text(self, prompt: str, *, system: str | None = None, json_mode: bool = False) -> str:
         parts = [p for p in (system, JSON_INSTRUCTION if json_mode else None) if p]
         text = "\n\n".join([*parts, prompt]) if parts else prompt
-        return generate_text(text, model=self.model, json_mime=json_mode, fallback=ALLOW_FALLBACK)
+        usage: dict = {}
+        out = generate_text(text, model=self.model, json_mime=json_mode, fallback=ALLOW_FALLBACK, usage_out=usage)
+        cached = int(usage.get("cachedContentTokenCount", 0) or 0)
+        self.last_usage = Usage(input_tokens=int(usage.get("promptTokenCount", 0) or 0) - cached,
+                                output_tokens=int(usage.get("candidatesTokenCount", 0) or 0)
+                                + int(usage.get("thoughtsTokenCount", 0) or 0),
+                                cache_read_tokens=cached)
+        return out
 
 
 def api_key() -> str:
@@ -58,6 +65,7 @@ def generate_text(
     timeout: int = 180,
     json_mime: bool = False,
     fallback: bool = True,
+    usage_out: dict | None = None,
 ) -> str:
     key = api_key()
     tried: list[str] = []
@@ -82,6 +90,8 @@ def generate_text(
                 raise PipelineError(f"Gemini request failed ({name}: HTTP {exc.code})") from exc
             except urllib.error.URLError as exc:
                 raise PipelineError(f"Gemini request failed: {exc}") from exc
+            if usage_out is not None:
+                usage_out.update(payload.get("usageMetadata") or {})
             return _first_text(payload)
     raise PipelineError(
         f"Gemini models failed ({', '.join(tried)}). Last error: {last_error}"

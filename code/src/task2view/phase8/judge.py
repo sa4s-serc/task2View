@@ -54,7 +54,7 @@ def judge_view(view: ArchitectureView, questions: list[Question], goal: str, sou
         themes="\n".join(f"- {k}: {v}" for k, v in THEMES.items()),
     )
     try:
-        raw = runtime.complete_json(prompt)
+        raw = runtime.complete_json(prompt, purpose=f"phase8-judge:{view.id}")
     except Exception as exc:  # the judge is soft: a failure is reported, never fatal
         return JudgeReport(status="failed", model=judge_spec, summary=str(exc)[:300])
     scores = {k: v for k, v in (raw.get("scores") or {}).items() if isinstance(v, dict)}

@@ -141,3 +141,38 @@ def test_openai_compatible_requires_base_url(monkeypatch):
     monkeypatch.delenv("OPENAI_COMPAT_BASE_URL", raising=False)
     with pytest.raises(PipelineError, match="OPENAI_COMPAT_BASE_URL"):
         OpenAICompatibleClient("openai-compatible", "m")
+
+
+def test_usage_ledger_prices_known_models_and_flags_unknown():
+    from task2view.llm.base import Usage
+    from task2view.llm.usage import UsageLedger, cost_usd
+
+    u = Usage(input_tokens=1_000_000, output_tokens=100_000, cache_read_tokens=1_000_000)
+    assert cost_usd("anthropic:claude-sonnet-4-5", u) == pytest.approx(3.0 + 1.5 + 0.30)
+    assert cost_usd("unknown:model", u) is None
+    ledger = UsageLedger()
+    ledger.record("phase5:IT1", "anthropic:claude-sonnet-4-5", u, 2.0)
+    ledger.record("phase1", "unknown:model", Usage(input_tokens=10), 1.0)
+    summary = ledger.summary()
+    assert summary["by_phase"]["phase5"]["cost_usd"] == pytest.approx(4.8)
+    assert summary["total"]["cost_complete"] is False
+
+
+def test_runtime_records_reported_usage_per_purpose():
+    from task2view.agents.runtime import AgentRuntime
+    from task2view.llm.base import Usage
+
+    @register_provider("usage-fixture", default_model="m")
+    class Reporting(LLMClient):
+        provider = "usage-fixture"
+
+        def complete_text(self, prompt, *, system=None, json_mode=False):
+            self.last_usage = Usage(input_tokens=120, output_tokens=30)
+            return '{"ok": true}'
+
+    runtime = AgentRuntime(model="usage-fixture")
+    runtime.complete_json("hello", purpose="phase4:V1:task1")
+    call = runtime.ledger.calls[0]
+    assert (call.purpose, call.model, call.input_tokens, call.output_tokens, call.reported) == \
+        ("phase4:V1:task1", "usage-fixture:m", 120, 30, True)
+    assert call.cost_usd is None  # no price for this model

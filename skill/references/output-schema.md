@@ -10,6 +10,7 @@ Write these files under `--out`, with exactly these names and fields. They are t
   evidence_model.json          reconciliation.json
   viewset.json                 validation_report.json
   traceability.md              README.md
+  usage.json                   (tokens and cost; agents: what your tool reports, else omit)
   V1-<viewpoint id>/view.json  V1-<viewpoint id>/view.puml   (one folder per view)
 ```
 
@@ -118,6 +119,15 @@ Write these files under `--out`, with exactly these names and fields. They are t
   "faithfulness": [], "coverage": [{"question": "AQ1", "status": "supported", "claims": ["C1"], "note": ""}],
   "task_fit": {"status": "not-run", "model": null, "independent": null, "scores": {}, "overall": null, "summary": "a different model must judge"},
   "errors": 0, "warnings": 1, "repair_marks": []}}
+```
+
+## usage.json
+The pipeline records every model call (purpose, model, tokens, seconds, cost) and totals per phase and model. An agent condition writes what its tool reports (for example Claude Code's `/cost`), or leaves the file out, and states that in README.md.
+```json
+{"total": {"calls": 42, "input_tokens": 512000, "output_tokens": 18000, "cache_read_tokens": 0, "cache_write_tokens": 0,
+           "seconds": 310.2, "cost_usd": 1.806, "cost_complete": true},
+ "by_phase": {"phase1": {"…": "…"}, "phase5": {"…": "…"}}, "by_model": {"anthropic:claude-sonnet-4-5": {"…": "…"}},
+ "pricing_source": "https://platform.claude.com/docs/en/about-claude/pricing (read 2026-10-09)", "calls": [ … ]}
 ```
 
 ## traceability.md and README.md

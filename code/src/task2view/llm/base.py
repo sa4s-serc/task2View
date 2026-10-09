@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
 
 from task2view.contracts.models import PipelineError
@@ -34,13 +35,24 @@ def load_dotenv() -> None:
         return
 
 
+@dataclass
+class Usage:
+    """Tokens one call consumed, as reported by the provider's API."""
+
+    input_tokens: int = 0  # uncached input
+    output_tokens: int = 0
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
+
+
 class LLMClient(ABC):
-    """One model behind one provider."""
+    """One model behind one provider. ``complete_text`` sets ``last_usage``."""
 
     provider: str = ""
 
     def __init__(self, model: str):
         self.model = model
+        self.last_usage: Usage | None = None
 
     @property
     def spec(self) -> str:

@@ -136,7 +136,7 @@ def plan_investigation(
                     questions="\n".join(f"- {q.id}: {q.text}" for q in group),
                     suggestions="\n".join(f"- {s} ({o})" for s, o in suggestions) or "- none",
                     limit=cfg["seed_symbols_per_task"],
-                ))
+                ), purpose=f"phase4:{vid}:task{len(tasks) + 1}")
                 picked = [s for s in raw.get("symbols") or [] if s in card.symbols]
                 paths = [p for p in raw.get("paths") or [] if p in known_paths]
                 if picked or paths:
