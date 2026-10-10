@@ -1,0 +1,11 @@
+@startuml view-4
+title View 4 - Reservation lifecycle (state machine)
+[*] --> ACTIVE : makeReservation
+ACTIVE --> CANCELLED : cancel (>= 6h before slot start)
+ACTIVE --> CONFIRMED : checkIn (same day, <= start + 10 min)
+ACTIVE --> EXPIRED : manageEnd (scheduler, now > start + 10 min)
+CONFIRMED --> COMPLETED : manageEnd (scheduler, now > slot end)
+CONFIRMED --> CONFIRMED : cancel / checkIn rejected
+note right of ACTIVE : ACTIVE and CONFIRMED occupy the seat\n(ReservationRegistry.occupiesSlot)
+note bottom of CANCELLED : Cancelled/Expired/Completed free the seat
+@enduml

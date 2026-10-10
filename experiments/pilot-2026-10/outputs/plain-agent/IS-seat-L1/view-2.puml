@@ -1,0 +1,48 @@
+@startuml view-2
+title View 2 - makeReservation runtime interaction (REST path; Swing calls LibraryFacade directly)
+actor Student
+participant "reservation.html" as UI
+participant ReservationController as RC
+participant LibraryFacade as F
+participant ReservationManager as RM
+participant StudyRoomRegistry as SR
+participant UserRegistry as UR
+participant Area
+participant Seat
+participant ReservationRegistry as RR
+participant AssignmentStrategy as AS
+participant Reservation
+participant NotificationManager as NM
+participant NotificationService as NS
+
+Student -> UI : choose room, date, slot, area, seat (0 = auto)
+UI -> RC : POST /api/reservations/create
+RC -> F : makeReservation(ReservationRequestDTO)
+F -> RM : makeReservation(request)
+RM -> UR : findStudentById
+RM -> SR : findRoomById, findAreaById
+RM -> RM : resolveRoom (active, open on date)\nresolveArea, resolveTimeSlot (not started)\nvalidateSeatInArea
+RM -> SR : findSeatById (if seatId != 0)
+group synchronized(this)
+  RM -> RM : validateUniqueness\n(student.hasActiveOrConfirmedReservationForDateAndSlot)
+  RM -> Area : getAvailableSeats(date, slot)
+  loop each seat of area
+    Area -> Seat : isAvailable(date, slot)
+    Seat -> RR : findReservationsBySeat
+  end
+  alt seatId > 0
+    RM -> Seat : isAvailable (re-check)
+  else seatId == 0
+    RM -> AS : selectSeat(available)
+  end
+  RM -> Reservation : new, setSeat/Student/TimeSlot/Date,\nsetState(ActiveState)
+  RM -> RR : saveReservation
+  RM -> Reservation : attach(NM); notifyObservers()
+  Reservation -> NM : update(reservation)
+  NM -> NS : sendNotification(recipient, "registered (ACTIVE)")
+end
+RM --> F : ReservationDTO
+F --> RC
+RC --> UI : ReservationDTO
+note over RC : IllegalArgument/IllegalState -> RestExceptionHandler
+@enduml

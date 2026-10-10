@@ -1,0 +1,72 @@
+@startuml view-1
+title View 1 - Components involved in seat booking (module/component view)
+skinparam componentStyle rectangle
+left to right direction
+
+package "Boundary (it.unina.reservations.boundary)" {
+  component "Web UI\nstatic/reservation.html,\nstudent-dashboard.html, app.js" as Web
+  component "Swing UI\nDateAndRoomSelection, TimeSlotSelection,\nAreaSelection, SeatSelection,\nReservationSummary, WizardState" as Swing
+  component "ReservationController\n(POST /api/reservations/create,\nPUT /{id}/cancel, PUT /{id}/checkIn)" as RC
+  component "StudyRoomController\n(GET /api/rooms/available,\n/{id}/time-slots, /{id}/detail)" as SRC
+  component "NotificationScheduler\n(@Scheduled every 60s)" as Sched
+  component "NotificationConfiguration\n+ NotificationServiceAdapter" as NAdapter
+}
+
+package "Controller (it.unina.reservations.controller)" {
+  component "LibraryFacade\n(singleton Facade)" as Facade
+  component "ReservationManager\nmakeReservation / cancel / checkIn /\nmanageReservationEnd" as RM
+  component "StudyRoomManager\ngetAvailableTimeSlots / getRoomDetail" as SRM
+  component "NotificationManager\n(Observer)" as NM
+  interface "AssignmentStrategy" as AS
+  component "FirstAvailableAssignment" as FAA
+  interface "NotificationService" as NS
+}
+
+package "Entity / domain (it.unina.reservations.entity)" {
+  component "Reservation\n(Subject, state context)" as Res
+  component "ReservationState\nActive/Confirmed/Cancelled/\nExpired/Completed" as St
+  component "StudyRoom / Area / Seat / TimeSlot" as Room
+  component "Student" as Stu
+  component "ReservationRegistry" as RR
+  component "StudyRoomRegistry" as SR
+  component "UserRegistry" as UR
+}
+
+package "Database" {
+  component "PersistenceManager / JpaUtil\n(JPA, persistence.xml)" as PM
+}
+database "Relational DB" as DB
+cloud "External email gateway\n(ExternalEmailGateway)" as Mail
+
+Web --> RC : REST
+Web --> SRC : REST
+Swing --> Facade : direct call
+RC --> Facade
+SRC --> Facade
+Sched --> Facade
+Facade --> RM
+Facade --> SRM
+Facade --> NM : sendReminders
+RM --> AS : seatId == 0
+FAA ..|> AS
+RM --> RR
+RM --> SR
+RM --> UR
+RM --> Res : create, cancel, check-in
+RM --> NM : attach + notify
+Res --> St : delegates
+Res ..> NM : notifyObservers (Observer)
+Res --> Room
+Res --> Stu
+Room ..> RR : Seat.isAvailable
+SRM --> SR
+SRM ..> Room
+NM --> NS
+NAdapter ..|> NS
+NAdapter --> Mail
+NAdapter ..> NM : registers service
+RR --> PM
+SR --> PM
+UR --> PM
+PM --> DB
+@enduml

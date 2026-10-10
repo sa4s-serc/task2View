@@ -1,0 +1,70 @@
+@startuml view-3
+title View 3 - Booking domain model, State, Observer and Strategy
+abstract class Subject {
+  attach(Observer)
+  detach(Observer)
+  notifyObservers()
+}
+interface Observer {
+  update(Reservation)
+}
+class Reservation {
+  date
+  stateName
+  reminderSent
+  CHECK_IN_TOLERANCE_MINUTES = 10
+  cancelReservation()
+  performCheckIn()
+  manageEnd()
+  validateActiveReservationForCurrentDate()
+}
+class StudyRoom {
+  active
+  isOpenOnDate()
+  getScheduledTimeSlots()
+}
+class Area {
+  type
+  getAvailableSeats()
+}
+class Seat {
+  isAvailable(date, slot)
+}
+class TimeSlot
+class Student {
+  totalVisitCount
+}
+class ReservationRegistry {
+  occupiesSlot()
+  findReservationsBySeat()
+}
+class NotificationManager
+interface ReservationState {
+  cancel()
+  checkIn()
+  manageEnd()
+  getStatusEnum()
+}
+interface AssignmentStrategy {
+  selectSeat(List<Seat>)
+}
+class FirstAvailableAssignment
+
+Subject <|-- Reservation
+Observer <|.. NotificationManager
+Reservation --> Observer : observers
+Reservation --> ReservationState : status (transient)
+ReservationState <|.. ActiveState
+ReservationState <|.. ConfirmedState
+ReservationState <|.. CancelledState
+ReservationState <|.. ExpiredState
+ReservationState <|.. CompletedState
+Reservation "*" --> "1" Seat
+Reservation "*" --> "1" Student
+Reservation "*" --> "1" TimeSlot
+StudyRoom "1" *-- "*" Area
+Area "1" *-- "*" Seat
+StudyRoom "1" o-- "*" TimeSlot
+Seat ..> ReservationRegistry : availability query
+AssignmentStrategy <|.. FirstAvailableAssignment
+@enduml
