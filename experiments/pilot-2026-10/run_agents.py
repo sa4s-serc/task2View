@@ -45,7 +45,8 @@ def run_claude(workdir: Path, prompt: str, session: list[str], stream: Path) -> 
            "--output-format", "stream-json", "--verbose", *session]
     result, resets_at = None, None
     with stream.open("a", encoding="utf-8") as out, \
-            subprocess.Popen(cmd, cwd=workdir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
+            subprocess.Popen(cmd, cwd=workdir, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, text=True) as proc:
         for line in proc.stdout:
             out.write(line)
             try:
