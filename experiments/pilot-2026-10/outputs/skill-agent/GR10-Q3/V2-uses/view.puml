@@ -1,0 +1,43 @@
+@startuml
+title Uses view — what depends on the persisted report data
+
+package "Application" as e_group_layer_application_01b6 <<layer>> {
+  component "UserRegistrationController\n--\n- registers a new user through UserService" as e_cmp_Control_UserRegistrationController_773f <<application>>
+  component "UserLoginController\n--\n- retrieves user data by credentials through UserService" as e_cmp_Control_UserLoginController_60fb <<application>>
+  component "ReportCreationController\n--\n- registers a new report for a citizen" as e_cmp_Control_ReportCreationController_2c07 <<application>>
+  component "ReportReviewController\n--\n- retrieves submitted reports for a citizen and received reports for an operator" as e_cmp_Control_ReportReviewController_555a <<application>>
+  component "ReportDetailsController\n--\n- retrieves report details and status history" as e_cmp_Control_ReportDetailsController_c212 <<application>>
+  component "ReportStatusUpdateController\n--\n- advances the report status and requests a notification" as e_cmp_Control_ReportStatusUpdateController_206e <<application>>
+  component "NotificationController\n--\n- checks whether the new status is notifiable and sends the notification" as e_cmp_Control_NotificationController_3043 <<application>>
+  component "InternalNoteController\n--\n- registers an internal note for an operator" as e_cmp_Control_InternalNoteController_5f55 <<application>>
+  component "ActivityMonitoringController\n--\n- produces monitoring results over stored reports" as e_cmp_Control_ActivityMonitoringController_2da3 <<application>>
+}
+package "Domain" as e_group_layer_domain_0f45 <<layer>> {
+  component "UserService\n--\n- registers users and looks them up by credentials; checks whether an id is a Citizen or a MunicipalOperator" as e_cmp_Entity_UserService_b74c <<domain>>
+  component "ReportService\n--\n- creates reports, reads reports, details and history, updates status, adds internal notes, generates notifications and monitoring results" as e_cmp_Entity_ReportService_1a7a <<domain>>
+}
+package "Persistence" as e_group_layer_persistence_7fe3 <<layer>> {
+  component "JpaUtil\n--\n- creates the EntityManagerFactory for persistence unit Municipal_Report_Management_System and hands out EntityManagers" as e_cmp_Database_JpaUtil_7297 <<persistence>>
+  component "PersistenceService\n--\n- saves, updates and queries any entity in its own transaction (save, update, findById, findByAttribute, findByFields)" as e_cmp_Database_PersistenceService_6d8c <<persistence>>
+}
+
+e_cmp_Control_ReportCreationController_2c07 --> e_cmp_Entity_ReportService_1a7a : registerNewReport
+e_cmp_Control_ReportReviewController_555a --> e_cmp_Entity_ReportService_1a7a : retrieveReportsSubmitted, retrieveReportsReceived
+e_cmp_Control_ReportDetailsController_c212 --> e_cmp_Entity_ReportService_1a7a : retrieveDetailsReport, retrieveHistoryReport
+e_cmp_Control_ReportStatusUpdateController_206e --> e_cmp_Entity_ReportService_1a7a : retrieveDetailsReport, updateReportStatus
+e_cmp_Control_InternalNoteController_5f55 --> e_cmp_Entity_ReportService_1a7a : registerInternalNote
+e_cmp_Control_ActivityMonitoringController_2da3 --> e_cmp_Entity_ReportService_1a7a : generateMonitoringResults
+e_cmp_Control_NotificationController_3043 --> e_cmp_Entity_ReportService_1a7a : verifyNotifiableStatus, generateStatusChangeNotification
+e_cmp_Control_ReportCreationController_2c07 --> e_cmp_Entity_UserService_b74c : verifyUserCitizen
+e_cmp_Control_ReportReviewController_555a --> e_cmp_Entity_UserService_b74c : verifyUserCitizen, isMunicipalOperator
+e_cmp_Control_ReportDetailsController_c212 --> e_cmp_Entity_UserService_b74c : isMunicipalOperator, verifyUserCitizen
+e_cmp_Control_ReportStatusUpdateController_206e --> e_cmp_Entity_UserService_b74c : isMunicipalOperator
+e_cmp_Control_InternalNoteController_5f55 --> e_cmp_Entity_UserService_b74c : isMunicipalOperator
+e_cmp_Control_ActivityMonitoringController_2da3 --> e_cmp_Entity_UserService_b74c : isMunicipalOperator
+e_cmp_Control_UserRegistrationController_773f --> e_cmp_Entity_UserService_b74c : isUserRegistered, registerUser
+e_cmp_Control_UserLoginController_60fb --> e_cmp_Entity_UserService_b74c : retrieveUserDataByCredentials
+e_cmp_Control_ReportStatusUpdateController_206e --> e_cmp_Control_NotificationController_3043 : verifyNotifiableStatus
+e_cmp_Entity_ReportService_1a7a --> e_cmp_Database_PersistenceService_6d8c : findById, findByFields
+e_cmp_Entity_UserService_b74c --> e_cmp_Database_PersistenceService_6d8c : findById, findByFields
+e_cmp_Database_PersistenceService_6d8c --> e_cmp_Database_JpaUtil_7297 : getInstance, getEntityManager
+@enduml

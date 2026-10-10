@@ -1,0 +1,7 @@
+# Registration (UC1) - architecture views for the integration tester
+
+All elements come from `JavaProject/src` (main and test). Plain-text note: the project is a Java/Spring Boot + Swing app with a MySQL database via JPA/Hibernate.
+
+- **view-1.puml - Component view.** Shows every component that takes part in registration, grouped by layer (boundary, controller, entity, persistence, MySQL), and the four places a test can drive it: the Swing form, `registration.html`, the REST endpoint `POST /api/auth/register`, or `LibraryFacade.register` directly (what `RegistrationTest` does). Use it to choose test entry points and see which components are real in each integration level (DB must be running; test persistence unit uses `reservationsdb_test`).
+- **view-2.puml - Sequence view.** Shows the step-by-step interaction for a registration: UI checks, facade, `UserManager` validation, duplicate lookups through `UserRegistry`/`PersistenceManager`, factory creation, INSERT, and how each failure (validation, duplicate, save failure) surfaces in the Swing dialog or as HTTP 400. Use it to derive test cases and expected outcomes at each interaction. It also notes a gap: a save-failure `RuntimeException` is not mapped by `RestExceptionHandler`.
+- **view-3.puml - Data/constraint view.** Shows the entities, DTO and factories involved, DB unique constraints, and the validation rules enforced by `UserManager`. Use it for test data design (valid/invalid boundaries, duplicate email/identifier) and for cleanup (`RegistrationTest` deletes from `Reservation` and `User`).

@@ -1,0 +1,12 @@
+Repository card — Progetto-IS-main-English (library-reservation-system)
+Files: 109 (java 80, html 6, js 1, css 3, xml 3). Excluded: .claude, task2view-out.
+Languages: Java 21 (Spring Boot 3.2.4, Hibernate/JPA, Swing), HTML/JS static web client.
+Layers (by package alias): presentation = boundary.{SpringBoot,Swing}; application = controller, controller.factory, controller.strategy; domain = entity, entity.state, dto; persistence = database.
+Entry points: POST /api/auth/register and /api/auth/login (AuthenticationController); Launcher/ReservationsApplication mains; Swing Registration.register(); web registration.html submit handler; RegistrationTest calls LibraryFacade.register directly.
+Persisted entities: User (abstract, JOINED) <- Student, Librarian; StudyRoom, Area, Seat, TimeSlot, Reservation. Unique: User.institutionalEmail, Student.studentNumber, Librarian.internalIdentifierCode.
+Deployment/build: pom.xml (jar, Spring Boot parent 3.2.4); persistence.xml unit reservationsPU -> MySQL localhost:3306/reservationsdb (hbm2ddl=update). No Docker/compose.
+Signals: rest-api, gui-client, web-client, layered, inheritance, persisted-data, threads, lifecycle, deploy-config, build-config, tests.
+Notes:
+- Sources import org.springframework.web.bind.yeartation.* and org.springframework.scheduling.yeartation.EnableScheduling; these are not Spring package names (Spring uses '...annotation'). The sources as delivered appear not to compile unmodified; the analysis reads the code as written.
+- Layer assignment uses package-name aliases from corpus.yaml (boundary -> presentation, controller -> application, entity/dto -> domain, database -> persistence).
+- No compose files, Dockerfile, CODEOWNERS, ADRs or requirement documents found; signals for those are not raised.

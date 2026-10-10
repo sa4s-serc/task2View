@@ -1,0 +1,256 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "decomposition",
+    "subject": "handling booking requests",
+    "goal": "Collect evidence for: the parts of the system, their responsibilities, and how they are contained in subsystems (handling booking requests)",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.Swing.ReservationSummary",
+        "it.unina.reservations.controller.ReservationManager"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: request/booking",
+      "entry-point:http-route",
+      "entry-point:gui-frame"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "decomposition",
+    "subject": "checking seat availability",
+    "goal": "Collect evidence for: the parts of the system, their responsibilities, and how they are contained in subsystems (checking seat availability)",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.entity.Area",
+        "it.unina.reservations.entity.StudyRoomRegistry",
+        "it.unina.reservations.controller.StudyRoomManager"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: seat, available"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ3"
+    ],
+    "need": "decomposition",
+    "subject": "applying booking rules",
+    "goal": "Collect evidence for: the parts of the system, their responsibilities, and how they are contained in subsystems (applying booking rules)",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.strategy.AssignmentStrategy",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.Reservation"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "method-name: validate*, resolve*, selectSeat",
+      "symbol-name: strategy"
+    ]
+  },
+  {
+    "id": "IT4",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ4"
+    ],
+    "need": "decomposition",
+    "subject": "managing and storing reservations",
+    "goal": "Collect evidence for: the parts of the system, their responsibilities, and how they are contained in subsystems (managing and storing reservations)",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.controller.ReservationManager"
+      ],
+      "paths": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: Reservation, Registry"
+    ]
+  },
+  {
+    "id": "IT5",
+    "view_id": "V2-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ5"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect evidence for: which parts depend on which other parts (seat booking functionality)",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "target: seat booking functionality",
+      "direct dependencies of entry points"
+    ]
+  },
+  {
+    "id": "IT6",
+    "view_id": "V2-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ6"
+    ],
+    "need": "change-impact",
+    "subject": null,
+    "goal": "Collect evidence for: which parts are affected when a given part changes (seat booking functionality)",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.ReservationRegistry"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "target: seat booking functionality"
+    ]
+  },
+  {
+    "id": "IT7",
+    "view_id": "V3-context",
+    "viewpoint_id": "context",
+    "question_ids": [
+      "AQ7"
+    ],
+    "need": "boundary",
+    "subject": "interacting with external services such as the notification service",
+    "goal": "Collect evidence for: the system edge, external systems and services, datastores at the boundary (interacting with external services such as the notification service)",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.NotificationManager",
+        "it.unina.reservations.controller.NotificationService",
+        "it.unina.reservations.boundary.NotificationServiceAdapter",
+        "it.unina.reservations.boundary.ExternalEmailGateway",
+        "it.unina.reservations.boundary.NotificationConfiguration",
+        "it.unina.reservations.boundary.NotificationScheduler"
+      ],
+      "paths": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "system",
+      "actor",
+      "external_system",
+      "datastore"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: notification, external"
+    ]
+  }
+]

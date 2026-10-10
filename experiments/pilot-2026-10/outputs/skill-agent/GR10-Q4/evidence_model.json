@@ -1,0 +1,2081 @@
+{
+  "claims": {
+    "C1": {
+      "id": "C1",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "actor",
+      "name": "Citizen",
+      "symbol": "Entity.Citizen",
+      "responsibilities": [
+        "reports problems and follows the reports they submitted"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/Citizen.java",
+          "symbol": "Entity.Citizen",
+          "lines": [
+            11,
+            11
+          ],
+          "excerpt": "public class Citizen extends User {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C2": {
+      "id": "C2",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "actor",
+      "name": "MunicipalOperator",
+      "symbol": "Entity.MunicipalOperator",
+      "responsibilities": [
+        "manages the reports received by the municipality"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/MunicipalOperator.java",
+          "symbol": "Entity.MunicipalOperator",
+          "lines": [
+            11,
+            11
+          ],
+          "excerpt": "public class MunicipalOperator extends User {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C3": {
+      "id": "C3",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "createReport",
+      "symbol": "Control.SystemServicesController.createReport",
+      "responsibilities": [
+        "a citizen submits a report about a problem, with category and location"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": "Control.SystemServicesController.createReport",
+          "lines": [
+            57,
+            57
+          ],
+          "excerpt": "public boolean createReport("
+        },
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            155,
+            155
+          ],
+          "excerpt": "if (!userService.verifyUserCitizen(userId)) {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C4": {
+      "id": "C4",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "reviewReportsSubmitted",
+      "symbol": "Control.SystemServicesController.reviewReportsSubmitted",
+      "responsibilities": [
+        "a citizen lists the reports they have submitted"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": "Control.SystemServicesController.reviewReportsSubmitted",
+          "lines": [
+            85,
+            85
+          ],
+          "excerpt": "public List<Map<String, Object>> reviewReportsSubmitted(Long userId) {"
+        },
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": null,
+          "lines": [
+            34,
+            34
+          ],
+          "excerpt": "if (!userService.verifyUserCitizen(userId)) {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C5": {
+      "id": "C5",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "reviewReportsReceived",
+      "symbol": "Control.SystemServicesController.reviewReportsReceived",
+      "responsibilities": [
+        "an operator lists and filters the reports received by the municipality"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": "Control.SystemServicesController.reviewReportsReceived",
+          "lines": [
+            106,
+            106
+          ],
+          "excerpt": "public List<Map<String, Object>> reviewReportsReceived("
+        },
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": null,
+          "lines": [
+            53,
+            53
+          ],
+          "excerpt": "if (!userService.isMunicipalOperator(userId)) {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C6": {
+      "id": "C6",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "displayReportDetails",
+      "symbol": "Control.SystemServicesController.displayReportDetails",
+      "responsibilities": [
+        "shows a report's details and history to an operator or to the citizen who submitted it"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": "Control.SystemServicesController.displayReportDetails",
+          "lines": [
+            131,
+            131
+          ],
+          "excerpt": "public Map<String, Object> displayReportDetails("
+        },
+        {
+          "file": "src/main/java/Control/ReportDetailsController.java",
+          "symbol": null,
+          "lines": [
+            49,
+            49
+          ],
+          "excerpt": "return citizenId != null && citizenId.equals(userId);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C7": {
+      "id": "C7",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "updateReportStatus",
+      "symbol": "Control.SystemServicesController.updateReportStatus",
+      "responsibilities": [
+        "an operator advances a report to its next status"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": "Control.SystemServicesController.updateReportStatus",
+          "lines": [
+            163,
+            163
+          ],
+          "excerpt": "public boolean updateReportStatus("
+        },
+        {
+          "file": "src/main/java/Control/ReportStatusUpdateController.java",
+          "symbol": null,
+          "lines": [
+            41,
+            41
+          ],
+          "excerpt": "throw new IllegalArgumentException(\"Insufficient privileges. Only an operator can update the status.\");"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C8": {
+      "id": "C8",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "addInternalNote",
+      "symbol": "Control.SystemServicesController.addInternalNote",
+      "responsibilities": [
+        "an operator records an internal note on a report"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": "Control.SystemServicesController.addInternalNote",
+          "lines": [
+            210,
+            210
+          ],
+          "excerpt": "public boolean addInternalNote("
+        },
+        {
+          "file": "src/main/java/Control/InternalNoteController.java",
+          "symbol": null,
+          "lines": [
+            56,
+            56
+          ],
+          "excerpt": "return userService.isMunicipalOperator(userId);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C9": {
+      "id": "C9",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "monitorActivityTrends",
+      "symbol": "Control.SystemServicesController.monitorActivityTrends",
+      "responsibilities": [
+        "an operator monitors report activity over a date range"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": "Control.SystemServicesController.monitorActivityTrends",
+          "lines": [
+            188,
+            188
+          ],
+          "excerpt": "public Map<String, Object> monitorActivityTrends("
+        },
+        {
+          "file": "src/main/java/Control/ActivityMonitoringController.java",
+          "symbol": null,
+          "lines": [
+            39,
+            39
+          ],
+          "excerpt": "System.err.println(\"[ActivityMonitoringController] Access denied: user \" + userId + \" is not a municipal operator.\");"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C10": {
+      "id": "C10",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "registerUser",
+      "symbol": "Control.SystemServicesController.registerUser",
+      "responsibilities": [
+        "a new person registers as Citizen or Municipal Operator"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": "Control.SystemServicesController.registerUser",
+          "lines": [
+            35,
+            35
+          ],
+          "excerpt": "public boolean registerUser(Map<String, Object> registrationData) {"
+        },
+        {
+          "file": "src/main/java/Boundary/UserRegistrationGUI.java",
+          "symbol": null,
+          "lines": [
+            113,
+            113
+          ],
+          "excerpt": "defaultComboBoxModel1.addElement(\"Municipal Operator\");"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C11": {
+      "id": "C11",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "verifyCredentialsLogin",
+      "symbol": "Control.UserLoginController.verifyCredentialsLogin",
+      "responsibilities": [
+        "a registered user signs in with email and password and receives a role-based session"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/UserLoginController.java",
+          "symbol": "Control.UserLoginController.verifyCredentialsLogin",
+          "lines": [
+            24,
+            24
+          ],
+          "excerpt": "public Map<String, Object> verifyCredentialsLogin(Map<String, Object> loginData) {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C12": {
+      "id": "C12",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "use_case",
+      "name": "sendNotificationToCitizen",
+      "symbol": "Control.NotificationController.sendNotificationToCitizen",
+      "responsibilities": [
+        "notifies the citizen when a report reaches a notifiable status"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/NotificationController.java",
+          "symbol": "Control.NotificationController.sendNotificationToCitizen",
+          "lines": [
+            46,
+            46
+          ],
+          "excerpt": "public boolean sendNotificationToCitizen("
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C13": {
+      "id": "C13",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.Citizen",
+      "target": "Control.SystemServicesController.createReport",
+      "relation": "association",
+      "label": "creates",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            155,
+            155
+          ],
+          "excerpt": "if (!userService.verifyUserCitizen(userId)) {"
+        },
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": null,
+          "lines": [
+            322,
+            322
+          ],
+          "excerpt": "createReportPanel.setVisible(true);"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C14": {
+      "id": "C14",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.Citizen",
+      "target": "Control.SystemServicesController.reviewReportsSubmitted",
+      "relation": "association",
+      "label": "reviews own",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": null,
+          "lines": [
+            34,
+            34
+          ],
+          "excerpt": "if (!userService.verifyUserCitizen(userId)) {"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C15": {
+      "id": "C15",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.Citizen",
+      "target": "Control.SystemServicesController.displayReportDetails",
+      "relation": "association",
+      "label": "views own report",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportDetailsController.java",
+          "symbol": null,
+          "lines": [
+            49,
+            49
+          ],
+          "excerpt": "return citizenId != null && citizenId.equals(userId);"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C16": {
+      "id": "C16",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.MunicipalOperator",
+      "target": "Control.SystemServicesController.reviewReportsReceived",
+      "relation": "association",
+      "label": "reviews received",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportReviewController.java",
+          "symbol": null,
+          "lines": [
+            53,
+            53
+          ],
+          "excerpt": "if (!userService.isMunicipalOperator(userId)) {"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C17": {
+      "id": "C17",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.MunicipalOperator",
+      "target": "Control.SystemServicesController.displayReportDetails",
+      "relation": "association",
+      "label": "views any report",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportDetailsController.java",
+          "symbol": null,
+          "lines": [
+            42,
+            42
+          ],
+          "excerpt": "if (userService.isMunicipalOperator(userId)) {"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C18": {
+      "id": "C18",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.MunicipalOperator",
+      "target": "Control.SystemServicesController.updateReportStatus",
+      "relation": "association",
+      "label": "updates status",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportStatusUpdateController.java",
+          "symbol": null,
+          "lines": [
+            41,
+            41
+          ],
+          "excerpt": "throw new IllegalArgumentException(\"Insufficient privileges. Only an operator can update the status.\");"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C19": {
+      "id": "C19",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.MunicipalOperator",
+      "target": "Control.SystemServicesController.addInternalNote",
+      "relation": "association",
+      "label": "adds note",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/InternalNoteController.java",
+          "symbol": null,
+          "lines": [
+            56,
+            56
+          ],
+          "excerpt": "return userService.isMunicipalOperator(userId);"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C20": {
+      "id": "C20",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.MunicipalOperator",
+      "target": "Control.SystemServicesController.monitorActivityTrends",
+      "relation": "association",
+      "label": "monitors",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ActivityMonitoringController.java",
+          "symbol": null,
+          "lines": [
+            39,
+            39
+          ],
+          "excerpt": "System.err.println(\"[ActivityMonitoringController] Access denied: user \" + userId + \" is not a municipal operator.\");"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C21": {
+      "id": "C21",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.Citizen",
+      "target": "Control.SystemServicesController.registerUser",
+      "relation": "association",
+      "label": "registers",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserRegistrationGUI.java",
+          "symbol": null,
+          "lines": [
+            112,
+            112
+          ],
+          "excerpt": "defaultComboBoxModel1.addElement(\"Citizen\");"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C22": {
+      "id": "C22",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.MunicipalOperator",
+      "target": "Control.SystemServicesController.registerUser",
+      "relation": "association",
+      "label": "registers",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserRegistrationGUI.java",
+          "symbol": null,
+          "lines": [
+            113,
+            113
+          ],
+          "excerpt": "defaultComboBoxModel1.addElement(\"Municipal Operator\");"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C23": {
+      "id": "C23",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.Citizen",
+      "target": "Control.UserLoginController.verifyCredentialsLogin",
+      "relation": "association",
+      "label": "signs in",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": null,
+          "lines": [
+            14,
+            14
+          ],
+          "excerpt": "private static final String RUOLO_CITIZEN = \"Citizen\";"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C24": {
+      "id": "C24",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.MunicipalOperator",
+      "target": "Control.UserLoginController.verifyCredentialsLogin",
+      "relation": "association",
+      "label": "signs in",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": null,
+          "lines": [
+            15,
+            15
+          ],
+          "excerpt": "private static final String RUOLO_MUNICIPAL_OPERATOR = \"Municipal Operator\";"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C25": {
+      "id": "C25",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController.updateReportStatus",
+      "target": "Control.SystemServicesController.reviewReportsReceived",
+      "relation": "extend",
+      "label": "opened from the received-reports screen",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReceivedReportsGUI.java",
+          "symbol": null,
+          "lines": [
+            1122,
+            1122
+          ],
+          "excerpt": "new ReportStatusUpdateGUI("
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C26": {
+      "id": "C26",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController.addInternalNote",
+      "target": "Control.SystemServicesController.reviewReportsReceived",
+      "relation": "extend",
+      "label": "opened from the received-reports screen",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReceivedReportsGUI.java",
+          "symbol": null,
+          "lines": [
+            790,
+            790
+          ],
+          "excerpt": "new InternalNoteGUI("
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C27": {
+      "id": "C27",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController.reviewReportsReceived",
+      "target": "Control.SystemServicesController.displayReportDetails",
+      "relation": "include",
+      "label": "shows details of a selected report",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReceivedReportsGUI.java",
+          "symbol": null,
+          "lines": [
+            254,
+            254
+          ],
+          "excerpt": "systemServicesController.displayReportDetails("
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C28": {
+      "id": "C28",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController.reviewReportsSubmitted",
+      "target": "Control.SystemServicesController.displayReportDetails",
+      "relation": "include",
+      "label": "shows details of a selected report",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/SubmittedReportsGUI.java",
+          "symbol": null,
+          "lines": [
+            164,
+            164
+          ],
+          "excerpt": "systemServicesController.displayReportDetails("
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C29": {
+      "id": "C29",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.NotificationController.sendNotificationToCitizen",
+      "target": "Control.SystemServicesController.updateReportStatus",
+      "relation": "extend",
+      "label": "only if the new status is notifiable",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportStatusUpdateController.java",
+          "symbol": null,
+          "lines": [
+            104,
+            104
+          ],
+          "excerpt": "notificationController.verifyNotifiableStatus("
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C30": {
+      "id": "C30",
+      "task": "IT1",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController.updateReportStatus",
+      "target": "Control.NotificationController.sendNotificationToCitizen",
+      "relation": null,
+      "label": "verifyNotifiableStatus(reportId, newStatus)",
+      "order": 1,
+      "scenario": "status update notification",
+      "condition": "status is notifiable",
+      "evidence": [
+        {
+          "file": "src/main/java/Control/NotificationController.java",
+          "symbol": null,
+          "lines": [
+            38,
+            38
+          ],
+          "excerpt": "if (esito) {"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C31": {
+      "id": "C31",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.Citizen",
+      "target": "Control.SystemServicesController.createReport",
+      "relation": "association",
+      "label": "dashboard offers",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": null,
+          "lines": [
+            322,
+            322
+          ],
+          "excerpt": "createReportPanel.setVisible(true);"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C32": {
+      "id": "C32",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.MunicipalOperator",
+      "target": "Control.SystemServicesController.reviewReportsReceived",
+      "relation": "association",
+      "label": "dashboard offers",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserDashboardGUI.java",
+          "symbol": null,
+          "lines": [
+            344,
+            344
+          ],
+          "excerpt": "reviewReceivedPanel.setVisible(true);"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    }
+  },
+  "rejected_claims": [],
+  "elements": {
+    "actor:Citizen": {
+      "id": "actor:Citizen",
+      "kind": "actor",
+      "name": "Citizen",
+      "realized_by": [
+        "Entity.Citizen"
+      ],
+      "layer": "domain",
+      "responsibilities": [
+        {
+          "text": "reports problems and follows the reports they submitted",
+          "claims": [
+            "C1"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C1"
+      ],
+      "named_by": "symbol"
+    },
+    "actor:MunicipalOperator": {
+      "id": "actor:MunicipalOperator",
+      "kind": "actor",
+      "name": "MunicipalOperator",
+      "realized_by": [
+        "Entity.MunicipalOperator"
+      ],
+      "layer": "domain",
+      "responsibilities": [
+        {
+          "text": "manages the reports received by the municipality",
+          "claims": [
+            "C2"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C2"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:createReport": {
+      "id": "use_case:createReport",
+      "kind": "use_case",
+      "name": "createReport",
+      "realized_by": [
+        "Control.SystemServicesController.createReport"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "a citizen submits a report about a problem, with category and location",
+          "claims": [
+            "C3"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C3"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:reviewReportsSubmitted": {
+      "id": "use_case:reviewReportsSubmitted",
+      "kind": "use_case",
+      "name": "reviewReportsSubmitted",
+      "realized_by": [
+        "Control.SystemServicesController.reviewReportsSubmitted"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "a citizen lists the reports they have submitted",
+          "claims": [
+            "C4"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C4"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:reviewReportsReceived": {
+      "id": "use_case:reviewReportsReceived",
+      "kind": "use_case",
+      "name": "reviewReportsReceived",
+      "realized_by": [
+        "Control.SystemServicesController.reviewReportsReceived"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "an operator lists and filters the reports received by the municipality",
+          "claims": [
+            "C5"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C5"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:displayReportDetails": {
+      "id": "use_case:displayReportDetails",
+      "kind": "use_case",
+      "name": "displayReportDetails",
+      "realized_by": [
+        "Control.SystemServicesController.displayReportDetails"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "shows a report's details and history to an operator or to the citizen who submitted it",
+          "claims": [
+            "C6"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C6"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:updateReportStatus": {
+      "id": "use_case:updateReportStatus",
+      "kind": "use_case",
+      "name": "updateReportStatus",
+      "realized_by": [
+        "Control.SystemServicesController.updateReportStatus"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "an operator advances a report to its next status",
+          "claims": [
+            "C7"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C7"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:addInternalNote": {
+      "id": "use_case:addInternalNote",
+      "kind": "use_case",
+      "name": "addInternalNote",
+      "realized_by": [
+        "Control.SystemServicesController.addInternalNote"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "an operator records an internal note on a report",
+          "claims": [
+            "C8"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C8"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:monitorActivityTrends": {
+      "id": "use_case:monitorActivityTrends",
+      "kind": "use_case",
+      "name": "monitorActivityTrends",
+      "realized_by": [
+        "Control.SystemServicesController.monitorActivityTrends"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "an operator monitors report activity over a date range",
+          "claims": [
+            "C9"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C9"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:registerUser": {
+      "id": "use_case:registerUser",
+      "kind": "use_case",
+      "name": "registerUser",
+      "realized_by": [
+        "Control.SystemServicesController.registerUser"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "a new person registers as Citizen or Municipal Operator",
+          "claims": [
+            "C10"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C10"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:verifyCredentialsLogin": {
+      "id": "use_case:verifyCredentialsLogin",
+      "kind": "use_case",
+      "name": "verifyCredentialsLogin",
+      "realized_by": [
+        "Control.UserLoginController.verifyCredentialsLogin"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "a registered user signs in with email and password and receives a role-based session",
+          "claims": [
+            "C11"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C11"
+      ],
+      "named_by": "symbol"
+    },
+    "use_case:sendNotificationToCitizen": {
+      "id": "use_case:sendNotificationToCitizen",
+      "kind": "use_case",
+      "name": "sendNotificationToCitizen",
+      "realized_by": [
+        "Control.NotificationController.sendNotificationToCitizen"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "notifies the citizen when a report reaches a notifiable status",
+          "claims": [
+            "C12"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C12"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Entity": {
+      "id": "cmp:Entity",
+      "kind": "component",
+      "name": "Entity",
+      "realized_by": [
+        "Entity.Citizen",
+        "Entity.MunicipalOperator"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "package"
+    },
+    "cmp:Control": {
+      "id": "cmp:Control",
+      "kind": "component",
+      "name": "Control",
+      "realized_by": [
+        "Control.SystemServicesController",
+        "Control.ReportCreationController",
+        "Control.ReportReviewController",
+        "Control.ReportDetailsController",
+        "Control.ReportStatusUpdateController",
+        "Control.InternalNoteController",
+        "Control.ActivityMonitoringController",
+        "Control.UserLoginController",
+        "Control.NotificationController"
+      ],
+      "layer": "application",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "package"
+    },
+    "cmp:Boundary": {
+      "id": "cmp:Boundary",
+      "kind": "component",
+      "name": "Boundary",
+      "realized_by": [
+        "Boundary.UserDashboardGUI",
+        "Boundary.UserRegistrationGUI",
+        "Boundary.ReceivedReportsGUI",
+        "Boundary.SubmittedReportsGUI"
+      ],
+      "layer": "presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "package"
+    },
+    "ent:Entity.User": {
+      "id": "ent:Entity.User",
+      "kind": "entity",
+      "name": "User",
+      "realized_by": [
+        "Entity.User"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "userId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "phoneNumber",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "table": "users"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "ent:Entity.Report": {
+      "id": "ent:Entity.Report",
+      "kind": "entity",
+      "name": "Report",
+      "realized_by": [
+        "Entity.Report"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "reportId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "category",
+          "type": "ReportCategory",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "dateReport",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "imageAttached",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "currentStatusName",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "citizenEditable",
+          "type": "boolean",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "table": "reports"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "ent:Entity.Notification": {
+      "id": "ent:Entity.Notification",
+      "kind": "entity",
+      "name": "Notification",
+      "realized_by": [
+        "Entity.Notification"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "notificationId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "sentDate",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "notifiedStatus",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "table": "notifications"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "ent:Entity.StatusUpdate": {
+      "id": "ent:Entity.StatusUpdate",
+      "kind": "entity",
+      "name": "StatusUpdate",
+      "realized_by": [
+        "Entity.StatusUpdate"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "updateId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "updateDate",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "newStatus",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "table": "status_updates"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "ent:Entity.InternalNote": {
+      "id": "ent:Entity.InternalNote",
+      "kind": "entity",
+      "name": "InternalNote",
+      "realized_by": [
+        "Entity.InternalNote"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "noteId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "text",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "dateEntry",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "table": "internal_notes"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    }
+  },
+  "relations": {
+    "rel:C13": {
+      "id": "rel:C13",
+      "kind": "association",
+      "source": "actor:Citizen",
+      "target": "use_case:createReport",
+      "label": "creates",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C13"
+      ],
+      "support": "inferred"
+    },
+    "rel:C14": {
+      "id": "rel:C14",
+      "kind": "association",
+      "source": "actor:Citizen",
+      "target": "use_case:reviewReportsSubmitted",
+      "label": "reviews own",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C14"
+      ],
+      "support": "inferred"
+    },
+    "rel:C15": {
+      "id": "rel:C15",
+      "kind": "association",
+      "source": "actor:Citizen",
+      "target": "use_case:displayReportDetails",
+      "label": "views own report",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C15"
+      ],
+      "support": "inferred"
+    },
+    "rel:C16": {
+      "id": "rel:C16",
+      "kind": "association",
+      "source": "actor:MunicipalOperator",
+      "target": "use_case:reviewReportsReceived",
+      "label": "reviews received",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C16"
+      ],
+      "support": "inferred"
+    },
+    "rel:C17": {
+      "id": "rel:C17",
+      "kind": "association",
+      "source": "actor:MunicipalOperator",
+      "target": "use_case:displayReportDetails",
+      "label": "views any report",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C17"
+      ],
+      "support": "inferred"
+    },
+    "rel:C18": {
+      "id": "rel:C18",
+      "kind": "association",
+      "source": "actor:MunicipalOperator",
+      "target": "use_case:updateReportStatus",
+      "label": "updates status",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C18"
+      ],
+      "support": "inferred"
+    },
+    "rel:C19": {
+      "id": "rel:C19",
+      "kind": "association",
+      "source": "actor:MunicipalOperator",
+      "target": "use_case:addInternalNote",
+      "label": "adds note",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C19"
+      ],
+      "support": "inferred"
+    },
+    "rel:C20": {
+      "id": "rel:C20",
+      "kind": "association",
+      "source": "actor:MunicipalOperator",
+      "target": "use_case:monitorActivityTrends",
+      "label": "monitors",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C20"
+      ],
+      "support": "inferred"
+    },
+    "rel:C21": {
+      "id": "rel:C21",
+      "kind": "association",
+      "source": "actor:Citizen",
+      "target": "use_case:registerUser",
+      "label": "registers",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C21"
+      ],
+      "support": "observed"
+    },
+    "rel:C22": {
+      "id": "rel:C22",
+      "kind": "association",
+      "source": "actor:MunicipalOperator",
+      "target": "use_case:registerUser",
+      "label": "registers",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C22"
+      ],
+      "support": "inferred"
+    },
+    "rel:C23": {
+      "id": "rel:C23",
+      "kind": "association",
+      "source": "actor:Citizen",
+      "target": "use_case:verifyCredentialsLogin",
+      "label": "signs in",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C23"
+      ],
+      "support": "observed"
+    },
+    "rel:C24": {
+      "id": "rel:C24",
+      "kind": "association",
+      "source": "actor:MunicipalOperator",
+      "target": "use_case:verifyCredentialsLogin",
+      "label": "signs in",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C24"
+      ],
+      "support": "inferred"
+    },
+    "rel:C25": {
+      "id": "rel:C25",
+      "kind": "extend",
+      "source": "use_case:updateReportStatus",
+      "target": "use_case:reviewReportsReceived",
+      "label": "opened from the received-reports screen",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C25"
+      ],
+      "support": "inferred"
+    },
+    "rel:C26": {
+      "id": "rel:C26",
+      "kind": "extend",
+      "source": "use_case:addInternalNote",
+      "target": "use_case:reviewReportsReceived",
+      "label": "opened from the received-reports screen",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C26"
+      ],
+      "support": "inferred"
+    },
+    "rel:C27": {
+      "id": "rel:C27",
+      "kind": "include",
+      "source": "use_case:reviewReportsReceived",
+      "target": "use_case:displayReportDetails",
+      "label": "shows details of a selected report",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C27"
+      ],
+      "support": "observed"
+    },
+    "rel:C28": {
+      "id": "rel:C28",
+      "kind": "include",
+      "source": "use_case:reviewReportsSubmitted",
+      "target": "use_case:displayReportDetails",
+      "label": "shows details of a selected report",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C28"
+      ],
+      "support": "observed"
+    },
+    "rel:C29": {
+      "id": "rel:C29",
+      "kind": "extend",
+      "source": "use_case:sendNotificationToCitizen",
+      "target": "use_case:updateReportStatus",
+      "label": "only if the new status is notifiable",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C29"
+      ],
+      "support": "inferred"
+    },
+    "rel:cmp:Boundary->cmp:Control": {
+      "id": "rel:cmp:Boundary->cmp:Control",
+      "kind": "uses",
+      "source": "cmp:Boundary",
+      "target": "cmp:Control",
+      "label": "createReport, reviewReportsReceived",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ReceivedReportsGUI -calls-> Control.SystemServicesController (src/main/java/Boundary/ReceivedReportsGUI.java:254)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp:Control->cmp:Entity": {
+      "id": "rel:cmp:Control->cmp:Entity",
+      "kind": "uses",
+      "source": "cmp:Control",
+      "target": "cmp:Entity",
+      "label": "isMunicipalOperator, verifyUserCitizen",
+      "multiplicity": null,
+      "member_edges": [
+        "Control.ReportReviewController -calls-> Entity.UserService (src/main/java/Control/ReportReviewController.java:53)"
+      ],
+      "claims": [],
+      "support": "observed"
+    }
+  },
+  "scenarios": {
+    "scn:status-update-notification": {
+      "id": "scn:status-update-notification",
+      "name": "status update notification",
+      "steps": [
+        {
+          "order": 1,
+          "source": "use_case:updateReportStatus",
+          "target": "use_case:sendNotificationToCitizen",
+          "message": "verifyNotifiableStatus(reportId, newStatus)",
+          "kind": "call",
+          "fragment": "scn:status-update-notification:alt1",
+          "claims": [
+            "C30"
+          ]
+        }
+      ],
+      "fragments": [
+        {
+          "id": "scn:status-update-notification:alt1",
+          "kind": "alt",
+          "guard": "status is notifiable"
+        }
+      ]
+    }
+  },
+  "states": [
+    "Submitted",
+    "Assigned",
+    "InProgress",
+    "Resolved"
+  ],
+  "state_sources": [
+    {
+      "state": "Submitted",
+      "file": "src/main/java/Entity/Submitted.java"
+    },
+    {
+      "state": "Assigned",
+      "file": "src/main/java/Entity/Assigned.java"
+    },
+    {
+      "state": "InProgress",
+      "file": "src/main/java/Entity/InProgress.java"
+    },
+    {
+      "state": "Resolved",
+      "file": "src/main/java/Entity/Resolved.java"
+    }
+  ],
+  "component_of": {
+    "Entity.Citizen": "cmp:Entity",
+    "Entity.MunicipalOperator": "cmp:Entity",
+    "Control.SystemServicesController": "cmp:Control",
+    "Control.ReportCreationController": "cmp:Control",
+    "Control.ReportReviewController": "cmp:Control",
+    "Control.ReportDetailsController": "cmp:Control",
+    "Control.ReportStatusUpdateController": "cmp:Control",
+    "Control.InternalNoteController": "cmp:Control",
+    "Control.ActivityMonitoringController": "cmp:Control",
+    "Control.UserLoginController": "cmp:Control",
+    "Control.NotificationController": "cmp:Control",
+    "Boundary.UserDashboardGUI": "cmp:Boundary",
+    "Boundary.UserRegistrationGUI": "cmp:Boundary",
+    "Boundary.ReceivedReportsGUI": "cmp:Boundary",
+    "Boundary.SubmittedReportsGUI": "cmp:Boundary"
+  },
+  "correspondences": [
+    {
+      "rule": "actor-realized-by-entity",
+      "elements": [
+        "actor:Citizen",
+        "Entity.Citizen"
+      ],
+      "note": "actor taken from the Citizen subclass of User"
+    },
+    {
+      "rule": "actor-realized-by-entity",
+      "elements": [
+        "actor:MunicipalOperator",
+        "Entity.MunicipalOperator"
+      ],
+      "note": "actor taken from the MunicipalOperator subclass of User"
+    }
+  ],
+  "reflexion": {
+    "convergence": [
+      "rel:cmp:Boundary->cmp:Control",
+      "rel:cmp:Control->cmp:Entity"
+    ],
+    "divergence": [],
+    "absence": []
+  },
+  "notes": [
+    "IT1: 32 claims verified, 0 rejected; read the 10 controllers, 5 role-related GUIs, Citizen, MunicipalOperator, User and the report status classes",
+    "Component grain follows detail level overview (one per package); the Database package holds no claim candidate and is not a component."
+  ]
+}

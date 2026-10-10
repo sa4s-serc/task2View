@@ -1,0 +1,37 @@
+@startuml view-2
+title View 2 - Report lifecycle: states and the data persisted at each step
+
+[*] --> submitted : Citizen creates report\nINSERT reports (current_status=submitted,\ncitizen_editable=true, operator_id=NULL,\nlocation, category, optional image)\n[ReportService.registerNewReport]
+
+submitted --> assigned : Operator updates status\nUPDATE reports (current_status, citizen_editable=false, operator_id)\nINSERT status_updates(new_status=assigned, operator_id)\nthen INSERT notifications (notifiable)
+assigned --> in_progress : Operator updates status\nUPDATE reports (current_status)\nINSERT status_updates(new_status=in_progress, operator_id)\nno notification
+in_progress --> resolved : Operator updates status\nUPDATE reports (current_status)\nINSERT status_updates(new_status=resolved, operator_id)\nthen INSERT notifications (notifiable)
+resolved --> [*] : terminal\nIllegalStateException on further update
+
+note right of submitted
+  isStatusNotifiable = false
+  Citizen-editable flag = true
+end note
+note right of assigned
+  isStatusNotifiable = true
+end note
+note right of in_progress
+  isStatusNotifiable = false
+end note
+note right of resolved
+  isStatusNotifiable = true
+end note
+
+note bottom
+  Side activity at any state (operator only): InternalNote added via
+  Report.addInternalNote -> INSERT internal_notes(text, created_date, report_id, operator_id).
+  Notes do not change the state.
+  Status updates and notes are appended, never updated or deleted (history is append-only).
+  Observed in code: ReportService.updateReportStatus persists the report and its StatusUpdate
+  in one merge (one transaction); the Notification is saved afterwards in a separate
+  transaction (ReportStatusUpdateController -> NotificationController), so a failure
+  between them leaves the state change without a notification.
+  Note: the notifiable test (Report.isCurrentStatusNotifiable) uses the report's
+  current state, not the newStatus argument passed in.
+end note
+@enduml

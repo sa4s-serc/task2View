@@ -1,0 +1,278 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "data-structure",
+    "subject": "users",
+    "goal": "Collect evidence for: For users: the data entities, their attributes, keys, and relationships?",
+    "seeds": {
+      "symbols": [
+        "Entity.User",
+        "Entity.Citizen",
+        "Entity.MunicipalOperator",
+        "Entity.Credentials",
+        "Entity.UserService"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: user",
+      "persistence-unit class list"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "data-structure",
+    "subject": "reports",
+    "goal": "Collect evidence for: For reports: the data entities, their attributes, keys, and relationships?",
+    "seeds": {
+      "symbols": [
+        "Entity.Report",
+        "Entity.ReportService"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: report"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ3",
+      "AQ4"
+    ],
+    "need": "data-structure",
+    "subject": "locations",
+    "goal": "Collect evidence for: For locations: the data entities, their attributes, keys, and relationships?; For categories: the data entities, their attributes, keys, and relationships?",
+    "seeds": {
+      "symbols": [
+        "Entity.Location",
+        "Entity.ReportCategory",
+        "Entity.Report"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: location",
+      "symbol-name: category (merged subject: categories)"
+    ]
+  },
+  {
+    "id": "IT4",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ5",
+      "AQ6"
+    ],
+    "need": "data-structure",
+    "subject": "states",
+    "goal": "Collect evidence for: For states: the data entities, their attributes, keys, and relationships?; For state changes: the data entities, their attributes, keys, and relationships?",
+    "seeds": {
+      "symbols": [
+        "Entity.ReportStatus",
+        "Entity.Submitted",
+        "Entity.Assigned",
+        "Entity.InProgress",
+        "Entity.Resolved",
+        "Entity.StatusUpdate"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: status/state (merged subject: state changes)"
+    ]
+  },
+  {
+    "id": "IT5",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ7",
+      "AQ8"
+    ],
+    "need": "data-structure",
+    "subject": "internal notes",
+    "goal": "Collect evidence for: For internal notes: the data entities, their attributes, keys, and relationships?; For notifications: the data entities, their attributes, keys, and relationships?",
+    "seeds": {
+      "symbols": [
+        "Entity.InternalNote",
+        "Entity.Notification",
+        "Control.NotificationController"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: note, notification (merged subject: notifications)"
+    ]
+  },
+  {
+    "id": "IT6",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ9"
+    ],
+    "need": "data-storage",
+    "subject": null,
+    "goal": "Collect evidence for: For management of municipal reports: where and how data is persisted (databases, schemas, stores)?",
+    "seeds": {
+      "symbols": [
+        "Database.JpaUtil",
+        "Database.PersistenceService"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml",
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "schema/deploy files for data-storage",
+      "persistence layer classes"
+    ]
+  },
+  {
+    "id": "IT7",
+    "view_id": "V2-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ10",
+      "AQ11"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect evidence for: For management of municipal reports: which parts depend on which other parts?; For management of municipal reports: which parts are affected when a given part changes?",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Control.ReportStatusUpdateController",
+        "Control.ReportCreationController"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "entry points and direct dependencies of the persistence layer"
+    ]
+  }
+]

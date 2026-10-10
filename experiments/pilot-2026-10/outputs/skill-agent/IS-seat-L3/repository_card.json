@@ -1,0 +1,409 @@
+{
+  "root": ".",
+  "name": "Progetto-IS-main-English",
+  "languages": {
+    "java": 90,
+    "html": 7,
+    "javascript": 1,
+    "css": 3,
+    "xml": 3
+  },
+  "layers": {
+    "presentation": [
+      "it.unina.reservations.boundary",
+      "it.unina.reservations.boundary.SpringBoot",
+      "it.unina.reservations.boundary.Swing"
+    ],
+    "application": [
+      "it.unina.reservations.controller",
+      "it.unina.reservations.controller.strategy",
+      "it.unina.reservations.controller.factory"
+    ],
+    "domain": [
+      "it.unina.reservations.entity",
+      "it.unina.reservations.entity.state",
+      "it.unina.reservations.dto"
+    ],
+    "persistence": [
+      "it.unina.reservations.database"
+    ]
+  },
+  "entry_points": [
+    {
+      "kind": "main",
+      "symbol": "it.unina.reservations.Launcher",
+      "file": "JavaProject/src/main/java/it/unina/reservations/Launcher.java",
+      "line": 10,
+      "detail": "starts Spring Boot and the Swing Login frame (mainClass in pom.xml)"
+    },
+    {
+      "kind": "main",
+      "symbol": "it.unina.reservations.ReservationsApplication",
+      "file": "JavaProject/src/main/java/it/unina/reservations/ReservationsApplication.java",
+      "line": 16,
+      "detail": "SpringBootApplication with EnableScheduling"
+    },
+    {
+      "kind": "http-route",
+      "symbol": "it.unina.reservations.boundary.SpringBoot.ReservationController",
+      "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
+      "line": 21,
+      "detail": "PostMapping /api/reservations/create"
+    },
+    {
+      "kind": "http-route",
+      "symbol": "it.unina.reservations.boundary.SpringBoot.ReservationController",
+      "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
+      "line": 36,
+      "detail": "PutMapping /api/reservations/{reservationId}/cancel"
+    },
+    {
+      "kind": "http-route",
+      "symbol": "it.unina.reservations.boundary.SpringBoot.ReservationController",
+      "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
+      "line": 45,
+      "detail": "PutMapping /api/reservations/{reservationId}/checkIn"
+    },
+    {
+      "kind": "http-route",
+      "symbol": "it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+      "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java",
+      "line": 60,
+      "detail": "GetMapping /api/rooms/{roomId}/detail"
+    },
+    {
+      "kind": "gui-frame",
+      "symbol": "it.unina.reservations.boundary.Swing.ReservationSummary",
+      "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java",
+      "line": 100,
+      "detail": "wizard step calling LibraryFacade.makeReservation"
+    },
+    {
+      "kind": "scheduled-job",
+      "symbol": "it.unina.reservations.boundary.NotificationScheduler",
+      "file": "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java",
+      "line": 15,
+      "detail": "Scheduled fixedDelay=60000: manageReservationEnd and sendReminders"
+    }
+  ],
+  "entities": [
+    {
+      "symbol": "it.unina.reservations.entity.Reservation",
+      "name": "Reservation",
+      "table": "reservation",
+      "source": "orm",
+      "file": "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "date",
+          "type": "LocalDate",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "stateName",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "student",
+          "type": "Student",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "it.unina.reservations.entity.Student",
+          "foreign_key": "student_id"
+        },
+        {
+          "name": "seat",
+          "type": "Seat",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "it.unina.reservations.entity.Seat",
+          "foreign_key": "seat_id"
+        },
+        {
+          "name": "timeSlot",
+          "type": "TimeSlot",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "it.unina.reservations.entity.TimeSlot",
+          "foreign_key": "time_slot_id"
+        },
+        {
+          "name": "reminderSent",
+          "type": "boolean",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "it.unina.reservations.entity.Seat",
+      "name": "Seat",
+      "table": "seat",
+      "source": "orm",
+      "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "area",
+          "type": "Area",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "it.unina.reservations.entity.Area",
+          "foreign_key": "area_id"
+        }
+      ]
+    },
+    {
+      "symbol": "it.unina.reservations.entity.Area",
+      "name": "Area",
+      "table": "area",
+      "source": "orm",
+      "file": "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "studyRoom",
+          "type": "StudyRoom",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "it.unina.reservations.entity.StudyRoom",
+          "foreign_key": "room_studio_id"
+        }
+      ]
+    },
+    {
+      "symbol": "it.unina.reservations.entity.StudyRoom",
+      "name": "StudyRoom",
+      "table": "study_room",
+      "source": "orm",
+      "file": "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "timeSlots",
+          "type": "List<TimeSlot>",
+          "key": false,
+          "relation": "many-to-many",
+          "target": "it.unina.reservations.entity.TimeSlot",
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "it.unina.reservations.entity.TimeSlot",
+      "name": "TimeSlot",
+      "table": "time_slot",
+      "source": "orm",
+      "file": "JavaProject/src/main/java/it/unina/reservations/entity/TimeSlot.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "startTime",
+          "type": "LocalTime",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "endTime",
+          "type": "LocalTime",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "it.unina.reservations.entity.User",
+      "name": "User",
+      "table": "user",
+      "source": "orm",
+      "file": "JavaProject/src/main/java/it/unina/reservations/entity/User.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "it.unina.reservations.entity.Student",
+      "name": "Student",
+      "table": "student",
+      "source": "orm",
+      "file": "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+      "fields": [
+        {
+          "name": "studentNumber",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "reservations",
+          "type": "List<Reservation>",
+          "key": false,
+          "relation": "one-to-many",
+          "target": "it.unina.reservations.entity.Reservation",
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "it.unina.reservations.entity.Librarian",
+      "name": "Librarian",
+      "table": "librarian",
+      "source": "orm",
+      "file": "JavaProject/src/main/java/it/unina/reservations/entity/Librarian.java",
+      "fields": []
+    }
+  ],
+  "deploy": [
+    {
+      "kind": "persistence-unit",
+      "name": "reservationsPU",
+      "file": "JavaProject/src/main/resources/META-INF/persistence.xml",
+      "details": {
+        "provider": "Hibernate",
+        "url": "jdbc:mysql://localhost:3306/reservationsdb",
+        "hbm2ddl": "update"
+      }
+    }
+  ],
+  "build": [
+    {
+      "tool": "maven",
+      "file": "JavaProject/pom.xml",
+      "name": "library-reservation-system",
+      "packaging": "jar",
+      "dependencies": [
+        "spring-boot-starter-web",
+        "hibernate-core",
+        "mysql-connector-j",
+        "forms_rt",
+        "junit-jupiter"
+      ]
+    }
+  ],
+  "signals": {
+    "rest-api": [
+      "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java: RestController, PostMapping /api/reservations/create"
+    ],
+    "gui-client": [
+      "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java: Swing frame (javax.swing)"
+    ],
+    "web-client": [
+      "JavaProject/src/main/resources/static/reservation.html: browser wizard posting to /reservations/create"
+    ],
+    "layered": [
+      "presentation: boundary",
+      "application: controller",
+      "domain: entity",
+      "persistence: database"
+    ],
+    "inheritance": [
+      "User <- Student, Librarian",
+      "ReservationState <- ActiveState, CancelledState, ConfirmedState, CompletedState, ExpiredState"
+    ],
+    "threads": [
+      "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java: @Scheduled(initialDelay = 60000, fixedDelay = 60000)"
+    ],
+    "persisted-data": [
+      "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java: @Entity @Table(name = \"reservation\")"
+    ],
+    "lifecycle": [
+      "JavaProject/src/main/java/it/unina/reservations/entity/StatusEnum.java: ACTIVE, CANCELLED, EXPIRED, CONFIRMED, COMPLETED; ReservationState implementations"
+    ],
+    "deploy-config": [
+      "JavaProject/src/main/resources/META-INF/persistence.xml: persistence unit reservationsPU on MySQL"
+    ],
+    "build-config": [
+      "JavaProject/pom.xml: maven build, Spring Boot parent 3.2.4"
+    ],
+    "tests": [
+      "JavaProject/src/test/java/it/unina/reservations/controller/MakeReservationTest.java"
+    ]
+  },
+  "notes": [
+    "No Dockerfile or compose files; no CODEOWNERS or ADRs; README.md is the only documentation",
+    "Singletons obtained with getInstance() are used for managers, registries and the facade instead of dependency injection",
+    "No services/event-bus/peer-calls/shared-repository/multi-tier signal: observer pattern is hand-written (Subject/Observer), not a message bus"
+  ]
+}

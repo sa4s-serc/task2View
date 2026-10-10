@@ -1,0 +1,443 @@
+{
+  "root": ".",
+  "name": "municipal-report-management",
+  "languages": {
+    "java": 44,
+    "xml": 2
+  },
+  "layers": {
+    "presentation": [
+      "Boundary"
+    ],
+    "application": [
+      "Control"
+    ],
+    "domain": [
+      "Entity"
+    ],
+    "persistence": [
+      "Database"
+    ]
+  },
+  "entry_points": [
+    {
+      "kind": "main",
+      "symbol": "Boundary.HomePageGUI",
+      "file": "src/main/java/Boundary/HomePageGUI.java",
+      "line": 75,
+      "detail": "public static void main, opens JFrame 'HomePage'"
+    },
+    {
+      "kind": "main",
+      "symbol": "Boundary.UserLoginGUI",
+      "file": "src/main/java/Boundary/UserLoginGUI.java",
+      "line": 91,
+      "detail": "public static void main, opens 'User Sign-In'"
+    },
+    {
+      "kind": "main",
+      "symbol": "Boundary.UserRegistrationGUI",
+      "file": "src/main/java/Boundary/UserRegistrationGUI.java",
+      "line": 145,
+      "detail": "public static void main"
+    }
+  ],
+  "entities": [
+    {
+      "symbol": "Entity.User",
+      "name": "User",
+      "table": "users",
+      "source": "orm",
+      "file": "src/main/java/Entity/User.java",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "phoneNumber",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "credentials",
+          "type": "Credentials",
+          "key": false,
+          "relation": "embedded",
+          "target": "Entity.Credentials",
+          "foreign_key": null
+        }
+      ],
+      "notes": "abstract; SINGLE_TABLE inheritance, discriminator column role"
+    },
+    {
+      "symbol": "Entity.Citizen",
+      "name": "Citizen",
+      "table": "users",
+      "source": "orm",
+      "file": "src/main/java/Entity/Citizen.java",
+      "fields": [],
+      "notes": "extends User, discriminator CITIZEN"
+    },
+    {
+      "symbol": "Entity.MunicipalOperator",
+      "name": "MunicipalOperator",
+      "table": "users",
+      "source": "orm",
+      "file": "src/main/java/Entity/MunicipalOperator.java",
+      "fields": [],
+      "notes": "extends User"
+    },
+    {
+      "symbol": "Entity.Report",
+      "name": "Report",
+      "table": "reports",
+      "source": "orm",
+      "file": "src/main/java/Entity/Report.java",
+      "fields": [
+        {
+          "name": "reportId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "category",
+          "type": "ReportCategory",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "location",
+          "type": "Location",
+          "key": false,
+          "relation": "embedded",
+          "target": "Entity.Location",
+          "foreign_key": null
+        },
+        {
+          "name": "dateReport",
+          "type": "Date",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "imageAttached",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "currentStatusName",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "citizenEditable",
+          "type": "boolean",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "citizenReporting",
+          "type": "Citizen",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "Entity.Citizen",
+          "foreign_key": null
+        },
+        {
+          "name": "operator",
+          "type": "MunicipalOperator",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "Entity.MunicipalOperator",
+          "foreign_key": null
+        },
+        {
+          "name": "internalNotes",
+          "type": "List<InternalNote>",
+          "key": false,
+          "relation": "one-to-many",
+          "target": "Entity.InternalNote",
+          "foreign_key": null
+        },
+        {
+          "name": "statusUpdates",
+          "type": "List<StatusUpdate>",
+          "key": false,
+          "relation": "one-to-many",
+          "target": "Entity.StatusUpdate",
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "Entity.InternalNote",
+      "name": "InternalNote",
+      "table": "internal_notes",
+      "source": "orm",
+      "file": "src/main/java/Entity/InternalNote.java",
+      "fields": [
+        {
+          "name": "noteId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "text",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "dateEntry",
+          "type": "Date",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "operator",
+          "type": "MunicipalOperator",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "Entity.MunicipalOperator",
+          "foreign_key": null
+        },
+        {
+          "name": "report",
+          "type": "Report",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "Entity.Report",
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "Entity.StatusUpdate",
+      "name": "StatusUpdate",
+      "table": "status_updates",
+      "source": "orm",
+      "file": "src/main/java/Entity/StatusUpdate.java",
+      "fields": [
+        {
+          "name": "updateId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "updateDate",
+          "type": "Date",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "newStatus",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "report",
+          "type": "Report",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "Entity.Report",
+          "foreign_key": null
+        },
+        {
+          "name": "operator",
+          "type": "MunicipalOperator",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "Entity.MunicipalOperator",
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "Entity.Notification",
+      "name": "Notification",
+      "table": "notifications",
+      "source": "orm",
+      "file": "src/main/java/Entity/Notification.java",
+      "fields": [
+        {
+          "name": "notificationId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "sentDate",
+          "type": "Date",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "notifiedStatus",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "destinatario",
+          "type": "Citizen",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "Entity.Citizen",
+          "foreign_key": null
+        },
+        {
+          "name": "report",
+          "type": "Report",
+          "key": false,
+          "relation": "many-to-one",
+          "target": "Entity.Report",
+          "foreign_key": null
+        }
+      ]
+    }
+  ],
+  "deploy": [
+    {
+      "kind": "persistence-unit",
+      "name": "Municipal_Report_Management_System",
+      "file": "src/main/resources/META-INF/persistence.xml",
+      "details": {
+        "transaction-type": "RESOURCE_LOCAL",
+        "provider": "org.hibernate.jpa.HibernatePersistenceProvider",
+        "jdbc.driver": "com.mysql.cj.jdbc.Driver",
+        "jdbc.url": "jdbc:mysql://127.0.0.1:3306/reports_db",
+        "jdbc.user": "reports_user",
+        "hbm2ddl.auto": "update"
+      }
+    }
+  ],
+  "build": [
+    {
+      "tool": "maven",
+      "file": "pom.xml",
+      "name": "municipal-report-management",
+      "packaging": "jar (default, not declared)",
+      "dependencies": [
+        "junit-jupiter 5.10.2 (test)",
+        "forms_rt 7.0.3",
+        "mysql-connector-j 9.4.0",
+        "hibernate-core 6.6.50.Final"
+      ]
+    }
+  ],
+  "signals": {
+    "gui-client": [
+      "src/main/java/Boundary/HomePageGUI.java: import javax.swing.*"
+    ],
+    "layered": [
+      "Boundary, Control, Entity, Database packages (presentation, application, domain, persistence)"
+    ],
+    "inheritance": [
+      "Entity.User extended by Citizen and MunicipalOperator; Entity.ReportStatus implemented by Submitted, Assigned, InProgress, Resolved"
+    ],
+    "persisted-data": [
+      "Entity.Report: @Entity @Table(name = \"reports\")"
+    ],
+    "lifecycle": [
+      "Entity.ReportStatus implementations Submitted, Assigned, InProgress, Resolved"
+    ],
+    "deploy-config": [
+      "src/main/resources/META-INF/persistence.xml: persistence unit with JDBC settings"
+    ],
+    "build-config": [
+      "pom.xml: maven project municipal-report-management"
+    ],
+    "tests": [
+      "src/test/java/testingBlackBox and testingWhiteBox"
+    ]
+  },
+  "notes": [
+    "No Dockerfile, compose file, CI file or application server config.",
+    "/images/logo.png is referenced by GUI classes but not present under src/main/resources.",
+    "Raised only on evidence in code/config; signals multi-tier, rest-api, services, threads not raised."
+  ]
+}

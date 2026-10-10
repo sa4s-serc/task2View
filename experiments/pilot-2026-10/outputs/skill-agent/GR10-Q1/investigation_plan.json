@@ -1,0 +1,450 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "decomposition",
+    "subject": null,
+    "goal": "Collect evidence for: For the whole system: the parts of the system, their responsibilities, and how they are contained in subsystems?",
+    "seeds": {
+      "symbols": [
+        "Boundary.HomePageGUI",
+        "Control.SystemServicesController",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Database.PersistenceService"
+      ],
+      "paths": [
+        "README.md",
+        "pom.xml",
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ],
+      "why": [
+        "entry-point:main",
+        "facade name",
+        "service name",
+        "service name",
+        "persistence entry"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "entry-point:main",
+      "facade name",
+      "persistence entry",
+      "service name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "layering",
+    "subject": "user-facing functionality",
+    "goal": "Collect evidence for: For user-facing functionality: how the parts are separated into layers and which layer may use which?",
+    "seeds": {
+      "symbols": [
+        "Boundary.HomePageGUI",
+        "Boundary.UserDashboardGUI",
+        "Control.SystemServicesController"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ],
+      "why": [
+        "entry-point:main",
+        "symbol-name",
+        "direct dependency"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "direct dependency",
+      "entry-point:main",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ3"
+    ],
+    "need": "layering",
+    "subject": "application logic",
+    "goal": "Collect evidence for: For application logic: how the parts are separated into layers and which layer may use which?",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Control.ReportStatusUpdateController",
+        "Entity.ReportService",
+        "Entity.UserService"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ],
+      "why": [
+        "symbol-name",
+        "symbol-name",
+        "direct dependency",
+        "direct dependency"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "direct dependency",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT4",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ4"
+    ],
+    "need": "layering",
+    "subject": "domain entities",
+    "goal": "Collect evidence for: For domain entities: how the parts are separated into layers and which layer may use which?",
+    "seeds": {
+      "symbols": [
+        "Entity.Report",
+        "Entity.User",
+        "Entity.ReportStatus"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ],
+      "why": [
+        "symbol-name",
+        "symbol-name",
+        "symbol-name"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT5",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ5"
+    ],
+    "need": "layering",
+    "subject": "data persistence",
+    "goal": "Collect evidence for: For data persistence: how the parts are separated into layers and which layer may use which?",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml",
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ],
+      "why": [
+        "symbol-name",
+        "symbol-name"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT6",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ6"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect evidence for: For the whole system: which parts depend on which other parts?",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Database.PersistenceService"
+      ],
+      "paths": [
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ],
+      "why": [
+        "entry-point dependency",
+        "entry-point dependency",
+        "entry-point dependency",
+        "entry-point dependency"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes",
+      "generalization"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "entry-point dependency"
+    ]
+  },
+  {
+    "id": "IT7",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ7"
+    ],
+    "need": "collaboration",
+    "subject": "user-facing functionality",
+    "goal": "Collect evidence for: For user-facing functionality: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "Boundary.HomePageGUI",
+        "Boundary.UserDashboardGUI",
+        "Control.SystemServicesController"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ],
+      "why": [
+        "entry-point:main",
+        "symbol-name",
+        "direct dependency"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "direct dependency",
+      "entry-point:main",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT8",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ8"
+    ],
+    "need": "collaboration",
+    "subject": "application logic",
+    "goal": "Collect evidence for: For application logic: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Control.ReportStatusUpdateController",
+        "Entity.ReportService",
+        "Entity.UserService"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ],
+      "why": [
+        "symbol-name",
+        "symbol-name",
+        "direct dependency",
+        "direct dependency"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "direct dependency",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT9",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ9"
+    ],
+    "need": "collaboration",
+    "subject": "domain entities",
+    "goal": "Collect evidence for: For domain entities: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "Entity.Report",
+        "Entity.User",
+        "Entity.ReportStatus"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ],
+      "why": [
+        "symbol-name",
+        "symbol-name",
+        "symbol-name"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT10",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ10"
+    ],
+    "need": "collaboration",
+    "subject": "data persistence",
+    "goal": "Collect evidence for: For data persistence: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml",
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ],
+      "why": [
+        "symbol-name",
+        "symbol-name"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name"
+    ]
+  }
+]

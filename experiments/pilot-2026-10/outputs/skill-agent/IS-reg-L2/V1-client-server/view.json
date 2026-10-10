@@ -1,0 +1,439 @@
+{
+ "id": "V1-client-server",
+ "viewpoint_id": "client-server",
+ "viewpoint_name": "Client-Server",
+ "vb_ref": "4.3.1 Client-Server Style",
+ "model_kind": "uml-component",
+ "title": "Client-Server view \u2014 user registration functionality",
+ "purpose": "Show the components that collaborate when a new user registers, their responsibilities and the operations through which they call each other (integration points).",
+ "detail_level": "feature",
+ "max_elements": 10,
+ "addresses": [
+  "AQ1",
+  "AQ2"
+ ],
+ "overlays": [
+  "layered"
+ ],
+ "scenario": null,
+ "elements": [
+  {
+   "id": "group:layer:presentation",
+   "kind": "layer",
+   "name": "Presentation",
+   "stereotype": null,
+   "parent": null,
+   "responsibilities": [],
+   "attributes": [],
+   "realized_by": [],
+   "support": "observed",
+   "group": true
+  },
+  {
+   "id": "group:layer:application",
+   "kind": "layer",
+   "name": "Application",
+   "stereotype": null,
+   "parent": null,
+   "responsibilities": [],
+   "attributes": [],
+   "realized_by": [],
+   "support": "observed",
+   "group": true
+  },
+  {
+   "id": "group:layer:domain",
+   "kind": "layer",
+   "name": "Domain",
+   "stereotype": null,
+   "parent": null,
+   "responsibilities": [],
+   "attributes": [],
+   "realized_by": [],
+   "support": "observed",
+   "group": true
+  },
+  {
+   "id": "group:layer:persistence",
+   "kind": "layer",
+   "name": "Persistence",
+   "stereotype": null,
+   "parent": null,
+   "responsibilities": [],
+   "attributes": [],
+   "realized_by": [],
+   "support": "observed",
+   "group": true
+  },
+  {
+   "id": "cmp:it.unina.reservations.boundary.Swing.Registration",
+   "kind": "component",
+   "name": "Registration",
+   "stereotype": "presentation",
+   "parent": "group:layer:presentation",
+   "responsibilities": [
+    "collects the sign-up form fields in the desktop GUI",
+    "rejects blank fields before calling the facade",
+    "shows the error message of a failed registration and opens Login after success"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.boundary.Swing.Registration"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "kind": "component",
+   "name": "AuthenticationController",
+   "stereotype": "presentation",
+   "parent": "group:layer:presentation",
+   "responsibilities": [
+    "exposes POST /api/auth/register taking role, name, surname, email, password and identifier as request parameters",
+    "returns the UserDTO produced by the facade"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.boundary.SpringBoot.AuthenticationController"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "kind": "component",
+   "name": "LibraryFacade",
+   "stereotype": "application",
+   "parent": "group:layer:application",
+   "responsibilities": [
+    "single entry point of the controller layer; forwards register to UserManager"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.controller.LibraryFacade"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "cmp:it.unina.reservations.controller.UserManager",
+   "kind": "component",
+   "name": "UserManager",
+   "stereotype": "application",
+   "parent": "group:layer:application",
+   "responsibilities": [
+    "validates role, name, surname, email, password and identifier format",
+    "rejects an email or an identifier that is already registered",
+    "chooses StudentFactory or LibrarianFactory from the role",
+    "stores the new user through UserRegistry and fails if it could not be saved",
+    "maps the stored user to a UserDTO"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.controller.UserManager"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+   "kind": "component",
+   "name": "StudentFactory",
+   "stereotype": "application",
+   "parent": "group:layer:application",
+   "responsibilities": [
+    "implements UserFactory; builds a Student from name, surname, email, password and student number"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.controller.factory.StudentFactory"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+   "kind": "component",
+   "name": "LibrarianFactory",
+   "stereotype": "application",
+   "parent": "group:layer:application",
+   "responsibilities": [
+    "implements UserFactory; builds a Librarian from name, surname, email, password and internal identifier code"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.controller.factory.LibrarianFactory"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "cmp:it.unina.reservations.entity.UserRegistry",
+   "kind": "component",
+   "name": "UserRegistry",
+   "stereotype": "domain",
+   "parent": "group:layer:domain",
+   "responsibilities": [
+    "looks users up by email, student number and librarian code",
+    "persists a new user through PersistenceManager"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.entity.UserRegistry"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "cmp:it.unina.reservations.database.PersistenceManager",
+   "kind": "component",
+   "name": "PersistenceManager",
+   "stereotype": "persistence",
+   "parent": "group:layer:persistence",
+   "responsibilities": [
+    "saves an entity in a transaction and rolls back on error, returning false",
+    "finds entities by field values with a JPQL query"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.database.PersistenceManager"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "cmp:it.unina.reservations.database.JpaUtil",
+   "kind": "component",
+   "name": "JpaUtil",
+   "stereotype": "persistence",
+   "parent": "group:layer:persistence",
+   "responsibilities": [
+    "creates the EntityManagerFactory of persistence unit reservationsPU and hands out EntityManagers"
+   ],
+   "attributes": [],
+   "realized_by": [
+    "it.unina.reservations.database.JpaUtil"
+   ],
+   "support": "observed",
+   "group": false
+  },
+  {
+   "id": "ds:reservationsdb",
+   "kind": "datastore",
+   "name": "reservationsdb",
+   "stereotype": null,
+   "parent": null,
+   "responsibilities": [
+    "MySQL database configured for persistence unit reservationsPU; schema updated by hibernate.hbm2ddl.auto=update"
+   ],
+   "attributes": [],
+   "realized_by": [],
+   "support": "observed",
+   "group": false
+  }
+ ],
+ "relations": [
+  {
+   "id": "rel:cmp:it.unina.reservations.boundary.Swing.Registration>cmp:it.unina.reservations.controller.LibraryFacade:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.boundary.Swing.Registration",
+   "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "label": "register",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController>cmp:it.unina.reservations.controller.LibraryFacade:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "label": "register",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.controller.LibraryFacade>cmp:it.unina.reservations.controller.UserManager:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "target": "cmp:it.unina.reservations.controller.UserManager",
+   "label": "register",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.entity.UserRegistry:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.entity.UserRegistry",
+   "label": "institutionalEmailExists / registerUser",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.controller.factory.StudentFactory:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+   "label": "createUser",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.controller.factory.LibrarianFactory:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+   "label": "createUser",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.entity.UserRegistry>cmp:it.unina.reservations.database.PersistenceManager:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.entity.UserRegistry",
+   "target": "cmp:it.unina.reservations.database.PersistenceManager",
+   "label": "save / findFirstByFields",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.database.PersistenceManager>cmp:it.unina.reservations.database.JpaUtil:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "cmp:it.unina.reservations.database.JpaUtil",
+   "label": "getEntityManager",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.database.PersistenceManager>ds:reservationsdb:writes",
+   "kind": "writes",
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "ds:reservationsdb",
+   "label": "persist",
+   "multiplicity": null,
+   "support": "observed"
+  },
+  {
+   "id": "rel:cmp:it.unina.reservations.database.PersistenceManager>ds:reservationsdb:reads",
+   "kind": "reads",
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "ds:reservationsdb",
+   "label": "createQuery",
+   "multiplicity": null,
+   "support": "observed"
+  }
+ ],
+ "interactions": [],
+ "fragments": [],
+ "traceability": [
+  {
+   "element": "cmp:it.unina.reservations.boundary.Swing.Registration",
+   "name": "Registration",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.boundary.Swing.Registration"
+   ]
+  },
+  {
+   "element": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "name": "AuthenticationController",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.boundary.SpringBoot.AuthenticationController"
+   ]
+  },
+  {
+   "element": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "name": "LibraryFacade",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.controller.LibraryFacade"
+   ]
+  },
+  {
+   "element": "cmp:it.unina.reservations.controller.UserManager",
+   "name": "UserManager",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.controller.UserManager"
+   ]
+  },
+  {
+   "element": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+   "name": "StudentFactory",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.controller.factory.StudentFactory"
+   ]
+  },
+  {
+   "element": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+   "name": "LibrarianFactory",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.controller.factory.LibrarianFactory"
+   ]
+  },
+  {
+   "element": "cmp:it.unina.reservations.entity.UserRegistry",
+   "name": "UserRegistry",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.entity.UserRegistry"
+   ]
+  },
+  {
+   "element": "cmp:it.unina.reservations.database.PersistenceManager",
+   "name": "PersistenceManager",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.database.PersistenceManager"
+   ]
+  },
+  {
+   "element": "cmp:it.unina.reservations.database.JpaUtil",
+   "name": "JpaUtil",
+   "files": [
+    "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java"
+   ],
+   "symbols": [
+    "it.unina.reservations.database.JpaUtil"
+   ]
+  },
+  {
+   "element": "ds:reservationsdb",
+   "name": "reservationsdb",
+   "files": [
+    "JavaProject/src/main/resources/META-INF/persistence.xml"
+   ],
+   "symbols": []
+  }
+ ],
+ "limitations": [
+  "Layer groups are containers and are not counted in the cap of 10; the 10 counted elements are 9 components and 1 datastore.",
+  "The UserFactory interface (two implementations), the entities User/Student/Librarian, UserDTO and RestExceptionHandler were read but are not drawn: the viewpoint has no generalization relation and no entity kind, and no claims were recorded for them.",
+  "The browser client (registration.html) calls POST /api/auth/register but has no code symbol, so it is not an element.",
+  "JpaUtil reaches the database only through persistence unit reservationsPU (persistence.xml); the reads/writes edges are drawn from PersistenceManager with persistence.xml as second citation.",
+  "The relation direction UserManager -> factories is by instantiation; UserRegistry is placed in the domain layer because its package is entity."
+ ],
+ "gaps": [],
+ "overflow": []
+}

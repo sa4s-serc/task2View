@@ -1,0 +1,61 @@
+@startuml
+title View 1 - Components involved in user registration (with integration points)
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "New user\n(Student / Librarian)" as U
+
+package "Boundary (entry points)" {
+  component "registration.html + app.js\n(api() -> POST /api/auth/register,\nform-urlencoded)" as WEB
+  component "Swing Registration\n(boundary/Swing/Registration.java)\nchecks non-blank fields only" as SWING
+  component "AuthenticationController\n@RestController /api/auth/register\n(boundary/SpringBoot)" as CTRL
+  component "RestExceptionHandler\n@RestControllerAdvice\nIllegalArgument/State -> 400 {error}" as EXH
+}
+
+package "Controller (business logic)" {
+  component "LibraryFacade\n(singleton) register()" as FAC
+  component "UserManager\n(singleton) register():\nvalidate, uniqueness checks, build, save, toDTO" as UM
+  component "UserFactory\n<<interface>>" as UF
+  component "StudentFactory" as SF
+  component "LibrarianFactory" as LF
+}
+
+package "Entity" {
+  component "UserRegistry\n(singleton) findUserByEmail,\nfindStudentByStudentNumber,\nfindLibrarianByCode, registerUser" as UR
+  component "User (abstract) / Student / Librarian\nJPA, JOINED inheritance,\nunique email, studentNumber, code" as ENT
+}
+
+package "Dto" {
+  component "UserDTO\n(returned, no password)" as DTO
+}
+
+package "Database" {
+  component "PersistenceManager\nsave(), findFirstByFields()" as PM
+  component "JpaUtil -> EntityManagerFactory\n(reservationsPU, Hibernate)" as JPA
+}
+database "MySQL\nreservationsdb\n(tests: reservationsdb_test)" as DB
+
+U --> WEB
+U --> SWING
+WEB --> CTRL : <<IP1>> HTTP POST\n6 form params
+SWING --> FAC : <<IP2>> direct call
+CTRL --> FAC : <<IP3>> register(...)
+CTRL ..> EXH : exceptions
+FAC --> UM : <<IP4>> delegate
+UM --> UF : <<IP5>> createUser()
+SF .up.|> UF
+LF .up.|> UF
+SF ..> ENT : creates Student
+LF ..> ENT : creates Librarian
+UM --> UR : <<IP6>> uniqueness lookups\n+ registerUser()
+UM ..> DTO : toDTO()
+UR --> PM : <<IP7>> save / find
+PM --> JPA : <<IP8>> EntityManager,\ntransaction
+JPA --> DB : <<IP9>> JDBC / DDL (hbm2ddl update)
+UR ..> ENT : persists / queries
+
+note bottom of FAC
+  Existing RegistrationTest (TC1-TC20) enters here (IP4 level):
+  LibraryFacade -> real DB, bypassing HTTP (IP1/IP3) and the Swing UI.
+end note
+@enduml

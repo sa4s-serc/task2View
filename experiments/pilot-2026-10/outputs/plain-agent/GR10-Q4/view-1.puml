@@ -1,0 +1,53 @@
+@startuml
+title View 1 - Actors, goals and functionalities (use case view)
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Visitor\n(not signed in)" as V
+actor "Citizen" as C
+actor "Municipal Operator" as O
+
+rectangle "Municipal Issue Reporting System" {
+  package "Access (all users)" {
+    usecase "Register account\n(choose role: Citizen or Operator)" as UCReg
+    usecase "Sign in\n(role-specific dashboard)" as UCLogin
+  }
+  package "Citizen goals" {
+    usecase "Report a problem\n(title, description, category,\nlocation, optional image)" as UCCreate
+    usecase "View my submitted reports" as UCMine
+    usecase "View report details\nand status history" as UCDet
+    usecase "View status-change\nnotifications" as UCNotif
+  }
+  package "Operator goals" {
+    usecase "View received reports\n(filter by category, status, area)" as UCRecv
+    usecase "Advance report status\n(assigns the operator)" as UCStat
+    usecase "Add internal note" as UCNote
+    usecase "Monitor activity trends\n(general / in progress / area summary)" as UCMon
+  }
+}
+
+V --> UCReg
+V --> UCLogin
+C --> UCLogin
+O --> UCLogin
+C --> UCCreate
+C --> UCMine
+C --> UCNotif
+O --> UCRecv
+O --> UCStat
+O --> UCNote
+O --> UCMon
+
+UCMine ..> UCDet : <<include>>
+UCRecv ..> UCDet : <<include>>
+UCNote ..> UCDet : <<extend>>\n(from details)
+UCStat ..> UCNotif : <<include>>\n(Assigned, Resolved only;\ncreates a notification)
+UCCreate ..> UCMine : appears in
+UCDet <.. UCNotif : <<extend>>\n(shown in details)
+note bottom of UCMon
+  Operator-only access.
+  Counts total / open / resolved
+  and per-category distribution
+  for a past date range.
+end note
+@enduml

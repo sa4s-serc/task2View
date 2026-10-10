@@ -1,0 +1,48 @@
+@startuml view-1
+title View 1 - Deployment: runtime environments, artifacts, data location
+
+node "User workstation (desktop OS with a display)" as WS {
+  node "JVM - Java 23 (JRE/JDK)" as JVM {
+    artifact "municipal-report-management-1.0-SNAPSHOT\n(Maven build of src/main/java, Swing app)" as APP
+    artifact "META-INF/persistence.xml\n(persistence unit Municipal_Report_Management_System,\nJDBC URL/user/password embedded in the jar)" as PXML
+    artifact "mysql-connector-j 9.4.0" as DRV
+    artifact "hibernate-core 6.6.50.Final\n(+ transitive Jakarta Persistence 3.1 API)" as HIB
+    artifact "forms_rt 7.0.3\n(IntelliJ GUI Designer runtime)" as FRT
+    artifact "/images/logo.png\n(referenced by GUIs; not in src/main/resources)" as LOGO
+  }
+}
+
+node "Database host (same host in default config: 127.0.0.1)" as DBH {
+  node "MySQL server (version not pinned in repo)\nlistens on TCP 3306" as MYSQL {
+    database "Schema reports_db\ntables: users, reports, internal_notes,\nstatus_updates, notifications\n(created/updated by Hibernate hbm2ddl=update)" as DB
+  }
+}
+
+node "Build machine / CI" as BUILD {
+  node "JDK 23 + Maven" as MVN
+  artifact "Maven Central\nhttps://repo.maven.apache.org/maven2" as CENTRAL
+}
+
+APP ..> PXML : reads at startup
+APP ..> HIB : uses
+APP ..> FRT : uses
+APP ..> LOGO : getResource (optional)
+HIB ..> DRV : JDBC driver\ncom.mysql.cj.jdbc.Driver
+JVM -[#blue,thickness=2]-> MYSQL : JDBC over TCP/IP\njdbc:mysql://127.0.0.1:3306/reports_db\nuser reports_user
+
+MVN --> CENTRAL : HTTPS, download dependencies
+MVN ..> APP : mvn test / build (Java 23)
+
+note bottom of DBH
+  Prerequisite (README): CREATE DATABASE reports_db;
+  CREATE USER reports_user; GRANT ALL ON reports_db.*.
+  All application data persists only in this MySQL schema;
+  the client stores nothing locally.
+end note
+note right of WS
+  Entry points (main): Boundary.UserLoginGUI,
+  HomePageGUI, UserRegistrationGUI.
+  No server tier, no web/HTTP, no message broker.
+  Each user runs their own client process.
+end note
+@enduml

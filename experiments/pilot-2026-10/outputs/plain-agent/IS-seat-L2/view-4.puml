@@ -1,0 +1,39 @@
+@startuml view-4
+title View 4 - Impact map: what a change to booking rules can touch
+skinparam componentStyle rectangle
+component "ReservationManager\n(primary change point:\nvalidations in makeReservation)" as RM #LightCoral
+component "Reservation\n(cancel window, check-in tolerance,\nCHECK_IN_TOLERANCE_MINUTES)" as Res #LightCoral
+component "Student.hasActiveOrConfirmed...\n(uniqueness rule)" as Stu #LightCoral
+component "AssignmentStrategy /\nFirstAvailableAssignment\n(auto seat choice)" as AS #LightCoral
+component "ReservationRequestDTO /\nReservationDTO\n(new rule inputs/outputs)" as DTO #Gold
+component "ReservationController\n(request params)" as RC #Gold
+component "Swing wizard + app.js\n(new inputs, error display)" as UI #Gold
+component "RestExceptionHandler" as REH #Gold
+component "Seat / Area / StudyRoom\nisAvailable, getAvailableSeats,\nisOpenOnDate" as Avail #Gold
+component "ReservationRegistry.occupiesSlot\n+ queries" as RR #Gold
+component "StudyRoomManager\n(getRoomDetail, getAvailableTimeSlots,\nmonitoraSale, deleteStudyRoom)" as SRM #Gold
+component "ReservationManager statistics\n+ manageReservationEnd" as Stat #Gold
+component "NotificationManager\n(messages per state)" as NM #LightGreen
+component "Reservation entity mapping\n(persistence.xml schema)" as DB #LightGreen
+component "Tests: MakeReservationTest,\nCancelReservationTest, PerformCheckInTest,\nManageReservationEndTest, AvailableStudyRoomsQueryTest" as T #LightGreen
+
+RM --> Res
+RM --> Stu
+RM --> AS
+RM --> DTO
+RC --> DTO
+UI --> RC
+UI ..> DTO
+REH ..> RM : exception types
+RM ..> Avail
+Avail --> RR
+SRM --> RR : seat map shows availability
+Stat --> RR
+Res --> NM
+Res --> DB : new fields need schema change
+T ..> RM
+legend right
+Red = likely edited; Yellow = check for consistency;
+Green = secondary (tests, messages, schema).
+end legend
+@enduml

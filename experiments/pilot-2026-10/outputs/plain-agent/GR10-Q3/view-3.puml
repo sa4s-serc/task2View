@@ -1,0 +1,113 @@
+@startuml view-3
+title View 3 - Who depends on the persisted data (layers and entity access)
+left to right direction
+skinparam componentStyle rectangle
+
+package "Boundary (Swing GUIs)" {
+  [UserRegistrationGUI] as G1
+  [UserLoginGUI] as G2
+  [ReportCreationGUI] as G3
+  [SubmittedReportsGUI] as G4
+  [ReceivedReportsGUI] as G5
+  [ReportStatusUpdateGUI] as G6
+  [InternalNoteGUI] as G7
+  [ActivityMonitoringGUI] as G8
+}
+
+package "Control" {
+  [SystemServicesController\n(facade)] as SSC
+  [UserLoginController] as C_login
+  [UserRegistrationController] as C_reg
+  [ReportCreationController] as C_create
+  [ReportReviewController] as C_review
+  [ReportDetailsController] as C_det
+  [ReportStatusUpdateController] as C_status
+  [NotificationController] as C_notif
+  [InternalNoteController] as C_note
+  [ActivityMonitoringController] as C_mon
+}
+
+package "Entity (domain + services)" {
+  [UserService] as US
+  [ReportService] as RS
+  [User / Citizen /\nMunicipalOperator] as EU
+  [Report\n(+ Location, ReportCategory,\nReportStatus states)] as ER
+  [StatusUpdate] as ESU
+  [InternalNote] as EIN
+  [Notification] as ENO
+}
+
+package "Database" {
+  [PersistenceService\nsave / update / findById /\nfindByFields / findByAttribute] as PS
+  [JpaUtil\n(EntityManagerFactory)] as JU
+}
+database "MySQL reports_db\nusers, reports, status_updates,\ninternal_notes, notifications" as DB
+
+G1 --> SSC
+G3 --> SSC
+G4 --> SSC
+G5 --> SSC
+G6 --> SSC
+G7 --> SSC
+G8 --> SSC
+G2 --> C_login
+
+SSC --> C_reg
+SSC --> C_create
+SSC --> C_review
+SSC --> C_det
+SSC --> C_status
+SSC --> C_note
+SSC --> C_mon
+C_status --> C_notif
+
+C_login --> US
+C_reg --> US
+C_create --> US
+C_create --> RS
+C_review --> US
+C_review --> RS
+C_det --> US
+C_det --> RS
+C_status --> US
+C_status --> RS
+C_note --> US
+C_note --> RS
+C_mon --> US
+C_mon --> RS
+C_notif --> RS
+
+US --> PS
+RS --> PS
+US ..> EU : read/write users
+RS ..> ER : read/write reports
+ER *-- ESU : cascade
+ER *-- EIN : cascade
+RS ..> ENO : save / query by report
+RS ..> ESU : query history
+RS ..> EIN : query notes
+PS --> JU
+JU --> DB : JPA/Hibernate (persistence.xml)
+
+note bottom of RS
+  Data operations by use case (ReportService / UserService)
+  - register user: INSERT users; check email uniqueness (credentials.email)
+  - login: SELECT users by credentials.email + password
+  - create report: INSERT reports (citizen from users)
+  - sent reports: reports WHERE citizenReporting.userId
+  - received reports / monitoring: reports WHERE category, location.municipalArea,
+    currentStatusName (+ date range and counts computed in Java on report_date)
+  - details: reports + notifications + internal_notes by report.reportId
+  - history: status_updates by report.reportId
+  - update status: MERGE reports (+ new status_updates row)
+  - add note: MERGE reports (+ new internal_notes row)
+  - notify: INSERT notifications for the reporting citizen
+end note
+
+note bottom of PS
+  Queries are built as JPQL from attribute-name strings
+  (e.g. "citizenReporting.userId", "location.municipalArea",
+  "currentStatusName", "credentials.email").
+  Renaming entity fields or columns breaks callers at runtime, not compile time.
+end note
+@enduml

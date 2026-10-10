@@ -1,0 +1,251 @@
+{
+  "id": "V1-deployment",
+  "viewpoint_id": "deployment",
+  "viewpoint_name": "Deployment Style",
+  "vb_ref": "5.2 Deployment Style",
+  "model_kind": "uml-deployment",
+  "title": "Deployment view — Municipal Report Management System",
+  "purpose": "Show the runtime environments, the artifacts they run, where the data lives and how the application reaches the database.",
+  "detail_level": "feature",
+  "max_elements": 12,
+  "addresses": [
+    "AQ1",
+    "AQ2",
+    "AQ3"
+  ],
+  "overlays": [],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "execution_env:java-23",
+      "kind": "execution_env",
+      "name": "Java 23",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "runs the application jar and its library jars on the classpath; provides javax.swing and java.awt for the GUI"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "artifact:municipal-report-management.jar",
+      "kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "stereotype": null,
+      "parent": "execution_env:java-23",
+      "responsibilities": [
+        "single Maven build unit of the application (no <packaging> element, so the Maven default jar)",
+        "started as a desktop Swing process through a main method (HomePageGUI, UserLoginGUI and UserRegistrationGUI each define one)",
+        "needs a graphical display: the user interface is built with javax.swing and java.awt",
+        "carries META-INF/persistence.xml with persistence unit Municipal_Report_Management_System; RESOURCE_LOCAL, so the application opens its own JDBC connections (no application server or JNDI datasource)",
+        "database URL, user and password are fixed inside the packaged persistence.xml; changing them means rebuilding the artifact",
+        "JpaUtil creates one EntityManagerFactory for the persistence unit when first used (singleton), so the database is first contacted at the first persistence call",
+        "attached report images are kept as an absolute file path string in column attached_image; the image file itself is not stored in the database",
+        "GUI classes load /images/logo.png from the classpath; the repository ships no such resource (src/main/resources holds only META-INF/persistence.xml) and the code only logs 'Logo not found'"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "artifact:hibernate-core",
+      "kind": "artifact",
+      "name": "hibernate-core",
+      "stereotype": null,
+      "parent": "execution_env:java-23",
+      "responsibilities": [
+        "JPA provider (version 6.6.50.Final) that maps entities and issues the SQL"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "artifact:mysql-connector-j",
+      "kind": "artifact",
+      "name": "mysql-connector-j",
+      "stereotype": null,
+      "parent": "execution_env:java-23",
+      "responsibilities": [
+        "JDBC driver (version 9.4.0), class com.mysql.cj.jdbc.Driver"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "artifact:forms_rt",
+      "kind": "artifact",
+      "name": "forms_rt",
+      "stereotype": null,
+      "parent": "execution_env:java-23",
+      "responsibilities": [
+        "IntelliJ GUI Designer runtime (version 7.0.3) used by the .form based screens"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "execution_env:mysql",
+      "kind": "execution_env",
+      "name": "MySQL",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "database server reached over TCP port 3306; the shipped default address is the loopback 127.0.0.1, i.e. the same host as the application"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "datastore:reports_db",
+      "kind": "datastore",
+      "name": "reports_db",
+      "stereotype": null,
+      "parent": "execution_env:mysql",
+      "responsibilities": [
+        "relational schema holding the persisted entities (users, reports, internal_notes, status_updates, notifications)",
+        "created by hand beforehand (CREATE DATABASE); tables are created and updated by Hibernate at start-up",
+        "schema managed with hibernate.hbm2ddl.auto=update, so the database user needs DDL rights",
+        "user reports_user, granted on reports_db.* from host localhost only"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:artifact:municipal-report-management.jar-communicates->datastore:reports_db",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management.jar",
+      "target": "datastore:reports_db",
+      "label": "JPA (Hibernate) over JDBC, jdbc:mysql://127.0.0.1:3306/reports_db",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:artifact:municipal-report-management.jar-communicates->artifact:hibernate-core",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:hibernate-core",
+      "label": "in-process JPA provider",
+      "multiplicity": null,
+      "support": "inferred"
+    },
+    {
+      "id": "rel:artifact:municipal-report-management.jar-communicates->artifact:mysql-connector-j",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:mysql-connector-j",
+      "label": "in-process JDBC driver",
+      "multiplicity": null,
+      "support": "inferred"
+    },
+    {
+      "id": "rel:artifact:municipal-report-management.jar-communicates->artifact:forms_rt",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:forms_rt",
+      "label": "in-process GUI layout runtime",
+      "multiplicity": null,
+      "support": "inferred"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "execution_env:java-23",
+      "name": "Java 23",
+      "files": [
+        "README.md",
+        "pom.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "artifact:municipal-report-management.jar",
+      "name": "municipal-report-management.jar",
+      "files": [
+        "pom.xml",
+        "src/main/java/Boundary/HomePageGUI.java",
+        "src/main/java/Boundary/InternalNoteGUI.java",
+        "src/main/java/Boundary/ReportCreationGUI.java",
+        "src/main/java/Database/JpaUtil.java",
+        "src/main/java/Entity/Report.java",
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": [
+        "Boundary.HomePageGUI",
+        "Database.JpaUtil",
+        "Boundary.ReportCreationGUI",
+        "Entity.Report",
+        "Boundary.InternalNoteGUI"
+      ]
+    },
+    {
+      "element": "artifact:hibernate-core",
+      "name": "hibernate-core",
+      "files": [
+        "pom.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "artifact:mysql-connector-j",
+      "name": "mysql-connector-j",
+      "files": [
+        "pom.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "artifact:forms_rt",
+      "name": "forms_rt",
+      "files": [
+        "pom.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "execution_env:mysql",
+      "name": "MySQL",
+      "files": [
+        "README.md",
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "datastore:reports_db",
+      "name": "reports_db",
+      "files": [
+        "README.md",
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    }
+  ],
+  "limitations": [
+    "Repository defines no node, host, container or Dockerfile: 'where it runs' is only the Java 23 and MySQL execution environments; the default JDBC host 127.0.0.1 implies the same machine.",
+    "Library artifacts are drawn as communicates edges from the application jar because the viewpoint has no 'uses' relation; they are in-process calls, not network links.",
+    "Transitive runtime dependencies (for example jakarta.persistence-api, jboss-logging, JDK modules) are not declared in pom.xml and are not drawn.",
+    "pom.xml misspells <configuretion> in maven-compiler-plugin; the plugin therefore ignores it, but the maven.compiler.* properties still apply.",
+    "pom.xml defines no jar-with-dependencies, shade or manifest main class: the library jars must be on the classpath at launch and the start class must be named explicitly.",
+    "Secondary need 'dependencies' (between code parts) is not shown as a separate view."
+  ],
+  "gaps": [],
+  "overflow": []
+}

@@ -1,0 +1,15 @@
+@startuml
+left to right direction
+skinparam shadowing false
+actor "Citizen" as e_actor_Citizen
+actor "MunicipalOperator" as e_actor_MunicipalOperator
+rectangle "municipal-report-management" as e_system_municipal_report_management {
+  usecase "createReport" as e_use_case_createReport
+  usecase "reviewReportsReceived" as e_use_case_reviewReportsReceived
+  usecase "updateReportStatus" as e_use_case_updateReportStatus
+}
+e_actor_Citizen --> e_use_case_createReport
+e_actor_MunicipalOperator --> e_use_case_reviewReportsReceived
+e_actor_MunicipalOperator --> e_use_case_updateReportStatus
+e_use_case_updateReportStatus ..> e_use_case_reviewReportsReceived : <<extend>>
+@enduml

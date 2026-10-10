@@ -1,0 +1,478 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "decomposition",
+    "subject": "handle the registration request",
+    "goal": "Collect evidence for: For handle the registration request: the parts of the system, their responsibilities, and how they are contained in subsystems?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "paths": [
+        "JavaProject/src/main/resources/static/registration.html"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "entry-point:http-route",
+      "entry-point:web-page"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "decomposition",
+    "subject": "validate the user's personal information and selected role",
+    "goal": "Collect evidence for: For validate the user's personal information and selected role: the parts of the system, their responsibilities, and how they are contained in subsystems?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.boundary.SpringBoot.RestExceptionHandler"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:validate"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ3"
+    ],
+    "need": "decomposition",
+    "subject": "manage role-specific data such as the student ID or librarian identifier",
+    "goal": "Collect evidence for: For manage role-specific data such as the student ID or librarian identifier: the parts of the system, their responsibilities, and how they are contained in subsystems?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.factory.UserFactory",
+        "it.unina.reservations.controller.factory.StudentFactory",
+        "it.unina.reservations.controller.factory.LibrarianFactory",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.Librarian"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:createUser"
+    ]
+  },
+  {
+    "id": "IT4",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ4"
+    ],
+    "need": "decomposition",
+    "subject": "verify the validity and uniqueness of the account",
+    "goal": "Collect evidence for: For verify the validity and uniqueness of the account: the parts of the system, their responsibilities, and how they are contained in subsystems?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:institutionalEmailExists"
+    ]
+  },
+  {
+    "id": "IT5",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ5"
+    ],
+    "need": "decomposition",
+    "subject": "persist the newly created user",
+    "goal": "Collect evidence for: For persist the newly created user: the parts of the system, their responsibilities, and how they are contained in subsystems?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.database.JpaUtil",
+        "it.unina.reservations.entity.User"
+      ],
+      "paths": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:registerUser",
+      "schema:persistence.xml"
+    ]
+  },
+  {
+    "id": "IT6",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ6"
+    ],
+    "need": "collaboration",
+    "subject": "handle the registration request",
+    "goal": "Collect evidence for: For handle the registration request: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "paths": [
+        "JavaProject/src/main/resources/static/registration.html"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore"
+    ],
+    "expect_relations": [
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "entry-point:http-route",
+      "entry-point:web-page"
+    ]
+  },
+  {
+    "id": "IT7",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ7"
+    ],
+    "need": "collaboration",
+    "subject": "validate the user's personal information and selected role",
+    "goal": "Collect evidence for: For validate the user's personal information and selected role: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.boundary.SpringBoot.RestExceptionHandler"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore"
+    ],
+    "expect_relations": [
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:validate"
+    ]
+  },
+  {
+    "id": "IT8",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ8"
+    ],
+    "need": "collaboration",
+    "subject": "manage role-specific data such as the student ID or librarian identifier",
+    "goal": "Collect evidence for: For manage role-specific data such as the student ID or librarian identifier: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.factory.UserFactory",
+        "it.unina.reservations.controller.factory.StudentFactory",
+        "it.unina.reservations.controller.factory.LibrarianFactory",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.Librarian"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore"
+    ],
+    "expect_relations": [
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:createUser"
+    ]
+  },
+  {
+    "id": "IT9",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ9"
+    ],
+    "need": "collaboration",
+    "subject": "verify the validity and uniqueness of the account",
+    "goal": "Collect evidence for: For verify the validity and uniqueness of the account: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore"
+    ],
+    "expect_relations": [
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:institutionalEmailExists"
+    ]
+  },
+  {
+    "id": "IT10",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ10"
+    ],
+    "need": "collaboration",
+    "subject": "persist the newly created user",
+    "goal": "Collect evidence for: For persist the newly created user: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.database.JpaUtil",
+        "it.unina.reservations.entity.User"
+      ],
+      "paths": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore"
+    ],
+    "expect_relations": [
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:registerUser",
+      "schema:persistence.xml"
+    ]
+  },
+  {
+    "id": "IT11",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ11",
+      "AQ12"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect evidence for: which parts of the user registration functionality depend on which other parts, and the operations they provide or require",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.UserManager"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "entry-point:http-route",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT12",
+    "view_id": "V3-sequence",
+    "viewpoint_id": "sequence",
+    "question_ids": [
+      "AQ13"
+    ],
+    "need": "interaction-order",
+    "subject": "validate the user's personal information and selected role",
+    "goal": "Collect evidence for: For validate the user's personal information and selected role: the order of calls in a scenario, including alternative and failure paths?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.boundary.SpringBoot.RestExceptionHandler",
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "actor",
+      "lifeline"
+    ],
+    "expect_relations": [
+      "message",
+      "return"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:validate",
+      "entry-point:http-route"
+    ]
+  },
+  {
+    "id": "IT13",
+    "view_id": "V3-sequence",
+    "viewpoint_id": "sequence",
+    "question_ids": [
+      "AQ14"
+    ],
+    "need": "interaction-order",
+    "subject": "verify the validity and uniqueness of the account",
+    "goal": "Collect evidence for: For verify the validity and uniqueness of the account: the order of calls in a scenario, including alternative and failure paths?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController"
+      ],
+      "paths": [],
+      "classes": [
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "actor",
+      "lifeline"
+    ],
+    "expect_relations": [
+      "message",
+      "return"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name",
+      "method-name:institutionalEmailExists",
+      "entry-point:http-route"
+    ]
+  }
+]

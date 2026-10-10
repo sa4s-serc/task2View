@@ -1,0 +1,33 @@
+@startuml
+title Decomposition view — seat booking functionality (layered)
+left to right direction
+skinparam componentStyle uml2
+
+package "Presentation" as e_group_layer_presentation_6738 <<layer>> {
+  component "ReservationController\n--\n- exposes the REST endpoint POST\n  /api/reservations/create for booking requests\n- exposes REST endpoints to cancel and check in\n  a reservation" as e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_b294 <<presentation>>
+  component "ReservationSummary\n--\n- submits the seat booking request chosen in the\n  Swing wizard through LibraryFacade" as e_cmp_it_unina_reservations_boundary_Swing_ReservationSummary_fd61 <<presentation>>
+  component "NotificationServiceAdapter\n--\n- adapts NotificationService to the external\n  email gateway, one email per recipient\n- fails the delivery when the gateway does not\n  answer 200\n- defines the notification delivery port used by\n  NotificationManager" as e_cmp_it_unina_reservations_boundary_NotificationServiceAdapter_ac9e <<presentation>>
+  component "ExternalEmailGateway\n--\n- stands in for the external email service and\n  returns an HTTP-like status code (stub)" as e_cmp_it_unina_reservations_boundary_ExternalEmailGateway_27c1 <<presentation>>
+}
+
+package "Application" as e_group_layer_application_01b6 <<layer>> {
+  component "LibraryFacade\n--\n- forwards makeReservation requests to\n  ReservationManager\n- forwards sendReminders to NotificationManager" as e_cmp_it_unina_reservations_controller_LibraryFacade_5114 <<application>>
+  component "ReservationManager\n--\n- orchestrates the seat booking use case\n  (makeReservation)\n- checks that the room is active and open on the\n  date (weekdays only)\n- rejects time slots that have started or passed\n- checks that the requested seat belongs to the\n  selected area\n- enforces one active or confirmed reservation\n  per student, date and time slot\n- rejects the booking when no seat is available\n  in the area\n- uses the requested seat or delegates automatic\n  seat assignment to the strategy\n- creates the reservation in ActiveState and\n  saves it\n- serialises the booking critical section\n- attaches NotificationManager and notifies\n  observers after saving\n- cancels reservations, performs check-in and\n  ends elapsed reservations" as e_cmp_it_unina_reservations_controller_ReservationManager_bb66 <<application>>
+  component "FirstAvailableAssignment\n--\n- assigns the first available seat (default\n  AssignmentStrategy)\n- defines the seat assignment strategy used for\n  automatic assignment" as e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_594d <<application>>
+  component "NotificationManager\n--\n- receives reservation changes as Observer and\n  sends the message matching the status\n- sends notifications through\n  NotificationService and discards them when\n  none is configured\n- sends reminders for ACTIVE reservations of the\n  current day\n- builds the message text for each reservation\n  status\n- observer contract notified when a Reservation\n  changes" as e_cmp_it_unina_reservations_controller_NotificationManager_e337 <<application>>
+}
+
+package "Domain" as e_group_layer_domain_0f45 <<layer>> {
+  component "Reservation\n--\n- holds date, seat, time slot, student and\n  persisted status of a booking\n- delegates cancel, check-in and end handling to\n  its current ReservationState\n- rejects cancellation less than 6 hours before\n  the time slot starts\n- sets the check-in tolerance (10 minutes) used\n  to validate check-in\n- notifies attached observers" as e_cmp_it_unina_reservations_entity_Reservation_240e <<domain>>
+  component "Student\n--\n- checks whether the student already has an\n  active or confirmed reservation for a date and\n  slot" as e_cmp_it_unina_reservations_entity_Student_7051 <<domain>>
+  component "Area\n--\n- computes the seats of the area that are\n  available for a date and time slot" as e_cmp_it_unina_reservations_entity_Area_a34f <<domain>>
+  component "Seat\n--\n- tells whether the seat is free for a date and\n  time slot by checking occupying reservations" as e_cmp_it_unina_reservations_entity_Seat_b36b <<domain>>
+  component "ReservationRegistry\n--\n- saves and updates reservations through\n  PersistenceManager\n- finds reservations by seat, student, room and\n  date\n- defines which statuses occupy a slot (ACTIVE\n  and CONFIRMED)" as e_cmp_it_unina_reservations_entity_ReservationRegistry_e741 <<domain>>
+  component "StudyRoomRegistry\n--\n- looks up rooms, areas, seats and time slots\n  through PersistenceManager" as e_cmp_it_unina_reservations_entity_StudyRoomRegistry_c0d1 <<domain>>
+}
+
+package "Persistence" as e_group_layer_persistence_7fe3 <<layer>> {
+  component "PersistenceManager\n--\n- saves and updates JPA entities inside\n  transactions\n- builds and runs equality queries from field\n  maps" as e_cmp_it_unina_reservations_database_PersistenceManager_4f34 <<persistence>>
+}
+
+@enduml

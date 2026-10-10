@@ -1,0 +1,56 @@
+@startuml
+title View 3 - Data model and test-relevant constraints for registration
+abstract class User {
+  id : Long <<generated, IDENTITY>>
+  name
+  surname
+  institutionalEmail <<not null, unique>>
+  password
+  failedAttempts : int
+  lockedUntil : LocalDateTime
+}
+class Student {
+  studentNumber <<not null, unique>>
+  totalVisitCount : int
+}
+class Librarian {
+  internalIdentifierCode <<not null, unique>>
+}
+class Reservation
+class UserDTO {
+  id, name, surname
+  institutionalEmail
+  role, identifier
+  totalVisitCount
+}
+interface UserFactory {
+  createUser(name,surname,email,password,identifier) : User
+}
+class StudentFactory
+class LibrarianFactory
+class UserManager <<singleton>>
+class UserRegistry <<singleton>>
+class PersistenceManager
+
+User <|-- Student : JOINED inheritance
+User <|-- Librarian
+Student "1" o-- "*" Reservation
+UserFactory <|.. StudentFactory
+UserFactory <|.. LibrarianFactory
+StudentFactory ..> Student : creates
+LibrarianFactory ..> Librarian : creates
+UserManager ..> UserFactory
+UserManager --> UserRegistry
+UserManager ..> UserDTO : returns
+UserRegistry --> PersistenceManager
+PersistenceManager ..> User : persist / query
+
+note bottom of UserManager
+  Rules checked before persisting (UserManager):
+  role in {Student, Librarian}; password 8-32;
+  names letters only, 1-20; email < 255, *@*unina.it;
+  Student id = [A-Z]\d{8}; Librarian id alphanumeric;
+  duplicate email / identifier rejected.
+  DB unique constraints are a second line of defence.
+end note
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+title Client-Server view — user registration functionality
+left to right direction
+
+package "Presentation" as e_group_layer_presentation_67387e <<layer>> {
+  component "SpringBoot\n--\n- AuthenticationController: exposes POST /api/auth/register and forwards the form fields to LibraryFacade\n- RestExceptionHandler: maps IllegalArgumentException to an HTTP 400 error body (registration validation failures)" as e_cmp_it_unina_reservations_boundary_SpringBoot_70f0a4 <<presentation>>
+  component "Swing\n--\n- Registration: collects the registration form fields in a Swing frame\n- Registration: reports validation errors to the user" as e_cmp_it_unina_reservations_boundary_Swing_7eb8ca <<presentation>>
+}
+package "Application" as e_group_layer_application_01b64b <<layer>> {
+  component "controller\n--\n- LibraryFacade: single entry point that forwards register(...) to UserManager\n- UserManager: validates role, name, password and per-role fields\n- UserManager: rejects an already used email or identifier\n- UserManager: creates the user through a UserFactory and saves it through UserRegistry\n- UserManager: maps the saved user to a UserDTO" as e_cmp_it_unina_reservations_controller_742fd2 <<application>>
+  component "factory\n--\n- UserFactory: creates a User from name, surname, email, password and identifier\n- StudentFactory: builds a Student from the registration data\n- LibrarianFactory: builds a Librarian from the registration data" as e_cmp_it_unina_reservations_controller_factory_45ac7d <<application>>
+}
+package "Domain" as e_group_layer_domain_0f45bd <<layer>> {
+  component "entity\n--\n- UserRegistry: stores new users and looks up users by email, student number and librarian code\n- User: abstract persistent user (unique institutionalEmail)\n- Student: persistent student with unique studentNumber\n- Librarian: persistent librarian with unique internalIdentifierCode" as e_cmp_it_unina_reservations_entity_5e2a9d <<domain>>
+}
+package "Persistence" as e_group_layer_persistence_7fe3c4 <<layer>> {
+  component "database\n--\n- PersistenceManager: persists (save/persist, commit or rollback) and queries entities through JPA EntityManager\n- JpaUtil: creates the EntityManagerFactory for persistence unit reservationsPU and hands out EntityManagers" as e_cmp_it_unina_reservations_database_e44db6 <<persistence>>
+}
+
+e_cmp_it_unina_reservations_boundary_SpringBoot_70f0a4 --> e_cmp_it_unina_reservations_controller_742fd2 : 1 dependency
+e_cmp_it_unina_reservations_boundary_Swing_7eb8ca --> e_cmp_it_unina_reservations_controller_742fd2 : 1 dependency
+e_cmp_it_unina_reservations_controller_742fd2 --> e_cmp_it_unina_reservations_controller_factory_45ac7d : 3 dependencies
+e_cmp_it_unina_reservations_controller_742fd2 --> e_cmp_it_unina_reservations_entity_5e2a9d : 5 dependencies
+e_cmp_it_unina_reservations_controller_factory_45ac7d --> e_cmp_it_unina_reservations_entity_5e2a9d : 5 dependencies
+e_cmp_it_unina_reservations_entity_5e2a9d --> e_cmp_it_unina_reservations_database_e44db6 : 3 dependencies
+
+note bottom: Not drawn (cap 6): datastore reservationsdb (MySQL)
+@enduml

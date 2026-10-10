@@ -1,0 +1,239 @@
+{
+  "system": "municipal-report-management",
+  "stakeholder": "business-analyst",
+  "goal": "I am a business analyst. I need to understand at a high level how a system for reporting and managing problems in a municipal area is expected to work. I know that the application should allow people to report issues in the territory and support the municipality in managing them, but I do not yet know the specific user roles or the functionalities available to each of them. I need to identify the main types of users that interact with the system, the main goals they can achieve through it, and how the different functionalities are related to each other.",
+  "views": [
+    {
+      "id": "V1-use-case",
+      "viewpoint_id": "use-case",
+      "viewpoint_name": "Use Case",
+      "vb_ref": "8.3.1 Notations for Capturing Traces (use case diagrams)",
+      "model_kind": "uml-usecase",
+      "title": "Use Case view — municipal-report-management",
+      "purpose": "Show who uses the system and what each user type can achieve",
+      "detail_level": "overview",
+      "max_elements": 5,
+      "addresses": [
+        "AQ1"
+      ],
+      "overlays": [],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "system:municipal-report-management",
+          "kind": "system",
+          "name": "municipal-report-management",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "actor:Citizen",
+          "kind": "actor",
+          "name": "Citizen",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "reports problems and follows the reports they submitted"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.Citizen"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "actor:MunicipalOperator",
+          "kind": "actor",
+          "name": "MunicipalOperator",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "manages the reports received by the municipality"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.MunicipalOperator"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "use_case:createReport",
+          "kind": "use_case",
+          "name": "createReport",
+          "stereotype": null,
+          "parent": "system:municipal-report-management",
+          "responsibilities": [
+            "a citizen submits a report about a problem, with category and location"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.SystemServicesController.createReport"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "use_case:reviewReportsReceived",
+          "kind": "use_case",
+          "name": "reviewReportsReceived",
+          "stereotype": null,
+          "parent": "system:municipal-report-management",
+          "responsibilities": [
+            "an operator lists and filters the reports received by the municipality"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.SystemServicesController.reviewReportsReceived"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "use_case:updateReportStatus",
+          "kind": "use_case",
+          "name": "updateReportStatus",
+          "stereotype": null,
+          "parent": "system:municipal-report-management",
+          "responsibilities": [
+            "an operator advances a report to its next status"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.SystemServicesController.updateReportStatus"
+          ],
+          "support": "observed",
+          "group": false
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:C13",
+          "kind": "association",
+          "source": "actor:Citizen",
+          "target": "use_case:createReport",
+          "label": "creates",
+          "multiplicity": null,
+          "support": "inferred"
+        },
+        {
+          "id": "rel:C16",
+          "kind": "association",
+          "source": "actor:MunicipalOperator",
+          "target": "use_case:reviewReportsReceived",
+          "label": "reviews received",
+          "multiplicity": null,
+          "support": "inferred"
+        },
+        {
+          "id": "rel:C18",
+          "kind": "association",
+          "source": "actor:MunicipalOperator",
+          "target": "use_case:updateReportStatus",
+          "label": "updates status",
+          "multiplicity": null,
+          "support": "inferred"
+        },
+        {
+          "id": "rel:C25",
+          "kind": "extend",
+          "source": "use_case:updateReportStatus",
+          "target": "use_case:reviewReportsReceived",
+          "label": "opened from the received-reports screen",
+          "multiplicity": null,
+          "support": "inferred"
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "system:municipal-report-management",
+          "name": "municipal-report-management",
+          "files": [
+            "pom.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "actor:Citizen",
+          "name": "Citizen",
+          "files": [
+            "src/main/java/Entity/Citizen.java"
+          ],
+          "symbols": [
+            "Entity.Citizen"
+          ]
+        },
+        {
+          "element": "actor:MunicipalOperator",
+          "name": "MunicipalOperator",
+          "files": [
+            "src/main/java/Entity/MunicipalOperator.java"
+          ],
+          "symbols": [
+            "Entity.MunicipalOperator"
+          ]
+        },
+        {
+          "element": "use_case:createReport",
+          "name": "createReport",
+          "files": [
+            "src/main/java/Control/ReportCreationController.java",
+            "src/main/java/Control/SystemServicesController.java"
+          ],
+          "symbols": [
+            "Control.SystemServicesController.createReport"
+          ]
+        },
+        {
+          "element": "use_case:reviewReportsReceived",
+          "name": "reviewReportsReceived",
+          "files": [
+            "src/main/java/Control/ReportReviewController.java",
+            "src/main/java/Control/SystemServicesController.java"
+          ],
+          "symbols": [
+            "Control.SystemServicesController.reviewReportsReceived"
+          ]
+        },
+        {
+          "element": "use_case:updateReportStatus",
+          "name": "updateReportStatus",
+          "files": [
+            "src/main/java/Control/ReportStatusUpdateController.java",
+            "src/main/java/Control/SystemServicesController.java"
+          ],
+          "symbols": [
+            "Control.SystemServicesController.updateReportStatus"
+          ]
+        }
+      ],
+      "limitations": [
+        "Overview detail level caps the diagram at 5 elements (the system boundary is a group and not counted): 2 actors and 3 use cases are drawn; the other 7 use cases are listed in overflow and described in README.md.",
+        "Actor-to-use-case associations (role checks, role-dependent dashboard) and extend/include relations (GUI navigation) are 'inferred': the code shows them as screen flow or authorisation checks, not as a direct call between the named elements."
+      ],
+      "gaps": [],
+      "overflow": [
+        "use_case:reviewReportsSubmitted",
+        "use_case:displayReportDetails",
+        "use_case:addInternalNote",
+        "use_case:monitorActivityTrends",
+        "use_case:registerUser",
+        "use_case:verifyCredentialsLogin",
+        "use_case:sendNotificationToCitizen"
+      ]
+    }
+  ],
+  "correspondences": [],
+  "correspondence_gaps": [],
+  "declared_gaps": [],
+  "uncovered_needs": [],
+  "secondary_not_shown": []
+}

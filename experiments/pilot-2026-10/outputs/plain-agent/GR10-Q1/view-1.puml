@@ -1,0 +1,100 @@
+@startuml
+title View 1 - Layered component view (BCED: Boundary / Control / Entity / Database)
+skinparam componentStyle rectangle
+left to right direction
+
+database "MySQL\nreports_db" as DB
+
+package "Boundary (Swing GUIs)" {
+  component [HomePageGUI] as Home
+  component [UserRegistrationGUI] as RegG
+  component [UserLoginGUI] as LogG
+  component [UserDashboardGUI] as Dash
+  component [ReportCreationGUI] as CreG
+  component [SubmittedReportsGUI] as SubG
+  component [ReceivedReportsGUI] as RecG
+  component [ReportStatusUpdateGUI] as StG
+  component [InternalNoteGUI] as NoteG
+  component [ActivityMonitoringGUI] as MonG
+}
+
+package "Control (use-case controllers)" {
+  component [SystemServicesController\n(facade)] as Facade
+  component [UserLoginController] as LogC
+  component [UserRegistrationController] as RegC
+  component [ReportCreationController] as CreC
+  component [ReportReviewController] as RevC
+  component [ReportDetailsController] as DetC
+  component [ReportStatusUpdateController] as StC
+  component [NotificationController] as NotC
+  component [InternalNoteController] as NoteC
+  component [ActivityMonitoringController] as MonC
+}
+
+package "Entity (domain + domain services)" {
+  component [UserService] as US
+  component [ReportService] as RS
+  component [Domain model\n(see view 2)] as Model
+}
+
+package "Database (persistence support)" {
+  component [PersistenceService] as PS
+  component [JpaUtil\n(singleton EMF)] as Jpa
+}
+
+Home --> RegG
+Home --> LogG
+LogG --> Dash
+Dash --> CreG
+Dash --> SubG
+Dash --> RecG
+Dash --> MonG
+RecG --> StG
+RecG --> NoteG
+
+LogG --> LogC : direct (bypasses facade)
+RegG --> Facade
+CreG --> Facade
+SubG --> Facade
+RecG --> Facade
+StG --> Facade
+NoteG --> Facade
+MonG --> Facade
+
+Facade --> RegC
+Facade --> CreC
+Facade --> RevC
+Facade --> DetC
+Facade --> StC
+Facade --> NoteC
+Facade --> MonC
+StC --> NotC
+
+LogC --> US
+RegC --> US
+CreC --> US
+CreC --> RS
+RevC --> US
+RevC --> RS
+DetC --> US
+DetC --> RS
+StC --> US
+StC --> RS
+NotC --> RS
+NoteC --> US
+NoteC --> RS
+MonC --> US
+MonC --> RS
+
+US --> Model
+RS --> Model
+US --> PS
+RS --> PS
+PS --> Jpa
+Jpa --> DB : Hibernate / JPA
+note bottom of Facade
+Controllers exchange Map<String,Object>
+and List<Map> with the boundary
+(no entity objects cross upward).
+end note
+@enduml

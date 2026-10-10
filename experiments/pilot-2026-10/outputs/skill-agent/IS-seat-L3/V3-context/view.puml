@@ -1,0 +1,12 @@
+@startuml
+title Context view — seat booking functionality
+left to right direction
+
+actor "Student" as e_actor_student_4f7f
+rectangle "Progetto-IS-main-English\n--\n- lets students book a study-room seat for a\n  date and time slot, applies booking rules,\n  stores reservations and notifies the student" as e_system_Progetto_IS_main_English_7f9b
+component "ExternalEmailGateway\n--\n- external email delivery service reached\n  through ExternalEmailGateway (stubbed in this\n  repository)" as e_ext_externalemailgateway_a3bc <<external>>
+database "reservationsdb\n--\n- MySQL database holding the persisted\n  reservations, seats, areas and rooms" as e_ds_reservationsdb_0248
+e_actor_student_4f7f --> e_system_Progetto_IS_main_English_7f9b : requests a seat booking (REST, Swing GUI)
+e_system_Progetto_IS_main_English_7f9b --> e_ext_externalemailgateway_a3bc : send email notification
+e_system_Progetto_IS_main_English_7f9b --> e_ds_reservationsdb_0248 : JPA / Hibernate (MySQL)
+@enduml

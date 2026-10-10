@@ -1,0 +1,103 @@
+{
+  "views": [
+    {
+      "viewpoint_id": "decomposition",
+      "family": "module",
+      "model_kind": "uml-package",
+      "needs": [
+        "decomposition"
+      ],
+      "subjects": [
+        "handle the registration request",
+        "validate the user's personal information and selected role",
+        "manage role-specific data such as the student ID or librarian identifier",
+        "verify the validity and uniqueness of the account",
+        "persist the newly created user"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": null,
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 15
+      },
+      "evidence_gap": null,
+      "rationale": "Decomposition Style (2.1 Decomposition Style) covers decomposition; combined with layered (V&B 6.6) because the repository shows layered"
+    },
+    {
+      "viewpoint_id": "client-server",
+      "family": "cnc",
+      "model_kind": "uml-component",
+      "needs": [
+        "dependencies",
+        "collaboration",
+        "interface-contract"
+      ],
+      "subjects": [
+        "handle the registration request",
+        "validate the user's personal information and selected role",
+        "manage role-specific data such as the student ID or librarian identifier",
+        "verify the validity and uniqueness of the account",
+        "persist the newly created user"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": "cnc-generic",
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 15
+      },
+      "evidence_gap": null,
+      "rationale": "Client-Server (4.3.1 Client-Server Style) covers dependencies, collaboration, interface-contract; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6) because the repository shows layered"
+    },
+    {
+      "viewpoint_id": "sequence",
+      "family": "behavior",
+      "model_kind": "uml-sequence",
+      "needs": [
+        "interaction-order"
+      ],
+      "subjects": [
+        "validate the user's personal information and selected role",
+        "verify the validity and uniqueness of the account"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": null,
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 12,
+        "fragments": [
+          "alt",
+          "opt",
+          "loop"
+        ]
+      },
+      "evidence_gap": null,
+      "rationale": "Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) covers interaction-order; combined with layered (V&B 6.6) because the repository shows layered"
+    }
+  ],
+  "needs": [
+    "decomposition",
+    "dependencies",
+    "collaboration",
+    "interaction-order"
+  ],
+  "secondary_needs": [
+    "interface-contract",
+    "data-structure"
+  ],
+  "needs_from_role": false,
+  "uncovered_needs": [],
+  "secondary_not_shown": [
+    "data-structure"
+  ],
+  "detail_level": "detailed",
+  "notes": [
+    "Set choice: {decomposition, cnc-generic, sequence} is the smallest set covering the four primary needs (structural and behavioural needs need separate views; no single structural viewpoint covers decomposition together with collaboration/dependencies).",
+    "Tie-break against layered (covers decomposition too): decomposition frames decomposition itself (rule 5.4)."
+  ]
+}

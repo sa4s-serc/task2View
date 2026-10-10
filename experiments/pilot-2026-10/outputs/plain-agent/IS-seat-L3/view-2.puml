@@ -1,0 +1,54 @@
+@startuml view-2
+title View 2 - makeReservation runtime flow (where rules are applied)
+actor Student
+participant "ReservationController /\nSwing ReservationSummary" as UI
+participant LibraryFacade as F
+participant ReservationManager as RM
+participant StudyRoomRegistry as SRR
+participant UserRegistry as UR
+participant "Student / Area / Seat\n(entities)" as E
+participant AssignmentStrategy as AS
+participant ReservationRegistry as RR
+database MySQL as DB
+participant Reservation as R
+participant NotificationManager as NM
+participant NotificationServiceAdapter as AD
+participant ExternalEmailGateway as GW
+
+Student -> UI : choose room, slot, area, seat (0 = auto)
+UI -> F : makeReservation(ReservationRequestDTO)
+F -> RM : makeReservation(request)
+RM -> UR : findStudentById
+RM -> SRR : findRoomById (active? open on weekday?)
+RM -> SRR : findAreaById (area belongs to room?)
+RM -> RM : resolveTimeSlot (not past / not started)
+RM -> SRR : validateSeatInArea (seat in area?)
+group synchronized(this)  - rule checks + availability
+  RM -> E : student.hasActiveOrConfirmedReservationForDateAndSlot()
+  E -> RR : findActiveReservations
+  RR -> DB
+  RM -> E : area.getAvailableSeats(date, slot)
+  E -> RR : seat.isAvailable -> findReservationsBySeat
+  RR -> DB
+  alt seatId == 0
+    RM -> AS : selectSeat(available)
+  else specific seat
+    RM -> E : seat.isAvailable (re-check)
+  end
+  RM -> R : new Reservation, setState(ActiveState)
+  RM -> RR : saveReservation
+  RR -> DB : INSERT via PersistenceManager
+  RM -> R : attach(NotificationManager); notifyObservers()
+  R -> NM : update(reservation)
+  NM -> AD : sendNotification(recipients, message)
+  AD -> GW : send(email, subject, body)
+  note right: failure is caught and logged;\nbooking is not rolled back
+end
+RM --> F : ReservationDTO
+F --> UI
+UI --> Student
+
+== Background (every 60 s, NotificationScheduler) ==
+F <- UI : manageReservationEnd() / sendReminders()
+note over RM, NM : ACTIVE past 10-min tolerance -> EXPIRED;\nCONFIRMED past slot end -> COMPLETED;\nstate change notifies the student
+@enduml

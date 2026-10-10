@@ -1,0 +1,65 @@
+@startuml
+title Uses view — seat booking functionality (layered)
+skinparam componentStyle uml2
+
+package "Presentation" as e_group_layer_presentation_6738 <<layer>> {
+  component "ReservationController\n--\n- exposes the REST endpoint POST\n  /api/reservations/create for booking requests" as e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_b294 <<presentation>>
+  component "ReservationSummary\n--\n- submits the seat booking request chosen in the\n  Swing wizard through LibraryFacade" as e_cmp_it_unina_reservations_boundary_Swing_ReservationSummary_fd61 <<presentation>>
+  component "NotificationServiceAdapter\n--\n- adapts NotificationService to the external\n  email gateway, one email per recipient" as e_cmp_it_unina_reservations_boundary_NotificationServiceAdapter_ac9e <<presentation>>
+  component "ExternalEmailGateway\n--\n- stands in for the external email service and\n  returns an HTTP-like status code (stub)" as e_cmp_it_unina_reservations_boundary_ExternalEmailGateway_27c1 <<presentation>>
+}
+
+package "Application" as e_group_layer_application_01b6 <<layer>> {
+  component "LibraryFacade\n--\n- forwards makeReservation requests to\n  ReservationManager" as e_cmp_it_unina_reservations_controller_LibraryFacade_5114 <<application>>
+  component "ReservationManager\n--\n- orchestrates the seat booking use case\n  (makeReservation)" as e_cmp_it_unina_reservations_controller_ReservationManager_bb66 <<application>>
+  component "FirstAvailableAssignment\n--\n- assigns the first available seat (default\n  AssignmentStrategy)" as e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_594d <<application>>
+  component "NotificationManager\n--\n- receives reservation changes as Observer and\n  sends the message matching the status" as e_cmp_it_unina_reservations_controller_NotificationManager_e337 <<application>>
+}
+
+package "Domain" as e_group_layer_domain_0f45 <<layer>> {
+  component "Reservation\n--\n- holds date, seat, time slot, student and\n  persisted status of a booking" as e_cmp_it_unina_reservations_entity_Reservation_240e <<domain>>
+  component "Student\n--\n- checks whether the student already has an\n  active or confirmed reservation for a date and\n  slot" as e_cmp_it_unina_reservations_entity_Student_7051 <<domain>>
+  component "Area\n--\n- computes the seats of the area that are\n  available for a date and time slot" as e_cmp_it_unina_reservations_entity_Area_a34f <<domain>>
+  component "Seat\n--\n- tells whether the seat is free for a date and\n  time slot by checking occupying reservations" as e_cmp_it_unina_reservations_entity_Seat_b36b <<domain>>
+  component "ReservationRegistry\n--\n- saves and updates reservations through\n  PersistenceManager" as e_cmp_it_unina_reservations_entity_ReservationRegistry_e741 <<domain>>
+  component "StudyRoomRegistry\n--\n- looks up rooms, areas, seats and time slots\n  through PersistenceManager" as e_cmp_it_unina_reservations_entity_StudyRoomRegistry_c0d1 <<domain>>
+}
+
+package "Persistence" as e_group_layer_persistence_7fe3 <<layer>> {
+  component "PersistenceManager\n--\n- saves and updates JPA entities inside\n  transactions" as e_cmp_it_unina_reservations_database_PersistenceManager_4f34 <<persistence>>
+}
+
+e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_b294 --> e_cmp_it_unina_reservations_controller_LibraryFacade_5114 : makeReservation
+e_cmp_it_unina_reservations_boundary_Swing_ReservationSummary_fd61 --> e_cmp_it_unina_reservations_controller_LibraryFacade_5114 : makeReservation
+e_cmp_it_unina_reservations_controller_LibraryFacade_5114 --> e_cmp_it_unina_reservations_controller_ReservationManager_bb66 : makeReservation
+e_cmp_it_unina_reservations_controller_LibraryFacade_5114 --> e_cmp_it_unina_reservations_controller_NotificationManager_e337 : sendReminders
+e_cmp_it_unina_reservations_controller_ReservationManager_bb66 --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_c0d1 : findAreaById
+e_cmp_it_unina_reservations_controller_ReservationManager_bb66 --> e_cmp_it_unina_reservations_entity_Student_7051 : hasActiveOrConfirmedReservationForDateAndSlot
+e_cmp_it_unina_reservations_controller_ReservationManager_bb66 --> e_cmp_it_unina_reservations_entity_Area_a34f : getAvailableSeats
+e_cmp_it_unina_reservations_controller_ReservationManager_bb66 --> e_cmp_it_unina_reservations_entity_Seat_b36b : isAvailable
+e_cmp_it_unina_reservations_controller_ReservationManager_bb66 --> e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_594d : selectSeat, setAssignmentStrategy
+e_cmp_it_unina_reservations_controller_ReservationManager_bb66 --> e_cmp_it_unina_reservations_entity_ReservationRegistry_e741 : saveReservation
+e_cmp_it_unina_reservations_controller_ReservationManager_bb66 --> e_cmp_it_unina_reservations_entity_Reservation_240e : new
+e_cmp_it_unina_reservations_controller_ReservationManager_bb66 --> e_cmp_it_unina_reservations_controller_NotificationManager_e337 : attach
+e_cmp_it_unina_reservations_entity_Reservation_240e --> e_cmp_it_unina_reservations_controller_NotificationManager_e337 : update
+e_cmp_it_unina_reservations_entity_Reservation_240e --> e_cmp_it_unina_reservations_entity_Student_7051 : student
+e_cmp_it_unina_reservations_entity_Reservation_240e --> e_cmp_it_unina_reservations_entity_Seat_b36b : seat
+e_cmp_it_unina_reservations_entity_Student_7051 --> e_cmp_it_unina_reservations_entity_ReservationRegistry_e741 : findActiveReservations
+e_cmp_it_unina_reservations_entity_Student_7051 --> e_cmp_it_unina_reservations_entity_Reservation_240e : reservations
+e_cmp_it_unina_reservations_entity_Area_a34f --> e_cmp_it_unina_reservations_entity_Seat_b36b : isAvailable
+e_cmp_it_unina_reservations_entity_Area_a34f --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_c0d1 : getSeatsForArea
+e_cmp_it_unina_reservations_entity_Seat_b36b --> e_cmp_it_unina_reservations_entity_ReservationRegistry_e741 : findReservationsBySeat
+e_cmp_it_unina_reservations_entity_Seat_b36b --> e_cmp_it_unina_reservations_entity_Reservation_240e : Reservation
+e_cmp_it_unina_reservations_entity_Seat_b36b --> e_cmp_it_unina_reservations_entity_Area_a34f : area
+e_cmp_it_unina_reservations_controller_NotificationManager_e337 --> e_cmp_it_unina_reservations_boundary_NotificationServiceAdapter_ac9e : sendNotification
+e_cmp_it_unina_reservations_controller_NotificationManager_e337 --> e_cmp_it_unina_reservations_entity_Reservation_240e : update
+e_cmp_it_unina_reservations_controller_NotificationManager_e337 --> e_cmp_it_unina_reservations_entity_Student_7051 : getStudent
+e_cmp_it_unina_reservations_controller_NotificationManager_e337 --> e_cmp_it_unina_reservations_entity_ReservationRegistry_e741 : getEndingReservations
+e_cmp_it_unina_reservations_boundary_NotificationServiceAdapter_ac9e --> e_cmp_it_unina_reservations_boundary_ExternalEmailGateway_27c1 : send
+e_cmp_it_unina_reservations_entity_ReservationRegistry_e741 --> e_cmp_it_unina_reservations_database_PersistenceManager_4f34 : save
+e_cmp_it_unina_reservations_entity_ReservationRegistry_e741 --> e_cmp_it_unina_reservations_entity_Reservation_240e : findById
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_c0d1 --> e_cmp_it_unina_reservations_database_PersistenceManager_4f34 : findById
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_c0d1 --> e_cmp_it_unina_reservations_entity_Seat_b36b : findSeatById
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_c0d1 --> e_cmp_it_unina_reservations_entity_Area_a34f : findAreaById
+e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_594d --> e_cmp_it_unina_reservations_entity_Seat_b36b : selectSeat
+@enduml

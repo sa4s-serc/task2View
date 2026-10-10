@@ -1,0 +1,32 @@
+@startuml
+title Client-Server view — user registration functionality
+left to right direction
+package "Presentation" as e_group_layer_presentation_6738 <<presentation>> {
+  component "Registration\n--\n- collects the sign-up form fields in the desktop GUI\n- rejects blank fields before calling the facade\n- shows the error message of a failed registration and opens Login after success" as e_cmp_it_unina_reservations_boundary_Swing_Registration_b923 <<presentation>>
+  component "AuthenticationController\n--\n- exposes POST /api/auth/register taking role, name, surname, email, password and identifier as request parameters\n- returns the UserDTO produced by the facade" as e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_15f0 <<presentation>>
+}
+package "Application" as e_group_layer_application_01b6 <<application>> {
+  component "LibraryFacade\n--\n- single entry point of the controller layer; forwards register to UserManager" as e_cmp_it_unina_reservations_controller_LibraryFacade_5114 <<application>>
+  component "UserManager\n--\n- validates role, name, surname, email, password and identifier format\n- rejects an email or an identifier that is already registered\n- chooses StudentFactory or LibrarianFactory from the role\n- stores the new user through UserRegistry and fails if it could not be saved\n- maps the stored user to a UserDTO" as e_cmp_it_unina_reservations_controller_UserManager_2594 <<application>>
+  component "StudentFactory\n--\n- implements UserFactory; builds a Student from name, surname, email, password and student number" as e_cmp_it_unina_reservations_controller_factory_StudentFactory_6b88 <<application>>
+  component "LibrarianFactory\n--\n- implements UserFactory; builds a Librarian from name, surname, email, password and internal identifier code" as e_cmp_it_unina_reservations_controller_factory_LibrarianFactory_3789 <<application>>
+}
+package "Domain" as e_group_layer_domain_0f45 <<domain>> {
+  component "UserRegistry\n--\n- looks users up by email, student number and librarian code\n- persists a new user through PersistenceManager" as e_cmp_it_unina_reservations_entity_UserRegistry_1858 <<domain>>
+}
+package "Persistence" as e_group_layer_persistence_7fe3 <<persistence>> {
+  component "PersistenceManager\n--\n- saves an entity in a transaction and rolls back on error, returning false\n- finds entities by field values with a JPQL query" as e_cmp_it_unina_reservations_database_PersistenceManager_4f34 <<persistence>>
+  component "JpaUtil\n--\n- creates the EntityManagerFactory of persistence unit reservationsPU and hands out EntityManagers" as e_cmp_it_unina_reservations_database_JpaUtil_0108 <<persistence>>
+}
+database "reservationsdb\n--\n- MySQL database configured for persistence unit reservationsPU; schema updated by hibernate.hbm2ddl.auto=update" as e_ds_reservationsdb_0248
+e_cmp_it_unina_reservations_boundary_Swing_Registration_b923 --> e_cmp_it_unina_reservations_controller_LibraryFacade_5114 : register
+e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_15f0 --> e_cmp_it_unina_reservations_controller_LibraryFacade_5114 : register
+e_cmp_it_unina_reservations_controller_LibraryFacade_5114 --> e_cmp_it_unina_reservations_controller_UserManager_2594 : register
+e_cmp_it_unina_reservations_controller_UserManager_2594 --> e_cmp_it_unina_reservations_entity_UserRegistry_1858 : institutionalEmailExists / registerUser
+e_cmp_it_unina_reservations_controller_UserManager_2594 --> e_cmp_it_unina_reservations_controller_factory_StudentFactory_6b88 : createUser
+e_cmp_it_unina_reservations_controller_UserManager_2594 --> e_cmp_it_unina_reservations_controller_factory_LibrarianFactory_3789 : createUser
+e_cmp_it_unina_reservations_entity_UserRegistry_1858 --> e_cmp_it_unina_reservations_database_PersistenceManager_4f34 : save / findFirstByFields
+e_cmp_it_unina_reservations_database_PersistenceManager_4f34 --> e_cmp_it_unina_reservations_database_JpaUtil_0108 : getEntityManager
+e_cmp_it_unina_reservations_database_PersistenceManager_4f34 --> e_ds_reservationsdb_0248 : writes: persist
+e_cmp_it_unina_reservations_database_PersistenceManager_4f34 --> e_ds_reservationsdb_0248 : reads: createQuery
+@enduml

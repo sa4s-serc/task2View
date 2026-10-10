@@ -1,0 +1,61 @@
+@startuml
+title View 2 - Registration interaction sequence (success and failure paths)
+actor Tester
+participant "Registration form (Swing)\nor registration.html" as UI
+participant "AuthenticationController\n(REST path only)" as AC
+participant RestExceptionHandler as REH
+participant LibraryFacade as LF
+participant UserManager as UM
+participant UserRegistry as UR
+participant "StudentFactory /\nLibrarianFactory" as F
+participant PersistenceManager as PM
+database MySQL as DB
+
+Tester -> UI : role, name, surname, email,\npassword, identifier
+UI -> UI : all fields non-blank?\n(else "Complete all fields" - Swing only)
+alt Swing
+  UI -> LF : register(role,name,surname,email,password,identifier)
+else Web
+  UI -> AC : POST /api/auth/register (form params)
+  AC -> LF : register(...)
+end
+LF -> UM : register(...)
+UM -> UM : validate(role,name,password)\nrole Student|Librarian; name non-empty;\npassword 8..32 chars
+alt role = Student
+  UM -> UM : validateStudent: name/surname \\p{L}{1,20};\nemail <255 and ^...@...unina.it$;\nid [A-Za-z0-9]+ and [A-Z]\\d{8}
+else role = Librarian
+  UM -> UM : validateLibrarian: same name/email rules;\nid [A-Za-z0-9]+
+end
+UM -> UR : institutionalEmailExists(email)
+UR -> PM : findFirstByFields(User, institutionalEmail)
+PM -> DB : SELECT
+DB --> PM
+UM -> UR : findStudentByStudentNumber(id) /\nfindLibrarianByCode(id)
+UR -> PM : findFirstByFields(...)
+PM -> DB : SELECT
+alt duplicate email / identifier
+  UM --> LF : IllegalArgumentException\n("Email is already associated..." /\n"Identifier is already in use.")
+else new user
+  UM -> F : createUser(name,surname,email,password,id)
+  F --> UM : Student / Librarian
+  UM -> UR : registerUser(user)
+  UR -> PM : save(user)
+  PM -> DB : INSERT (transaction, rollback on error)
+  PM --> UR : true / false
+  alt save false
+    UM --> LF : RuntimeException("Server error: ...")
+  else saved
+    UM --> LF : UserDTO (role, id, name, surname,\nemail, identifier)
+  end
+end
+LF --> UI : UserDTO or exception
+alt exception, REST path
+  AC --> REH : IllegalArgumentException -> HTTP 400 {"error":msg}
+  REH --> UI : error message shown (#error div)
+  note right: A RuntimeException (save failure) is not mapped\nin RestExceptionHandler.
+else exception, Swing
+  UI -> Tester : "Registration error" dialog
+else success
+  UI -> Tester : "Registration complete! You can now sign in."\n-> redirect to Login / index.html
+end
+@enduml

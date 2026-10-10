@@ -1,0 +1,63 @@
+@startuml
+title View 2 - Domain model (Entity package) and persistence mapping
+skinparam classAttributeIconSize 0
+
+abstract class User <<@Entity, SINGLE_TABLE>>
+class Citizen <<@Entity>>
+class MunicipalOperator <<@Entity>>
+class Credentials <<@Embeddable>>
+class Location <<@Embeddable>>
+enum ReportCategory
+
+class Report <<@Entity>> {
+  currentStatusName : String
+  currentStatus : ReportStatus {transient}
+  citizenEditable : boolean
+  dateReport, imageAttached, title, description
+  assignOperator()
+  updateStatus()
+  addInternalNote()
+}
+class StatusUpdate <<@Entity>>
+class InternalNote <<@Entity>>
+class Notification <<@Entity>>
+
+interface ReportStatus {
+  updateStatus(Report)
+  isStatusNotifiable()
+}
+class Submitted
+class Assigned
+class InProgress
+class Resolved
+
+class UserService <<domain service>>
+class ReportService <<domain service>>
+class PersistenceService <<Database>>
+
+User <|-- Citizen
+User <|-- MunicipalOperator
+User *-- Credentials
+Report *-- Location
+Report --> ReportCategory
+Report "*" --> "1" Citizen : citizenReporting
+Report "*" --> "0..1" MunicipalOperator : operator
+Report "1" *-- "*" StatusUpdate : history
+Report "1" *-- "*" InternalNote
+StatusUpdate "*" --> "1" MunicipalOperator
+InternalNote "*" --> "1" MunicipalOperator
+Notification "*" --> "1" Citizen : recipient
+Notification "*" --> "1" Report
+
+ReportStatus <|.. Submitted
+ReportStatus <|.. Assigned
+ReportStatus <|.. InProgress
+ReportStatus <|.. Resolved
+Report --> ReportStatus : State pattern\nSubmitted>Assigned>In Progress>Resolved
+
+UserService ..> User
+ReportService ..> Report
+ReportService ..> Notification : creates
+UserService --> PersistenceService
+ReportService --> PersistenceService
+@enduml

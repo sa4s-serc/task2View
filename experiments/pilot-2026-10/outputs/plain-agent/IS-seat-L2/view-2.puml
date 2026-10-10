@@ -1,0 +1,53 @@
+@startuml view-2
+title View 2 - makeReservation (UC7) interaction: where each booking rule lives
+actor Student
+participant "UI (Swing ReservationSummary /\nReservationController)" as UI
+participant LibraryFacade as F
+participant ReservationManager as RM
+participant StudyRoomRegistry as SRR
+participant StudyRoom as Room
+participant Student as Stu
+participant Area
+participant Seat
+participant ReservationRegistry as RR
+participant AssignmentStrategy as AS
+participant Reservation as Res
+participant NotificationManager as NM
+
+Student -> UI : room, area, seat (0 = auto), date, slot
+UI -> F : makeReservation(ReservationRequestDTO)
+F -> RM : makeReservation(request)
+RM -> RM : resolveStudent (UserRegistry)
+RM -> SRR : resolveRoom: exists, active
+RM -> Room : isOpenOnDate (weekdays only)
+RM -> RM : resolveArea (area belongs to room)
+RM -> Room : resolveTimeSlot: getScheduledTimeSlots,\nnot past / not already started
+RM -> RM : validateSeatInArea
+RM -> RM : synchronized(this)
+group RULE: one reservation per student/date/slot
+  RM -> Stu : hasActiveOrConfirmedReservationForDateAndSlot
+  Stu -> RR : findActiveReservations
+end
+group RULE: seat availability
+  RM -> Area : getAvailableSeats(date, slot)
+  Area -> Seat : isAvailable
+  Seat -> RR : findReservationsBySeat
+end
+group RULE: seat choice
+  alt seatId > 0
+    RM -> Seat : isAvailable (explicit seat)
+  else seatId == 0
+    RM -> AS : selectSeat(available) (FirstAvailable)
+  end
+end
+RM -> Res : new, setState(ActiveState)
+RM -> RR : saveReservation -> PersistenceManager
+RM -> Res : attach(NM); notifyObservers()
+Res -> NM : update -> email "registered"
+RM --> F : ReservationDTO
+F --> UI
+note over UI
+Errors are IllegalArgument/IllegalStateException;
+REST maps them via RestExceptionHandler.
+end note
+@enduml

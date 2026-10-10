@@ -1,0 +1,9 @@
+Repository card: Progetto-IS-main-English (library study-room reservation system)
+Languages: Java 21 (71 main + 9 test files), HTML/JS/CSS static web client, Swing .form files
+Layers (package names): presentation=boundary (Swing, SpringBoot), application=controller (+factory, strategy), domain=entity (+state, dto), persistence=database
+Entry points: Spring REST controllers under /api (auth, reservations, rooms, student, monitoring); main in ReservationsApplication and Launcher; Swing Registration/Login frames; static web pages (registration.html); @Scheduled NotificationScheduler
+Registration-relevant entry points: POST /api/auth/register (AuthenticationController:22), Swing Registration.register() (:116), registration.html submit (:53)
+Persisted entities: User (JOINED inheritance) <- Student, Librarian; StudyRoom, Area, Seat, TimeSlot, Reservation
+Deployment/build: persistence.xml (MySQL reservationsdb; test PU uses reservationsdb_test), maven pom.xml; no Docker/compose
+Signals: rest-api, gui-client, web-client, layered, inheritance, persisted-data, lifecycle, threads, deploy-config, build-config, tests
+Not raised: crosscutting (RestControllerAdvice is an exception mapper, not an aspect/filter marker), event-bus, services, peer-calls, data-flow, shared-repository, multi-tier, variability, ownership, decision-records, requirement-docs

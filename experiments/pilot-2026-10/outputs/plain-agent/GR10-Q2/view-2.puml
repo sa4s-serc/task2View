@@ -1,0 +1,37 @@
+@startuml view-2
+title View 2 - Runtime communication and application-to-database technology stack
+
+package "Single JVM process (Swing client)" {
+  component "Boundary\n(Swing GUIs, forms_rt layouts)" as B
+  component "Control\n(use-case controllers)" as C
+  component "Entity\n(UserService, ReportService,\ndomain entities, JPA annotations)" as E
+  component "Database.PersistenceService\n(save / update / findById /\nfindByAttribute / findByFields - JPQL)" as PS
+  component "Database.JpaUtil\n(singleton EntityManagerFactory,\nunit Municipal_Report_Management_System)" as JU
+  component "Hibernate ORM 6.6.50.Final\n(JPA provider, RESOURCE_LOCAL tx)" as H
+  component "MySQL Connector/J 9.4.0\ncom.mysql.cj.jdbc.Driver" as D
+  interface "Jakarta Persistence 3.1\n(EntityManager)" as JPA
+}
+
+database "MySQL server\n127.0.0.1:3306\nschema reports_db" as M
+
+B --> C : in-process method calls (Swing event threads)
+C --> E : in-process method calls
+E --> PS : in-process method calls
+PS --> JU : getEntityManager()
+JU --> JPA
+JPA - H
+H --> D : JDBC API
+D --> M : MySQL client/server protocol\nover TCP, no TLS configured in URL\n(user reports_user / password in persistence.xml)
+
+note bottom of H
+  hbm2ddl.auto=update -> DDL executed at first connection:
+  the DB user needs CREATE/ALTER rights.
+  show_sql / format_sql = true -> SQL is printed to stdout.
+  Connection config is hard-coded in persistence.xml
+  (no env vars/external config) -> change and rebuild per environment.
+end note
+note right of E
+  Notifications to citizens are stored as rows
+  (table notifications); no email/SMS/HTTP integration exists.
+end note
+@enduml

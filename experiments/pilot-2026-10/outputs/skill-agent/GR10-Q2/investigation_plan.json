@@ -1,0 +1,134 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-deployment",
+    "viewpoint_id": "deployment",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "deployment",
+    "subject": null,
+    "goal": "Collect evidence for: For the whole system: runtime nodes and environments, what runs where, and how they communicate?",
+    "seeds": {
+      "symbols": [
+        "Boundary.HomePageGUI",
+        "Database.JpaUtil"
+      ],
+      "paths": [
+        "pom.xml",
+        "src/main/resources/META-INF/persistence.xml",
+        "README.md"
+      ],
+      "classes": [
+        "build",
+        "deploy",
+        "config",
+        "docs",
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "node",
+      "execution_env",
+      "artifact",
+      "datastore"
+    ],
+    "expect_relations": [
+      "deploys",
+      "communicates",
+      "contains"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "entry-point:main",
+      "path:deploy-config"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V1-deployment",
+    "viewpoint_id": "deployment",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "build-packaging",
+    "subject": null,
+    "goal": "Collect evidence for: For the whole system: the deployable artifacts and how they are built and packaged?",
+    "seeds": {
+      "symbols": [
+        "Boundary.HomePageGUI"
+      ],
+      "paths": [
+        "pom.xml",
+        "README.md"
+      ],
+      "classes": [
+        "build",
+        "deploy",
+        "config",
+        "docs",
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "node",
+      "execution_env",
+      "artifact",
+      "datastore"
+    ],
+    "expect_relations": [
+      "deploys",
+      "communicates",
+      "contains"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "path:build-config"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V1-deployment",
+    "viewpoint_id": "deployment",
+    "question_ids": [
+      "AQ3"
+    ],
+    "need": "data-storage",
+    "subject": null,
+    "goal": "Collect evidence for: For the whole system: where and how data is persisted (databases, schemas, stores)?",
+    "seeds": {
+      "symbols": [
+        "Database.JpaUtil",
+        "Database.PersistenceService",
+        "Entity.Report"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml",
+        "README.md"
+      ],
+      "classes": [
+        "build",
+        "deploy",
+        "config",
+        "docs",
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "node",
+      "execution_env",
+      "artifact",
+      "datastore"
+    ],
+    "expect_relations": [
+      "deploys",
+      "communicates",
+      "contains"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name:persistence",
+      "path:deploy-config"
+    ]
+  }
+]

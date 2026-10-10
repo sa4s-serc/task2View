@@ -1,0 +1,77 @@
+{
+  "views": [
+    {
+      "viewpoint_id": "decomposition",
+      "family": "module",
+      "model_kind": "uml-package",
+      "needs": [
+        "decomposition",
+        "layering"
+      ],
+      "subjects": [
+        "user-facing functionality",
+        "application logic",
+        "domain entities",
+        "data persistence"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": null,
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 15
+      },
+      "evidence_gap": null,
+      "rationale": "Decomposition (2.1 Decomposition Style) covers decomposition; combined with layered (V&B 6.6) because the repository is layered (Boundary/Control/Entity/Database), which covers layering"
+    },
+    {
+      "viewpoint_id": "cnc-generic",
+      "family": "cnc",
+      "model_kind": "uml-component",
+      "needs": [
+        "dependencies",
+        "collaboration"
+      ],
+      "subjects": [
+        "user-facing functionality",
+        "application logic",
+        "domain entities",
+        "data persistence"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": null,
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 15
+      },
+      "evidence_gap": null,
+      "rationale": "Component-and-Connector (Ch. 3 Component-and-Connector Views) covers collaboration and dependencies; stays generic because the repository shows none of the signals of a C&C style (no rest-api, services, event-bus, peer-calls, data-flow, shared-repository); combined with layered (V&B 6.6)"
+    }
+  ],
+  "needs": [
+    "decomposition",
+    "layering",
+    "dependencies",
+    "collaboration"
+  ],
+  "secondary_needs": [
+    "data-structure",
+    "data-storage"
+  ],
+  "needs_from_role": false,
+  "uncovered_needs": [],
+  "secondary_not_shown": [
+    "data-structure",
+    "data-storage"
+  ],
+  "detail_level": "detailed",
+  "notes": [
+    "Candidates covering a primary need: decomposition (decomposition), uses (dependencies), layered (layering, decomposition), cnc-generic (collaboration, dependencies). Sets of 1 view cannot cover all four needs.",
+    "Best 2-view sets all cover the four needs (layering via the layered overlay for decomposition/uses/cnc-generic). Ties on secondary needs (none covered), framed needs (2), role prior (2) are broken by catalog position: decomposition+cnc-generic (1+7) beats layered+cnc-generic (4+7).",
+    "The layering need is assigned to V1 because V1 carries the layered overlay that covers it.",
+    "data-structure and data-storage are secondary and add no view; the data-model and data-stores viewpoints were not selected."
+  ]
+}

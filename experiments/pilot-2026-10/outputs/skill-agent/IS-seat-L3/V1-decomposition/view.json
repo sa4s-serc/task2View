@@ -1,0 +1,509 @@
+{
+  "id": "V1-decomposition",
+  "viewpoint_id": "decomposition",
+  "viewpoint_name": "Decomposition",
+  "vb_ref": "2.1 Decomposition Style",
+  "model_kind": "uml-package",
+  "title": "Decomposition view — seat booking functionality (layered)",
+  "purpose": "Which components take part in seat booking, what each is responsible for, and in which layer it sits",
+  "detail_level": "detailed",
+  "max_elements": 15,
+  "addresses": [
+    "AQ1",
+    "AQ2",
+    "AQ3",
+    "AQ4"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "group:layer:presentation",
+      "kind": "layer",
+      "name": "Presentation",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:application",
+      "kind": "layer",
+      "name": "Application",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:domain",
+      "kind": "layer",
+      "name": "Domain",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:persistence",
+      "kind": "layer",
+      "name": "Persistence",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+      "kind": "component",
+      "name": "ReservationController",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [
+        "exposes the REST endpoint POST /api/reservations/create for booking requests",
+        "exposes REST endpoints to cancel and check in a reservation"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.SpringBoot.ReservationController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.boundary.Swing.ReservationSummary",
+      "kind": "component",
+      "name": "ReservationSummary",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [
+        "submits the seat booking request chosen in the Swing wizard through LibraryFacade"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.Swing.ReservationSummary"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "kind": "component",
+      "name": "LibraryFacade",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "forwards makeReservation requests to ReservationManager",
+        "forwards sendReminders to NotificationManager"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.ReservationManager",
+      "kind": "component",
+      "name": "ReservationManager",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "orchestrates the seat booking use case (makeReservation)",
+        "checks that the room is active and open on the date (weekdays only)",
+        "rejects time slots that have started or passed",
+        "checks that the requested seat belongs to the selected area",
+        "enforces one active or confirmed reservation per student, date and time slot",
+        "rejects the booking when no seat is available in the area",
+        "uses the requested seat or delegates automatic seat assignment to the strategy",
+        "creates the reservation in ActiveState and saves it",
+        "serialises the booking critical section",
+        "attaches NotificationManager and notifies observers after saving",
+        "cancels reservations, performs check-in and ends elapsed reservations"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.ReservationManager"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+      "kind": "component",
+      "name": "FirstAvailableAssignment",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "assigns the first available seat (default AssignmentStrategy)",
+        "defines the seat assignment strategy used for automatic assignment"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+        "it.unina.reservations.controller.strategy.AssignmentStrategy"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.NotificationManager",
+      "kind": "component",
+      "name": "NotificationManager",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "receives reservation changes as Observer and sends the message matching the status",
+        "sends notifications through NotificationService and discards them when none is configured",
+        "sends reminders for ACTIVE reservations of the current day",
+        "builds the message text for each reservation status",
+        "observer contract notified when a Reservation changes"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.NotificationManager",
+        "it.unina.reservations.entity.Observer"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+      "kind": "component",
+      "name": "NotificationServiceAdapter",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [
+        "adapts NotificationService to the external email gateway, one email per recipient",
+        "fails the delivery when the gateway does not answer 200",
+        "defines the notification delivery port used by NotificationManager"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.NotificationServiceAdapter",
+        "it.unina.reservations.controller.NotificationService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.boundary.ExternalEmailGateway",
+      "kind": "component",
+      "name": "ExternalEmailGateway",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [
+        "stands in for the external email service and returns an HTTP-like status code (stub)"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.ExternalEmailGateway"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.entity.Reservation",
+      "kind": "component",
+      "name": "Reservation",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "holds date, seat, time slot, student and persisted status of a booking",
+        "delegates cancel, check-in and end handling to its current ReservationState",
+        "rejects cancellation less than 6 hours before the time slot starts",
+        "sets the check-in tolerance (10 minutes) used to validate check-in",
+        "notifies attached observers"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.Reservation"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.entity.Student",
+      "kind": "component",
+      "name": "Student",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "checks whether the student already has an active or confirmed reservation for a date and slot"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.Student"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.entity.Area",
+      "kind": "component",
+      "name": "Area",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "computes the seats of the area that are available for a date and time slot"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.Area"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.entity.Seat",
+      "kind": "component",
+      "name": "Seat",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "tells whether the seat is free for a date and time slot by checking occupying reservations"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.Seat"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.entity.ReservationRegistry",
+      "kind": "component",
+      "name": "ReservationRegistry",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "saves and updates reservations through PersistenceManager",
+        "finds reservations by seat, student, room and date",
+        "defines which statuses occupy a slot (ACTIVE and CONFIRMED)"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.ReservationRegistry"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+      "kind": "component",
+      "name": "StudyRoomRegistry",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "looks up rooms, areas, seats and time slots through PersistenceManager"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.StudyRoomRegistry"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.database.PersistenceManager",
+      "kind": "component",
+      "name": "PersistenceManager",
+      "stereotype": "persistence",
+      "parent": "group:layer:persistence",
+      "responsibilities": [
+        "saves and updates JPA entities inside transactions",
+        "builds and runs equality queries from field maps"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.database.PersistenceManager"
+      ],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+      "name": "ReservationController",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.ReservationController"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.boundary.Swing.ReservationSummary",
+      "name": "ReservationSummary",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.Swing.ReservationSummary"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "name": "LibraryFacade",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.controller.ReservationManager",
+      "name": "ReservationManager",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+      "name": "FirstAvailableAssignment",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+        "it.unina.reservations.controller.strategy.AssignmentStrategy"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.controller.NotificationManager",
+      "name": "NotificationManager",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Observer.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.NotificationManager",
+        "it.unina.reservations.entity.Observer"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+      "name": "NotificationServiceAdapter",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/NotificationService.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.NotificationServiceAdapter",
+        "it.unina.reservations.controller.NotificationService"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.boundary.ExternalEmailGateway",
+      "name": "ExternalEmailGateway",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.ExternalEmailGateway"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.entity.Reservation",
+      "name": "Reservation",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.Reservation"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.entity.Student",
+      "name": "Student",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/Student.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.Student"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.entity.Area",
+      "name": "Area",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/Area.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.Area"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.entity.Seat",
+      "name": "Seat",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.Seat"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.entity.ReservationRegistry",
+      "name": "ReservationRegistry",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.ReservationRegistry"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+      "name": "StudyRoomRegistry",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.StudyRoomRegistry"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.database.PersistenceManager",
+      "name": "PersistenceManager",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.database.PersistenceManager"
+      ]
+    }
+  ],
+  "limitations": [
+    "Layer groups are not counted in the 15-element cap; the 15 components fill it",
+    "Not drawn (cap): StudyRoom, TimeSlot, UserRegistry, StudyRoomManager, StudyRoomController, JpaUtil, NotificationConfiguration, NotificationScheduler, ReservationState classes",
+    "NotificationServiceAdapter and ExternalEmailGateway sit in package boundary, so the layer alias places them in Presentation although they act as an adapter to an external service",
+    "AssignmentStrategy, NotificationService and Observer are merged into FirstAvailableAssignment, NotificationServiceAdapter and NotificationManager"
+  ],
+  "gaps": [],
+  "overflow": []
+}

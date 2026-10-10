@@ -1,0 +1,10 @@
+Repository card — Progetto-IS-main-English
+Languages: Java (Spring Boot 3.2.4, Java 21, Hibernate 6 / JPA, Swing), HTML/JS static web client, Maven.
+Layers (package aliases): presentation = boundary (REST controllers, Swing screens, notification adapter, scheduler);
+  application = controller (LibraryFacade, *Manager, strategy, factory); domain = entity (+ state, dto); persistence = database.
+Entry points: Launcher (Spring Boot + Swing Login), ReservationsApplication (Spring Boot, scheduling),
+  ReservationController /api/reservations/{create,cancel,checkIn}, StudyRoomController /api/rooms/*, NotificationScheduler (@Scheduled, 60 s).
+Entities: Reservation, Seat, Area, StudyRoom, TimeSlot, User, Student, Librarian (JPA, MySQL reservationsdb via persistence unit reservationsPU).
+Build/deploy: JavaProject/pom.xml (maven, jar), persistence.xml; no Docker/compose.
+Signals: rest-api, gui-client, web-client, layered, inheritance, threads, persisted-data, lifecycle, deploy-config, build-config, tests.
+Not raised: crosscutting, event-bus, services, peer-calls, data-flow, shared-repository, multi-tier, variability, ownership, decision-records, requirement-docs.

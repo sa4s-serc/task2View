@@ -1,0 +1,9 @@
+Repository card — progetto_ing_software_gr10-main-English
+Languages: java (44 files: 39 main, 5 test); 4 IntelliJ .form files; pom.xml; persistence.xml; README.md
+Layers (package -> layer): Boundary -> presentation, Control -> application, Entity -> domain, Database -> persistence
+Entry points: HomePageGUI.main (application start), UserLoginGUI.main, UserRegistrationGUI.main
+Persisted entities (JPA): User (users, single-table; Citizen, MunicipalOperator), Report (reports), InternalNote (internal_notes),
+  StatusUpdate (status_updates), Notification (notifications); embeddables Credentials, Location
+Deployment/config: persistence.xml (Hibernate, MySQL reports_db, RESOURCE_LOCAL); build: Maven (hibernate-core, mysql-connector-j, forms_rt)
+Signals: build-config, deploy-config, gui-client, inheritance, layered, lifecycle, persisted-data, tests
+Notes: No Dockerfile or compose file: the application is a single desktop JVM process talking to a MySQL server. | All classes sit in the packages Boundary, Control, Entity, Database; Entity also holds ReportService and UserService. | pom.xml line 64 spells the compiler-plugin configuration element 'configuretion' (so the Java 23 settings are ignored by Maven). | Signals not raised for lack of evidence: rest-api, web-client, crosscutting, event-bus, services, peer-calls, data-flow, shared-repository, multi-tier, threads, variability, ownership, decision-records, requirement-docs.

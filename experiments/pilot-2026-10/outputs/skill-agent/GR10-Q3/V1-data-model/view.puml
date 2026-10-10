@@ -1,0 +1,72 @@
+@startuml
+title Data Model view — management of municipal reports
+hide empty members
+
+abstract class "User" as e_ent_Entity_User_c603 <<entity>> {
+  userId : Long {PK}
+  name : String
+  lastName : String
+  phoneNumber : String
+}
+class "Citizen" as e_ent_Entity_Citizen_3d9f <<entity>> {
+}
+class "MunicipalOperator" as e_ent_Entity_MunicipalOperator_0730 <<entity>> {
+}
+class "Credentials" as e_ent_Entity_Credentials_71ba <<entity>> {
+  email : String
+  password : String
+}
+class "Report" as e_ent_Entity_Report_2112 <<entity>> {
+  reportId : Long {PK}
+  title : String
+  description : String
+  category : ReportCategory
+  dateReport : Date
+  imageAttached : String
+  currentStatusName : String
+  citizenEditable : boolean
+}
+class "Location" as e_ent_Entity_Location_4003 <<entity>> {
+  city : String
+  cap : String
+  street : String
+  streetNumber : String
+  municipalArea : String
+}
+enum "ReportCategory" as e_ent_Entity_ReportCategory_7f18 <<enum>> {
+  BROKEN_STREETLIGHT
+  DAMAGED_ROAD
+  ABANDONED_WASTE
+  GENERAL_HAZARD
+  DAMAGED_STREET_FURNITURE
+}
+class "StatusUpdate" as e_ent_Entity_StatusUpdate_176f <<entity>> {
+  updateId : Long {PK}
+  updateDate : Date
+  newStatus : String
+}
+class "InternalNote" as e_ent_Entity_InternalNote_4a3a <<entity>> {
+  noteId : Long {PK}
+  text : String
+  dateEntry : Date
+}
+class "Notification" as e_ent_Entity_Notification_ca66 <<entity>> {
+  notificationId : Long {PK}
+  sentDate : Date
+  message : String
+  notifiedStatus : String
+}
+
+e_ent_Entity_Report_2112 "*" --> "1" e_ent_Entity_Citizen_3d9f : citizen_id (citizenReporting)
+e_ent_Entity_Report_2112 "*" --> "0..1" e_ent_Entity_MunicipalOperator_0730 : operator_id (operator, nullable)
+e_ent_Entity_InternalNote_4a3a "*" --> "1" e_ent_Entity_Report_2112 : report_id (report)
+e_ent_Entity_InternalNote_4a3a "*" --> "1" e_ent_Entity_MunicipalOperator_0730 : operator_id (operator)
+e_ent_Entity_StatusUpdate_176f "*" --> "1" e_ent_Entity_Report_2112 : report_id (report)
+e_ent_Entity_StatusUpdate_176f "*" --> "1" e_ent_Entity_MunicipalOperator_0730 : operator_id (operator)
+e_ent_Entity_Notification_ca66 "*" --> "1" e_ent_Entity_Citizen_3d9f : citizen_id (destinatario)
+e_ent_Entity_Notification_ca66 "*" --> "1" e_ent_Entity_Report_2112 : report_id (report)
+e_ent_Entity_User_c603 "1" *-- "1" e_ent_Entity_Credentials_71ba : credentials (embedded)
+e_ent_Entity_Report_2112 "1" *-- "1" e_ent_Entity_Location_4003 : location (embedded)
+e_ent_Entity_Citizen_3d9f --|> e_ent_Entity_User_c603
+e_ent_Entity_MunicipalOperator_0730 --|> e_ent_Entity_User_c603
+@enduml

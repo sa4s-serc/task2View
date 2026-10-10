@@ -1,0 +1,9 @@
+Repository card: municipal-report-management (Java 44 files, Maven, Hibernate/JPA 6.6 + MySQL)
+Layers (BCED): presentation=Boundary (Swing GUIs), application=Control (controllers), domain=Entity (entities + ReportService/UserService), persistence=Database (JpaUtil, PersistenceService).
+Entry points: main() in HomePageGUI, UserLoginGUI, UserRegistrationGUI.
+Persisted entities (persistence.xml): User (SINGLE_TABLE users, discriminator role: Citizen, MunicipalOperator), Report (reports), InternalNote (internal_notes), StatusUpdate (status_updates), Notification (notifications).
+Embedded: Credentials (in User), Location (in Report). Enum: ReportCategory (stored as STRING in reports.category).
+Status: Report.currentStatusName (column current_status) holds submitted/assigned/in_progress/resolved; ReportStatus state objects are transient.
+Deployment: persistence unit Municipal_Report_Management_System -> jdbc:mysql://127.0.0.1:3306/reports_db, hbm2ddl.auto=update.
+Build: pom.xml (municipal-report-management 1.0-SNAPSHOT).
+Signals: layered, gui-client, persisted-data, inheritance, lifecycle, deploy-config, build-config, tests.

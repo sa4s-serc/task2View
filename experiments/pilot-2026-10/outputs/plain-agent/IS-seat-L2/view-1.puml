@@ -1,0 +1,78 @@
+@startuml view-1
+title View 1 - Components involved in seat booking (structure & responsibilities)
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+package "boundary (UI / entry points)" {
+  [Swing wizard\nDateAndRoomSelection > TimeSlotSelection >\nAreaSelection > SeatSelection >\nReservationSummary > ReservationConfirmed] as Swing
+  [StudentDashboard (Swing)\ncancel / check-in / history] as Dash
+  [ReservationController\n(REST /api/reservations:\ncreate, cancel, checkIn)] as RC
+  [RestExceptionHandler\nIllegalArgument/IllegalState -> HTTP error] as REH
+  [NotificationScheduler\n@Scheduled every 60s] as Sched
+  [Static web app (app.js, reservation.html)] as Web
+}
+
+package "controller (use-case logic)" {
+  [LibraryFacade\nsingleton, pure delegation] as Facade
+  [ReservationManager\nBOOKING RULES: makeReservation (UC7),\ncancel (UC9), checkIn (UC10),\nmanageReservationEnd (UC16)] as RM
+  [StudyRoomManager\nrooms/slots/seat map for the wizard\n(getAvailableTimeSlots, getRoomDetail)] as SRM
+  [NotificationManager\nObserver of Reservation] as NM
+  interface AssignmentStrategy
+  [FirstAvailableAssignment] as FAA
+}
+
+package "entity (domain model)" {
+  [Reservation\n<<Subject>> state, date, cancel window (6h),\ncheck-in tolerance (10 min)] as Res
+  [ReservationState\nActive / Confirmed / Cancelled /\nExpired / Completed] as St
+  [Student\nhasActiveOrConfirmedReservationForDateAndSlot] as Stu
+  [StudyRoom\nisOpenOnDate, getScheduledTimeSlots] as Room
+  [Area\ngetAvailableSeats] as Area
+  [Seat\nisAvailable] as Seat
+  [TimeSlot] as TS
+  [ReservationRegistry] as RR
+  [StudyRoomRegistry] as SRR
+  [UserRegistry] as UR
+}
+
+package "database" {
+  [PersistenceManager (JPA)] as PM
+}
+package "boundary adapters" {
+  [NotificationServiceAdapter /\nExternalEmailGateway] as Mail
+}
+database "DB (persistence.xml)" as DB
+
+Swing --> Facade
+Dash --> Facade
+Web --> RC : HTTP
+RC --> Facade
+RC ..> REH
+Sched --> Facade
+Facade --> RM
+Facade --> SRM
+Facade --> NM
+RM --> RR
+RM --> SRR
+RM --> UR
+RM ..> AssignmentStrategy
+FAA ..|> AssignmentStrategy
+RM --> Res : create / cancel / checkIn
+RM --> Stu : uniqueness rule
+RM --> Area : available seats
+Res --> St
+Res ..> NM : notifyObservers (Observer)
+Stu --> RR
+Seat --> RR : occupancy check
+Area --> Seat
+Area --> SRR
+Room --> Area
+Res --> Seat
+Res --> TS
+SRM --> SRR
+SRM --> RR
+RR --> PM
+SRR --> PM
+UR --> PM
+PM --> DB
+NM --> Mail
+@enduml

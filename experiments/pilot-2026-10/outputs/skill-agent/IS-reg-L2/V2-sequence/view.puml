@@ -1,0 +1,35 @@
+@startuml
+title Sequence view — a new user creates an account (REST entry)
+actor "New user" as e_act_new_user_6c9b
+box "Presentation"
+  participant "AuthenticationController" as e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_15f0
+end box
+box "Application"
+  participant "LibraryFacade" as e_cmp_it_unina_reservations_controller_LibraryFacade_5114
+  participant "UserManager" as e_cmp_it_unina_reservations_controller_UserManager_2594
+  participant "StudentFactory" as e_cmp_it_unina_reservations_controller_factory_StudentFactory_6b88
+  participant "LibrarianFactory" as e_cmp_it_unina_reservations_controller_factory_LibrarianFactory_3789
+end box
+box "Domain"
+  participant "UserRegistry" as e_cmp_it_unina_reservations_entity_UserRegistry_1858
+end box
+box "Persistence"
+  participant "PersistenceManager" as e_cmp_it_unina_reservations_database_PersistenceManager_4f34
+end box
+e_act_new_user_6c9b -> e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_15f0 : 1. register(role, name, surname, email, password, identifier)
+e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_15f0 -> e_cmp_it_unina_reservations_controller_LibraryFacade_5114 : 2. register(role, name, surname, email, password, identifier)
+e_cmp_it_unina_reservations_controller_LibraryFacade_5114 -> e_cmp_it_unina_reservations_controller_UserManager_2594 : 3. register(role, name, surname, email, password, identifier)
+e_cmp_it_unina_reservations_controller_UserManager_2594 -> e_cmp_it_unina_reservations_entity_UserRegistry_1858 : 4. institutionalEmailExists(email)
+e_cmp_it_unina_reservations_entity_UserRegistry_1858 -> e_cmp_it_unina_reservations_database_PersistenceManager_4f34 : 5. findFirstByFields(User.class, institutionalEmail)
+alt role is Student
+e_cmp_it_unina_reservations_controller_UserManager_2594 -> e_cmp_it_unina_reservations_entity_UserRegistry_1858 : 6. findStudentByStudentNumber(identifier)
+e_cmp_it_unina_reservations_entity_UserRegistry_1858 -> e_cmp_it_unina_reservations_database_PersistenceManager_4f34 : 7. findFirstByFields(Student.class, studentNumber)
+e_cmp_it_unina_reservations_controller_UserManager_2594 -> e_cmp_it_unina_reservations_controller_factory_StudentFactory_6b88 : 8. createUser(name, surname, email, password, identifier)
+else role is Librarian
+e_cmp_it_unina_reservations_controller_UserManager_2594 -> e_cmp_it_unina_reservations_entity_UserRegistry_1858 : 9. findLibrarianByCode(identifier)
+e_cmp_it_unina_reservations_entity_UserRegistry_1858 -> e_cmp_it_unina_reservations_database_PersistenceManager_4f34 : 10. findFirstByFields(Librarian.class, internalIdentifierCode)
+e_cmp_it_unina_reservations_controller_UserManager_2594 -> e_cmp_it_unina_reservations_controller_factory_LibrarianFactory_3789 : 11. createUser(name, surname, email, password, identifier)
+end
+e_cmp_it_unina_reservations_controller_UserManager_2594 -> e_cmp_it_unina_reservations_entity_UserRegistry_1858 : 12. registerUser(newUser)
+e_cmp_it_unina_reservations_entity_UserRegistry_1858 -> e_cmp_it_unina_reservations_database_PersistenceManager_4f34 : 13. save(newUser)
+@enduml

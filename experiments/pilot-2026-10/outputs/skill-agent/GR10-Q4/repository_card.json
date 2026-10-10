@@ -1,0 +1,334 @@
+{
+  "root": ".",
+  "name": "progetto_ing_software_gr10-main-English",
+  "languages": {
+    "java": 42,
+    "xml": 2,
+    "gui-form": 3
+  },
+  "layers": {
+    "presentation": [
+      "Boundary"
+    ],
+    "application": [
+      "Control"
+    ],
+    "domain": [
+      "Entity"
+    ],
+    "persistence": [
+      "Database"
+    ]
+  },
+  "entry_points": [
+    {
+      "kind": "main",
+      "symbol": "Boundary.HomePageGUI",
+      "file": "src/main/java/Boundary/HomePageGUI.java",
+      "line": 75,
+      "detail": "public static void main"
+    },
+    {
+      "kind": "main",
+      "symbol": "Boundary.UserLoginGUI",
+      "file": "src/main/java/Boundary/UserLoginGUI.java",
+      "line": 91,
+      "detail": "public static void main"
+    },
+    {
+      "kind": "main",
+      "symbol": "Boundary.UserRegistrationGUI",
+      "file": "src/main/java/Boundary/UserRegistrationGUI.java",
+      "line": 145,
+      "detail": "public static void main"
+    },
+    {
+      "kind": "gui-frame",
+      "symbol": "Boundary.UserDashboardGUI",
+      "file": "src/main/java/Boundary/UserDashboardGUI.java",
+      "line": 12,
+      "detail": "role-dependent dashboard (Citizen / Municipal Operator)"
+    }
+  ],
+  "entities": [
+    {
+      "symbol": "Entity.User",
+      "name": "User",
+      "table": "users",
+      "source": "orm",
+      "file": "src/main/java/Entity/User.java",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "phoneNumber",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "Entity.Report",
+      "name": "Report",
+      "table": "reports",
+      "source": "orm",
+      "file": "src/main/java/Entity/Report.java",
+      "fields": [
+        {
+          "name": "reportId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "category",
+          "type": "ReportCategory",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "dateReport",
+          "type": "Date",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "imageAttached",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "currentStatusName",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "citizenEditable",
+          "type": "boolean",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "Entity.Notification",
+      "name": "Notification",
+      "table": "notifications",
+      "source": "orm",
+      "file": "src/main/java/Entity/Notification.java",
+      "fields": [
+        {
+          "name": "notificationId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "sentDate",
+          "type": "Date",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "notifiedStatus",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "Entity.StatusUpdate",
+      "name": "StatusUpdate",
+      "table": "status_updates",
+      "source": "orm",
+      "file": "src/main/java/Entity/StatusUpdate.java",
+      "fields": [
+        {
+          "name": "updateId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "updateDate",
+          "type": "Date",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "newStatus",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        }
+      ]
+    },
+    {
+      "symbol": "Entity.InternalNote",
+      "name": "InternalNote",
+      "table": "internal_notes",
+      "source": "orm",
+      "file": "src/main/java/Entity/InternalNote.java",
+      "fields": [
+        {
+          "name": "noteId",
+          "type": "Long",
+          "key": true,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "text",
+          "type": "String",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        },
+        {
+          "name": "dateEntry",
+          "type": "Date",
+          "key": false,
+          "relation": null,
+          "target": null,
+          "foreign_key": null
+        }
+      ]
+    }
+  ],
+  "deploy": [
+    {
+      "kind": "persistence-unit",
+      "name": "Municipal_Report_Management_System",
+      "file": "src/main/resources/META-INF/persistence.xml",
+      "details": {
+        "jdbc": "jdbc:mysql://127.0.0.1:3306/reports_db"
+      }
+    }
+  ],
+  "build": [
+    {
+      "tool": "maven",
+      "file": "pom.xml",
+      "name": "municipal-report-management",
+      "packaging": "jar",
+      "dependencies": [
+        "hibernate-core",
+        "mysql-connector-j",
+        "forms_rt",
+        "junit-jupiter"
+      ]
+    }
+  ],
+  "signals": {
+    "gui-client": [
+      "Boundary.*GUI: Swing frames (HomePageGUI, UserDashboardGUI, ...)"
+    ],
+    "layered": [
+      "presentation: Boundary",
+      "application: Control",
+      "domain: Entity",
+      "persistence: Database"
+    ],
+    "inheritance": [
+      "Entity.User <- Citizen, MunicipalOperator",
+      "Entity.ReportStatus <- Submitted, Assigned, InProgress, Resolved"
+    ],
+    "persisted-data": [
+      "Entity.User, Report, Notification, StatusUpdate, InternalNote (@Entity)"
+    ],
+    "lifecycle": [
+      "Entity.ReportStatus implemented by Submitted, Assigned, InProgress, Resolved"
+    ],
+    "deploy-config": [
+      "src/main/resources/META-INF/persistence.xml: persistence unit"
+    ],
+    "build-config": [
+      "pom.xml: maven build"
+    ],
+    "tests": [
+      "src/test/java/testingBlackBox, testingWhiteBox"
+    ]
+  },
+  "notes": [
+    "Entities Credentials and Location are embeddable.",
+    "No REST endpoints, no deployment descriptors beyond persistence.xml."
+  ]
+}

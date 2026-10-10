@@ -1,0 +1,40 @@
+@startuml
+title View 2 - How the functionalities connect: report lifecycle across roles
+|Citizen|
+start
+:Register / Sign in;
+:Create report;
+|System|
+:Validate data and store report;
+:Status = **Submitted**\n(no notification);
+|Municipal Operator|
+:View received reports\n(filter category / status / area);
+:Open report details;
+if (Add internal note?) then (yes)
+  :Add internal note\n(operators only);
+endif
+repeat
+  :Update status\n(operator becomes assigned);
+  |System|
+  if (New status) then (Assigned)
+    :Status = **Assigned**;
+    :Notify citizen;
+  elseif (In Progress) then
+    :Status = **In Progress**\n(no notification);
+  else (Resolved)
+    :Status = **Resolved**\n(closed, cannot change);
+    :Notify citizen;
+  endif
+  |Municipal Operator|
+repeat while (Not yet Resolved?) is (yes)
+->no;
+|Citizen|
+:View submitted reports,\ndetails, history, notifications;
+|Municipal Operator|
+:Monitor activity trends\n(counts of open / resolved reports);
+stop
+note right
+  Citizens see only their own reports;
+  operators see all reports.
+end note
+@enduml

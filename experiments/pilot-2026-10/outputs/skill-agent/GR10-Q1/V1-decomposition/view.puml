@@ -1,0 +1,72 @@
+@startuml
+title Decomposition view with layered overlay — progetto_ing_software_gr10-main-English
+skinparam shadowing false
+skinparam wrapWidth 420
+left to right direction
+package "Presentation" as e_group_layer_presentation_67387e <<layer>> {
+}
+note as N_e_group_layer_presentation_67387e #FFFFFF
+  **Responsibilities / members**
+  - HomePageGUI: application entry point (main) that shows the home page and opens the registration and login windows
+  - UserLoginGUI: collects login credentials and hands them to UserLoginController
+  - UserRegistrationGUI: collects registration data and submits it through SystemServicesController
+  - UserDashboardGUI: role-dependent dashboard that opens the report creation, review and monitoring windows
+  - ReportCreationGUI: form where a citizen creates a report
+  - SubmittedReportsGUI: lists the reports a citizen submitted and shows their details
+  - ReceivedReportsGUI: lists the received reports for an operator, with filters, and opens the note and status-update windows
+  - ReportStatusUpdateGUI: lets an operator advance the status of a report
+  - InternalNoteGUI: lets an operator add an internal note to a report
+  - ActivityMonitoringGUI: lets an operator request activity-trend monitoring results
+end note
+e_group_layer_presentation_67387e .. N_e_group_layer_presentation_67387e
+package "Application" as e_group_layer_application_01b64b <<layer>> {
+}
+note as N_e_group_layer_application_01b64b #FFFFFF
+  **Responsibilities / members**
+  - SystemServicesController: facade giving the boundary one entry point; delegates each use case to its use-case controller
+  - UserLoginController: validates login data and obtains the user session data from UserService
+  - UserRegistrationController: validates registration data and rejects an already registered email before registering the user
+  - ReportCreationController: validates report data, checks the user is a citizen and requests report registration
+  - ReportReviewController: checks the user role and retrieves submitted (citizen) or received (operator) reports
+  - ReportDetailsController: checks access to a report (operator or owning citizen) and retrieves its details and history
+  - ReportStatusUpdateController: checks operator privileges, advances the report status and then requests the notification
+  - InternalNoteController: checks operator permission and requests registration of an internal note
+  - ActivityMonitoringController: authorises the operator, validates criteria and requests monitoring results
+  - NotificationController: decides whether a status is notifiable and requests the citizen notification
+end note
+e_group_layer_application_01b64b .. N_e_group_layer_application_01b64b
+package "Domain" as e_group_layer_domain_0f45bd <<layer>> {
+}
+note as N_e_group_layer_domain_0f45bd #FFFFFF
+  **Responsibilities / members**
+  - ReportService: domain service for reports: registers reports, retrieves them, updates status, adds notes, generates notifications and monitoring statistics
+  - UserService: domain service for users: registers users, looks up credentials and checks citizen/operator roles
+  - Report: persistent report: data, location, assigned operator, internal notes, status updates and a status object that drives status changes
+  - User: abstract persistent user with name, phone number and credentials (single-table inheritance)
+  - Citizen: user who submits reports
+  - MunicipalOperator: user who reviews, updates and annotates reports
+  - InternalNote: persistent internal note written by an operator on a report
+  - StatusUpdate: persistent record of a status change made by an operator
+  - Notification: persistent notification sent to a citizen about a report status change
+  - ReportCategory: enumerates the categories a report can have
+  - ReportStatus: state interface: advances a report and tells whether the status is notifiable
+  - Submitted: initial state; advancing makes the report Assigned
+  - Assigned: state; advancing makes the report InProgress; notifiable
+  - InProgress: state; advancing makes the report Resolved
+  - Resolved: final state; refuses further advancement; notifiable
+end note
+e_group_layer_domain_0f45bd .. N_e_group_layer_domain_0f45bd
+package "Persistence" as e_group_layer_persistence_7fe3c4 <<layer>> {
+}
+note as N_e_group_layer_persistence_7fe3c4 #FFFFFF
+  **Responsibilities / members**
+  - PersistenceService: generic persistence operations (save, update, findById, findByAttribute, findByFields) run in transactions
+  - JpaUtil: singleton that owns the EntityManagerFactory of the persistence unit and creates EntityManagers
+  - reports_db: MySQL database that stores users, reports, internal notes, status updates and notifications
+end note
+e_group_layer_persistence_7fe3c4 .. N_e_group_layer_persistence_7fe3c4
+e_group_layer_presentation_67387e ..> e_group_layer_application_01b64b : 8 dependencies
+e_group_layer_presentation_67387e ..> e_group_layer_domain_0f45bd : 2 dependencies (skips a layer)
+e_group_layer_application_01b64b ..> e_group_layer_domain_0f45bd : 16 dependencies
+e_group_layer_domain_0f45bd ..> e_group_layer_persistence_7fe3c4 : 2 dependencies
+@enduml

@@ -1,0 +1,1247 @@
+{
+  "system": "municipal-report-management",
+  "stakeholder": "data-engineer",
+  "goal": "I am a database engineer. I need to modify the persistence layer to support future changes to the management of municipal reports. Before modifying the database, I need to understand the main data entities stored by the system, the relationships among them, and which information must be persisted throughout the lifecycle of a report. In particular, I need to understand how users, reports, locations, categories, states, state changes, internal notes, and notifications are related, and which parts of the application depend on this persisted information.",
+  "views": [
+    {
+      "id": "V1-data-model",
+      "viewpoint_id": "data-model",
+      "viewpoint_name": "Data Model",
+      "vb_ref": "2.6 Data Model",
+      "model_kind": "uml-class",
+      "title": "Data Model view — management of municipal reports",
+      "purpose": "Show the persisted entities, their attributes, keys and relationships (users, reports, locations, categories, states, state changes, internal notes, notifications).",
+      "detail_level": "detailed",
+      "max_elements": 15,
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3",
+        "AQ4",
+        "AQ5",
+        "AQ6",
+        "AQ7",
+        "AQ8",
+        "AQ9"
+      ],
+      "overlays": [],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "ent:Entity.User",
+          "kind": "entity",
+          "name": "User",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "abstract base of all users; SINGLE_TABLE 'users' with discriminator column 'role'"
+          ],
+          "attributes": [
+            {
+              "name": "userId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false,
+              "column": "user_id"
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "name"
+            },
+            {
+              "name": "lastName",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "lastName"
+            },
+            {
+              "name": "phoneNumber",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "phone_number"
+            }
+          ],
+          "realized_by": [
+            "Entity.User"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.Citizen",
+          "kind": "entity",
+          "name": "Citizen",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "user subtype with discriminator value CITIZEN"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.Citizen"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.MunicipalOperator",
+          "kind": "entity",
+          "name": "MunicipalOperator",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "user subtype with discriminator value MUNICIPAL_OPERATOR"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.MunicipalOperator"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.Credentials",
+          "kind": "entity",
+          "name": "Credentials",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "embedded e-mail (unique) and password stored in the users table"
+          ],
+          "attributes": [
+            {
+              "name": "email",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "email"
+            },
+            {
+              "name": "password",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "password"
+            }
+          ],
+          "realized_by": [
+            "Entity.Credentials"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.Report",
+          "kind": "entity",
+          "name": "Report",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "root record of a municipal report with its current status name and editability flag",
+            "persists current status as the string column current_status (submitted, assigned, in_progress, resolved); ReportStatus object is @Transient",
+            "created in status submitted with citizen_editable true; the operator is assigned on the first status update"
+          ],
+          "attributes": [
+            {
+              "name": "reportId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false,
+              "column": "report_id"
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "title"
+            },
+            {
+              "name": "description",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "description"
+            },
+            {
+              "name": "category",
+              "type": "ReportCategory",
+              "key": false,
+              "foreign_key": false,
+              "column": "category"
+            },
+            {
+              "name": "dateReport",
+              "type": "Date",
+              "key": false,
+              "foreign_key": false,
+              "column": "report_date"
+            },
+            {
+              "name": "imageAttached",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "attached_image"
+            },
+            {
+              "name": "currentStatusName",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "current_status"
+            },
+            {
+              "name": "citizenEditable",
+              "type": "boolean",
+              "key": false,
+              "foreign_key": false,
+              "column": "citizen_editable"
+            }
+          ],
+          "realized_by": [
+            "Entity.Report"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.Location",
+          "kind": "entity",
+          "name": "Location",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "embedded address of a report stored in the reports table"
+          ],
+          "attributes": [
+            {
+              "name": "city",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "city"
+            },
+            {
+              "name": "cap",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "cap"
+            },
+            {
+              "name": "street",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "street"
+            },
+            {
+              "name": "streetNumber",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "street_number"
+            },
+            {
+              "name": "municipalArea",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "municipal_area"
+            }
+          ],
+          "realized_by": [
+            "Entity.Location"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.ReportCategory",
+          "kind": "enum",
+          "name": "ReportCategory",
+          "stereotype": "enum",
+          "parent": null,
+          "responsibilities": [
+            "closed set of report categories, persisted by name in reports.category"
+          ],
+          "attributes": [
+            {
+              "name": "BROKEN_STREETLIGHT",
+              "type": "constant",
+              "key": false
+            },
+            {
+              "name": "DAMAGED_ROAD",
+              "type": "constant",
+              "key": false
+            },
+            {
+              "name": "ABANDONED_WASTE",
+              "type": "constant",
+              "key": false
+            },
+            {
+              "name": "GENERAL_HAZARD",
+              "type": "constant",
+              "key": false
+            },
+            {
+              "name": "DAMAGED_STREET_FURNITURE",
+              "type": "constant",
+              "key": false
+            }
+          ],
+          "realized_by": [
+            "Entity.ReportCategory"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.StatusUpdate",
+          "kind": "entity",
+          "name": "StatusUpdate",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "history record of a status change made by an operator",
+            "one row per status transition, written by Report.updateStatus with timestamp, new status and operator"
+          ],
+          "attributes": [
+            {
+              "name": "updateId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false,
+              "column": "update_id"
+            },
+            {
+              "name": "updateDate",
+              "type": "Date",
+              "key": false,
+              "foreign_key": false,
+              "column": "update_date"
+            },
+            {
+              "name": "newStatus",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "new_status"
+            }
+          ],
+          "realized_by": [
+            "Entity.StatusUpdate"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.InternalNote",
+          "kind": "entity",
+          "name": "InternalNote",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "operator-only note attached to a report"
+          ],
+          "attributes": [
+            {
+              "name": "noteId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false,
+              "column": "note_id"
+            },
+            {
+              "name": "text",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "text"
+            },
+            {
+              "name": "dateEntry",
+              "type": "Date",
+              "key": false,
+              "foreign_key": false,
+              "column": "created_date"
+            }
+          ],
+          "realized_by": [
+            "Entity.InternalNote"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "ent:Entity.Notification",
+          "kind": "entity",
+          "name": "Notification",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [
+            "message sent to the reporting citizen about a notifiable status",
+            "only the statuses assigned and resolved may be notified; created by ReportService.generateStatusChangeNotification"
+          ],
+          "attributes": [
+            {
+              "name": "notificationId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false,
+              "column": "notification_id"
+            },
+            {
+              "name": "sentDate",
+              "type": "Date",
+              "key": false,
+              "foreign_key": false,
+              "column": "sent_date"
+            },
+            {
+              "name": "message",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "message"
+            },
+            {
+              "name": "notifiedStatus",
+              "type": "String",
+              "key": false,
+              "foreign_key": false,
+              "column": "notified_status"
+            }
+          ],
+          "realized_by": [
+            "Entity.Notification"
+          ],
+          "support": "observed",
+          "group": false
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:association:ent:Entity.Report->ent:Entity.Citizen",
+          "kind": "association",
+          "source": "ent:Entity.Report",
+          "target": "ent:Entity.Citizen",
+          "label": "citizen_id (citizenReporting)",
+          "multiplicity": "*..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:association:ent:Entity.Report->ent:Entity.MunicipalOperator",
+          "kind": "association",
+          "source": "ent:Entity.Report",
+          "target": "ent:Entity.MunicipalOperator",
+          "label": "operator_id (operator, nullable)",
+          "multiplicity": "*..0..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:association:ent:Entity.InternalNote->ent:Entity.Report",
+          "kind": "association",
+          "source": "ent:Entity.InternalNote",
+          "target": "ent:Entity.Report",
+          "label": "report_id (report)",
+          "multiplicity": "*..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:association:ent:Entity.InternalNote->ent:Entity.MunicipalOperator",
+          "kind": "association",
+          "source": "ent:Entity.InternalNote",
+          "target": "ent:Entity.MunicipalOperator",
+          "label": "operator_id (operator)",
+          "multiplicity": "*..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:association:ent:Entity.StatusUpdate->ent:Entity.Report",
+          "kind": "association",
+          "source": "ent:Entity.StatusUpdate",
+          "target": "ent:Entity.Report",
+          "label": "report_id (report)",
+          "multiplicity": "*..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:association:ent:Entity.StatusUpdate->ent:Entity.MunicipalOperator",
+          "kind": "association",
+          "source": "ent:Entity.StatusUpdate",
+          "target": "ent:Entity.MunicipalOperator",
+          "label": "operator_id (operator)",
+          "multiplicity": "*..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:association:ent:Entity.Notification->ent:Entity.Citizen",
+          "kind": "association",
+          "source": "ent:Entity.Notification",
+          "target": "ent:Entity.Citizen",
+          "label": "citizen_id (destinatario)",
+          "multiplicity": "*..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:association:ent:Entity.Notification->ent:Entity.Report",
+          "kind": "association",
+          "source": "ent:Entity.Notification",
+          "target": "ent:Entity.Report",
+          "label": "report_id (report)",
+          "multiplicity": "*..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:composition:ent:Entity.User->ent:Entity.Credentials",
+          "kind": "composition",
+          "source": "ent:Entity.User",
+          "target": "ent:Entity.Credentials",
+          "label": "credentials (embedded)",
+          "multiplicity": "1..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:composition:ent:Entity.Report->ent:Entity.Location",
+          "kind": "composition",
+          "source": "ent:Entity.Report",
+          "target": "ent:Entity.Location",
+          "label": "location (embedded)",
+          "multiplicity": "1..1",
+          "support": "observed"
+        },
+        {
+          "id": "rel:generalization:ent:Entity.Citizen->ent:Entity.User",
+          "kind": "generalization",
+          "source": "ent:Entity.Citizen",
+          "target": "ent:Entity.User",
+          "label": "role = CITIZEN",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:generalization:ent:Entity.MunicipalOperator->ent:Entity.User",
+          "kind": "generalization",
+          "source": "ent:Entity.MunicipalOperator",
+          "target": "ent:Entity.User",
+          "label": "role = MUNICIPAL_OPERATOR",
+          "multiplicity": null,
+          "support": "observed"
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "ent:Entity.User",
+          "name": "User",
+          "files": [
+            "src/main/java/Entity/User.java"
+          ],
+          "symbols": [
+            "Entity.User"
+          ]
+        },
+        {
+          "element": "ent:Entity.Citizen",
+          "name": "Citizen",
+          "files": [
+            "src/main/java/Entity/Citizen.java"
+          ],
+          "symbols": [
+            "Entity.Citizen"
+          ]
+        },
+        {
+          "element": "ent:Entity.MunicipalOperator",
+          "name": "MunicipalOperator",
+          "files": [
+            "src/main/java/Entity/MunicipalOperator.java"
+          ],
+          "symbols": [
+            "Entity.MunicipalOperator"
+          ]
+        },
+        {
+          "element": "ent:Entity.Credentials",
+          "name": "Credentials",
+          "files": [
+            "src/main/java/Entity/Credentials.java"
+          ],
+          "symbols": [
+            "Entity.Credentials"
+          ]
+        },
+        {
+          "element": "ent:Entity.Report",
+          "name": "Report",
+          "files": [
+            "src/main/java/Entity/Report.java"
+          ],
+          "symbols": [
+            "Entity.Report"
+          ]
+        },
+        {
+          "element": "ent:Entity.Location",
+          "name": "Location",
+          "files": [
+            "src/main/java/Entity/Location.java"
+          ],
+          "symbols": [
+            "Entity.Location"
+          ]
+        },
+        {
+          "element": "ent:Entity.ReportCategory",
+          "name": "ReportCategory",
+          "files": [
+            "src/main/java/Entity/ReportCategory.java"
+          ],
+          "symbols": [
+            "Entity.ReportCategory"
+          ]
+        },
+        {
+          "element": "ent:Entity.StatusUpdate",
+          "name": "StatusUpdate",
+          "files": [
+            "src/main/java/Entity/StatusUpdate.java",
+            "src/main/java/Entity/Report.java"
+          ],
+          "symbols": [
+            "Entity.StatusUpdate"
+          ]
+        },
+        {
+          "element": "ent:Entity.InternalNote",
+          "name": "InternalNote",
+          "files": [
+            "src/main/java/Entity/InternalNote.java"
+          ],
+          "symbols": [
+            "Entity.InternalNote"
+          ]
+        },
+        {
+          "element": "ent:Entity.Notification",
+          "name": "Notification",
+          "files": [
+            "src/main/java/Entity/Notification.java",
+            "src/main/java/Entity/ReportService.java"
+          ],
+          "symbols": [
+            "Entity.Notification"
+          ]
+        }
+      ],
+      "limitations": [
+        "States have no entity or enum: the status is the string reports.current_status (submitted, assigned, in_progress, resolved), repeated in status_updates.new_status and notifications.notified_status; the ReportStatus classes are transient and not drawn.",
+        "Foreign-key columns are not Java fields of their own: they are shown on the association labels (e.g. citizen_id, operator_id, report_id).",
+        "The discriminator column 'role' of users is not a field; it is shown in the User and subtype responsibilities.",
+        "The backing database (MySQL reports_db, hbm2ddl.auto=update) comes from persistence.xml and is not drawn by the data-model viewpoint; see evidence model element ds:reports_db.",
+        "Citizen and MunicipalOperator add no columns of their own; they share the users table and differ only by the discriminator value.",
+        "Only associations present as mapped fields are drawn: Notification is not reachable from Report (no collection on Report)."
+      ],
+      "gaps": [],
+      "overflow": []
+    },
+    {
+      "id": "V2-uses",
+      "viewpoint_id": "uses",
+      "viewpoint_name": "Uses Style",
+      "vb_ref": "2.2 Uses Style",
+      "model_kind": "uml-package",
+      "title": "Uses view — what depends on the persisted report data",
+      "purpose": "Show which parts of the application depend on the persistence layer and, through it, on the stored entities.",
+      "detail_level": "detailed",
+      "max_elements": 15,
+      "addresses": [
+        "AQ10",
+        "AQ11"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "group:layer:application",
+          "kind": "layer",
+          "name": "Application",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:domain",
+          "kind": "layer",
+          "name": "Domain",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:persistence",
+          "kind": "layer",
+          "name": "Persistence",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "cmp:Database.JpaUtil",
+          "kind": "component",
+          "name": "JpaUtil",
+          "stereotype": "persistence",
+          "parent": "group:layer:persistence",
+          "responsibilities": [
+            "creates the EntityManagerFactory for persistence unit Municipal_Report_Management_System and hands out EntityManagers"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Database.JpaUtil"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Database.PersistenceService",
+          "kind": "component",
+          "name": "PersistenceService",
+          "stereotype": "persistence",
+          "parent": "group:layer:persistence",
+          "responsibilities": [
+            "saves, updates and queries any entity in its own transaction (save, update, findById, findByAttribute, findByFields)"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Database.PersistenceService"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Entity.UserService",
+          "kind": "component",
+          "name": "UserService",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "registers users and looks them up by credentials; checks whether an id is a Citizen or a MunicipalOperator"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.UserService"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Entity.ReportService",
+          "kind": "component",
+          "name": "ReportService",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "creates reports, reads reports, details and history, updates status, adds internal notes, generates notifications and monitoring results"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.ReportService"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.UserRegistrationController",
+          "kind": "component",
+          "name": "UserRegistrationController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "registers a new user through UserService"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.UserRegistrationController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.UserLoginController",
+          "kind": "component",
+          "name": "UserLoginController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "retrieves user data by credentials through UserService"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.UserLoginController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.ReportCreationController",
+          "kind": "component",
+          "name": "ReportCreationController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "registers a new report for a citizen"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.ReportCreationController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.ReportReviewController",
+          "kind": "component",
+          "name": "ReportReviewController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "retrieves submitted reports for a citizen and received reports for an operator"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.ReportReviewController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.ReportDetailsController",
+          "kind": "component",
+          "name": "ReportDetailsController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "retrieves report details and status history"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.ReportDetailsController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.ReportStatusUpdateController",
+          "kind": "component",
+          "name": "ReportStatusUpdateController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "advances the report status and requests a notification"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.ReportStatusUpdateController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.NotificationController",
+          "kind": "component",
+          "name": "NotificationController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "checks whether the new status is notifiable and sends the notification"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.NotificationController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.InternalNoteController",
+          "kind": "component",
+          "name": "InternalNoteController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "registers an internal note for an operator"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.InternalNoteController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:Control.ActivityMonitoringController",
+          "kind": "component",
+          "name": "ActivityMonitoringController",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "produces monitoring results over stored reports"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.ActivityMonitoringController"
+          ],
+          "support": "observed",
+          "group": false
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:uses:cmp:Control.ReportCreationController->cmp:Entity.ReportService",
+          "kind": "uses",
+          "source": "cmp:Control.ReportCreationController",
+          "target": "cmp:Entity.ReportService",
+          "label": "registerNewReport",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ReportReviewController->cmp:Entity.ReportService",
+          "kind": "uses",
+          "source": "cmp:Control.ReportReviewController",
+          "target": "cmp:Entity.ReportService",
+          "label": "retrieveReportsSubmitted, retrieveReportsReceived",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ReportDetailsController->cmp:Entity.ReportService",
+          "kind": "uses",
+          "source": "cmp:Control.ReportDetailsController",
+          "target": "cmp:Entity.ReportService",
+          "label": "retrieveDetailsReport, retrieveHistoryReport",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ReportStatusUpdateController->cmp:Entity.ReportService",
+          "kind": "uses",
+          "source": "cmp:Control.ReportStatusUpdateController",
+          "target": "cmp:Entity.ReportService",
+          "label": "retrieveDetailsReport, updateReportStatus",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.InternalNoteController->cmp:Entity.ReportService",
+          "kind": "uses",
+          "source": "cmp:Control.InternalNoteController",
+          "target": "cmp:Entity.ReportService",
+          "label": "registerInternalNote",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ActivityMonitoringController->cmp:Entity.ReportService",
+          "kind": "uses",
+          "source": "cmp:Control.ActivityMonitoringController",
+          "target": "cmp:Entity.ReportService",
+          "label": "generateMonitoringResults",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.NotificationController->cmp:Entity.ReportService",
+          "kind": "uses",
+          "source": "cmp:Control.NotificationController",
+          "target": "cmp:Entity.ReportService",
+          "label": "verifyNotifiableStatus, generateStatusChangeNotification",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ReportCreationController->cmp:Entity.UserService",
+          "kind": "uses",
+          "source": "cmp:Control.ReportCreationController",
+          "target": "cmp:Entity.UserService",
+          "label": "verifyUserCitizen",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ReportReviewController->cmp:Entity.UserService",
+          "kind": "uses",
+          "source": "cmp:Control.ReportReviewController",
+          "target": "cmp:Entity.UserService",
+          "label": "verifyUserCitizen, isMunicipalOperator",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ReportDetailsController->cmp:Entity.UserService",
+          "kind": "uses",
+          "source": "cmp:Control.ReportDetailsController",
+          "target": "cmp:Entity.UserService",
+          "label": "isMunicipalOperator, verifyUserCitizen",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ReportStatusUpdateController->cmp:Entity.UserService",
+          "kind": "uses",
+          "source": "cmp:Control.ReportStatusUpdateController",
+          "target": "cmp:Entity.UserService",
+          "label": "isMunicipalOperator",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.InternalNoteController->cmp:Entity.UserService",
+          "kind": "uses",
+          "source": "cmp:Control.InternalNoteController",
+          "target": "cmp:Entity.UserService",
+          "label": "isMunicipalOperator",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ActivityMonitoringController->cmp:Entity.UserService",
+          "kind": "uses",
+          "source": "cmp:Control.ActivityMonitoringController",
+          "target": "cmp:Entity.UserService",
+          "label": "isMunicipalOperator",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.UserRegistrationController->cmp:Entity.UserService",
+          "kind": "uses",
+          "source": "cmp:Control.UserRegistrationController",
+          "target": "cmp:Entity.UserService",
+          "label": "isUserRegistered, registerUser",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.UserLoginController->cmp:Entity.UserService",
+          "kind": "uses",
+          "source": "cmp:Control.UserLoginController",
+          "target": "cmp:Entity.UserService",
+          "label": "retrieveUserDataByCredentials",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Control.ReportStatusUpdateController->cmp:Control.NotificationController",
+          "kind": "uses",
+          "source": "cmp:Control.ReportStatusUpdateController",
+          "target": "cmp:Control.NotificationController",
+          "label": "verifyNotifiableStatus",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Entity.ReportService->cmp:Database.PersistenceService",
+          "kind": "uses",
+          "source": "cmp:Entity.ReportService",
+          "target": "cmp:Database.PersistenceService",
+          "label": "findById, findByFields",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Entity.UserService->cmp:Database.PersistenceService",
+          "kind": "uses",
+          "source": "cmp:Entity.UserService",
+          "target": "cmp:Database.PersistenceService",
+          "label": "findById, findByFields",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:uses:cmp:Database.PersistenceService->cmp:Database.JpaUtil",
+          "kind": "uses",
+          "source": "cmp:Database.PersistenceService",
+          "target": "cmp:Database.JpaUtil",
+          "label": "getInstance, getEntityManager",
+          "multiplicity": null,
+          "support": "observed"
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "cmp:Database.JpaUtil",
+          "name": "JpaUtil",
+          "files": [
+            "src/main/java/Database/JpaUtil.java"
+          ],
+          "symbols": [
+            "Database.JpaUtil"
+          ]
+        },
+        {
+          "element": "cmp:Database.PersistenceService",
+          "name": "PersistenceService",
+          "files": [
+            "src/main/java/Database/PersistenceService.java"
+          ],
+          "symbols": [
+            "Database.PersistenceService"
+          ]
+        },
+        {
+          "element": "cmp:Entity.UserService",
+          "name": "UserService",
+          "files": [
+            "src/main/java/Entity/UserService.java"
+          ],
+          "symbols": [
+            "Entity.UserService"
+          ]
+        },
+        {
+          "element": "cmp:Entity.ReportService",
+          "name": "ReportService",
+          "files": [
+            "src/main/java/Entity/ReportService.java"
+          ],
+          "symbols": [
+            "Entity.ReportService"
+          ]
+        },
+        {
+          "element": "cmp:Control.UserRegistrationController",
+          "name": "UserRegistrationController",
+          "files": [
+            "src/main/java/Control/UserRegistrationController.java"
+          ],
+          "symbols": [
+            "Control.UserRegistrationController"
+          ]
+        },
+        {
+          "element": "cmp:Control.UserLoginController",
+          "name": "UserLoginController",
+          "files": [
+            "src/main/java/Control/UserLoginController.java"
+          ],
+          "symbols": [
+            "Control.UserLoginController"
+          ]
+        },
+        {
+          "element": "cmp:Control.ReportCreationController",
+          "name": "ReportCreationController",
+          "files": [
+            "src/main/java/Control/ReportCreationController.java"
+          ],
+          "symbols": [
+            "Control.ReportCreationController"
+          ]
+        },
+        {
+          "element": "cmp:Control.ReportReviewController",
+          "name": "ReportReviewController",
+          "files": [
+            "src/main/java/Control/ReportReviewController.java"
+          ],
+          "symbols": [
+            "Control.ReportReviewController"
+          ]
+        },
+        {
+          "element": "cmp:Control.ReportDetailsController",
+          "name": "ReportDetailsController",
+          "files": [
+            "src/main/java/Control/ReportDetailsController.java"
+          ],
+          "symbols": [
+            "Control.ReportDetailsController"
+          ]
+        },
+        {
+          "element": "cmp:Control.ReportStatusUpdateController",
+          "name": "ReportStatusUpdateController",
+          "files": [
+            "src/main/java/Control/ReportStatusUpdateController.java"
+          ],
+          "symbols": [
+            "Control.ReportStatusUpdateController"
+          ]
+        },
+        {
+          "element": "cmp:Control.NotificationController",
+          "name": "NotificationController",
+          "files": [
+            "src/main/java/Control/NotificationController.java"
+          ],
+          "symbols": [
+            "Control.NotificationController"
+          ]
+        },
+        {
+          "element": "cmp:Control.InternalNoteController",
+          "name": "InternalNoteController",
+          "files": [
+            "src/main/java/Control/InternalNoteController.java"
+          ],
+          "symbols": [
+            "Control.InternalNoteController"
+          ]
+        },
+        {
+          "element": "cmp:Control.ActivityMonitoringController",
+          "name": "ActivityMonitoringController",
+          "files": [
+            "src/main/java/Control/ActivityMonitoringController.java"
+          ],
+          "symbols": [
+            "Control.ActivityMonitoringController"
+          ]
+        }
+      ],
+      "limitations": [
+        "Group (layer) elements are not counted toward the 15-element cap; the 13 drawn components are.",
+        "Boundary (GUI) classes are not drawn: they reach the controllers through SystemServicesController (and UserLoginController); SystemServicesController has no persistence dependency and is not drawn.",
+        "Entity classes are drawn in V1, not here; which entities each service reads or writes is listed in README.md (access matrix) and in evidence_model.json relations from ReportService/UserService to entities.",
+        "ReportService and UserService sit in package Entity (domain layer) but call Database.PersistenceService directly; no repository/DAO layer separates them.",
+        "Queries are built from attribute-name strings (e.g. 'citizenReporting.userId', 'location.municipalArea', 'currentStatusName', 'credentials.email'): renaming mapped fields breaks them without compile errors (claims on lines in ReportService.java and UserService.java)."
+      ],
+      "gaps": [],
+      "overflow": []
+    }
+  ],
+  "correspondences": [],
+  "correspondence_gaps": [],
+  "declared_gaps": [],
+  "uncovered_needs": [],
+  "secondary_not_shown": [
+    "lifecycle"
+  ]
+}

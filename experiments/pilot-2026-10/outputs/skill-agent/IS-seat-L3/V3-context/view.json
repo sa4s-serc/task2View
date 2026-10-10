@@ -1,0 +1,147 @@
+{
+  "id": "V3-context",
+  "viewpoint_id": "context",
+  "viewpoint_name": "Context",
+  "vb_ref": "6.3 Documenting Context Diagrams",
+  "model_kind": "uml-component",
+  "title": "Context view — seat booking functionality",
+  "purpose": "What lies outside the system for seat booking: who requests bookings, the external notification (email) service and the database",
+  "detail_level": "detailed",
+  "max_elements": 15,
+  "addresses": [
+    "AQ7"
+  ],
+  "overlays": [],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "system:Progetto-IS-main-English",
+      "kind": "system",
+      "name": "Progetto-IS-main-English",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "lets students book a study-room seat for a date and time slot, applies booking rules, stores reservations and notifies the student"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "actor:student",
+      "kind": "actor",
+      "name": "Student",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "requests a seat reservation for a date, room, area, seat and time slot"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ext:externalemailgateway",
+      "kind": "external_system",
+      "name": "ExternalEmailGateway",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "external email delivery service reached through ExternalEmailGateway (stubbed in this repository)"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ds:reservationsdb",
+      "kind": "datastore",
+      "name": "reservationsdb",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "MySQL database holding the persisted reservations, seats, areas and rooms"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "ctx:student->system",
+      "kind": "uses",
+      "source": "actor:student",
+      "target": "system:Progetto-IS-main-English",
+      "label": "requests a seat booking (REST, Swing GUI)",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:NotificationServiceAdapter->ext",
+      "kind": "uses",
+      "source": "system:Progetto-IS-main-English",
+      "target": "ext:externalemailgateway",
+      "label": "send email notification",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:PersistenceManager->reservationsdb",
+      "kind": "uses",
+      "source": "system:Progetto-IS-main-English",
+      "target": "ds:reservationsdb",
+      "label": "JPA / Hibernate (MySQL)",
+      "multiplicity": null,
+      "support": "observed"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "system:Progetto-IS-main-English",
+      "name": "Progetto-IS-main-English",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/ReservationsApplication.java"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "actor:student",
+      "name": "Student",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "ext:externalemailgateway",
+      "name": "ExternalEmailGateway",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "ds:reservationsdb",
+      "name": "reservationsdb",
+      "files": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    }
+  ],
+  "limitations": [
+    "The external email service is only a stub in the repository (ExternalEmailGateway always answers 200); the real service is not named in code",
+    "Librarian users and the Spring scheduler are outside the booking flow and are not drawn as actors",
+    "The internal path to the boundary is in V2: NotificationManager -> NotificationServiceAdapter -> ExternalEmailGateway, and ReservationRegistry/StudyRoomRegistry -> PersistenceManager -> reservationsdb"
+  ],
+  "gaps": [],
+  "overflow": []
+}

@@ -1,0 +1,38 @@
+Repository card — Progetto-IS-main-English (University Library Seat Reservation System)
+Languages: java=80, html=6, javascript=1, css=3
+File classes: {"code": 71, "test": 9, "config": 2, "build": 1, "web": 10, "docs": 1, "gui-form": 13}
+Layers: presentation -> it.unina.reservations.boundary, it.unina.reservations.boundary.SpringBoot, it.unina.reservations.boundary.Swing; application -> it.unina.reservations.controller, it.unina.reservations.controller.strategy, it.unina.reservations.controller.factory; domain -> it.unina.reservations.entity, it.unina.reservations.entity.state, it.unina.reservations.dto; persistence -> it.unina.reservations.database
+Entry points:
+  - main it.unina.reservations.Launcher (JavaProject/src/main/java/it/unina/reservations/Launcher.java:10) starts Spring Boot on a thread and opens the Swing Login frame
+  - main it.unina.reservations.ReservationsApplication (JavaProject/src/main/java/it/unina/reservations/ReservationsApplication.java:16) SpringBootApplication with EnableScheduling
+  - http-route it.unina.reservations.boundary.SpringBoot.ReservationController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:21) PostMapping /api/reservations/create
+  - http-route it.unina.reservations.boundary.SpringBoot.ReservationController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:36) PutMapping /api/reservations/{reservationId}/cancel
+  - http-route it.unina.reservations.boundary.SpringBoot.ReservationController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:45) PutMapping /api/reservations/{reservationId}/checkIn
+  - http-route it.unina.reservations.boundary.SpringBoot.StudyRoomController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java:25) PostMapping /api/rooms/create
+  - http-route it.unina.reservations.boundary.SpringBoot.StudyRoomController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java:33) DeleteMapping /api/rooms/{studyRoomId}
+  - http-route it.unina.reservations.boundary.SpringBoot.StudyRoomController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java:41) GetMapping /api/rooms/available
+  - http-route it.unina.reservations.boundary.SpringBoot.StudyRoomController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java:50) GetMapping /api/rooms/{roomId}/time-slots
+  - http-route it.unina.reservations.boundary.SpringBoot.StudyRoomController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java:60) GetMapping /api/rooms/{roomId}/detail
+  - http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22) PostMapping /api/auth/register
+  - http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:36) PostMapping /api/auth/login
+  - http-route it.unina.reservations.boundary.SpringBoot.StudentController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:23) GetMapping /api/student/{studentId}/profile
+  - http-route it.unina.reservations.boundary.SpringBoot.StudentController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:31) GetMapping /api/student/{studentId}/history
+  - http-route it.unina.reservations.boundary.SpringBoot.MonitoringController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:22) GetMapping /api/monitoring/rooms
+  - http-route it.unina.reservations.boundary.SpringBoot.MonitoringController (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:28) GetMapping /api/monitoring/statistics
+  - scheduled-job it.unina.reservations.boundary.NotificationScheduler (JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java:15) Scheduled fixedDelay=60000: manageReservationEnd + sendReminders
+  - gui-frame it.unina.reservations.boundary.Swing.Login (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Login.java:27) Swing login frame opened by Launcher
+  - web-page None (JavaProject/src/main/resources/static/reservation.html:385) browser wizard posts /reservations/create
+Persisted entities: User, Student, Librarian, StudyRoom, Area, Seat, TimeSlot, Reservation
+Deploy: persistence unit reservationsPU on MySQL reservationsdb (persistence.xml); build: maven jar
+Signals: rest-api, gui-client, web-client, layered, inheritance, persisted-data, threads, lifecycle, deploy-config, build-config, tests
+  * rest-api: boundary.SpringBoot.ReservationController: PostMapping /api/reservations/create
+  * gui-client: boundary.Swing.SeatSelection uses javax.swing.JFrame (import javax.swing.*)
+  * web-client: JavaProject/src/main/resources/static/reservation.html + app.js call fetch(/api/...)
+  * layered: presentation: boundary.*
+  * inheritance: entity.state.*State implements ReservationState (5 classes)
+  * persisted-data: entity.Reservation: @Entity @Table(name = "reservation")
+  * threads: boundary.NotificationScheduler: @Scheduled(initialDelay = 60000, fixedDelay = 60000)
+  * lifecycle: entity.state.ActiveState/ConfirmedState/... implement ReservationState; entity.StatusEnum
+  * deploy-config: JavaProject/src/main/resources/META-INF/persistence.xml: persistence-unit reservationsPU (MySQL)
+  * build-config: JavaProject/pom.xml (maven, spring-boot-starter-parent 3.2.4)
+  * tests: JavaProject/src/test/java/it/unina/reservations/controller/MakeReservationTest.java

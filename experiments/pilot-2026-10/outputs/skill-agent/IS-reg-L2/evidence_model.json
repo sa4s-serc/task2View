@@ -1,0 +1,1935 @@
+{
+ "claims": {
+  "C1": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "Registration",
+   "symbol": "it.unina.reservations.boundary.Swing.Registration",
+   "responsibilities": [
+    "collects the sign-up form fields in the desktop GUI",
+    "rejects blank fields before calling the facade",
+    "shows the error message of a failed registration and opens Login after success"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+     "symbol": "it.unina.reservations.boundary.Swing.Registration",
+     "lines": [
+      127,
+      130
+     ],
+     "excerpt": "if (name.isBlank() || surname.isBlank() || email.isBlank()\n|| password.isBlank() || identifier.isBlank()) {\nshowError(\"Complete all fields\");\nreturn;"
+    },
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+     "symbol": null,
+     "lines": [
+      140,
+      141
+     ],
+     "excerpt": "} catch (RuntimeException ex) {\nshowError(ex.getMessage());"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1"
+   ],
+   "support": "observed",
+   "id": "C1"
+  },
+  "C2": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "AuthenticationController",
+   "symbol": "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "responsibilities": [
+    "exposes POST /api/auth/register taking role, name, surname, email, password and identifier as request parameters",
+    "returns the UserDTO produced by the facade"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+     "symbol": "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+     "lines": [
+      15,
+      17
+     ],
+     "excerpt": "@RestController\n@RequestMapping(\"/api/auth\")\npublic class AuthenticationController {"
+    },
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+     "symbol": null,
+     "lines": [
+      22,
+      23
+     ],
+     "excerpt": "@PostMapping(\"/register\")\npublic UserDTO register(@RequestParam(\"role\") String role,"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1",
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C2"
+  },
+  "C3": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "LibraryFacade",
+   "symbol": "it.unina.reservations.controller.LibraryFacade",
+   "responsibilities": [
+    "single entry point of the controller layer; forwards register to UserManager"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+     "symbol": "it.unina.reservations.controller.LibraryFacade",
+     "lines": [
+      37,
+      39
+     ],
+     "excerpt": "public UserDTO register(String role, String name, String surname,\nString email, String password, String identifier) {\nreturn UserManager.getInstance().register(role, name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1",
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C3"
+  },
+  "C4": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "UserManager",
+   "symbol": "it.unina.reservations.controller.UserManager",
+   "responsibilities": [
+    "validates role, name, surname, email, password and identifier format",
+    "rejects an email or an identifier that is already registered",
+    "chooses StudentFactory or LibrarianFactory from the role",
+    "stores the new user through UserRegistry and fails if it could not be saved",
+    "maps the stored user to a UserDTO"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": "it.unina.reservations.controller.UserManager",
+     "lines": [
+      65,
+      75
+     ],
+     "excerpt": "public UserDTO register(String role, String name, String surname,\nString email, String password, String identifier) {\nvalidate(role, name, password);\nboolean student = \"Student\".equalsIgnoreCase(role);"
+    },
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      77,
+      86
+     ],
+     "excerpt": "if (userRegistry.institutionalEmailExists(email)) {\nthrow new IllegalArgumentException(\"Email is already associated with an account.\");\nthrow new IllegalArgumentException(\"Identifier is already in use.\");"
+    },
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      89,
+      96
+     ],
+     "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();\nboolean success = userRegistry.registerUser(newUser);\nthrow new RuntimeException(\"Server error: the user could not be saved. Please try again.\");\nreturn toDTO(newUser);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1",
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C4"
+  },
+  "C5": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "StudentFactory",
+   "symbol": "it.unina.reservations.controller.factory.StudentFactory",
+   "responsibilities": [
+    "implements UserFactory; builds a Student from name, surname, email, password and student number"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java",
+     "symbol": "it.unina.reservations.controller.factory.StudentFactory",
+     "lines": [
+      8,
+      11
+     ],
+     "excerpt": "public class StudentFactory implements UserFactory {\npublic User createUser(String name, String surname, String email, String password, String identifier) {\nStudent student = new Student();"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1"
+   ],
+   "support": "observed",
+   "id": "C5"
+  },
+  "C6": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "LibrarianFactory",
+   "symbol": "it.unina.reservations.controller.factory.LibrarianFactory",
+   "responsibilities": [
+    "implements UserFactory; builds a Librarian from name, surname, email, password and internal identifier code"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java",
+     "symbol": "it.unina.reservations.controller.factory.LibrarianFactory",
+     "lines": [
+      8,
+      11
+     ],
+     "excerpt": "public class LibrarianFactory implements UserFactory {\npublic User createUser(String name, String surname, String email, String password, String identifier) {\nLibrarian librarian = new Librarian();"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1"
+   ],
+   "support": "observed",
+   "id": "C6"
+  },
+  "C7": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "UserRegistry",
+   "symbol": "it.unina.reservations.entity.UserRegistry",
+   "responsibilities": [
+    "looks users up by email, student number and librarian code",
+    "persists a new user through PersistenceManager"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+     "symbol": "it.unina.reservations.entity.UserRegistry",
+     "lines": [
+      10,
+      16
+     ],
+     "excerpt": "public class UserRegistry {\nprivate final PersistenceManager persistenceManager;\nthis.persistenceManager = new PersistenceManager();"
+    },
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+     "symbol": null,
+     "lines": [
+      26,
+      28
+     ],
+     "excerpt": "public boolean registerUser(User newUser) {\nreturn persistenceManager.save(newUser);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1"
+   ],
+   "support": "observed",
+   "id": "C7"
+  },
+  "C8": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "PersistenceManager",
+   "symbol": "it.unina.reservations.database.PersistenceManager",
+   "responsibilities": [
+    "saves an entity in a transaction and rolls back on error, returning false",
+    "finds entities by field values with a JPQL query"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+     "symbol": "it.unina.reservations.database.PersistenceManager",
+     "lines": [
+      16,
+      27
+     ],
+     "excerpt": "public class PersistenceManager {\npublic boolean save(Object object) {\nEntityManager em = JpaUtil.getInstance().getEntityManager();\nem.getTransaction().begin();\nem.persist(object);\nem.getTransaction().commit();"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1"
+   ],
+   "support": "observed",
+   "id": "C8"
+  },
+  "C9": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "component",
+   "name": "JpaUtil",
+   "symbol": "it.unina.reservations.database.JpaUtil",
+   "responsibilities": [
+    "creates the EntityManagerFactory of persistence unit reservationsPU and hands out EntityManagers"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java",
+     "symbol": "it.unina.reservations.database.JpaUtil",
+     "lines": [
+      12,
+      19
+     ],
+     "excerpt": "public class JpaUtil {\nprivate JpaUtil() {\nemf = Persistence.createEntityManagerFactory(\"reservationsPU\");"
+    },
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java",
+     "symbol": null,
+     "lines": [
+      34,
+      36
+     ],
+     "excerpt": "public EntityManager getEntityManager() {\nreturn emf.createEntityManager();"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1"
+   ],
+   "support": "observed",
+   "id": "C9"
+  },
+  "C10": {
+   "task": "IT1",
+   "kind": "element",
+   "element_kind": "datastore",
+   "name": "reservationsdb",
+   "symbol": null,
+   "responsibilities": [
+    "MySQL database configured for persistence unit reservationsPU; schema updated by hibernate.hbm2ddl.auto=update"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/resources/META-INF/persistence.xml",
+     "symbol": null,
+     "lines": [
+      21,
+      21
+     ],
+     "excerpt": "<property name=\"jakarta.persistence.jdbc.url\" value=\"jdbc:mysql://localhost:3306/reservationsdb?serverTimezone=UTC&amp;createDatebaseIfNotExist=true\"/>"
+    },
+    {
+     "file": "JavaProject/src/main/resources/META-INF/persistence.xml",
+     "symbol": null,
+     "lines": [
+      28,
+      28
+     ],
+     "excerpt": "<property name=\"hibernate.hbm2ddl.auto\" value=\"update\"/>"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ1"
+   ],
+   "support": "observed",
+   "id": "C10"
+  },
+  "C11": {
+   "task": "IT3",
+   "kind": "element",
+   "element_kind": "actor",
+   "name": "New user",
+   "symbol": null,
+   "responsibilities": [
+    "submits the registration request"
+   ],
+   "attributes": [],
+   "source": null,
+   "target": null,
+   "relation": null,
+   "label": null,
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+     "symbol": null,
+     "lines": [
+      22,
+      23
+     ],
+     "excerpt": "@PostMapping(\"/register\")\npublic UserDTO register(@RequestParam(\"role\") String role,"
+    }
+   ],
+   "confidence": 0.8,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C11"
+  },
+  "C12": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.boundary.Swing.Registration",
+   "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "relation": "uses",
+   "label": "register",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+     "symbol": null,
+     "lines": [
+      134,
+      134
+     ],
+     "excerpt": "LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C12"
+  },
+  "C13": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "relation": "uses",
+   "label": "register",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+     "symbol": null,
+     "lines": [
+      29,
+      30
+     ],
+     "excerpt": "return LibraryFacade.getInstance()\n.register(role, name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C13"
+  },
+  "C14": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "target": "cmp:it.unina.reservations.controller.UserManager",
+   "relation": "uses",
+   "label": "register",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+     "symbol": null,
+     "lines": [
+      39,
+      39
+     ],
+     "excerpt": "return UserManager.getInstance().register(role, name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C14"
+  },
+  "C15": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.entity.UserRegistry",
+   "relation": "uses",
+   "label": "institutionalEmailExists / registerUser",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      31,
+      31
+     ],
+     "excerpt": "private final UserRegistry userRegistry = UserRegistry.getInstance();"
+    },
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      92,
+      92
+     ],
+     "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C15"
+  },
+  "C16": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+   "relation": "uses",
+   "label": "createUser",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      89,
+      90
+     ],
+     "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();\nUser newUser = factory.createUser(name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C16"
+  },
+  "C17": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+   "relation": "uses",
+   "label": "createUser",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      89,
+      90
+     ],
+     "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();\nUser newUser = factory.createUser(name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C17"
+  },
+  "C18": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.entity.UserRegistry",
+   "target": "cmp:it.unina.reservations.database.PersistenceManager",
+   "relation": "uses",
+   "label": "save / findFirstByFields",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+     "symbol": null,
+     "lines": [
+      16,
+      16
+     ],
+     "excerpt": "this.persistenceManager = new PersistenceManager();"
+    },
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+     "symbol": null,
+     "lines": [
+      27,
+      27
+     ],
+     "excerpt": "return persistenceManager.save(newUser);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C18"
+  },
+  "C19": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "cmp:it.unina.reservations.database.JpaUtil",
+   "relation": "uses",
+   "label": "getEntityManager",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+     "symbol": null,
+     "lines": [
+      20,
+      20
+     ],
+     "excerpt": "EntityManager em = JpaUtil.getInstance().getEntityManager();"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C19"
+  },
+  "C20": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "ds:reservationsdb",
+   "relation": "writes",
+   "label": "persist",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+     "symbol": null,
+     "lines": [
+      25,
+      25
+     ],
+     "excerpt": "em.persist(object);"
+    },
+    {
+     "file": "JavaProject/src/main/resources/META-INF/persistence.xml",
+     "symbol": null,
+     "lines": [
+      21,
+      21
+     ],
+     "excerpt": "jdbc:mysql://localhost:3306/reservationsdb?serverTimezone=UTC"
+    }
+   ],
+   "confidence": 0.8,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C20"
+  },
+  "C21": {
+   "task": "IT2",
+   "kind": "relation",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "ds:reservationsdb",
+   "relation": "reads",
+   "label": "createQuery",
+   "order": null,
+   "scenario": null,
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+     "symbol": null,
+     "lines": [
+      134,
+      134
+     ],
+     "excerpt": "TypedQuery<T> query = em.createQuery("
+    },
+    {
+     "file": "JavaProject/src/main/resources/META-INF/persistence.xml",
+     "symbol": null,
+     "lines": [
+      21,
+      21
+     ],
+     "excerpt": "jdbc:mysql://localhost:3306/reservationsdb?serverTimezone=UTC"
+    }
+   ],
+   "confidence": 0.8,
+   "question_ids": [
+    "AQ2"
+   ],
+   "support": "observed",
+   "id": "C21"
+  },
+  "C22": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "act:new-user",
+   "target": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "relation": null,
+   "label": "register(role, name, surname, email, password, identifier)",
+   "order": 1,
+   "scenario": "register user",
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+     "symbol": null,
+     "lines": [
+      22,
+      23
+     ],
+     "excerpt": "@PostMapping(\"/register\")\npublic UserDTO register(@RequestParam(\"role\") String role,"
+    }
+   ],
+   "confidence": 0.8,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C22"
+  },
+  "C23": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "relation": null,
+   "label": "register(role, name, surname, email, password, identifier)",
+   "order": 2,
+   "scenario": "register user",
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+     "symbol": null,
+     "lines": [
+      29,
+      30
+     ],
+     "excerpt": "return LibraryFacade.getInstance()\n.register(role, name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C23"
+  },
+  "C24": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "target": "cmp:it.unina.reservations.controller.UserManager",
+   "relation": null,
+   "label": "register(role, name, surname, email, password, identifier)",
+   "order": 3,
+   "scenario": "register user",
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+     "symbol": null,
+     "lines": [
+      39,
+      39
+     ],
+     "excerpt": "return UserManager.getInstance().register(role, name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C24"
+  },
+  "C25": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.entity.UserRegistry",
+   "relation": null,
+   "label": "institutionalEmailExists(email)",
+   "order": 4,
+   "scenario": "register user",
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      77,
+      77
+     ],
+     "excerpt": "if (userRegistry.institutionalEmailExists(email)) {"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C25"
+  },
+  "C26": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.entity.UserRegistry",
+   "target": "cmp:it.unina.reservations.database.PersistenceManager",
+   "relation": null,
+   "label": "findFirstByFields(User.class, institutionalEmail)",
+   "order": 5,
+   "scenario": "register user",
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+     "symbol": null,
+     "lines": [
+      37,
+      38
+     ],
+     "excerpt": "public User findUserByEmail(String email) {\nreturn persistenceManager.findFirstByFields(User.class, Map.of(\"institutionalEmail\", email));"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C26"
+  },
+  "C27": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.entity.UserRegistry",
+   "relation": null,
+   "label": "findStudentByStudentNumber(identifier)",
+   "order": 6,
+   "scenario": "register user",
+   "condition": "role is Student",
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      81,
+      83
+     ],
+     "excerpt": "boolean identifierGiaUsato = student\n? userRegistry.findStudentByStudentNumber(identifier) != null\n: userRegistry.findLibrarianByCode(identifier) != null;"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C27"
+  },
+  "C28": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.entity.UserRegistry",
+   "target": "cmp:it.unina.reservations.database.PersistenceManager",
+   "relation": null,
+   "label": "findFirstByFields(Student.class, studentNumber)",
+   "order": 7,
+   "scenario": "register user",
+   "condition": "role is Student",
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+     "symbol": null,
+     "lines": [
+      44,
+      45
+     ],
+     "excerpt": "public Student findStudentByStudentNumber(String studentNumber) {\nreturn persistenceManager.findFirstByFields(Student.class, Map.of(\"studentNumber\", studentNumber));"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C28"
+  },
+  "C29": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+   "relation": null,
+   "label": "createUser(name, surname, email, password, identifier)",
+   "order": 8,
+   "scenario": "register user",
+   "condition": "role is Student",
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      89,
+      90
+     ],
+     "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();\nUser newUser = factory.createUser(name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C29"
+  },
+  "C30": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.entity.UserRegistry",
+   "relation": null,
+   "label": "findLibrarianByCode(identifier)",
+   "order": 9,
+   "scenario": "register user",
+   "condition": "role is Librarian",
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      81,
+      83
+     ],
+     "excerpt": "boolean identifierGiaUsato = student\n? userRegistry.findStudentByStudentNumber(identifier) != null\n: userRegistry.findLibrarianByCode(identifier) != null;"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C30"
+  },
+  "C31": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.entity.UserRegistry",
+   "target": "cmp:it.unina.reservations.database.PersistenceManager",
+   "relation": null,
+   "label": "findFirstByFields(Librarian.class, internalIdentifierCode)",
+   "order": 10,
+   "scenario": "register user",
+   "condition": "role is Librarian",
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+     "symbol": null,
+     "lines": [
+      58,
+      59
+     ],
+     "excerpt": "public Librarian findLibrarianByCode(String code) {\nreturn persistenceManager.findFirstByFields(Librarian.class, Map.of(\"internalIdentifierCode\", code));"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C31"
+  },
+  "C32": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+   "relation": null,
+   "label": "createUser(name, surname, email, password, identifier)",
+   "order": 11,
+   "scenario": "register user",
+   "condition": "role is Librarian",
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      89,
+      90
+     ],
+     "excerpt": "UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();\nUser newUser = factory.createUser(name, surname, email, password, identifier);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C32"
+  },
+  "C33": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.entity.UserRegistry",
+   "relation": null,
+   "label": "registerUser(newUser)",
+   "order": 12,
+   "scenario": "register user",
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+     "symbol": null,
+     "lines": [
+      92,
+      92
+     ],
+     "excerpt": "boolean success = userRegistry.registerUser(newUser);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C33"
+  },
+  "C34": {
+   "task": "IT3",
+   "kind": "interaction",
+   "element_kind": null,
+   "name": null,
+   "symbol": null,
+   "responsibilities": [],
+   "attributes": [],
+   "source": "cmp:it.unina.reservations.entity.UserRegistry",
+   "target": "cmp:it.unina.reservations.database.PersistenceManager",
+   "relation": null,
+   "label": "save(newUser)",
+   "order": 13,
+   "scenario": "register user",
+   "condition": null,
+   "evidence": [
+    {
+     "file": "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java",
+     "symbol": null,
+     "lines": [
+      26,
+      27
+     ],
+     "excerpt": "public boolean registerUser(User newUser) {\nreturn persistenceManager.save(newUser);"
+    }
+   ],
+   "confidence": 0.9,
+   "question_ids": [
+    "AQ3"
+   ],
+   "support": "observed",
+   "id": "C34"
+  }
+ },
+ "rejected_claims": [],
+ "elements": {
+  "cmp:it.unina.reservations.boundary.Swing.Registration": {
+   "id": "cmp:it.unina.reservations.boundary.Swing.Registration",
+   "kind": "component",
+   "name": "Registration",
+   "realized_by": [
+    "it.unina.reservations.boundary.Swing.Registration"
+   ],
+   "layer": "presentation",
+   "responsibilities": [
+    {
+     "text": "collects the sign-up form fields in the desktop GUI",
+     "claims": [
+      "C1"
+     ]
+    },
+    {
+     "text": "rejects blank fields before calling the facade",
+     "claims": [
+      "C1"
+     ]
+    },
+    {
+     "text": "shows the error message of a failed registration and opens Login after success",
+     "claims": [
+      "C1"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C1"
+   ],
+   "named_by": "symbol"
+  },
+  "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController": {
+   "id": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "kind": "component",
+   "name": "AuthenticationController",
+   "realized_by": [
+    "it.unina.reservations.boundary.SpringBoot.AuthenticationController"
+   ],
+   "layer": "presentation",
+   "responsibilities": [
+    {
+     "text": "exposes POST /api/auth/register taking role, name, surname, email, password and identifier as request parameters",
+     "claims": [
+      "C2"
+     ]
+    },
+    {
+     "text": "returns the UserDTO produced by the facade",
+     "claims": [
+      "C2"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C2"
+   ],
+   "named_by": "symbol"
+  },
+  "cmp:it.unina.reservations.controller.LibraryFacade": {
+   "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "kind": "component",
+   "name": "LibraryFacade",
+   "realized_by": [
+    "it.unina.reservations.controller.LibraryFacade"
+   ],
+   "layer": "application",
+   "responsibilities": [
+    {
+     "text": "single entry point of the controller layer; forwards register to UserManager",
+     "claims": [
+      "C3"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C3"
+   ],
+   "named_by": "symbol"
+  },
+  "cmp:it.unina.reservations.controller.UserManager": {
+   "id": "cmp:it.unina.reservations.controller.UserManager",
+   "kind": "component",
+   "name": "UserManager",
+   "realized_by": [
+    "it.unina.reservations.controller.UserManager"
+   ],
+   "layer": "application",
+   "responsibilities": [
+    {
+     "text": "validates role, name, surname, email, password and identifier format",
+     "claims": [
+      "C4"
+     ]
+    },
+    {
+     "text": "rejects an email or an identifier that is already registered",
+     "claims": [
+      "C4"
+     ]
+    },
+    {
+     "text": "chooses StudentFactory or LibrarianFactory from the role",
+     "claims": [
+      "C4"
+     ]
+    },
+    {
+     "text": "stores the new user through UserRegistry and fails if it could not be saved",
+     "claims": [
+      "C4"
+     ]
+    },
+    {
+     "text": "maps the stored user to a UserDTO",
+     "claims": [
+      "C4"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C4"
+   ],
+   "named_by": "symbol"
+  },
+  "cmp:it.unina.reservations.controller.factory.StudentFactory": {
+   "id": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+   "kind": "component",
+   "name": "StudentFactory",
+   "realized_by": [
+    "it.unina.reservations.controller.factory.StudentFactory"
+   ],
+   "layer": "application",
+   "responsibilities": [
+    {
+     "text": "implements UserFactory; builds a Student from name, surname, email, password and student number",
+     "claims": [
+      "C5"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C5"
+   ],
+   "named_by": "symbol"
+  },
+  "cmp:it.unina.reservations.controller.factory.LibrarianFactory": {
+   "id": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+   "kind": "component",
+   "name": "LibrarianFactory",
+   "realized_by": [
+    "it.unina.reservations.controller.factory.LibrarianFactory"
+   ],
+   "layer": "application",
+   "responsibilities": [
+    {
+     "text": "implements UserFactory; builds a Librarian from name, surname, email, password and internal identifier code",
+     "claims": [
+      "C6"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C6"
+   ],
+   "named_by": "symbol"
+  },
+  "cmp:it.unina.reservations.entity.UserRegistry": {
+   "id": "cmp:it.unina.reservations.entity.UserRegistry",
+   "kind": "component",
+   "name": "UserRegistry",
+   "realized_by": [
+    "it.unina.reservations.entity.UserRegistry"
+   ],
+   "layer": "domain",
+   "responsibilities": [
+    {
+     "text": "looks users up by email, student number and librarian code",
+     "claims": [
+      "C7"
+     ]
+    },
+    {
+     "text": "persists a new user through PersistenceManager",
+     "claims": [
+      "C7"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C7"
+   ],
+   "named_by": "symbol"
+  },
+  "cmp:it.unina.reservations.database.PersistenceManager": {
+   "id": "cmp:it.unina.reservations.database.PersistenceManager",
+   "kind": "component",
+   "name": "PersistenceManager",
+   "realized_by": [
+    "it.unina.reservations.database.PersistenceManager"
+   ],
+   "layer": "persistence",
+   "responsibilities": [
+    {
+     "text": "saves an entity in a transaction and rolls back on error, returning false",
+     "claims": [
+      "C8"
+     ]
+    },
+    {
+     "text": "finds entities by field values with a JPQL query",
+     "claims": [
+      "C8"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C8"
+   ],
+   "named_by": "symbol"
+  },
+  "cmp:it.unina.reservations.database.JpaUtil": {
+   "id": "cmp:it.unina.reservations.database.JpaUtil",
+   "kind": "component",
+   "name": "JpaUtil",
+   "realized_by": [
+    "it.unina.reservations.database.JpaUtil"
+   ],
+   "layer": "persistence",
+   "responsibilities": [
+    {
+     "text": "creates the EntityManagerFactory of persistence unit reservationsPU and hands out EntityManagers",
+     "claims": [
+      "C9"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C9"
+   ],
+   "named_by": "symbol"
+  },
+  "ds:reservationsdb": {
+   "id": "ds:reservationsdb",
+   "kind": "datastore",
+   "name": "reservationsdb",
+   "realized_by": [],
+   "layer": null,
+   "responsibilities": [
+    {
+     "text": "MySQL database configured for persistence unit reservationsPU; schema updated by hibernate.hbm2ddl.auto=update",
+     "claims": [
+      "C10"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {
+    "technology": "MySQL",
+    "url": "jdbc:mysql://localhost:3306/reservationsdb"
+   },
+   "support": "observed",
+   "claims": [
+    "C10"
+   ],
+   "named_by": "claim"
+  },
+  "act:new-user": {
+   "id": "act:new-user",
+   "kind": "actor",
+   "name": "New user",
+   "realized_by": [],
+   "layer": null,
+   "responsibilities": [
+    {
+     "text": "submits the registration request",
+     "claims": [
+      "C11"
+     ]
+    }
+   ],
+   "attributes": [],
+   "details": {},
+   "support": "observed",
+   "claims": [
+    "C11"
+   ],
+   "named_by": "claim"
+  }
+ },
+ "relations": {
+  "rel:cmp:it.unina.reservations.boundary.Swing.Registration>cmp:it.unina.reservations.controller.LibraryFacade:uses": {
+   "id": "rel:cmp:it.unina.reservations.boundary.Swing.Registration>cmp:it.unina.reservations.controller.LibraryFacade:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.boundary.Swing.Registration",
+   "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "label": "register",
+   "multiplicity": null,
+   "member_edges": [
+    "Registration.register -calls-> LibraryFacade.register (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:134)"
+   ],
+   "claims": [
+    "C12"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController>cmp:it.unina.reservations.controller.LibraryFacade:uses": {
+   "id": "rel:cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController>cmp:it.unina.reservations.controller.LibraryFacade:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+   "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "label": "register",
+   "multiplicity": null,
+   "member_edges": [
+    "AuthenticationController.register -calls-> LibraryFacade.register (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:29)"
+   ],
+   "claims": [
+    "C13"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.controller.LibraryFacade>cmp:it.unina.reservations.controller.UserManager:uses": {
+   "id": "rel:cmp:it.unina.reservations.controller.LibraryFacade>cmp:it.unina.reservations.controller.UserManager:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+   "target": "cmp:it.unina.reservations.controller.UserManager",
+   "label": "register",
+   "multiplicity": null,
+   "member_edges": [
+    "LibraryFacade.register -calls-> UserManager.register (JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39)"
+   ],
+   "claims": [
+    "C14"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.entity.UserRegistry:uses": {
+   "id": "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.entity.UserRegistry:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.entity.UserRegistry",
+   "label": "institutionalEmailExists / registerUser",
+   "multiplicity": null,
+   "member_edges": [
+    "UserManager -field-> UserRegistry (JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:31)",
+    "UserManager.register -calls-> UserRegistry.registerUser (JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:92)"
+   ],
+   "claims": [
+    "C15"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.controller.factory.StudentFactory:uses": {
+   "id": "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.controller.factory.StudentFactory:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+   "label": "createUser",
+   "multiplicity": null,
+   "member_edges": [
+    "UserManager.register -instantiates-> StudentFactory (JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:89)"
+   ],
+   "claims": [
+    "C16"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.controller.factory.LibrarianFactory:uses": {
+   "id": "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.controller.factory.LibrarianFactory:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.controller.UserManager",
+   "target": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+   "label": "createUser",
+   "multiplicity": null,
+   "member_edges": [
+    "UserManager.register -instantiates-> LibrarianFactory (JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:89)"
+   ],
+   "claims": [
+    "C17"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.entity.UserRegistry>cmp:it.unina.reservations.database.PersistenceManager:uses": {
+   "id": "rel:cmp:it.unina.reservations.entity.UserRegistry>cmp:it.unina.reservations.database.PersistenceManager:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.entity.UserRegistry",
+   "target": "cmp:it.unina.reservations.database.PersistenceManager",
+   "label": "save / findFirstByFields",
+   "multiplicity": null,
+   "member_edges": [
+    "UserRegistry -field-> PersistenceManager (JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:13)",
+    "UserRegistry.registerUser -calls-> PersistenceManager.save (JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:27)"
+   ],
+   "claims": [
+    "C18"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.database.PersistenceManager>cmp:it.unina.reservations.database.JpaUtil:uses": {
+   "id": "rel:cmp:it.unina.reservations.database.PersistenceManager>cmp:it.unina.reservations.database.JpaUtil:uses",
+   "kind": "uses",
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "cmp:it.unina.reservations.database.JpaUtil",
+   "label": "getEntityManager",
+   "multiplicity": null,
+   "member_edges": [
+    "PersistenceManager.save -calls-> JpaUtil.getEntityManager (JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:20)"
+   ],
+   "claims": [
+    "C19"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.database.PersistenceManager>ds:reservationsdb:writes": {
+   "id": "rel:cmp:it.unina.reservations.database.PersistenceManager>ds:reservationsdb:writes",
+   "kind": "writes",
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "ds:reservationsdb",
+   "label": "persist",
+   "multiplicity": null,
+   "member_edges": [],
+   "claims": [
+    "C20"
+   ],
+   "support": "observed"
+  },
+  "rel:cmp:it.unina.reservations.database.PersistenceManager>ds:reservationsdb:reads": {
+   "id": "rel:cmp:it.unina.reservations.database.PersistenceManager>ds:reservationsdb:reads",
+   "kind": "reads",
+   "source": "cmp:it.unina.reservations.database.PersistenceManager",
+   "target": "ds:reservationsdb",
+   "label": "createQuery",
+   "multiplicity": null,
+   "member_edges": [],
+   "claims": [
+    "C21"
+   ],
+   "support": "observed"
+  }
+ },
+ "scenarios": {
+  "scn:register-user": {
+   "id": "scn:register-user",
+   "name": "register user",
+   "steps": [
+    {
+     "order": 1,
+     "source": "act:new-user",
+     "target": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+     "message": "register(role, name, surname, email, password, identifier)",
+     "kind": "call",
+     "fragment": null,
+     "claims": [
+      "C22"
+     ],
+     "branch": null
+    },
+    {
+     "order": 2,
+     "source": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+     "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+     "message": "register(role, name, surname, email, password, identifier)",
+     "kind": "call",
+     "fragment": null,
+     "claims": [
+      "C23"
+     ],
+     "branch": null
+    },
+    {
+     "order": 3,
+     "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+     "target": "cmp:it.unina.reservations.controller.UserManager",
+     "message": "register(role, name, surname, email, password, identifier)",
+     "kind": "call",
+     "fragment": null,
+     "claims": [
+      "C24"
+     ],
+     "branch": null
+    },
+    {
+     "order": 4,
+     "source": "cmp:it.unina.reservations.controller.UserManager",
+     "target": "cmp:it.unina.reservations.entity.UserRegistry",
+     "message": "institutionalEmailExists(email)",
+     "kind": "call",
+     "fragment": null,
+     "claims": [
+      "C25"
+     ],
+     "branch": null
+    },
+    {
+     "order": 5,
+     "source": "cmp:it.unina.reservations.entity.UserRegistry",
+     "target": "cmp:it.unina.reservations.database.PersistenceManager",
+     "message": "findFirstByFields(User.class, institutionalEmail)",
+     "kind": "call",
+     "fragment": null,
+     "claims": [
+      "C26"
+     ],
+     "branch": null
+    },
+    {
+     "order": 6,
+     "source": "cmp:it.unina.reservations.controller.UserManager",
+     "target": "cmp:it.unina.reservations.entity.UserRegistry",
+     "message": "findStudentByStudentNumber(identifier)",
+     "kind": "call",
+     "fragment": "scn:register-user:alt1",
+     "claims": [
+      "C27"
+     ],
+     "branch": "role is Student"
+    },
+    {
+     "order": 7,
+     "source": "cmp:it.unina.reservations.entity.UserRegistry",
+     "target": "cmp:it.unina.reservations.database.PersistenceManager",
+     "message": "findFirstByFields(Student.class, studentNumber)",
+     "kind": "call",
+     "fragment": "scn:register-user:alt1",
+     "claims": [
+      "C28"
+     ],
+     "branch": "role is Student"
+    },
+    {
+     "order": 8,
+     "source": "cmp:it.unina.reservations.controller.UserManager",
+     "target": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+     "message": "createUser(name, surname, email, password, identifier)",
+     "kind": "call",
+     "fragment": "scn:register-user:alt1",
+     "claims": [
+      "C29"
+     ],
+     "branch": "role is Student"
+    },
+    {
+     "order": 9,
+     "source": "cmp:it.unina.reservations.controller.UserManager",
+     "target": "cmp:it.unina.reservations.entity.UserRegistry",
+     "message": "findLibrarianByCode(identifier)",
+     "kind": "call",
+     "fragment": "scn:register-user:alt1",
+     "claims": [
+      "C30"
+     ],
+     "branch": "role is Librarian"
+    },
+    {
+     "order": 10,
+     "source": "cmp:it.unina.reservations.entity.UserRegistry",
+     "target": "cmp:it.unina.reservations.database.PersistenceManager",
+     "message": "findFirstByFields(Librarian.class, internalIdentifierCode)",
+     "kind": "call",
+     "fragment": "scn:register-user:alt1",
+     "claims": [
+      "C31"
+     ],
+     "branch": "role is Librarian"
+    },
+    {
+     "order": 11,
+     "source": "cmp:it.unina.reservations.controller.UserManager",
+     "target": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+     "message": "createUser(name, surname, email, password, identifier)",
+     "kind": "call",
+     "fragment": "scn:register-user:alt1",
+     "claims": [
+      "C32"
+     ],
+     "branch": "role is Librarian"
+    },
+    {
+     "order": 12,
+     "source": "cmp:it.unina.reservations.controller.UserManager",
+     "target": "cmp:it.unina.reservations.entity.UserRegistry",
+     "message": "registerUser(newUser)",
+     "kind": "call",
+     "fragment": null,
+     "claims": [
+      "C33"
+     ],
+     "branch": null
+    },
+    {
+     "order": 13,
+     "source": "cmp:it.unina.reservations.entity.UserRegistry",
+     "target": "cmp:it.unina.reservations.database.PersistenceManager",
+     "message": "save(newUser)",
+     "kind": "call",
+     "fragment": null,
+     "claims": [
+      "C34"
+     ],
+     "branch": null
+    }
+   ],
+   "fragments": [
+    {
+     "id": "scn:register-user:alt1",
+     "kind": "alt",
+     "guard": "role is Student",
+     "else_guard": "role is Librarian"
+    }
+   ]
+  }
+ },
+ "component_of": {
+  "it.unina.reservations.boundary.Swing.Registration": "cmp:it.unina.reservations.boundary.Swing.Registration",
+  "it.unina.reservations.boundary.SpringBoot.AuthenticationController": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+  "it.unina.reservations.controller.LibraryFacade": "cmp:it.unina.reservations.controller.LibraryFacade",
+  "it.unina.reservations.controller.UserManager": "cmp:it.unina.reservations.controller.UserManager",
+  "it.unina.reservations.controller.factory.StudentFactory": "cmp:it.unina.reservations.controller.factory.StudentFactory",
+  "it.unina.reservations.controller.factory.LibrarianFactory": "cmp:it.unina.reservations.controller.factory.LibrarianFactory",
+  "it.unina.reservations.entity.UserRegistry": "cmp:it.unina.reservations.entity.UserRegistry",
+  "it.unina.reservations.database.PersistenceManager": "cmp:it.unina.reservations.database.PersistenceManager",
+  "it.unina.reservations.database.JpaUtil": "cmp:it.unina.reservations.database.JpaUtil"
+ },
+ "correspondences": [],
+ "reflexion": {
+  "convergence": [
+   "rel:cmp:it.unina.reservations.boundary.Swing.Registration>cmp:it.unina.reservations.controller.LibraryFacade:uses",
+   "rel:cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController>cmp:it.unina.reservations.controller.LibraryFacade:uses",
+   "rel:cmp:it.unina.reservations.controller.LibraryFacade>cmp:it.unina.reservations.controller.UserManager:uses",
+   "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.entity.UserRegistry:uses",
+   "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.controller.factory.StudentFactory:uses",
+   "rel:cmp:it.unina.reservations.controller.UserManager>cmp:it.unina.reservations.controller.factory.LibrarianFactory:uses",
+   "rel:cmp:it.unina.reservations.entity.UserRegistry>cmp:it.unina.reservations.database.PersistenceManager:uses",
+   "rel:cmp:it.unina.reservations.database.PersistenceManager>cmp:it.unina.reservations.database.JpaUtil:uses"
+  ],
+  "divergence": [],
+  "absence": [
+   "rel:cmp:it.unina.reservations.database.PersistenceManager>ds:reservationsdb:writes",
+   "rel:cmp:it.unina.reservations.database.PersistenceManager>ds:reservationsdb:reads"
+  ]
+ },
+ "notes": [
+  "IT1: elements; IT2: relations; IT3: interaction claims (read files: AuthenticationController, LibraryFacade, UserManager, factories, UserRegistry, PersistenceManager, JpaUtil, Registration, persistence.xml)",
+  "entity classes User/Student/Librarian, UserDTO, UserFactory and RestExceptionHandler were read but not claimed: data-model and inheritance viewpoints were not selected",
+  "registration.html (browser client calling POST /auth/register) was read; it has no code symbol so it is not an element"
+ ]
+}

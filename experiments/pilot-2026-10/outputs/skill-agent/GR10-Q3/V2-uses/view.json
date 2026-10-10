@@ -1,0 +1,581 @@
+{
+  "id": "V2-uses",
+  "viewpoint_id": "uses",
+  "viewpoint_name": "Uses Style",
+  "vb_ref": "2.2 Uses Style",
+  "model_kind": "uml-package",
+  "title": "Uses view — what depends on the persisted report data",
+  "purpose": "Show which parts of the application depend on the persistence layer and, through it, on the stored entities.",
+  "detail_level": "detailed",
+  "max_elements": 15,
+  "addresses": [
+    "AQ10",
+    "AQ11"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "group:layer:application",
+      "kind": "layer",
+      "name": "Application",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:domain",
+      "kind": "layer",
+      "name": "Domain",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:persistence",
+      "kind": "layer",
+      "name": "Persistence",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "cmp:Database.JpaUtil",
+      "kind": "component",
+      "name": "JpaUtil",
+      "stereotype": "persistence",
+      "parent": "group:layer:persistence",
+      "responsibilities": [
+        "creates the EntityManagerFactory for persistence unit Municipal_Report_Management_System and hands out EntityManagers"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Database.JpaUtil"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Database.PersistenceService",
+      "kind": "component",
+      "name": "PersistenceService",
+      "stereotype": "persistence",
+      "parent": "group:layer:persistence",
+      "responsibilities": [
+        "saves, updates and queries any entity in its own transaction (save, update, findById, findByAttribute, findByFields)"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Database.PersistenceService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.UserService",
+      "kind": "component",
+      "name": "UserService",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "registers users and looks them up by credentials; checks whether an id is a Citizen or a MunicipalOperator"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.UserService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.ReportService",
+      "kind": "component",
+      "name": "ReportService",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "creates reports, reads reports, details and history, updates status, adds internal notes, generates notifications and monitoring results"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.ReportService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.UserRegistrationController",
+      "kind": "component",
+      "name": "UserRegistrationController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "registers a new user through UserService"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.UserRegistrationController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.UserLoginController",
+      "kind": "component",
+      "name": "UserLoginController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "retrieves user data by credentials through UserService"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.UserLoginController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.ReportCreationController",
+      "kind": "component",
+      "name": "ReportCreationController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "registers a new report for a citizen"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.ReportCreationController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.ReportReviewController",
+      "kind": "component",
+      "name": "ReportReviewController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "retrieves submitted reports for a citizen and received reports for an operator"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.ReportReviewController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.ReportDetailsController",
+      "kind": "component",
+      "name": "ReportDetailsController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "retrieves report details and status history"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.ReportDetailsController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.ReportStatusUpdateController",
+      "kind": "component",
+      "name": "ReportStatusUpdateController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "advances the report status and requests a notification"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.ReportStatusUpdateController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.NotificationController",
+      "kind": "component",
+      "name": "NotificationController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "checks whether the new status is notifiable and sends the notification"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.NotificationController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.InternalNoteController",
+      "kind": "component",
+      "name": "InternalNoteController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "registers an internal note for an operator"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.InternalNoteController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.ActivityMonitoringController",
+      "kind": "component",
+      "name": "ActivityMonitoringController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "produces monitoring results over stored reports"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.ActivityMonitoringController"
+      ],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:uses:cmp:Control.ReportCreationController->cmp:Entity.ReportService",
+      "kind": "uses",
+      "source": "cmp:Control.ReportCreationController",
+      "target": "cmp:Entity.ReportService",
+      "label": "registerNewReport",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ReportReviewController->cmp:Entity.ReportService",
+      "kind": "uses",
+      "source": "cmp:Control.ReportReviewController",
+      "target": "cmp:Entity.ReportService",
+      "label": "retrieveReportsSubmitted, retrieveReportsReceived",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ReportDetailsController->cmp:Entity.ReportService",
+      "kind": "uses",
+      "source": "cmp:Control.ReportDetailsController",
+      "target": "cmp:Entity.ReportService",
+      "label": "retrieveDetailsReport, retrieveHistoryReport",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ReportStatusUpdateController->cmp:Entity.ReportService",
+      "kind": "uses",
+      "source": "cmp:Control.ReportStatusUpdateController",
+      "target": "cmp:Entity.ReportService",
+      "label": "retrieveDetailsReport, updateReportStatus",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.InternalNoteController->cmp:Entity.ReportService",
+      "kind": "uses",
+      "source": "cmp:Control.InternalNoteController",
+      "target": "cmp:Entity.ReportService",
+      "label": "registerInternalNote",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ActivityMonitoringController->cmp:Entity.ReportService",
+      "kind": "uses",
+      "source": "cmp:Control.ActivityMonitoringController",
+      "target": "cmp:Entity.ReportService",
+      "label": "generateMonitoringResults",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.NotificationController->cmp:Entity.ReportService",
+      "kind": "uses",
+      "source": "cmp:Control.NotificationController",
+      "target": "cmp:Entity.ReportService",
+      "label": "verifyNotifiableStatus, generateStatusChangeNotification",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ReportCreationController->cmp:Entity.UserService",
+      "kind": "uses",
+      "source": "cmp:Control.ReportCreationController",
+      "target": "cmp:Entity.UserService",
+      "label": "verifyUserCitizen",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ReportReviewController->cmp:Entity.UserService",
+      "kind": "uses",
+      "source": "cmp:Control.ReportReviewController",
+      "target": "cmp:Entity.UserService",
+      "label": "verifyUserCitizen, isMunicipalOperator",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ReportDetailsController->cmp:Entity.UserService",
+      "kind": "uses",
+      "source": "cmp:Control.ReportDetailsController",
+      "target": "cmp:Entity.UserService",
+      "label": "isMunicipalOperator, verifyUserCitizen",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ReportStatusUpdateController->cmp:Entity.UserService",
+      "kind": "uses",
+      "source": "cmp:Control.ReportStatusUpdateController",
+      "target": "cmp:Entity.UserService",
+      "label": "isMunicipalOperator",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.InternalNoteController->cmp:Entity.UserService",
+      "kind": "uses",
+      "source": "cmp:Control.InternalNoteController",
+      "target": "cmp:Entity.UserService",
+      "label": "isMunicipalOperator",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ActivityMonitoringController->cmp:Entity.UserService",
+      "kind": "uses",
+      "source": "cmp:Control.ActivityMonitoringController",
+      "target": "cmp:Entity.UserService",
+      "label": "isMunicipalOperator",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.UserRegistrationController->cmp:Entity.UserService",
+      "kind": "uses",
+      "source": "cmp:Control.UserRegistrationController",
+      "target": "cmp:Entity.UserService",
+      "label": "isUserRegistered, registerUser",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.UserLoginController->cmp:Entity.UserService",
+      "kind": "uses",
+      "source": "cmp:Control.UserLoginController",
+      "target": "cmp:Entity.UserService",
+      "label": "retrieveUserDataByCredentials",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Control.ReportStatusUpdateController->cmp:Control.NotificationController",
+      "kind": "uses",
+      "source": "cmp:Control.ReportStatusUpdateController",
+      "target": "cmp:Control.NotificationController",
+      "label": "verifyNotifiableStatus",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Entity.ReportService->cmp:Database.PersistenceService",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Database.PersistenceService",
+      "label": "findById, findByFields",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Entity.UserService->cmp:Database.PersistenceService",
+      "kind": "uses",
+      "source": "cmp:Entity.UserService",
+      "target": "cmp:Database.PersistenceService",
+      "label": "findById, findByFields",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:uses:cmp:Database.PersistenceService->cmp:Database.JpaUtil",
+      "kind": "uses",
+      "source": "cmp:Database.PersistenceService",
+      "target": "cmp:Database.JpaUtil",
+      "label": "getInstance, getEntityManager",
+      "multiplicity": null,
+      "support": "observed"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "cmp:Database.JpaUtil",
+      "name": "JpaUtil",
+      "files": [
+        "src/main/java/Database/JpaUtil.java"
+      ],
+      "symbols": [
+        "Database.JpaUtil"
+      ]
+    },
+    {
+      "element": "cmp:Database.PersistenceService",
+      "name": "PersistenceService",
+      "files": [
+        "src/main/java/Database/PersistenceService.java"
+      ],
+      "symbols": [
+        "Database.PersistenceService"
+      ]
+    },
+    {
+      "element": "cmp:Entity.UserService",
+      "name": "UserService",
+      "files": [
+        "src/main/java/Entity/UserService.java"
+      ],
+      "symbols": [
+        "Entity.UserService"
+      ]
+    },
+    {
+      "element": "cmp:Entity.ReportService",
+      "name": "ReportService",
+      "files": [
+        "src/main/java/Entity/ReportService.java"
+      ],
+      "symbols": [
+        "Entity.ReportService"
+      ]
+    },
+    {
+      "element": "cmp:Control.UserRegistrationController",
+      "name": "UserRegistrationController",
+      "files": [
+        "src/main/java/Control/UserRegistrationController.java"
+      ],
+      "symbols": [
+        "Control.UserRegistrationController"
+      ]
+    },
+    {
+      "element": "cmp:Control.UserLoginController",
+      "name": "UserLoginController",
+      "files": [
+        "src/main/java/Control/UserLoginController.java"
+      ],
+      "symbols": [
+        "Control.UserLoginController"
+      ]
+    },
+    {
+      "element": "cmp:Control.ReportCreationController",
+      "name": "ReportCreationController",
+      "files": [
+        "src/main/java/Control/ReportCreationController.java"
+      ],
+      "symbols": [
+        "Control.ReportCreationController"
+      ]
+    },
+    {
+      "element": "cmp:Control.ReportReviewController",
+      "name": "ReportReviewController",
+      "files": [
+        "src/main/java/Control/ReportReviewController.java"
+      ],
+      "symbols": [
+        "Control.ReportReviewController"
+      ]
+    },
+    {
+      "element": "cmp:Control.ReportDetailsController",
+      "name": "ReportDetailsController",
+      "files": [
+        "src/main/java/Control/ReportDetailsController.java"
+      ],
+      "symbols": [
+        "Control.ReportDetailsController"
+      ]
+    },
+    {
+      "element": "cmp:Control.ReportStatusUpdateController",
+      "name": "ReportStatusUpdateController",
+      "files": [
+        "src/main/java/Control/ReportStatusUpdateController.java"
+      ],
+      "symbols": [
+        "Control.ReportStatusUpdateController"
+      ]
+    },
+    {
+      "element": "cmp:Control.NotificationController",
+      "name": "NotificationController",
+      "files": [
+        "src/main/java/Control/NotificationController.java"
+      ],
+      "symbols": [
+        "Control.NotificationController"
+      ]
+    },
+    {
+      "element": "cmp:Control.InternalNoteController",
+      "name": "InternalNoteController",
+      "files": [
+        "src/main/java/Control/InternalNoteController.java"
+      ],
+      "symbols": [
+        "Control.InternalNoteController"
+      ]
+    },
+    {
+      "element": "cmp:Control.ActivityMonitoringController",
+      "name": "ActivityMonitoringController",
+      "files": [
+        "src/main/java/Control/ActivityMonitoringController.java"
+      ],
+      "symbols": [
+        "Control.ActivityMonitoringController"
+      ]
+    }
+  ],
+  "limitations": [
+    "Group (layer) elements are not counted toward the 15-element cap; the 13 drawn components are.",
+    "Boundary (GUI) classes are not drawn: they reach the controllers through SystemServicesController (and UserLoginController); SystemServicesController has no persistence dependency and is not drawn.",
+    "Entity classes are drawn in V1, not here; which entities each service reads or writes is listed in README.md (access matrix) and in evidence_model.json relations from ReportService/UserService to entities.",
+    "ReportService and UserService sit in package Entity (domain layer) but call Database.PersistenceService directly; no repository/DAO layer separates them.",
+    "Queries are built from attribute-name strings (e.g. 'citizenReporting.userId', 'location.municipalArea', 'currentStatusName', 'credentials.email'): renaming mapped fields breaks them without compile errors (claims on lines in ReportService.java and UserService.java)."
+  ],
+  "gaps": [],
+  "overflow": []
+}

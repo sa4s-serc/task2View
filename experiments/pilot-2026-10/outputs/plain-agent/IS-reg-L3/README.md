@@ -1,0 +1,8 @@
+# User registration - architecture views (IS-reg-L3)
+
+Source: `JavaProject/src/main/java/it/unina/reservations` (layers: boundary / controller / entity / database).
+
+- **view-1.puml - Component view.** Shows who receives the registration request (web form -> `AuthenticationController`, or Swing `Registration`), the `LibraryFacade` entry point, `UserManager` (validation of personal data and role, role-specific identifier rules, uniqueness checks), the `UserFactory` implementations (`StudentFactory`/`LibrarianFactory`, which set `studentNumber` / `internalIdentifierCode`), `UserRegistry` + `PersistenceManager` + `JpaUtil` (persistence in MySQL) and `RestExceptionHandler` (error mapping). Why: gives the tester the components, responsibilities, dependencies and the integration seams (boundary->facade->manager, manager->registry->persistence->DB, manager->factories).
+- **view-2.puml - Sequence view of the collaboration.** Shows the ordered checks in `UserManager.register` and what happens for invalid data (role/name/password/format), duplicate email, duplicate student ID / librarian code, and a failed save, with the exception returned to each boundary. Why: identifies which interactions each negative/positive integration test must exercise (e.g. email lookup via `UserRegistry`->`PersistenceManager`; unique-constraint failure path returning `false`).
+
+Notes for testing: duplicate checks run before persistence, so the DB unique constraints (email, studentNumber, code) are only a second line of defence; a failed save raises a `RuntimeException` that `RestExceptionHandler` does not map (only IllegalArgument/IllegalState -> 400). Existing `RegistrationTest` calls the controller layer against a real DB (MySQL per persistence.xml).

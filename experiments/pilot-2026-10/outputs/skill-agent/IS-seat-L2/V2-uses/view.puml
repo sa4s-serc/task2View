@@ -1,0 +1,14 @@
+@startuml
+title Uses view — seat booking functionality
+top to bottom direction
+skinparam componentStyle uml2
+component "Presentation\n--\n- ReservationController: REST endpoint POST /api/reservations/create\n- ReservationSummary: Swing summary screen that submits the booking\n- SeatSelection: Swing seat picker (specific seat or automatic assignment)\n- NotificationScheduler: 60 s scheduler for reservation end and reminders\n- NotificationConfiguration: wires the e-mail adapter into NotificationManager\n- NotificationServiceAdapter: sends notifications through ExternalEmailGateway\n- ExternalEmailGateway: stub e-mail gateway" as e_group_layer_presentation <<layer>>
+component "Application\n--\n- LibraryFacade: facade that delegates to the managers\n- ReservationManager: booking checks and creation; also cancel, check-in, end\n- FirstAvailableAssignment: first-available seat assignment strategy\n- StudyRoomManager: room detail with per-seat availability\n- NotificationManager: observer that sends reservation notifications" as e_group_layer_application <<layer>>
+component "Domain\n--\n- Reservation: booking entity with cancel and check-in rules\n- ActiveState: ActiveState, initial state of a new reservation\n- Seat: seat availability for a date and slot\n- Area: available seats of an area\n- StudyRoom: open on weekdays, scheduled time slots\n- Student: one active or confirmed reservation per date and slot\n- TimeSlot: bookable slot with its label\n- ReservationRegistry: reservation lookup and saving; occupiesSlot\n- StudyRoomRegistry: room, area and seat lookup\n- UserRegistry: student lookup" as e_group_layer_domain <<layer>>
+component "Persistence\n--\n- PersistenceManager: generic JPA persistence\n- JpaUtil: EntityManagerFactory of reservationsPU" as e_group_layer_persistence <<layer>>
+e_group_layer_presentation --> e_group_layer_application : 4 dependencies
+e_group_layer_application --> e_group_layer_presentation : 1 dependencies
+e_group_layer_application --> e_group_layer_domain : 15 dependencies
+e_group_layer_domain --> e_group_layer_application : 1 dependencies
+e_group_layer_domain --> e_group_layer_persistence : 3 dependencies
+@enduml

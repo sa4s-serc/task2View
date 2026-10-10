@@ -1,0 +1,58 @@
+@startuml
+title View 2 - Registration interaction (REST path), success and failure branches
+skinparam shadowing false
+actor User
+participant "registration.html\n(app.js api())" as W
+participant AuthenticationController as C
+participant LibraryFacade as F
+participant UserManager as M
+participant UserRegistry as R
+participant PersistenceManager as P
+database MySQL as DB
+participant "StudentFactory /\nLibrarianFactory" as UF
+participant RestExceptionHandler as X
+
+User -> W : fill form, submit
+W -> C : POST /api/auth/register\nrole,name,surname,email,password,identifier
+C -> F : register(...)
+F -> M : register(...)
+M -> M : validate(role, name, password)\nvalidateStudent | validateLibrarian\n(name/surname letters<=20, email *@*unina.it <255,\nidentifier format, pwd 8..32)
+alt validation fails
+  M --> X : IllegalArgumentException
+  X --> W : 400 {"error": msg}
+  W --> User : error shown
+else valid
+  M -> R : institutionalEmailExists(email)
+  R -> P : findFirstByFields(User, institutionalEmail)
+  P -> DB : SELECT
+  DB --> P : row / none
+  alt email already used
+    M --> X : IllegalArgumentException("Email already...")
+    X --> W : 400
+  else email free
+    M -> R : findStudentByStudentNumber | findLibrarianByCode
+    R -> P : findFirstByFields(...)
+    P -> DB : SELECT
+    alt identifier already used
+      M --> X : IllegalArgumentException("Identifier already in use")
+      X --> W : 400
+    else identifier free
+      M -> UF : createUser(name,surname,email,password,identifier)
+      UF --> M : Student | Librarian
+      M -> R : registerUser(newUser)
+      R -> P : save(newUser)
+      P -> DB : BEGIN; INSERT user (+ subtype row); COMMIT
+      alt save failed (rollback)
+        P --> R : false
+        M --> M : RuntimeException("Server error...")\n(not mapped by RestExceptionHandler)
+      else saved
+        P --> R : true
+        M --> F : UserDTO (id, role, identifier)
+        F --> C : UserDTO
+        C --> W : 200 UserDTO (JSON)
+        W --> User : alert, redirect to index.html (login)
+      end
+    end
+  end
+end
+@enduml

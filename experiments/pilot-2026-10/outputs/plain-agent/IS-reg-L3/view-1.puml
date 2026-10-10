@@ -1,0 +1,55 @@
+@startuml
+title View 1 - Component structure of User Registration
+skinparam componentStyle rectangle
+left to right direction
+
+actor "Registrant" as U
+
+package "Boundary" {
+  component "registration.html + app.js\n(web form, POST /auth/register)" as Web
+  component "Swing Registration\n(register(): checks non-blank fields,\nshows errors in dialog)" as Swing
+  component "AuthenticationController\n(@PostMapping /register)" as AC
+  component "RestExceptionHandler\n(IllegalArgument/IllegalState -> 400 {error})" as REH
+}
+
+package "Control" {
+  component "LibraryFacade\n(singleton, delegates register())" as LF
+  component "UserManager\n(singleton: role/name/password checks,\nrole-specific validation, email &\nidentifier uniqueness, orchestration)" as UM
+  interface "UserFactory" as UF
+  component "StudentFactory\n(sets studentNumber)" as SF
+  component "LibrarianFactory\n(sets internalIdentifierCode)" as LFa
+}
+
+package "Entity" {
+  component "UserRegistry\n(singleton: institutionalEmailExists,\nfindStudentByStudentNumber,\nfindLibrarianByCode, registerUser)" as UR
+  component "User (abstract) / Student / Librarian\n(JPA, JOINED inheritance;\nunique email, studentNumber, code)" as Ent
+  component "UserDTO\n(result returned to caller)" as DTO
+}
+
+package "Database" {
+  component "PersistenceManager\n(findFirstByFields, save -> boolean)" as PM
+  component "JpaUtil\n(EntityManagerFactory 'reservationsPU')" as JPA
+}
+database "MySQL reservationsdb" as DB
+
+U --> Web
+U --> Swing
+Web --> AC : HTTP POST\nrole,name,surname,\nemail,password,identifier
+AC --> LF
+Swing --> LF : direct call
+AC .. REH : exceptions
+UM ..> UF
+SF ..|> UF
+LFa ..|> UF
+LF --> UM
+UM --> SF : role=Student
+UM --> LFa : role=Librarian
+UM --> UR
+UM ..> DTO
+SF ..> Ent : creates
+LFa ..> Ent : creates
+UR --> PM
+UR ..> Ent
+PM --> JPA
+JPA --> DB
+@enduml

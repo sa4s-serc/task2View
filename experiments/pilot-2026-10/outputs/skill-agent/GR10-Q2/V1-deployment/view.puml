@@ -1,0 +1,20 @@
+@startuml
+title Deployment view — Municipal Report Management System
+skinparam shadowing false
+skinparam wrapWidth 380
+
+node "Java 23" as e_execution_env_java_23 <<execution_env>> {
+  artifact "municipal-report-management.jar\n--\n- single Maven build unit of the application (no <packaging> element, so the Maven default jar)\n- started as a desktop Swing process through a main method (HomePageGUI, UserLoginGUI and UserRegistrationGUI each define one)\n- needs a graphical display: the user interface is built with javax.swing and java.awt\n- carries META-INF/persistence.xml with persistence unit Municipal_Report_Management_System; RESOURCE_LOCAL, so the application opens its own JDBC connections (no application server or JNDI datasource)\n- database URL, user and password are fixed inside the packaged persistence.xml; changing them means rebuilding the artifact\n- JpaUtil creates one EntityManagerFactory for the persistence unit when first used (singleton), so the database is first contacted at the first persistence call\n- attached report images are kept as an absolute file path string in column attached_image; the image file itself is not stored in the database\n- GUI classes load /images/logo.png from the classpath; the repository ships no such resource (src/main/resources holds only META-INF/persistence.xml) and the code only logs 'Logo not found'" as e_artifact_municipal_report_management_jar
+  artifact "hibernate-core\n--\n- JPA provider (version 6.6.50.Final) that maps entities and issues the SQL" as e_artifact_hibernate_core
+  artifact "mysql-connector-j\n--\n- JDBC driver (version 9.4.0), class com.mysql.cj.jdbc.Driver" as e_artifact_mysql_connector_j
+  artifact "forms_rt\n--\n- IntelliJ GUI Designer runtime (version 7.0.3) used by the .form based screens" as e_artifact_forms_rt
+}
+node "MySQL" as e_execution_env_mysql <<execution_env>> {
+  database "reports_db\n--\n- relational schema holding the persisted entities (users, reports, internal_notes, status_updates, notifications)\n- created by hand beforehand (CREATE DATABASE); tables are created and updated by Hibernate at start-up\n- schema managed with hibernate.hbm2ddl.auto=update, so the database user needs DDL rights\n- user reports_user, granted on reports_db.* from host localhost only" as e_datastore_reports_db
+}
+
+e_artifact_municipal_report_management_jar --> e_datastore_reports_db : JPA (Hibernate) over JDBC, jdbc:mysql://127.0.0.1:3306/reports_db
+e_artifact_municipal_report_management_jar --> e_artifact_hibernate_core : in-process JPA provider
+e_artifact_municipal_report_management_jar --> e_artifact_mysql_connector_j : in-process JDBC driver
+e_artifact_municipal_report_management_jar --> e_artifact_forms_rt : in-process GUI layout runtime
+@enduml

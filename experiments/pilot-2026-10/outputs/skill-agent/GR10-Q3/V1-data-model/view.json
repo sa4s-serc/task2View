@@ -1,0 +1,652 @@
+{
+  "id": "V1-data-model",
+  "viewpoint_id": "data-model",
+  "viewpoint_name": "Data Model",
+  "vb_ref": "2.6 Data Model",
+  "model_kind": "uml-class",
+  "title": "Data Model view — management of municipal reports",
+  "purpose": "Show the persisted entities, their attributes, keys and relationships (users, reports, locations, categories, states, state changes, internal notes, notifications).",
+  "detail_level": "detailed",
+  "max_elements": 15,
+  "addresses": [
+    "AQ1",
+    "AQ2",
+    "AQ3",
+    "AQ4",
+    "AQ5",
+    "AQ6",
+    "AQ7",
+    "AQ8",
+    "AQ9"
+  ],
+  "overlays": [],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "ent:Entity.User",
+      "kind": "entity",
+      "name": "User",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "abstract base of all users; SINGLE_TABLE 'users' with discriminator column 'role'"
+      ],
+      "attributes": [
+        {
+          "name": "userId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false,
+          "column": "user_id"
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "name"
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "lastName"
+        },
+        {
+          "name": "phoneNumber",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "phone_number"
+        }
+      ],
+      "realized_by": [
+        "Entity.User"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.Citizen",
+      "kind": "entity",
+      "name": "Citizen",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "user subtype with discriminator value CITIZEN"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.Citizen"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.MunicipalOperator",
+      "kind": "entity",
+      "name": "MunicipalOperator",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "user subtype with discriminator value MUNICIPAL_OPERATOR"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.MunicipalOperator"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.Credentials",
+      "kind": "entity",
+      "name": "Credentials",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "embedded e-mail (unique) and password stored in the users table"
+      ],
+      "attributes": [
+        {
+          "name": "email",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "email"
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "password"
+        }
+      ],
+      "realized_by": [
+        "Entity.Credentials"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.Report",
+      "kind": "entity",
+      "name": "Report",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "root record of a municipal report with its current status name and editability flag",
+        "persists current status as the string column current_status (submitted, assigned, in_progress, resolved); ReportStatus object is @Transient",
+        "created in status submitted with citizen_editable true; the operator is assigned on the first status update"
+      ],
+      "attributes": [
+        {
+          "name": "reportId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false,
+          "column": "report_id"
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "title"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "description"
+        },
+        {
+          "name": "category",
+          "type": "ReportCategory",
+          "key": false,
+          "foreign_key": false,
+          "column": "category"
+        },
+        {
+          "name": "dateReport",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false,
+          "column": "report_date"
+        },
+        {
+          "name": "imageAttached",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "attached_image"
+        },
+        {
+          "name": "currentStatusName",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "current_status"
+        },
+        {
+          "name": "citizenEditable",
+          "type": "boolean",
+          "key": false,
+          "foreign_key": false,
+          "column": "citizen_editable"
+        }
+      ],
+      "realized_by": [
+        "Entity.Report"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.Location",
+      "kind": "entity",
+      "name": "Location",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "embedded address of a report stored in the reports table"
+      ],
+      "attributes": [
+        {
+          "name": "city",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "city"
+        },
+        {
+          "name": "cap",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "cap"
+        },
+        {
+          "name": "street",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "street"
+        },
+        {
+          "name": "streetNumber",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "street_number"
+        },
+        {
+          "name": "municipalArea",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "municipal_area"
+        }
+      ],
+      "realized_by": [
+        "Entity.Location"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.ReportCategory",
+      "kind": "enum",
+      "name": "ReportCategory",
+      "stereotype": "enum",
+      "parent": null,
+      "responsibilities": [
+        "closed set of report categories, persisted by name in reports.category"
+      ],
+      "attributes": [
+        {
+          "name": "BROKEN_STREETLIGHT",
+          "type": "constant",
+          "key": false
+        },
+        {
+          "name": "DAMAGED_ROAD",
+          "type": "constant",
+          "key": false
+        },
+        {
+          "name": "ABANDONED_WASTE",
+          "type": "constant",
+          "key": false
+        },
+        {
+          "name": "GENERAL_HAZARD",
+          "type": "constant",
+          "key": false
+        },
+        {
+          "name": "DAMAGED_STREET_FURNITURE",
+          "type": "constant",
+          "key": false
+        }
+      ],
+      "realized_by": [
+        "Entity.ReportCategory"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.StatusUpdate",
+      "kind": "entity",
+      "name": "StatusUpdate",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "history record of a status change made by an operator",
+        "one row per status transition, written by Report.updateStatus with timestamp, new status and operator"
+      ],
+      "attributes": [
+        {
+          "name": "updateId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false,
+          "column": "update_id"
+        },
+        {
+          "name": "updateDate",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false,
+          "column": "update_date"
+        },
+        {
+          "name": "newStatus",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "new_status"
+        }
+      ],
+      "realized_by": [
+        "Entity.StatusUpdate"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.InternalNote",
+      "kind": "entity",
+      "name": "InternalNote",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "operator-only note attached to a report"
+      ],
+      "attributes": [
+        {
+          "name": "noteId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false,
+          "column": "note_id"
+        },
+        {
+          "name": "text",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "text"
+        },
+        {
+          "name": "dateEntry",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false,
+          "column": "created_date"
+        }
+      ],
+      "realized_by": [
+        "Entity.InternalNote"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "ent:Entity.Notification",
+      "kind": "entity",
+      "name": "Notification",
+      "stereotype": "entity",
+      "parent": null,
+      "responsibilities": [
+        "message sent to the reporting citizen about a notifiable status",
+        "only the statuses assigned and resolved may be notified; created by ReportService.generateStatusChangeNotification"
+      ],
+      "attributes": [
+        {
+          "name": "notificationId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false,
+          "column": "notification_id"
+        },
+        {
+          "name": "sentDate",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false,
+          "column": "sent_date"
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "message"
+        },
+        {
+          "name": "notifiedStatus",
+          "type": "String",
+          "key": false,
+          "foreign_key": false,
+          "column": "notified_status"
+        }
+      ],
+      "realized_by": [
+        "Entity.Notification"
+      ],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:association:ent:Entity.Report->ent:Entity.Citizen",
+      "kind": "association",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.Citizen",
+      "label": "citizen_id (citizenReporting)",
+      "multiplicity": "*..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:association:ent:Entity.Report->ent:Entity.MunicipalOperator",
+      "kind": "association",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator_id (operator, nullable)",
+      "multiplicity": "*..0..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:association:ent:Entity.InternalNote->ent:Entity.Report",
+      "kind": "association",
+      "source": "ent:Entity.InternalNote",
+      "target": "ent:Entity.Report",
+      "label": "report_id (report)",
+      "multiplicity": "*..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:association:ent:Entity.InternalNote->ent:Entity.MunicipalOperator",
+      "kind": "association",
+      "source": "ent:Entity.InternalNote",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator_id (operator)",
+      "multiplicity": "*..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:association:ent:Entity.StatusUpdate->ent:Entity.Report",
+      "kind": "association",
+      "source": "ent:Entity.StatusUpdate",
+      "target": "ent:Entity.Report",
+      "label": "report_id (report)",
+      "multiplicity": "*..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:association:ent:Entity.StatusUpdate->ent:Entity.MunicipalOperator",
+      "kind": "association",
+      "source": "ent:Entity.StatusUpdate",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator_id (operator)",
+      "multiplicity": "*..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:association:ent:Entity.Notification->ent:Entity.Citizen",
+      "kind": "association",
+      "source": "ent:Entity.Notification",
+      "target": "ent:Entity.Citizen",
+      "label": "citizen_id (destinatario)",
+      "multiplicity": "*..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:association:ent:Entity.Notification->ent:Entity.Report",
+      "kind": "association",
+      "source": "ent:Entity.Notification",
+      "target": "ent:Entity.Report",
+      "label": "report_id (report)",
+      "multiplicity": "*..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:composition:ent:Entity.User->ent:Entity.Credentials",
+      "kind": "composition",
+      "source": "ent:Entity.User",
+      "target": "ent:Entity.Credentials",
+      "label": "credentials (embedded)",
+      "multiplicity": "1..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:composition:ent:Entity.Report->ent:Entity.Location",
+      "kind": "composition",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.Location",
+      "label": "location (embedded)",
+      "multiplicity": "1..1",
+      "support": "observed"
+    },
+    {
+      "id": "rel:generalization:ent:Entity.Citizen->ent:Entity.User",
+      "kind": "generalization",
+      "source": "ent:Entity.Citizen",
+      "target": "ent:Entity.User",
+      "label": "role = CITIZEN",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:generalization:ent:Entity.MunicipalOperator->ent:Entity.User",
+      "kind": "generalization",
+      "source": "ent:Entity.MunicipalOperator",
+      "target": "ent:Entity.User",
+      "label": "role = MUNICIPAL_OPERATOR",
+      "multiplicity": null,
+      "support": "observed"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "ent:Entity.User",
+      "name": "User",
+      "files": [
+        "src/main/java/Entity/User.java"
+      ],
+      "symbols": [
+        "Entity.User"
+      ]
+    },
+    {
+      "element": "ent:Entity.Citizen",
+      "name": "Citizen",
+      "files": [
+        "src/main/java/Entity/Citizen.java"
+      ],
+      "symbols": [
+        "Entity.Citizen"
+      ]
+    },
+    {
+      "element": "ent:Entity.MunicipalOperator",
+      "name": "MunicipalOperator",
+      "files": [
+        "src/main/java/Entity/MunicipalOperator.java"
+      ],
+      "symbols": [
+        "Entity.MunicipalOperator"
+      ]
+    },
+    {
+      "element": "ent:Entity.Credentials",
+      "name": "Credentials",
+      "files": [
+        "src/main/java/Entity/Credentials.java"
+      ],
+      "symbols": [
+        "Entity.Credentials"
+      ]
+    },
+    {
+      "element": "ent:Entity.Report",
+      "name": "Report",
+      "files": [
+        "src/main/java/Entity/Report.java"
+      ],
+      "symbols": [
+        "Entity.Report"
+      ]
+    },
+    {
+      "element": "ent:Entity.Location",
+      "name": "Location",
+      "files": [
+        "src/main/java/Entity/Location.java"
+      ],
+      "symbols": [
+        "Entity.Location"
+      ]
+    },
+    {
+      "element": "ent:Entity.ReportCategory",
+      "name": "ReportCategory",
+      "files": [
+        "src/main/java/Entity/ReportCategory.java"
+      ],
+      "symbols": [
+        "Entity.ReportCategory"
+      ]
+    },
+    {
+      "element": "ent:Entity.StatusUpdate",
+      "name": "StatusUpdate",
+      "files": [
+        "src/main/java/Entity/StatusUpdate.java",
+        "src/main/java/Entity/Report.java"
+      ],
+      "symbols": [
+        "Entity.StatusUpdate"
+      ]
+    },
+    {
+      "element": "ent:Entity.InternalNote",
+      "name": "InternalNote",
+      "files": [
+        "src/main/java/Entity/InternalNote.java"
+      ],
+      "symbols": [
+        "Entity.InternalNote"
+      ]
+    },
+    {
+      "element": "ent:Entity.Notification",
+      "name": "Notification",
+      "files": [
+        "src/main/java/Entity/Notification.java",
+        "src/main/java/Entity/ReportService.java"
+      ],
+      "symbols": [
+        "Entity.Notification"
+      ]
+    }
+  ],
+  "limitations": [
+    "States have no entity or enum: the status is the string reports.current_status (submitted, assigned, in_progress, resolved), repeated in status_updates.new_status and notifications.notified_status; the ReportStatus classes are transient and not drawn.",
+    "Foreign-key columns are not Java fields of their own: they are shown on the association labels (e.g. citizen_id, operator_id, report_id).",
+    "The discriminator column 'role' of users is not a field; it is shown in the User and subtype responsibilities.",
+    "The backing database (MySQL reports_db, hbm2ddl.auto=update) comes from persistence.xml and is not drawn by the data-model viewpoint; see evidence model element ds:reports_db.",
+    "Citizen and MunicipalOperator add no columns of their own; they share the users table and differ only by the discriminator value.",
+    "Only associations present as mapped fields are drawn: Notification is not reachable from Report (no collection on Report)."
+  ],
+  "gaps": [],
+  "overflow": []
+}

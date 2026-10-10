@@ -1,0 +1,19 @@
+@startuml view-3
+title View 3 - Reservation lifecycle (State pattern) and rules tied to it
+[*] --> ACTIVE : makeReservation (UC7)
+ACTIVE --> CANCELLED : cancel (UC9)\nrule: owner only, >= 6h before slot start
+ACTIVE --> CONFIRMED : check-in (UC10)\nrule: same day, <= 10 min after start
+ACTIVE --> EXPIRED : manageEnd (UC16, scheduler)\nstart + 10 min passed, no check-in
+CONFIRMED --> COMPLETED : manageEnd (UC16)\nslot end passed
+CANCELLED --> CANCELLED : forceCancel when room deleted\n(StudyRoomManager.deleteStudyRoom)
+note right of ACTIVE
+ACTIVE and CONFIRMED occupy the seat
+(ReservationRegistry.occupiesSlot):
+used by Seat.isAvailable, uniqueness rule,
+room monitoring and statistics.
+end note
+note bottom
+Every setState() notifies observers (NotificationManager -> email).
+ConfirmedState cancel/checkIn return false.
+end note
+@enduml

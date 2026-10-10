@@ -1,0 +1,31 @@
+@startuml
+title View 3 - Collaboration: operator updates report status (with citizen notification)
+actor Operator
+participant ReportStatusUpdateGUI as GUI <<Boundary>>
+participant SystemServicesController as Fac <<Control>>
+participant ReportStatusUpdateController as SC <<Control>>
+participant NotificationController as NC <<Control>>
+participant UserService as US <<Entity>>
+participant ReportService as RS <<Entity>>
+participant Report <<Entity>>
+participant PersistenceService as PS <<Database>>
+database MySQL
+
+Operator -> GUI : choose new status
+GUI -> Fac : updateReportStatus(...)
+Fac -> SC : registerStatusUpdate(...)
+SC -> US : isMunicipalOperator(userId)
+SC -> RS : updateReportStatus(...)
+RS -> PS : findById(Report)
+RS -> Report : assignOperator / updateStatus()
+Report -> Report : currentStatus.updateStatus(this)\n(adds StatusUpdate)
+RS -> PS : update(report)
+PS -> MySQL
+SC -> NC : verifyNotifiableStatus / sendNotificationToCitizen
+NC -> RS : generateStatusChangeNotification(...)
+RS -> PS : save(Notification)
+PS -> MySQL
+SC --> Fac : result
+Fac --> GUI : boolean
+GUI --> Operator : feedback
+@enduml

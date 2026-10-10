@@ -1,0 +1,16 @@
+@startuml
+title Client-Server view — seat booking functionality (layer overview)
+left to right direction
+
+component "Presentation\n--\n- ExternalEmailGateway: stub e-mail sender\n- NotificationConfiguration: wires the e-mail adapter into NotificationManager at startup\n- NotificationScheduler: runs reservation-end handling and reminders every minute\n- NotificationServiceAdapter: delivers notifications through the e-mail gateway\n- ReservationController: exposes POST /api/reservations/create to book a seat\n- RestExceptionHandler: maps booking validation errors to HTTP 400\n- StudyRoomController: returns per-seat availability of a room for a date and time slot\n- AreaSelection: loads room detail with seat availability for the Swing wizard\n- ReservationSummary: submits the booking from the Swing wizard\n- SeatSelection: lets the student pick a seat or automatic assignment in the Swing wizard" as e_fold_layer_presentation_de4c <<presentation>>
+component "Application\n--\n- LibraryFacade: single entry point of the controller layer, delegates to the managers\n- NotificationManager: notifies the student when a reservation changes\n- NotificationService: port for sending notifications\n- ReservationManager: validates the request and creates the seat reservation\n- ReservationManager: serialises seat availability check, assignment and save\n- StudyRoomManager: builds room detail with per-seat availability\n- AssignmentStrategy: selects a seat among the available ones\n- FirstAvailableAssignment: assigns the first available seat" as e_fold_layer_application_9e23 <<application>>
+component "Domain\n--\n- Area: lists the available seats of the area\n- Observer: contract notified when a reservation changes\n- Reservation: holds the seat, time slot, student and state of a booking\n- Reservation: delegates cancel and check-in to its current state\n- ReservationRegistry: saves and queries reservations\n- Seat: tells whether it is free for a date and time slot\n- Student: checks for an existing active or confirmed reservation in the slot\n- StudyRoomRegistry: finds rooms, areas, seats and time slots\n- Subject: keeps the observers of a reservation\n- ActiveState: ACTIVE state: check-in confirms, cancel cancels\n- ReservationState: state contract for cancel, check-in and end" as e_fold_layer_domain_3932 <<domain>>
+component "Persistence\n--\n- JpaUtil: creates EntityManagers for persistence unit reservationsPU\n- PersistenceManager: saves and queries entities through JPA" as e_fold_layer_persistence_00fe <<persistence>>
+database "reservationsdb\n--\n- MySQL database holding reservations, seats, areas and rooms" as e_ds_reservationsdb_0248
+
+e_fold_layer_presentation_de4c --> e_fold_layer_application_9e23 : 7 dependencies
+e_fold_layer_application_9e23 --> e_fold_layer_domain_3932 : 18 dependencies
+e_fold_layer_domain_3932 --> e_fold_layer_persistence_00fe : 2 dependencies
+e_fold_layer_persistence_00fe --> e_ds_reservationsdb_0248 : <<reads>> JPA find
+e_fold_layer_persistence_00fe --> e_ds_reservationsdb_0248 : <<writes>> JPA persist
+@enduml

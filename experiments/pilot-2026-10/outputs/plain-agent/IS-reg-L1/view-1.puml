@@ -1,0 +1,62 @@
+@startuml
+title View 1 - Components involved in User Registration (component/interaction view)
+skinparam componentStyle rectangle
+left to right direction
+
+actor "Integration tester" as T
+
+package "Entry points (boundary)" {
+  component "Swing Registration form\n(boundary.Swing.Registration)" as SW
+  component "Swing Login\n(boundary.Swing.Login)" as LOGIN
+  component "Web page registration.html\n+ app.js api()" as WEB
+  component "AuthenticationController\nPOST /api/auth/register\n(boundary.SpringBoot)" as AC
+  component "RestExceptionHandler\nIllegalArgument -> 400\nSecurityException -> 401" as REH
+}
+
+package "Controller" {
+  component "LibraryFacade (singleton)\nregister(...)" as LF
+  component "UserManager (singleton)\nvalidate + uniqueness + create" as UM
+  interface "UserFactory" as UF
+  component "StudentFactory" as SF
+  component "LibrarianFactory" as LFAC
+}
+
+package "Entity" {
+  component "UserRegistry (singleton)\nregisterUser / findUserByEmail /\nfindStudentByStudentNumber /\nfindLibrarianByCode" as UR
+  component "User (abstract) <|- Student, Librarian" as ENT
+  component "UserDTO" as DTO
+}
+
+package "Persistence" {
+  component "PersistenceManager\nsave / findFirstByFields" as PM
+  component "JpaUtil\nEntityManagerFactory 'reservationsPU'" as JPA
+}
+database "MySQL reservationsdb\n(tests: reservationsdb_test)\ntable User/Student/Librarian" as DB
+
+package "Spring Boot runtime" {
+  component "ReservationsApplication / Launcher" as APP
+}
+
+T --> SW : fills form (UI test)
+T --> WEB : fills form (UI test)
+T --> AC : HTTP form-params\n(API test)
+T --> LF : direct call\n(RegistrationTest, TC1-TC20)
+
+SW --> LF : register(role,name,surname,\nemail,password,identifier)
+SW ..> LOGIN : on success / "sign in" link
+WEB --> AC : fetch POST /api/auth/register\n(x-www-form-urlencoded)
+AC --> LF
+AC ..> REH : exceptions
+LF --> UM
+UM --> UF
+SF ..|> UF
+LFAC ..|> UF
+UF ..> ENT : creates
+UM --> UR : uniqueness checks,\nregisterUser
+UM ..> DTO : toDTO
+UR --> PM
+PM --> JPA
+JPA --> DB : Hibernate / JDBC (root@localhost:3306)
+APP ..> AC : hosts REST + static/*.html
+APP ..> LOGIN : Launcher opens Swing Login
+@enduml

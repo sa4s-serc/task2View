@@ -1,0 +1,96 @@
+@startuml view-1
+title View 1 - Component view of the seat-booking functionality (package it.unina.reservations)
+skinparam componentStyle rectangle
+left to right direction
+
+package "Boundary (UI / entry points)" {
+  [Swing wizard\n(DateAndRoomSelection, TimeSlotSelection,\nAreaSelection, SeatSelection,\nReservationSummary, StudentDashboard)] as Swing
+  [Web UI\n(static/*.html, app.js)] as Web
+  [ReservationController\n/api/reservations: create, cancel, checkIn] as RC
+  [StudyRoomController\n/api/rooms: available, time-slots, detail] as SRC
+  [NotificationScheduler\n@Scheduled every 60 s] as Sched
+  [NotificationConfiguration\n@PostConstruct wiring] as NConf
+  [NotificationServiceAdapter] as Adapter
+  [ExternalEmailGateway\n(stub, returns 200)] as Gateway
+}
+
+package "Controller (application logic)" {
+  [LibraryFacade\n(singleton, single entry point)] as Facade
+  [ReservationManager\nmakeReservation: validates request, room open,\nslot not past, seat in area, one booking per slot\n+ cancel (owner), check-in, end-of-reservation] as RM
+  [StudyRoomManager\navailable rooms / time slots / seat map] as SRM
+  [AssignmentStrategy <<interface>>] as Strat
+  [FirstAvailableAssignment] as First
+  [NotificationManager\n(Observer) message per state, reminders] as NM
+  interface "NotificationService" as NS
+}
+
+package "Entity (domain model)" {
+  [Reservation <<Subject>>\n6h cancel window, 10 min check-in tolerance] as Res
+  [ReservationState\nActive/Confirmed/Cancelled/Expired/Completed] as State
+  [Student\nhasActiveOrConfirmedReservationForDateAndSlot] as Stu
+  [StudyRoom\nisOpenOnDate, getScheduledTimeSlots] as Room
+  [Area\ngetAvailableSeats] as Area
+  [Seat\nisAvailable(date, slot)] as Seat
+  [TimeSlot] as Slot
+}
+
+package "Registries / Persistence" {
+  [ReservationRegistry\nsave, update, find*] as RR
+  [StudyRoomRegistry] as SRR
+  [UserRegistry] as UR
+  [PersistenceManager\n(JPA / JpaUtil)] as PM
+}
+database "MySQL\nreservationsdb" as DB
+cloud "External e-mail service" as Ext
+
+Swing --> Facade
+Web --> RC : HTTP
+Web --> SRC : HTTP
+RC --> Facade
+SRC --> Facade
+Sched --> Facade : manageReservationEnd(),\nsendReminders()
+Facade --> RM
+Facade --> SRM
+Facade --> NM
+RM --> Strat
+First ..|> Strat
+RM --> NM : sendNotification (cancel),\nattach as observer
+RM --> RR
+RM --> SRR
+RM --> UR
+RM --> Room
+RM --> Area
+RM --> Stu
+RM --> Res
+SRM --> SRR
+SRM --> RR
+Res --> State
+Res ..> NM : notifyObservers()
+Area --> Seat
+Seat --> RR : findReservationsBySeat
+Stu --> RR : findActiveReservations
+Area --> SRR : getSeatsForArea
+Res --> Seat
+Res --> Slot
+Res --> Stu
+Room --> Slot
+Room --> Area
+NM ..|> NS : uses
+NM --> RR : sendReminders
+NConf --> NM : setNotificationService
+Adapter ..|> NS
+Adapter --> Gateway
+Gateway ..> Ext : (simulated)
+RR --> PM
+SRR --> PM
+UR --> PM
+PM --> DB
+
+note bottom of RM
+  Main change point for new booking rules:
+  makeReservation() validation chain.
+  Rules about a student's bookings fit Student /
+  ReservationRegistry; seat rules fit Area/Seat.
+  Seat auto-pick: AssignmentStrategy.
+end note
+@enduml

@@ -1,0 +1,54 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "collaboration",
+    "subject": null,
+    "goal": "Collect evidence for: For seat booking functionality: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.entity.Area",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.boundary.Swing.ReservationSummary",
+        "it.unina.reservations.controller.strategy.AssignmentStrategy"
+      ],
+      "paths": [
+        "JavaProject/src/main/resources/static/reservation.html",
+        "JavaProject/src/main/resources/static/app.js",
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "request-reply",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: Seat, Area, SeatSelection, ReservationManager.selectSeat share words with 'seat booking'",
+      "entry-point:http-route POST /api/reservations/create",
+      "entry-point:gui-frame Swing wizard",
+      "config: persistence.xml (datastore)"
+    ]
+  }
+]

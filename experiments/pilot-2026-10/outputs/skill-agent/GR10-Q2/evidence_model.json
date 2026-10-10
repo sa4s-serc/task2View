@@ -1,0 +1,1362 @@
+{
+  "claims": {
+    "C1": {
+      "id": "C1",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "symbol": null,
+      "responsibilities": [
+        "single Maven build unit of the application (no <packaging> element, so the Maven default jar)"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            9,
+            9
+          ],
+          "excerpt": "<artifactId>municipal-report-management</artifactId>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ2"
+      ],
+      "element_id": "artifact:municipal-report-management.jar"
+    },
+    "C2": {
+      "id": "C2",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "symbol": null,
+      "responsibilities": [
+        "started as a desktop Swing process through a main method (HomePageGUI, UserLoginGUI and UserRegistrationGUI each define one)"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/HomePageGUI.java",
+          "symbol": "Boundary.HomePageGUI",
+          "lines": [
+            75,
+            75
+          ],
+          "excerpt": "public static void main(String[] args) {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ],
+      "element_id": "artifact:municipal-report-management.jar"
+    },
+    "C3": {
+      "id": "C3",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "symbol": null,
+      "responsibilities": [
+        "needs a graphical display: the user interface is built with javax.swing and java.awt"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/HomePageGUI.java",
+          "symbol": null,
+          "lines": [
+            6,
+            6
+          ],
+          "excerpt": "import javax.swing.*;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ],
+      "element_id": "artifact:municipal-report-management.jar"
+    },
+    "C4": {
+      "id": "C4",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "symbol": null,
+      "responsibilities": [
+        "carries META-INF/persistence.xml with persistence unit Municipal_Report_Management_System; RESOURCE_LOCAL, so the application opens its own JDBC connections (no application server or JNDI datasource)"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            10,
+            10
+          ],
+          "excerpt": "<persistence-unit name=\"Municipal_Report_Management_System\" transaction-type=\"RESOURCE_LOCAL\">"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ3"
+      ],
+      "element_id": "artifact:municipal-report-management.jar"
+    },
+    "C5": {
+      "id": "C5",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "symbol": null,
+      "responsibilities": [
+        "database URL, user and password are fixed inside the packaged persistence.xml; changing them means rebuilding the artifact"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            32,
+            32
+          ],
+          "excerpt": "<property name=\"jakarta.persistence.jdbc.password\""
+        },
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            33,
+            33
+          ],
+          "excerpt": "value=\"reports_password\"/>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ3"
+      ],
+      "element_id": "artifact:municipal-report-management.jar"
+    },
+    "C6": {
+      "id": "C6",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "symbol": null,
+      "responsibilities": [
+        "JpaUtil creates one EntityManagerFactory for the persistence unit when first used (singleton), so the database is first contacted at the first persistence call"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/JpaUtil.java",
+          "symbol": "Database.JpaUtil",
+          "lines": [
+            17,
+            17
+          ],
+          "excerpt": "Persistence.createEntityManagerFactory(\"Municipal_Report_Management_System\");"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ3"
+      ],
+      "element_id": "artifact:municipal-report-management.jar"
+    },
+    "C7": {
+      "id": "C7",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "symbol": null,
+      "responsibilities": [
+        "attached report images are kept as an absolute file path string in column attached_image; the image file itself is not stored in the database"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReportCreationGUI.java",
+          "symbol": "Boundary.ReportCreationGUI",
+          "lines": [
+            674,
+            674
+          ],
+          "excerpt": "txtImageAttached.setText(fileSelected.getAbsolutePath());"
+        },
+        {
+          "file": "src/main/java/Entity/Report.java",
+          "symbol": "Entity.Report",
+          "lines": [
+            64,
+            64
+          ],
+          "excerpt": "private String imageAttached;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ3"
+      ],
+      "element_id": "artifact:municipal-report-management.jar"
+    },
+    "C8": {
+      "id": "C8",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "symbol": null,
+      "responsibilities": [
+        "GUI classes load /images/logo.png from the classpath; the repository ships no such resource (src/main/resources holds only META-INF/persistence.xml) and the code only logs 'Logo not found'"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/InternalNoteGUI.java",
+          "symbol": "Boundary.InternalNoteGUI",
+          "lines": [
+            396,
+            396
+          ],
+          "excerpt": "getClass().getResource(\"/images/logo.png\");"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ2"
+      ],
+      "element_id": "artifact:municipal-report-management.jar"
+    },
+    "C9": {
+      "id": "C9",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "execution_env",
+      "name": "Java 23",
+      "symbol": null,
+      "responsibilities": [
+        "runs the application jar and its library jars on the classpath; provides javax.swing and java.awt for the GUI"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            14,
+            14
+          ],
+          "excerpt": "<maven.compiler.target>23</maven.compiler.target>"
+        },
+        {
+          "file": "README.md",
+          "symbol": null,
+          "lines": [
+            20,
+            20
+          ],
+          "excerpt": "- Java 23"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1",
+        "AQ2"
+      ],
+      "element_id": "execution_env:java-23"
+    },
+    "C10": {
+      "id": "C10",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "execution_env",
+      "name": "MySQL",
+      "symbol": null,
+      "responsibilities": [
+        "database server reached over TCP port 3306; the shipped default address is the loopback 127.0.0.1, i.e. the same host as the application"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            27,
+            27
+          ],
+          "excerpt": "value=\"jdbc:mysql://127.0.0.1:3306/reports_db\"/>"
+        },
+        {
+          "file": "README.md",
+          "symbol": null,
+          "lines": [
+            22,
+            22
+          ],
+          "excerpt": "- MySQL"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1",
+        "AQ3"
+      ],
+      "element_id": "execution_env:mysql"
+    },
+    "C11": {
+      "id": "C11",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "datastore",
+      "name": "reports_db",
+      "symbol": null,
+      "responsibilities": [
+        "relational schema holding the persisted entities (users, reports, internal_notes, status_updates, notifications)",
+        "created by hand beforehand (CREATE DATABASE); tables are created and updated by Hibernate at start-up"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            27,
+            27
+          ],
+          "excerpt": "value=\"jdbc:mysql://127.0.0.1:3306/reports_db\"/>"
+        },
+        {
+          "file": "README.md",
+          "symbol": null,
+          "lines": [
+            29,
+            29
+          ],
+          "excerpt": "CREATE DATABASE reports_db;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ3"
+      ],
+      "element_id": "datastore:reports_db"
+    },
+    "C12": {
+      "id": "C12",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "datastore",
+      "name": "reports_db",
+      "symbol": null,
+      "responsibilities": [
+        "schema managed with hibernate.hbm2ddl.auto=update, so the database user needs DDL rights"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            35,
+            35
+          ],
+          "excerpt": "<property name=\"hibernate.hbm2ddl.auto\""
+        },
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            36,
+            36
+          ],
+          "excerpt": "value=\"update\"/>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ3"
+      ],
+      "element_id": "datastore:reports_db"
+    },
+    "C13": {
+      "id": "C13",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "datastore",
+      "name": "reports_db",
+      "symbol": null,
+      "responsibilities": [
+        "user reports_user, granted on reports_db.* from host localhost only"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "README.md",
+          "symbol": null,
+          "lines": [
+            31,
+            31
+          ],
+          "excerpt": "GRANT ALL PRIVILEGES ON reports_db.* TO 'reports_user'@'localhost'"
+        }
+      ],
+      "support": "documented",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ3"
+      ],
+      "element_id": "datastore:reports_db"
+    },
+    "C14": {
+      "id": "C14",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "hibernate-core",
+      "symbol": null,
+      "responsibilities": [
+        "JPA provider (version 6.6.50.Final) that maps entities and issues the SQL"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            50,
+            50
+          ],
+          "excerpt": "<artifactId>hibernate-core</artifactId>"
+        },
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            51,
+            51
+          ],
+          "excerpt": "<version>6.6.50.Final</version>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ2"
+      ],
+      "element_id": "artifact:hibernate-core"
+    },
+    "C15": {
+      "id": "C15",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "mysql-connector-j",
+      "symbol": null,
+      "responsibilities": [
+        "JDBC driver (version 9.4.0), class com.mysql.cj.jdbc.Driver"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            43,
+            43
+          ],
+          "excerpt": "<artifactId>mysql-connector-j</artifactId>"
+        },
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            44,
+            44
+          ],
+          "excerpt": "<version>9.4.0</version>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ2"
+      ],
+      "element_id": "artifact:mysql-connector-j"
+    },
+    "C16": {
+      "id": "C16",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "forms_rt",
+      "symbol": null,
+      "responsibilities": [
+        "IntelliJ GUI Designer runtime (version 7.0.3) used by the .form based screens"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            36,
+            36
+          ],
+          "excerpt": "<artifactId>forms_rt</artifactId>"
+        },
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            37,
+            37
+          ],
+          "excerpt": "<version>7.0.3</version>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ2"
+      ],
+      "element_id": "artifact:forms_rt"
+    },
+    "C17": {
+      "id": "C17",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "artifact:municipal-report-management.jar",
+      "target": "datastore:reports_db",
+      "relation": "communicates",
+      "label": "JPA (Hibernate) over JDBC, jdbc:mysql://127.0.0.1:3306/reports_db",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            27,
+            27
+          ],
+          "excerpt": "value=\"jdbc:mysql://127.0.0.1:3306/reports_db\"/>"
+        },
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            24,
+            24
+          ],
+          "excerpt": "value=\"com.mysql.cj.jdbc.Driver\"/>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1",
+        "AQ3"
+      ],
+      "element_id": null
+    },
+    "C18": {
+      "id": "C18",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:hibernate-core",
+      "relation": "communicates",
+      "label": "in-process JPA provider",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            12,
+            12
+          ],
+          "excerpt": "<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ],
+      "element_id": null
+    },
+    "C19": {
+      "id": "C19",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:mysql-connector-j",
+      "relation": "communicates",
+      "label": "in-process JDBC driver",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            24,
+            24
+          ],
+          "excerpt": "value=\"com.mysql.cj.jdbc.Driver\"/>"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ],
+      "element_id": null
+    },
+    "C20": {
+      "id": "C20",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:forms_rt",
+      "relation": "communicates",
+      "label": "in-process GUI layout runtime",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/HomePageGUI.java",
+          "symbol": "Boundary.HomePageGUI",
+          "lines": [
+            4,
+            4
+          ],
+          "excerpt": "import com.intellij.uiDesigner.core.GridLayoutManager;"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ],
+      "element_id": null
+    },
+    "C21": {
+      "id": "C21",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "execution_env:java-23",
+      "target": "artifact:municipal-report-management.jar",
+      "relation": "contains",
+      "label": "",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            14,
+            14
+          ],
+          "excerpt": "<maven.compiler.target>23</maven.compiler.target>"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ],
+      "element_id": null
+    },
+    "C22": {
+      "id": "C22",
+      "task": "IT2",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "execution_env:java-23",
+      "target": "artifact:hibernate-core",
+      "relation": "contains",
+      "label": "classpath dependency (compile scope)",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            25,
+            25
+          ],
+          "excerpt": "<dependencies>"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ2"
+      ],
+      "element_id": null
+    },
+    "C23": {
+      "id": "C23",
+      "task": "IT2",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "execution_env:java-23",
+      "target": "artifact:mysql-connector-j",
+      "relation": "contains",
+      "label": "classpath dependency (compile scope)",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            25,
+            25
+          ],
+          "excerpt": "<dependencies>"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ2"
+      ],
+      "element_id": null
+    },
+    "C24": {
+      "id": "C24",
+      "task": "IT2",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "execution_env:java-23",
+      "target": "artifact:forms_rt",
+      "relation": "contains",
+      "label": "classpath dependency (compile scope)",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            25,
+            25
+          ],
+          "excerpt": "<dependencies>"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ2"
+      ],
+      "element_id": null
+    },
+    "C25": {
+      "id": "C25",
+      "task": "IT3",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "execution_env:mysql",
+      "target": "datastore:reports_db",
+      "relation": "contains",
+      "label": "",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            27,
+            27
+          ],
+          "excerpt": "value=\"jdbc:mysql://127.0.0.1:3306/reports_db\"/>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ3"
+      ],
+      "element_id": null
+    }
+  },
+  "rejected_claims": [],
+  "elements": {
+    "artifact:municipal-report-management.jar": {
+      "id": "artifact:municipal-report-management.jar",
+      "kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "single Maven build unit of the application (no <packaging> element, so the Maven default jar)",
+          "claims": [
+            "C1"
+          ]
+        },
+        {
+          "text": "started as a desktop Swing process through a main method (HomePageGUI, UserLoginGUI and UserRegistrationGUI each define one)",
+          "claims": [
+            "C2"
+          ]
+        },
+        {
+          "text": "needs a graphical display: the user interface is built with javax.swing and java.awt",
+          "claims": [
+            "C3"
+          ]
+        },
+        {
+          "text": "carries META-INF/persistence.xml with persistence unit Municipal_Report_Management_System; RESOURCE_LOCAL, so the application opens its own JDBC connections (no application server or JNDI datasource)",
+          "claims": [
+            "C4"
+          ]
+        },
+        {
+          "text": "database URL, user and password are fixed inside the packaged persistence.xml; changing them means rebuilding the artifact",
+          "claims": [
+            "C5"
+          ]
+        },
+        {
+          "text": "JpaUtil creates one EntityManagerFactory for the persistence unit when first used (singleton), so the database is first contacted at the first persistence call",
+          "claims": [
+            "C6"
+          ]
+        },
+        {
+          "text": "attached report images are kept as an absolute file path string in column attached_image; the image file itself is not stored in the database",
+          "claims": [
+            "C7"
+          ]
+        },
+        {
+          "text": "GUI classes load /images/logo.png from the classpath; the repository ships no such resource (src/main/resources holds only META-INF/persistence.xml) and the code only logs 'Logo not found'",
+          "claims": [
+            "C8"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {
+        "groupId": "edu.unina.softwareengineering",
+        "version": "1.0-SNAPSHOT",
+        "entry_points": [
+          "Boundary.HomePageGUI.main",
+          "Boundary.UserLoginGUI.main",
+          "Boundary.UserRegistrationGUI.main"
+        ]
+      },
+      "support": "observed",
+      "claims": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C8"
+      ],
+      "named_by": "config"
+    },
+    "execution_env:java-23": {
+      "id": "execution_env:java-23",
+      "kind": "execution_env",
+      "name": "Java 23",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "runs the application jar and its library jars on the classpath; provides javax.swing and java.awt for the GUI",
+          "claims": [
+            "C9"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {
+        "maven.compiler.source/target": 23
+      },
+      "support": "observed",
+      "claims": [
+        "C9"
+      ],
+      "named_by": "config"
+    },
+    "execution_env:mysql": {
+      "id": "execution_env:mysql",
+      "kind": "execution_env",
+      "name": "MySQL",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "database server reached over TCP port 3306; the shipped default address is the loopback 127.0.0.1, i.e. the same host as the application",
+          "claims": [
+            "C10"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C10"
+      ],
+      "named_by": "config"
+    },
+    "datastore:reports_db": {
+      "id": "datastore:reports_db",
+      "kind": "datastore",
+      "name": "reports_db",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "relational schema holding the persisted entities (users, reports, internal_notes, status_updates, notifications)",
+          "claims": [
+            "C11"
+          ]
+        },
+        {
+          "text": "created by hand beforehand (CREATE DATABASE); tables are created and updated by Hibernate at start-up",
+          "claims": [
+            "C11"
+          ]
+        },
+        {
+          "text": "schema managed with hibernate.hbm2ddl.auto=update, so the database user needs DDL rights",
+          "claims": [
+            "C12"
+          ]
+        },
+        {
+          "text": "user reports_user, granted on reports_db.* from host localhost only",
+          "claims": [
+            "C13"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {
+        "jdbc_url": "jdbc:mysql://127.0.0.1:3306/reports_db",
+        "user": "reports_user"
+      },
+      "support": "observed",
+      "claims": [
+        "C11",
+        "C12",
+        "C13"
+      ],
+      "named_by": "config"
+    },
+    "artifact:hibernate-core": {
+      "id": "artifact:hibernate-core",
+      "kind": "artifact",
+      "name": "hibernate-core",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "JPA provider (version 6.6.50.Final) that maps entities and issues the SQL",
+          "claims": [
+            "C14"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C14"
+      ],
+      "named_by": "config"
+    },
+    "artifact:mysql-connector-j": {
+      "id": "artifact:mysql-connector-j",
+      "kind": "artifact",
+      "name": "mysql-connector-j",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "JDBC driver (version 9.4.0), class com.mysql.cj.jdbc.Driver",
+          "claims": [
+            "C15"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C15"
+      ],
+      "named_by": "config"
+    },
+    "artifact:forms_rt": {
+      "id": "artifact:forms_rt",
+      "kind": "artifact",
+      "name": "forms_rt",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "IntelliJ GUI Designer runtime (version 7.0.3) used by the .form based screens",
+          "claims": [
+            "C16"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C16"
+      ],
+      "named_by": "config"
+    }
+  },
+  "relations": {
+    "rel:artifact:municipal-report-management.jar-communicates->datastore:reports_db": {
+      "id": "rel:artifact:municipal-report-management.jar-communicates->datastore:reports_db",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management.jar",
+      "target": "datastore:reports_db",
+      "label": "JPA (Hibernate) over JDBC, jdbc:mysql://127.0.0.1:3306/reports_db",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C17"
+      ],
+      "support": "observed"
+    },
+    "rel:artifact:municipal-report-management.jar-communicates->artifact:hibernate-core": {
+      "id": "rel:artifact:municipal-report-management.jar-communicates->artifact:hibernate-core",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:hibernate-core",
+      "label": "in-process JPA provider",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C18"
+      ],
+      "support": "inferred"
+    },
+    "rel:artifact:municipal-report-management.jar-communicates->artifact:mysql-connector-j": {
+      "id": "rel:artifact:municipal-report-management.jar-communicates->artifact:mysql-connector-j",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:mysql-connector-j",
+      "label": "in-process JDBC driver",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C19"
+      ],
+      "support": "inferred"
+    },
+    "rel:artifact:municipal-report-management.jar-communicates->artifact:forms_rt": {
+      "id": "rel:artifact:municipal-report-management.jar-communicates->artifact:forms_rt",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management.jar",
+      "target": "artifact:forms_rt",
+      "label": "in-process GUI layout runtime",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C20"
+      ],
+      "support": "inferred"
+    },
+    "rel:execution_env:java-23-contains->artifact:municipal-report-management.jar": {
+      "id": "rel:execution_env:java-23-contains->artifact:municipal-report-management.jar",
+      "kind": "contains",
+      "source": "execution_env:java-23",
+      "target": "artifact:municipal-report-management.jar",
+      "label": "",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C21"
+      ],
+      "support": "inferred"
+    },
+    "rel:execution_env:java-23-contains->artifact:hibernate-core": {
+      "id": "rel:execution_env:java-23-contains->artifact:hibernate-core",
+      "kind": "contains",
+      "source": "execution_env:java-23",
+      "target": "artifact:hibernate-core",
+      "label": "classpath dependency (compile scope)",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C22"
+      ],
+      "support": "inferred"
+    },
+    "rel:execution_env:java-23-contains->artifact:mysql-connector-j": {
+      "id": "rel:execution_env:java-23-contains->artifact:mysql-connector-j",
+      "kind": "contains",
+      "source": "execution_env:java-23",
+      "target": "artifact:mysql-connector-j",
+      "label": "classpath dependency (compile scope)",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C23"
+      ],
+      "support": "inferred"
+    },
+    "rel:execution_env:java-23-contains->artifact:forms_rt": {
+      "id": "rel:execution_env:java-23-contains->artifact:forms_rt",
+      "kind": "contains",
+      "source": "execution_env:java-23",
+      "target": "artifact:forms_rt",
+      "label": "classpath dependency (compile scope)",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C24"
+      ],
+      "support": "inferred"
+    },
+    "rel:execution_env:mysql-contains->datastore:reports_db": {
+      "id": "rel:execution_env:mysql-contains->datastore:reports_db",
+      "kind": "contains",
+      "source": "execution_env:mysql",
+      "target": "datastore:reports_db",
+      "label": "",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C25"
+      ],
+      "support": "observed"
+    }
+  },
+  "scenarios": {},
+  "component_of": {},
+  "correspondences": [],
+  "reflexion": {
+    "convergence": [],
+    "divergence": [],
+    "absence": [
+      "rel:artifact:municipal-report-management.jar-communicates->datastore:reports_db",
+      "rel:artifact:municipal-report-management.jar-communicates->artifact:hibernate-core",
+      "rel:artifact:municipal-report-management.jar-communicates->artifact:mysql-connector-j",
+      "rel:artifact:municipal-report-management.jar-communicates->artifact:forms_rt",
+      "rel:execution_env:java-23-contains->artifact:municipal-report-management.jar",
+      "rel:execution_env:java-23-contains->artifact:hibernate-core",
+      "rel:execution_env:java-23-contains->artifact:mysql-connector-j",
+      "rel:execution_env:java-23-contains->artifact:forms_rt",
+      "rel:execution_env:mysql-contains->datastore:reports_db"
+    ]
+  },
+  "notes": [
+    "No code components were anchored: the deployment viewpoint draws nodes, environments, artifacts and datastores only.",
+    "Entities, states and scenarios were not investigated: the goal does not ask for them.",
+    "No Dockerfile or compose file exists, so no node element can be derived; hosts are not named in the repository.",
+    "claims per task: IT1, IT2, IT3 (see each claim's task field)"
+  ]
+}

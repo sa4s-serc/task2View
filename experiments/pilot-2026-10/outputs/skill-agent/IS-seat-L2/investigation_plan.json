@@ -1,0 +1,95 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "collaboration",
+    "subject": null,
+    "goal": "Collect evidence for: For seat booking functionality: which parts work together for a feature and through which interfaces or connectors?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.dto.SeatDTO",
+        "it.unina.reservations.controller.strategy.AssignmentStrategy",
+        "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.Swing.ReservationSummary",
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "uses",
+      "reads",
+      "writes",
+      "request-reply"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: Seat, SeatSelection, SeatDTO, selectSeat (shares 'seat' with the target)",
+      "entry-point:http-route ReservationController /create",
+      "entry-point:gui-frame Swing wizard (ReservationSummary)",
+      "direct dependencies of the entry points: LibraryFacade, ReservationManager"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "change-impact",
+    "subject": null,
+    "goal": "Collect evidence for: For seat booking functionality: which parts are affected when a given part changes?",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.entity.Area",
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager",
+        "it.unina.reservations.database.PersistenceManager"
+      ],
+      "paths": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml",
+        "JavaProject/pom.xml"
+      ],
+      "classes": [
+        "code",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 10,
+    "suggested_by": [
+      "symbol-name: Seat, Area.getAvailableSeats, Seat.isAvailable",
+      "callers of the booking rules (ReservationManager, StudyRoomManager)",
+      "schema/config file: persistence.xml (datastore of the entities)"
+    ]
+  }
+]

@@ -1,0 +1,62 @@
+@startuml
+title View 2 - Registration collaboration: success and failure paths (UserManager.register)
+actor Registrant
+participant "Boundary\n(AuthenticationController / Swing Registration)" as B
+participant LibraryFacade as LF
+participant UserManager as UM
+participant UserRegistry as UR
+participant PersistenceManager as PM
+participant "StudentFactory /\nLibrarianFactory" as F
+database DB
+participant RestExceptionHandler as REH
+
+Registrant -> B : role, name, surname, email, password, identifier
+B -> LF : register(...)
+LF -> UM : register(...)
+UM -> UM : validate(role, name, password)\nrole in {Student, Librarian}, name set,\npassword 8..32
+alt invalid role / name / password
+  UM --> B : IllegalArgumentException
+else role = Student
+  UM -> UM : validateStudent: name/surname letters<=20,\nemail @*.unina.it (<255), id = [A-Z]\\d{8}
+else role = Librarian
+  UM -> UM : validateLibrarian: name/surname, email,\nid alphanumeric non-empty
+end
+alt format validation fails
+  UM --> B : IllegalArgumentException(message)
+end
+UM -> UR : institutionalEmailExists(email)
+UR -> PM : findFirstByFields(User, institutionalEmail)
+PM -> DB : SELECT
+DB --> PM
+PM --> UR
+UR --> UM : exists?
+alt email already registered
+  UM --> B : IllegalArgumentException\n"Email is already associated with an account."
+end
+UM -> UR : findStudentByStudentNumber(id) /\nfindLibrarianByCode(id)
+UR -> PM : findFirstByFields(Student|Librarian, ...)
+PM -> DB : SELECT
+UR --> UM : existing?
+alt identifier already used
+  UM --> B : IllegalArgumentException\n"Identifier is already in use."
+end
+UM -> F : createUser(name, surname, email, password, identifier)
+F --> UM : Student | Librarian (not yet persisted)
+UM -> UR : registerUser(newUser)
+UR -> PM : save(newUser)
+PM -> DB : persist in transaction
+alt persistence fails (e.g. unique constraint)
+  PM --> UR : false (rollback)
+  UR --> UM : false
+  UM --> B : RuntimeException "Server error: ... could not be saved"
+else saved
+  PM --> UR : true
+  UR --> UM : true
+  UM --> B : UserDTO (id, role, identifier)
+end
+note over B, REH
+ Web: IllegalArgumentException -> RestExceptionHandler -> HTTP 400 {"error": msg}.
+ A plain RuntimeException (save failure) is NOT mapped by the handler.
+ Swing: catches RuntimeException and shows message dialog.
+end note
+@enduml

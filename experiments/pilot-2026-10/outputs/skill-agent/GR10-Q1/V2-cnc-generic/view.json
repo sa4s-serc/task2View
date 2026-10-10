@@ -1,0 +1,473 @@
+{
+  "id": "V2-cnc-generic",
+  "viewpoint_id": "cnc-generic",
+  "viewpoint_name": "Component-and-Connector",
+  "vb_ref": "Ch. 3 Component-and-Connector Views",
+  "model_kind": "uml-component",
+  "title": "Component-and-Connector view with layered overlay — progetto_ing_software_gr10-main-English",
+  "purpose": "How the parts collaborate and depend on each other: the four layers as runtime parts of one desktop process, the dependencies between them (counted), and the MySQL datastore reached through JPA. Member classes and their responsibilities are listed inside each layer.",
+  "detail_level": "detailed",
+  "max_elements": 15,
+  "addresses": [
+    "AQ6",
+    "AQ7",
+    "AQ8",
+    "AQ9",
+    "AQ10"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "group:layer:presentation",
+      "kind": "component",
+      "name": "Presentation",
+      "stereotype": "presentation",
+      "parent": null,
+      "responsibilities": [
+        "HomePageGUI: application entry point (main) that shows the home page and opens the registration and login windows",
+        "UserLoginGUI: collects login credentials and hands them to UserLoginController",
+        "UserRegistrationGUI: collects registration data and submits it through SystemServicesController",
+        "UserDashboardGUI: role-dependent dashboard that opens the report creation, review and monitoring windows",
+        "ReportCreationGUI: form where a citizen creates a report",
+        "SubmittedReportsGUI: lists the reports a citizen submitted and shows their details",
+        "ReceivedReportsGUI: lists the received reports for an operator, with filters, and opens the note and status-update windows",
+        "ReportStatusUpdateGUI: lets an operator advance the status of a report",
+        "InternalNoteGUI: lets an operator add an internal note to a report",
+        "ActivityMonitoringGUI: lets an operator request activity-trend monitoring results"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Boundary.HomePageGUI",
+        "Boundary.UserLoginGUI",
+        "Boundary.UserRegistrationGUI",
+        "Boundary.UserDashboardGUI",
+        "Boundary.ReportCreationGUI",
+        "Boundary.SubmittedReportsGUI",
+        "Boundary.ReceivedReportsGUI",
+        "Boundary.ReportStatusUpdateGUI",
+        "Boundary.InternalNoteGUI",
+        "Boundary.ActivityMonitoringGUI"
+      ],
+      "support": "observed",
+      "group": false,
+      "folds": [
+        "cmp:Boundary.HomePageGUI",
+        "cmp:Boundary.UserLoginGUI",
+        "cmp:Boundary.UserRegistrationGUI",
+        "cmp:Boundary.UserDashboardGUI",
+        "cmp:Boundary.ReportCreationGUI",
+        "cmp:Boundary.SubmittedReportsGUI",
+        "cmp:Boundary.ReceivedReportsGUI",
+        "cmp:Boundary.ReportStatusUpdateGUI",
+        "cmp:Boundary.InternalNoteGUI",
+        "cmp:Boundary.ActivityMonitoringGUI"
+      ],
+      "claims": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C8",
+        "C9",
+        "C10"
+      ]
+    },
+    {
+      "id": "group:layer:application",
+      "kind": "component",
+      "name": "Application",
+      "stereotype": "application",
+      "parent": null,
+      "responsibilities": [
+        "SystemServicesController: facade giving the boundary one entry point; delegates each use case to its use-case controller",
+        "UserLoginController: validates login data and obtains the user session data from UserService",
+        "UserRegistrationController: validates registration data and rejects an already registered email before registering the user",
+        "ReportCreationController: validates report data, checks the user is a citizen and requests report registration",
+        "ReportReviewController: checks the user role and retrieves submitted (citizen) or received (operator) reports",
+        "ReportDetailsController: checks access to a report (operator or owning citizen) and retrieves its details and history",
+        "ReportStatusUpdateController: checks operator privileges, advances the report status and then requests the notification",
+        "InternalNoteController: checks operator permission and requests registration of an internal note",
+        "ActivityMonitoringController: authorises the operator, validates criteria and requests monitoring results",
+        "NotificationController: decides whether a status is notifiable and requests the citizen notification"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.SystemServicesController",
+        "Control.UserLoginController",
+        "Control.UserRegistrationController",
+        "Control.ReportCreationController",
+        "Control.ReportReviewController",
+        "Control.ReportDetailsController",
+        "Control.ReportStatusUpdateController",
+        "Control.InternalNoteController",
+        "Control.ActivityMonitoringController",
+        "Control.NotificationController"
+      ],
+      "support": "observed",
+      "group": false,
+      "folds": [
+        "cmp:Control.SystemServicesController",
+        "cmp:Control.UserLoginController",
+        "cmp:Control.UserRegistrationController",
+        "cmp:Control.ReportCreationController",
+        "cmp:Control.ReportReviewController",
+        "cmp:Control.ReportDetailsController",
+        "cmp:Control.ReportStatusUpdateController",
+        "cmp:Control.InternalNoteController",
+        "cmp:Control.ActivityMonitoringController",
+        "cmp:Control.NotificationController"
+      ],
+      "claims": [
+        "C11",
+        "C12",
+        "C13",
+        "C14",
+        "C15",
+        "C16",
+        "C17",
+        "C18",
+        "C19",
+        "C20"
+      ]
+    },
+    {
+      "id": "group:layer:domain",
+      "kind": "component",
+      "name": "Domain",
+      "stereotype": "domain",
+      "parent": null,
+      "responsibilities": [
+        "ReportService: domain service for reports: registers reports, retrieves them, updates status, adds notes, generates notifications and monitoring statistics",
+        "UserService: domain service for users: registers users, looks up credentials and checks citizen/operator roles",
+        "Report: persistent report: data, location, assigned operator, internal notes, status updates and a status object that drives status changes",
+        "User: abstract persistent user with name, phone number and credentials (single-table inheritance)",
+        "Citizen: user who submits reports",
+        "MunicipalOperator: user who reviews, updates and annotates reports",
+        "InternalNote: persistent internal note written by an operator on a report",
+        "StatusUpdate: persistent record of a status change made by an operator",
+        "Notification: persistent notification sent to a citizen about a report status change",
+        "ReportCategory: enumerates the categories a report can have",
+        "ReportStatus: state interface: advances a report and tells whether the status is notifiable",
+        "Submitted: initial state; advancing makes the report Assigned",
+        "Assigned: state; advancing makes the report InProgress; notifiable",
+        "InProgress: state; advancing makes the report Resolved",
+        "Resolved: final state; refuses further advancement; notifiable"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Entity.Report",
+        "Entity.User",
+        "Entity.Citizen",
+        "Entity.MunicipalOperator",
+        "Entity.InternalNote",
+        "Entity.StatusUpdate",
+        "Entity.Notification",
+        "Entity.ReportCategory",
+        "Entity.ReportStatus",
+        "Entity.Submitted",
+        "Entity.Assigned",
+        "Entity.InProgress",
+        "Entity.Resolved"
+      ],
+      "support": "observed",
+      "group": false,
+      "folds": [
+        "cmp:Entity.ReportService",
+        "cmp:Entity.UserService",
+        "cmp:Entity.Report",
+        "cmp:Entity.User",
+        "cmp:Entity.Citizen",
+        "cmp:Entity.MunicipalOperator",
+        "cmp:Entity.InternalNote",
+        "cmp:Entity.StatusUpdate",
+        "cmp:Entity.Notification",
+        "cmp:Entity.ReportCategory",
+        "cmp:Entity.ReportStatus",
+        "cmp:Entity.Submitted",
+        "cmp:Entity.Assigned",
+        "cmp:Entity.InProgress",
+        "cmp:Entity.Resolved"
+      ],
+      "claims": [
+        "C21",
+        "C22",
+        "C23",
+        "C24",
+        "C25",
+        "C26",
+        "C27",
+        "C28",
+        "C29",
+        "C30",
+        "C31",
+        "C32",
+        "C33",
+        "C34",
+        "C35"
+      ]
+    },
+    {
+      "id": "group:layer:persistence",
+      "kind": "component",
+      "name": "Persistence",
+      "stereotype": "persistence",
+      "parent": null,
+      "responsibilities": [
+        "PersistenceService: generic persistence operations (save, update, findById, findByAttribute, findByFields) run in transactions",
+        "JpaUtil: singleton that owns the EntityManagerFactory of the persistence unit and creates EntityManagers"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ],
+      "support": "observed",
+      "group": false,
+      "folds": [
+        "cmp:Database.PersistenceService",
+        "cmp:Database.JpaUtil"
+      ],
+      "claims": [
+        "C36",
+        "C37"
+      ]
+    },
+    {
+      "id": "datastore:reports_db",
+      "kind": "datastore",
+      "name": "reports_db",
+      "stereotype": "MySQL",
+      "parent": null,
+      "responsibilities": [
+        "MySQL database that stores users, reports, internal notes, status updates and notifications"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false,
+      "claims": [
+        "C38"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:group:layer:presentation->group:layer:application",
+      "kind": "uses",
+      "source": "group:layer:presentation",
+      "target": "group:layer:application",
+      "label": "8 dependencies",
+      "multiplicity": null,
+      "support": "observed",
+      "member_relations": [
+        "rel:Boundary.UserLoginGUI->Control.UserLoginController",
+        "rel:Boundary.UserRegistrationGUI->Control.SystemServicesController",
+        "rel:Boundary.ReportCreationGUI->Control.SystemServicesController",
+        "rel:Boundary.SubmittedReportsGUI->Control.SystemServicesController",
+        "rel:Boundary.ReceivedReportsGUI->Control.SystemServicesController",
+        "rel:Boundary.ReportStatusUpdateGUI->Control.SystemServicesController",
+        "rel:Boundary.InternalNoteGUI->Control.SystemServicesController",
+        "rel:Boundary.ActivityMonitoringGUI->Control.SystemServicesController"
+      ]
+    },
+    {
+      "id": "rel:group:layer:presentation->group:layer:domain",
+      "kind": "uses",
+      "source": "group:layer:presentation",
+      "target": "group:layer:domain",
+      "label": "2 dependencies (skips a layer)",
+      "multiplicity": null,
+      "support": "observed",
+      "member_relations": [
+        "rel:Boundary.ReportCreationGUI->Entity.ReportCategory",
+        "rel:Boundary.ReceivedReportsGUI->Entity.ReportCategory"
+      ]
+    },
+    {
+      "id": "rel:group:layer:application->group:layer:domain",
+      "kind": "uses",
+      "source": "group:layer:application",
+      "target": "group:layer:domain",
+      "label": "16 dependencies",
+      "multiplicity": null,
+      "support": "observed",
+      "member_relations": [
+        "rel:Control.UserLoginController->Entity.UserService",
+        "rel:Control.UserRegistrationController->Entity.UserService",
+        "rel:Control.ReportCreationController->Entity.ReportService",
+        "rel:Control.ReportCreationController->Entity.UserService",
+        "rel:Control.ReportReviewController->Entity.ReportService",
+        "rel:Control.ReportReviewController->Entity.UserService",
+        "rel:Control.ReportDetailsController->Entity.ReportService",
+        "rel:Control.ReportDetailsController->Entity.UserService",
+        "rel:Control.ReportStatusUpdateController->Entity.ReportService",
+        "rel:Control.ReportStatusUpdateController->Entity.UserService",
+        "rel:Control.InternalNoteController->Entity.ReportService",
+        "rel:Control.InternalNoteController->Entity.UserService",
+        "rel:Control.ActivityMonitoringController->Entity.ReportService",
+        "rel:Control.ActivityMonitoringController->Entity.UserService",
+        "rel:Control.NotificationController->Entity.ReportService",
+        "rel:Control.ReportCreationController->Entity.ReportCategory"
+      ]
+    },
+    {
+      "id": "rel:group:layer:domain->group:layer:persistence",
+      "kind": "uses",
+      "source": "group:layer:domain",
+      "target": "group:layer:persistence",
+      "label": "2 dependencies",
+      "multiplicity": null,
+      "support": "observed",
+      "member_relations": [
+        "rel:Entity.ReportService->Database.PersistenceService",
+        "rel:Entity.UserService->Database.PersistenceService"
+      ]
+    },
+    {
+      "id": "rel:group:layer:persistence->datastore:reports_db",
+      "kind": "uses",
+      "source": "group:layer:persistence",
+      "target": "datastore:reports_db",
+      "label": "JDBC (MySQL) via JPA",
+      "multiplicity": null,
+      "support": "observed",
+      "member_relations": [
+        "rel:Database.JpaUtil->datastore:reports_db"
+      ]
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "group:layer:presentation",
+      "name": "Presentation",
+      "files": [
+        "src/main/java/Boundary/ActivityMonitoringGUI.java",
+        "src/main/java/Boundary/HomePageGUI.java",
+        "src/main/java/Boundary/InternalNoteGUI.java",
+        "src/main/java/Boundary/ReceivedReportsGUI.java",
+        "src/main/java/Boundary/ReportCreationGUI.java",
+        "src/main/java/Boundary/ReportStatusUpdateGUI.java",
+        "src/main/java/Boundary/SubmittedReportsGUI.java",
+        "src/main/java/Boundary/UserDashboardGUI.java",
+        "src/main/java/Boundary/UserLoginGUI.java",
+        "src/main/java/Boundary/UserRegistrationGUI.java"
+      ],
+      "symbols": [
+        "Boundary.HomePageGUI",
+        "Boundary.UserLoginGUI",
+        "Boundary.UserRegistrationGUI",
+        "Boundary.UserDashboardGUI",
+        "Boundary.ReportCreationGUI",
+        "Boundary.SubmittedReportsGUI",
+        "Boundary.ReceivedReportsGUI",
+        "Boundary.ReportStatusUpdateGUI",
+        "Boundary.InternalNoteGUI",
+        "Boundary.ActivityMonitoringGUI"
+      ]
+    },
+    {
+      "element": "group:layer:application",
+      "name": "Application",
+      "files": [
+        "src/main/java/Control/ActivityMonitoringController.java",
+        "src/main/java/Control/InternalNoteController.java",
+        "src/main/java/Control/NotificationController.java",
+        "src/main/java/Control/ReportCreationController.java",
+        "src/main/java/Control/ReportDetailsController.java",
+        "src/main/java/Control/ReportReviewController.java",
+        "src/main/java/Control/ReportStatusUpdateController.java",
+        "src/main/java/Control/SystemServicesController.java",
+        "src/main/java/Control/UserLoginController.java",
+        "src/main/java/Control/UserRegistrationController.java"
+      ],
+      "symbols": [
+        "Control.SystemServicesController",
+        "Control.UserLoginController",
+        "Control.UserRegistrationController",
+        "Control.ReportCreationController",
+        "Control.ReportReviewController",
+        "Control.ReportDetailsController",
+        "Control.ReportStatusUpdateController",
+        "Control.InternalNoteController",
+        "Control.ActivityMonitoringController",
+        "Control.NotificationController"
+      ]
+    },
+    {
+      "element": "group:layer:domain",
+      "name": "Domain",
+      "files": [
+        "src/main/java/Entity/Assigned.java",
+        "src/main/java/Entity/Citizen.java",
+        "src/main/java/Entity/InProgress.java",
+        "src/main/java/Entity/InternalNote.java",
+        "src/main/java/Entity/MunicipalOperator.java",
+        "src/main/java/Entity/Notification.java",
+        "src/main/java/Entity/Report.java",
+        "src/main/java/Entity/ReportCategory.java",
+        "src/main/java/Entity/ReportService.java",
+        "src/main/java/Entity/ReportStatus.java",
+        "src/main/java/Entity/Resolved.java",
+        "src/main/java/Entity/StatusUpdate.java",
+        "src/main/java/Entity/Submitted.java",
+        "src/main/java/Entity/User.java",
+        "src/main/java/Entity/UserService.java"
+      ],
+      "symbols": [
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Entity.Report",
+        "Entity.User",
+        "Entity.Citizen",
+        "Entity.MunicipalOperator",
+        "Entity.InternalNote",
+        "Entity.StatusUpdate",
+        "Entity.Notification",
+        "Entity.ReportCategory",
+        "Entity.ReportStatus",
+        "Entity.Submitted",
+        "Entity.Assigned",
+        "Entity.InProgress",
+        "Entity.Resolved"
+      ]
+    },
+    {
+      "element": "group:layer:persistence",
+      "name": "Persistence",
+      "files": [
+        "src/main/java/Database/JpaUtil.java",
+        "src/main/java/Database/PersistenceService.java"
+      ],
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ]
+    },
+    {
+      "element": "datastore:reports_db",
+      "name": "reports_db",
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    }
+  ],
+  "limitations": [
+    "Simplified like V1 (38 evidenced elements above the cap of 15): one element per layer listing its members, plus the datastore.",
+    "The repository shows none of the signals of a C&C style, so the generic style is used and the connector kind is plain 'uses' (in-process calls); no interfaces, brokers or remote connectors exist to draw.",
+    "Collaboration is shown by the entry-point chain (Boundary GUIs -> SystemServicesController facade -> use-case controllers -> ReportService/UserService -> PersistenceService -> JpaUtil -> reports_db); no dynamic scenario was requested, so call order is not shown.",
+    "The Persistence-to-reports_db relation is evidenced by the persistence unit (JpaUtil creates the factory, persistence.xml gives the JDBC url); it is drawn as 'uses' because the code does not separate read and write connectors."
+  ],
+  "gaps": [],
+  "overflow": []
+}

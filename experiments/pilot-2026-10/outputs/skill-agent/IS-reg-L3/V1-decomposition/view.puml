@@ -1,0 +1,29 @@
+@startuml
+title Decomposition view — user registration functionality
+skinparam componentStyle uml2
+skinparam shadowing false
+left to right direction
+package "Presentation" as e_group_layer_presentation_6738 <<layer>> {
+  component "AuthenticationController\n--\n- exposes the POST /api/auth/register endpoint\n- forwards role, name, surname, email,\n  password and identifier to LibraryFacade" as e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_15f0 <<presentation>>
+  component "Registration\n--\n- collects the registration form fields and\n  the selected role in the Swing client\n- requires all fields to be filled before\n  calling LibraryFacade\n- shows the error message of a failed\n  registration" as e_cmp_it_unina_reservations_boundary_Swing_Registration_b923 <<presentation>>
+  component "RestExceptionHandler\n--\n- maps IllegalArgumentException to an HTTP 400\n  response carrying the error message" as e_cmp_it_unina_reservations_boundary_SpringBoot_RestExceptionHandler_8ea8 <<presentation>>
+}
+package "Application" as e_group_layer_application_01b6 <<layer>> {
+  component "LibraryFacade\n--\n- single entry point that delegates register\n  to UserManager" as e_cmp_it_unina_reservations_controller_LibraryFacade_5114 <<application>>
+  component "UserManager\n--\n- validates the role, the first name and the\n  password length before anything else\n- validates first name, last name, email and\n  identifier of a student or librarian\n- selects StudentFactory or LibrarianFactory\n  according to the role\n- checks the student ID format (uppercase\n  letter followed by 8 digits)\n- rejects an email already associated with an\n  account\n- rejects an identifier already in use\n- raises a server error when the user could\n  not be saved" as e_cmp_it_unina_reservations_controller_UserManager_2594 <<application>>
+  component "UserFactory\n--\n- declares createUser(name, surname, email,\n  password, identifier) for role-specific\n  users" as e_cmp_it_unina_reservations_controller_factory_UserFactory_476b <<application>>
+  component "StudentFactory\n--\n- creates a Student whose studentNumber is the\n  identifier" as e_cmp_it_unina_reservations_controller_factory_StudentFactory_6b88 <<application>>
+  component "LibrarianFactory\n--\n- creates a Librarian whose\n  internalIdentifierCode is the identifier" as e_cmp_it_unina_reservations_controller_factory_LibrarianFactory_3789 <<application>>
+}
+package "Domain" as e_group_layer_domain_0f45 <<layer>> {
+  component "Student\n--\n- holds the unique studentNumber of a student" as e_cmp_it_unina_reservations_entity_Student_7051 <<domain>>
+  component "Librarian\n--\n- holds the unique internalIdentifierCode of a\n  librarian" as e_cmp_it_unina_reservations_entity_Librarian_21a6 <<domain>>
+  component "UserRegistry\n--\n- looks up users by institutional email,\n  student number and librarian code\n- saves a newly created user through\n  PersistenceManager" as e_cmp_it_unina_reservations_entity_UserRegistry_1858 <<domain>>
+  component "User\n--\n- abstract base entity of Student and\n  Librarian with a unique institutionalEmail" as e_cmp_it_unina_reservations_entity_User_0b5b <<domain>>
+}
+package "Persistence" as e_group_layer_persistence_7fe3 <<layer>> {
+  component "PersistenceManager\n--\n- persists an entity in a transaction and\n  returns false after a rollback\n- finds the first entity matching field values" as e_cmp_it_unina_reservations_database_PersistenceManager_4f34 <<persistence>>
+  component "JpaUtil\n--\n- creates EntityManager instances from the\n  reservationsPU persistence unit" as e_cmp_it_unina_reservations_database_JpaUtil_0108 <<persistence>>
+}
+' is-part-of is drawn as nesting of each component in its layer package
+@enduml
