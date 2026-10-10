@@ -9,13 +9,14 @@ How to run one goal set through the conditions so the results can be compared. I
 | **plain-agent** | One coding agent with the repository and the goal | §3.1 |
 | **skill-agent** | The same agent and model, plus the Task2View skill (`skill/`) | §3.2 |
 | **task2view** | The Task2View pipeline (ADR-006) | §3.3 |
-| **task2view-retrieval** | The pipeline with one call over retrieved code instead of tool-loop agents (baseline) | §3.3 |
+
+The pipeline's `--evidence retrieval` mode (one call over retrieved code, no tool loop) is an optional ablation for later; it is not part of the pilot.
 
 ## 0. Before generating anything
 Fix these in writing, with a date, before the first run (a short pre-registration):
 1. **Expected facts:** for each goal, the expert lists the facts a good answer must show, in `goals.yaml` under `expected:` (e.g. "ReservationController calls ReservationService.makeReservation"). They are written from the code and the goal, never from any output.
 2. **Primary outcome:** the share of a goal's expected facts that its views show, rated by people (§4). Everything else is secondary.
-3. **Primary contrast:** task2view vs plain-agent; the other pairs are secondary. Change this here, before running, if the study needs a different main question.
+3. **Comparison:** the three conditions against each other: task2view vs skill-agent, task2view vs plain-agent, and skill-agent vs plain-agent, all reported.
 4. **Rubric:** rubric v1 of `code/src/task2view/phase8/judge.py` (answers-questions, second-view, layers, placement, layout), frozen.
 
 ## 1. Hold fixed across conditions
@@ -68,8 +69,6 @@ Use the task2view skill.
 cd Task2View/code
 .venv/bin/python scripts/run_goal_set.py --goals ../experiments/pilot-2026-09/goals.yaml --repeat 3 \
   --out ../experiments/pilot-2026-09/outputs/task2view --llm anthropic:claude-sonnet-4-5 --notations plantuml
-.venv/bin/python scripts/run_goal_set.py --goals ../experiments/pilot-2026-09/goals.yaml --repeat 3 --evidence retrieval \
-  --out ../experiments/pilot-2026-09/outputs/task2view-retrieval --llm anthropic:claude-sonnet-4-5 --notations plantuml
 ```
 In the goal-set file, `systems:` should point to the prepared copies (or use `code:` per case). Leave `--judge-llm` out here; all conditions are judged together in §4. Each run's `run.log` records the tool use of every evidence task, and its README the component relations that code and claims agree on, the ones only in code (possible omissions), and the ones only claimed.
 
@@ -93,7 +92,7 @@ This writes `judge.json` per run and `experiments/<name>/judge_summary.csv`.
 - grounding (`evidence_model.json`: verified vs rejected claims);
 - the validation verdicts (`validation_report.json`).
 
-**Human rating (primary outcome and judge validation):** at least **two** raters, working independently and blind to the condition.
+**Human rating (primary outcome):** the expert rates, blind to the condition. One rater is enough for the pilot's outcome; a second, independent rater would later allow the judge to be validated (human–human agreement as the yardstick).
 ```bash
 .venv/bin/python scripts/make_rating_sheet.py --runs ../experiments/pilot-2026-09/outputs \
   --goals ../experiments/pilot-2026-09/goals.yaml --out ../experiments/pilot-2026-09/rating --rater <name>
@@ -103,7 +102,7 @@ Each rater gets `rating_sheet.csv` and `items/` (anonymised, shuffled per goal);
 .venv/bin/python scripts/judge_agreement.py --ratings ratings.csv --key ../experiments/pilot-2026-09/rating/rating_key.csv \
   --judge ../experiments/pilot-2026-09/judge_summary.csv
 ```
-This prints the weighted kappa of the judge against each rater and between raters, with 95% bootstrap intervals. The judge stays a reported, non-gating signal; a theme could become a gate only if judge–human agreement comes close to human–human agreement.
+This prints the weighted kappa of the judge against each rater (and between raters, when there are two), with 95% bootstrap intervals. With one rater it is indicative only. The judge stays a reported, non-gating signal.
 
 **The earlier expert review** (`pilot-2026-09/review/expert_labels.yaml`, 18 comments on 20 outputs) is compared with the judge only descriptively (`judge_agreement.py --labels …`): the rubric themes came from those comments, so they cannot validate it.
 
