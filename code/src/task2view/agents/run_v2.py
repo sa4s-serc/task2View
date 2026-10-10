@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from task2view.agents.runtime import AgentRuntime
 from task2view.contracts.aem import EvidenceModel, InvestigationTask, Question
@@ -64,13 +65,14 @@ def run_v2(
     languages: list[str] | None = None,
     compile_enabled: bool = True,
     evidence_mode: str = "agent",
+    cache_dir: str | Path | None = None,
     generate=None,
     judge_generate=None,
 ) -> RunV2Result:
     catalog = load_catalog()
     cfg = pipeline_config()
     languages = languages or ["plantuml"]
-    runtime = AgentRuntime(generate=generate, model=llm)
+    runtime = AgentRuntime(generate=generate, model=llm, cache_dir=cache_dir)
     llm_spec = runtime.spec
     judge_runtime = None
     if judge_llm or judge_generate is not None:

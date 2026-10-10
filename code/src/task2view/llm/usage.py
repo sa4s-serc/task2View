@@ -25,7 +25,9 @@ def pricing() -> dict:
 
 
 def cost_usd(spec: str, usage: Usage) -> float | None:
-    price = (pricing().get("models") or {}).get(spec)
+    models = pricing().get("models") or {}
+    # a Claude subscription (claude-code:) is not billed per token: report the API-equivalent cost
+    price = models.get(spec) or models.get(spec.replace("claude-code:", "anthropic:", 1))
     if price is None:
         return None
     return (usage.input_tokens * price["input"] + usage.output_tokens * price["output"]
