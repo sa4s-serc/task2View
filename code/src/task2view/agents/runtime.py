@@ -7,6 +7,7 @@ replies for free: no progress is lost when a run stops on a usage limit, an erro
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
 import time
@@ -15,7 +16,7 @@ from pathlib import Path
 
 from task2view.contracts.models import PipelineError
 from task2view.llm import get_client
-from task2view.llm.base import Prompt, joined
+from task2view.llm.base import Prompt, Usage, joined
 from task2view.llm.usage import UsageLedger
 
 GenerateFn = Callable[..., dict]
@@ -38,22 +39,27 @@ class AgentRuntime:
     def complete_json(self, prompt: Prompt, *, purpose: str = "") -> dict:
         cached = self._cache_path(prompt)
         if cached is not None and cached.exists():
-            self.ledger.record(f"{purpose or 'unlabelled'} (replayed)", self.spec, None, 0.0)
-            return json.loads(cached.read_text(encoding="utf-8"))
+            saved = json.loads(cached.read_text(encoding="utf-8"))
+            usage = Usage(**saved["usage"]) if saved.get("usage") else None  # the original call's tokens
+            self.ledger.record(f"{purpose or 'unlabelled'} (replayed)", self.spec, usage, saved.get("seconds", 0.0))
+            return saved["reply"]
         start = time.monotonic()
+        usage = None
         if self._client is not None:
             self._client.last_usage = None
         try:
             raw = self.generate(prompt if self._client is not None else joined(prompt), model=self.model)
         finally:
             usage = self._client.last_usage if self._client is not None else None
-            self.ledger.record(purpose or "unlabelled", self.spec, usage, time.monotonic() - start)
+            seconds = time.monotonic() - start
+            self.ledger.record(purpose or "unlabelled", self.spec, usage, seconds)
         if not isinstance(raw, dict):
             raise PipelineError("model reply is not a JSON object")
         reply = {k: v for k, v in raw.items() if not str(k).startswith("_")}
         if cached is not None:
             cached.parent.mkdir(parents=True, exist_ok=True)
-            cached.write_text(json.dumps(reply), encoding="utf-8")
+            cached.write_text(json.dumps({"reply": reply, "seconds": seconds,
+                                          "usage": dataclasses.asdict(usage) if usage else None}), encoding="utf-8")
         return reply
 
     def _cache_path(self, prompt: Prompt) -> Path | None:

@@ -85,7 +85,8 @@ def run_v2(
     plan = select_views(profile.selection_input(), catalog, repo_facts(card), max_views=max_views)
     questions = derive_view_questions(profile, plan, catalog)
     tasks = plan_investigation(plan, questions, card, catalog, target=profile.target, runtime=runtime, card_text=card_text)
-    grain = "package" if profile.detail_level == "overview" else "class"
+    # package boxes only for a whole-system overview; a request about a feature needs the classes involved in it
+    grain = "package" if profile.detail_level == "overview" and not profile.target else "class"
     aem = collect_evidence(tasks, questions, card, runtime, catalog, card_text=card_text, grain=grain,
                            mode=evidence_mode)
     log.append(f"round 1: {len(tasks)} tasks, {len(aem.claims)} claims, {len(aem.rejected_claims)} rejected; "

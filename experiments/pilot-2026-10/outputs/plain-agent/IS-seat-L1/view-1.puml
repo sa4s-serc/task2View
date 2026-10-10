@@ -1,0 +1,70 @@
+@startuml
+title View 1 - Components involved in seat booking (layers and dependencies)
+skinparam componentStyle rectangle
+left to right direction
+
+package "Clients (boundary)" {
+  component "Web UI\nstatic/reservation.html + app.js" as Web
+  component "Swing wizard\nDateAndRoomSelection > TimeSlotSelection >\nAreaSelection > SeatSelection >\nReservationSummary (WizardState)" as Swing
+}
+package "Spring Boot REST (boundary/SpringBoot)" {
+  component "StudyRoomController\n/api/rooms/available, /{id}/time-slots, /{id}/detail" as SRC
+  component "ReservationController\n/api/reservations/create, /{id}/cancel, /{id}/checkIn" as RC
+  component "RestExceptionHandler" as REH
+}
+package "Controller layer" {
+  component "LibraryFacade\n(singleton Facade)" as Facade
+  component "ReservationManager\nmakeReservation / cancel / checkIn / manageReservationEnd" as RM
+  component "StudyRoomManager\ngetAvailableStudyRooms / getAvailableTimeSlots / getRoomDetail" as SRM
+  component "AssignmentStrategy\n<<Strategy>> FirstAvailableAssignment" as Strat
+  component "NotificationManager\n<<Observer>>" as NM
+  interface "NotificationService" as NS
+}
+package "Entity layer (domain + registries)" {
+  component "Reservation (Subject) + ReservationState\nActive/Confirmed/Cancelled/Expired/Completed" as Res
+  component "StudyRoom / Area / Seat / TimeSlot / Student" as Dom
+  component "ReservationRegistry" as RR
+  component "StudyRoomRegistry" as SRR
+  component "UserRegistry" as UR
+}
+package "Persistence" {
+  component "PersistenceManager + JpaUtil\n(JPA, persistence.xml)" as PM
+  database "Database" as DB
+}
+package "Notification boundary" {
+  component "NotificationConfiguration\n(wires adapter at startup)" as NC
+  component "NotificationServiceAdapter" as NSA
+  component "ExternalEmailGateway (stub)" as GW
+  component "NotificationScheduler\n@Scheduled every 60s" as Sched
+}
+
+Web --> SRC
+Web --> RC
+Swing --> Facade
+SRC --> Facade
+RC --> Facade
+REH ..> RC : maps exceptions
+Facade --> RM
+Facade --> SRM
+Facade --> NM : sendReminders
+RM --> Strat
+RM --> Res
+RM --> RR
+RM --> SRR
+RM --> UR
+RM --> NM
+SRM --> SRR
+SRM --> RR
+Dom ..> SRR : Area.getAvailableSeats
+Dom ..> RR : Seat.isAvailable
+Res ..> NM : notifyObservers
+NM --> NS
+NSA ..|> NS
+NSA --> GW
+NC ..> NM : setNotificationService
+Sched --> Facade : manageReservationEnd,\nsendReminders
+RR --> PM
+SRR --> PM
+UR --> PM
+PM --> DB
+@enduml

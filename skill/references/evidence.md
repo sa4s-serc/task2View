@@ -46,9 +46,9 @@ Keep rejected claims in `rejected_claims` as `{"task", "claim", "reason"}`.
 ## 3. Evidence model (consolidation)
 Build it from the verified claims and the repository card only.
 
-**Components.** The grain follows the goal's detail level:
-- **overview:** one component per package (Python/JS: module) that holds a candidate: id `cmp:<package>`, name = the package's last segment, `realized_by` = its candidates. Skip the anchor rules below.
-- **feature / detailed:** the anchor rules below.
+**Components.** The grain follows the goal's scope and detail level:
+- **whole-system overview** (detail level overview and no target): one component per package (Python/JS: module) that holds a candidate: id `cmp:<package>`, name = the package's last segment, `realized_by` = its candidates. Skip the anchor rules below.
+- **a request about a specific feature (a target is set), or feature / detailed level:** the anchor rules below.
 
 - Every non-test code symbol that a claim is about (as `symbol`, `source` or `target`) is a candidate.
 - **Merge** an interface with exactly one implementation among the candidates into that implementation.

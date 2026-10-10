@@ -96,7 +96,7 @@ def test_investigation_tasks_have_budget_and_origin(setup):
     card, profile, plan, questions = setup
     tasks = plan_investigation(plan, questions, card, CATALOG, target=profile.target)
     assert {t.view_id for t in tasks} == {"V1-client-server", "V2-sequence"}
-    assert all(t.budget_steps == 10 for t in tasks)  # detail level "feature"
+    assert all(t.budget_steps == 16 for t in tasks)  # detail level "feature"
     assert all(t.suggested_by and t.seeds.classes for t in tasks)
 
 

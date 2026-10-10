@@ -1,0 +1,45 @@
+@startuml
+title View 3 - makeReservation runtime flow (POST /api/reservations/create)
+actor Student
+participant "app.js / Swing\nReservationSummary" as UI
+participant ReservationController as RC
+participant LibraryFacade as F
+participant ReservationManager as RM
+participant StudyRoomRegistry as SRR
+participant Area
+participant Seat
+participant ReservationRegistry as RR
+participant Reservation
+participant NotificationManager as NM
+participant NotificationServiceAdapter as NSA
+
+Student -> UI : confirm (room, area, seatId or 0, date, slot)
+UI -> RC : create(...)   [Swing calls Facade directly]
+RC -> F : makeReservation(ReservationRequestDTO)
+F -> RM : makeReservation(request)
+RM -> RM : resolveStudent (UserRegistry)
+RM -> SRR : findRoomById ; findAreaById
+RM -> RM : check room active/open, slot not started,\narea in room, seat in area
+RM -> RM : synchronized(this)
+RM -> RM : validateUniqueness\n(Student.hasActiveOrConfirmedReservation...)
+RM -> Area : getAvailableSeats(date, slot)
+Area -> SRR : getSeatsForArea
+loop each seat
+  Area -> Seat : isAvailable(date, slot)
+  Seat -> RR : findReservationsBySeat
+end
+alt seatId > 0
+  RM -> Seat : isAvailable (re-check)
+else seatId == 0
+  RM -> RM : assignmentStrategy.selectSeat(available)\n(FirstAvailableAssignment)
+end
+RM -> Reservation : new, set date/slot/seat/student, setState(ActiveState)
+RM -> RR : saveReservation
+RM -> Reservation : attach(NM) ; notifyObservers()
+Reservation -> NM : update(reservation)
+NM -> NSA : sendNotification (email; failures only logged)
+RM --> F : ReservationDTO
+F --> RC
+RC --> UI : JSON
+note over RM : IllegalArgument/IllegalState exceptions\nare mapped by RestExceptionHandler
+@enduml

@@ -1,10 +1,11 @@
 """Phase 5b — consolidate verified claims and card facts into the Architecture Evidence Model.
 
 Deterministic (design 02 §6; ADR-006 D2: cluster deterministically, names from members):
-- Components (grain follows the goal's detail level; names always exist in the code):
-  - overview: one component per package (module) holding the claimed symbols, named
-    after the package. Class-level boxes are finer than any recovered architecture.
-  - feature / detailed: every non-test code symbol a verified claim is about anchors
+- Components (grain follows the goal's scope and detail level; names always exist in the code):
+  - whole-system overview (no target): one component per package (module) holding the
+    claimed symbols, named after the package. Class-level boxes are finer than any
+    recovered architecture.
+  - a request about a feature, or feature / detailed level: every non-test code symbol a verified claim is about anchors
     one component named after it. Helper types (enums, records, exceptions, DTOs,
     single-implementation interfaces) join the one anchor that uses them; a helper
     shared by several anchors, or used by none, stays its own component.

@@ -1,0 +1,95 @@
+@startuml
+title View 2 - Core classes for seat booking (controller + entity)
+skinparam classAttributeIconSize 0
+
+class ReservationManager <<singleton>> {
+  +makeReservation(ReservationRequestDTO): ReservationDTO
+  +cancelReservation(reservationId, studentId)
+  +performCheckIn(reservationId, studentId)
+  +manageReservationEnd()
+  +getReservationHistory(studentId)
+  ~setAssignmentStrategy(AssignmentStrategy)
+  -resolveRoom / resolveArea / resolveTimeSlot
+  -validateSeatInArea / validateUniqueness
+  -selectSeat / createAndSave / notifyReservation
+}
+interface AssignmentStrategy { +selectSeat(List<Seat>): Seat }
+class FirstAvailableAssignment
+class StudyRoomManager <<singleton>> {
+  +getAvailableTimeSlots(roomId, date)
+  +getRoomDetail(roomId, timeSlotId, date): RoomDetailDTO
+}
+class NotificationManager <<singleton>> {
+  +update(Reservation)
+  +sendNotification(recipients, message)
+  +sendReminders()
+}
+interface Observer { +update(Reservation) }
+interface NotificationService { +sendNotification(List<UserDTO>, String) }
+class NotificationServiceAdapter
+class ExternalEmailGateway
+
+abstract class Subject { +attach(Observer); +notifyObservers() }
+class Reservation {
+  date; stateName (persisted); reminderSent
+  CHECK_IN_TOLERANCE_MINUTES = 10
+  +cancelReservation()  <<6h window>>
+  +performCheckIn()
+  +manageEnd()
+  +setState(ReservationState)
+  +validateActiveReservationForCurrentDate()
+}
+interface ReservationState { cancel; checkIn; manageEnd; getStatusEnum }
+class ActiveState
+class ConfirmedState
+class CancelledState
+class ExpiredState
+class CompletedState
+class Seat { +isAvailable(date, TimeSlot) }
+class Area { type; +getAvailableSeats(date, TimeSlot) }
+class StudyRoom { active; +isOpenOnDate(date); +getScheduledTimeSlots(date) }
+class TimeSlot { startTime; endTime; +getLabel() }
+class Student { +hasActiveOrConfirmedReservationForDateAndSlot(date, label) }
+class ReservationRegistry <<singleton>> {
+  +saveReservation; +update; +findById
+  +findReservationsBySeat(seatId, date, slotId)
+  +getEndingReservations(); {static} occupiesSlot(Reservation)
+}
+class StudyRoomRegistry <<singleton>> {
+  +findRoomById; +findAreaById; +findSeatById
+  +getSeatsForArea; +getAreasForRoom
+}
+class UserRegistry <<singleton>>
+class PersistenceManager
+
+ReservationManager --> AssignmentStrategy
+FirstAvailableAssignment ..|> AssignmentStrategy
+ReservationManager ..> ReservationRegistry
+ReservationManager ..> StudyRoomRegistry
+ReservationManager ..> UserRegistry
+ReservationManager ..> NotificationManager
+StudyRoomManager ..> StudyRoomRegistry
+NotificationManager ..|> Observer
+NotificationManager --> NotificationService
+NotificationServiceAdapter ..|> NotificationService
+NotificationServiceAdapter --> ExternalEmailGateway
+Reservation --|> Subject
+Subject o-- "*" Observer
+Reservation --> ReservationState : status
+ActiveState ..|> ReservationState
+ConfirmedState ..|> ReservationState
+CancelledState ..|> ReservationState
+ExpiredState ..|> ReservationState
+CompletedState ..|> ReservationState
+Reservation "*" --> "1" Seat
+Reservation "*" --> "1" TimeSlot
+Reservation "*" --> "1" Student
+Seat "*" --> "1" Area
+Area "*" --> "1" StudyRoom
+StudyRoom "1" o-- "*" TimeSlot
+Seat ..> ReservationRegistry : availability
+Area ..> StudyRoomRegistry
+ReservationRegistry --> PersistenceManager
+StudyRoomRegistry --> PersistenceManager
+UserRegistry --> PersistenceManager
+@enduml
