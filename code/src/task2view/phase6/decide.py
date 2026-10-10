@@ -9,7 +9,9 @@ Rule-based and logged; no model call. For each projected view:
    - gap                the viewpoint's evidence is absent from the repository: keep
                         what exists and report the declared gap (decision 01 §8)
    - request_evidence   nothing drawn yet and evidence rounds remain
-   - simplify           the selection overflows the detail-level cap: coarser grain
+   - simplify           fold to coarser grain (one element per layer or package), only for a
+                        whole-system overview or a selection over twice the detail-level cap;
+                        a smaller overflow keeps the most relevant elements and lists the rest
    - confirm            otherwise (limitations stay visible)
 
 A `split` into several views is part of the design but not yet automatic; an
@@ -92,6 +94,7 @@ def decide(
     *,
     evidence_rounds_left: int,
     already_simplified: bool = False,
+    whole_system: bool = False,
 ) -> ViewDecision:
     cov = coverage(view, questions, aem)
     unsupported = [c.question for c in cov if c.status == "unsupported"]
@@ -105,7 +108,8 @@ def decide(
         if view.gaps:
             return ViewDecision(decision="gap", reason="; ".join(view.gaps), **base)
         return ViewDecision(decision="drop", reason="no evidence for this view after all rounds", **base)
-    if view.overflow and not already_simplified and view.model_kind in {"uml-component", "uml-package"}:
+    if view.overflow and not already_simplified and view.model_kind in {"uml-component", "uml-package"} \
+            and (whole_system or len(view.overflow) > view.max_elements):
         return ViewDecision(decision="simplify",
                             reason=f"{len(view.overflow)} element(s) over the {view.detail_level} cap", **base)
     if view.gaps or planned.evidence_gap:

@@ -147,3 +147,19 @@ def test_judge_reports_unusable_replies_without_failing(result):
                         AgentRuntime(generate=lambda p, model=None: next(replies)), judge_spec="a:x", generator_spec="b:y")
     assert report.status == "partial" and report.independent is True
     assert json.dumps(report.scores) and len(report.scores) == len(THEMES) - 1
+
+
+def test_small_overflow_keeps_detail_unless_whole_system(result):
+    from task2view.phase6.decide import decide
+    planned = result.plan.views[0]
+    view = result.viewset.views[0].model_copy(deep=True)
+    view.gaps, view.max_elements = [], 6
+
+    def decision(overflow, whole_system):
+        view.overflow = [f"cmp:x{i}" for i in range(overflow)]
+        return decide(view, planned, result.questions, result.aem, evidence_rounds_left=0,
+                      whole_system=whole_system).decision
+
+    assert decision(1, whole_system=False) == "confirm"
+    assert decision(1, whole_system=True) == "simplify"
+    assert decision(7, whole_system=False) == "simplify"

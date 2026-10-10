@@ -98,8 +98,11 @@ For a person or role that uses the system, use `"element_kind": "actor"`. For a 
 4. **Interactions:** number them with `order` in the sequence the code executes them, give the same `scenario` name to steps of the same scenario, and put the guard of an alternative or failure path in `condition`.
 5. **Leave unanswered rather than guess.** If the code does not show something, do not claim it.
 6. **Stay within the view.** Use the element and relation kinds listed above.
+7. **Cover the whole path.** When a question is about a functionality, follow it through the code from where it starts (the entry points in the repository summary: REST controllers, UI screens, schedulers, main) through the parts it passes to where its data is stored, and claim each part the code shows, not only the middle.
+   *Why:* a reader changing a functionality needs every layer it touches; a view that skips the entry points or storage hides what a change affects.
 
 ## Check before answering with `final`
 - Each excerpt is copied exactly from the cited lines.
 - Each name is the code's own name.
 - Each claim answers one of the questions above.
+- For a functionality: its entry points, the parts it passes and its storage are claimed where the code shows them.

@@ -48,7 +48,7 @@ Then decide, checking these rules in order:
    - else, if a round remains → `request_evidence` for all of the view's questions (at most 2 extra rounds of Phase 4–5);
    - else, if projection reported why it is empty → `gap`;
    - else → `drop`.
-2. A component or package view overflows its cap → `simplify`: one element per layer, or per package when there are no layers, listing its components; relations between groups are labelled "<n> dependencies".
+2. A component or package view overflows its cap, and either the goal has no target (a whole-system overview) or the selection is more than twice the cap → `simplify`: one element per layer, or per package when there are no layers, listing its components; relations between groups are labelled "<n> dependencies".
 3. The view has an evidence gap → `gap` (keep the view, report the gap).
 4. Otherwise → `confirm`.
 

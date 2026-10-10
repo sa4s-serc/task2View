@@ -100,7 +100,7 @@ def run_v2(
         views = {vid: project_view(vid, pv, questions, aem, card, catalog, target=profile.target, fold=vid in folded)
                  for vid, pv in planned.items()}
         decisions = {vid: decide(views[vid], planned[vid], questions, aem, evidence_rounds_left=rounds_left,
-                                 already_simplified=vid in folded) for vid in views}
+                                 already_simplified=vid in folded, whole_system=not profile.target) for vid in views}
         needing = [q for d in decisions.values() if d.decision == "request_evidence" for q in d.unsupported_questions]
         to_fold = {vid for vid, d in decisions.items() if d.decision == "simplify"}
         if needing and rounds_left > 0:
