@@ -1,0 +1,28 @@
+@startuml
+title Decomposition view — seat booking functionality
+allowmixing
+top to bottom direction
+package "Presentation" as e_group_layer_presentation_8df40c <<layer>> {
+  component "NotificationServiceAdapter\n--\n- sends notification emails to recipients through an external email gateway\n- fails with an exception when email delivery does not return code 200\n- declares the interface for sending notifications to a list of users\n- abstracts sending notifications to recipients\n- implements NotificationService\n- sends emails through the external gateway" as e_cmp_it_unina_reservations_boundary_NotificationServiceAdapter_fbafc4 <<presentation>>
+  component "ReservationController\n--\n- exposes REST endpoints to create, cancel and check in reservations\n- exposes REST endpoints for creating, cancelling and checking in reservations\n- exposes REST endpoint for creating reservations\n- exposes REST routes for creating, cancelling and checking in reservations" as e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_9a6804 <<presentation>>
+  component "NotificationScheduler\n--\n- periodically triggers reservation-end handling and reminder sending\n- periodically triggers reservation-end handling and reminders" as e_cmp_it_unina_reservations_boundary_NotificationScheduler_83a51c <<presentation>>
+  component "StudyRoomController\n--\n- exposes REST endpoints for study rooms, available time slots and room detail\n- exposes REST endpoints under /api/rooms for room and seat availability queries" as e_cmp_it_unina_reservations_boundary_SpringBoot_StudyRoomController_bf9931 <<presentation>>
+  component "ExternalEmailGateway\n--\n- external email delivery returning a status code" as e_cmp_it_unina_reservations_boundary_ExternalEmailGateway_c37864 <<presentation>>
+}
+package "Application" as e_group_layer_application_663bcf <<layer>> {
+  component "ReservationManager\n--\n- validates that a student has no other active or confirmed reservation for the same date and slot\n- resolves and validates room, area and time slot for a booking\n- cancels reservations after an ownership check\n- performs check-in and ends reservations\n- cancels reservations after ownership validation\n- performs check-in and increments student visit count\n- ends reservations whose slot has expired\n- applies booking rules for room, area, seat, time slot and uniqueness\n- creates and saves reservations\n- makes and cancels seat reservations\n- validates room, area, seat and student" as e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 <<application>>
+  component "FirstAvailableAssignment\n--\n- strategy interface for choosing a seat from the available seats" as e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1 <<application>>
+  component "LibraryFacade\n--\n- singleton facade exposing use cases to the boundary\n- delegates reservation calls to ReservationManager\n- singleton facade delegating requests to managers" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 <<application>>
+  component "NotificationManager\n--\n- sends notifications through NotificationService\n- sends reservation reminders" as e_cmp_it_unina_reservations_controller_NotificationManager_02be8e <<application>>
+  component "StudyRoomManager\n--\n- computes available time slots and per-seat availability" as e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 <<application>>
+}
+package "Domain" as e_group_layer_domain_e2a928 <<layer>> {
+  component "ReservationRegistry\n--\n- finds reservations by seat, date and time slot\n- delegates storage queries to PersistenceManager\n- provides save, update and query operations for reservations\n- delegates storage to PersistenceManager\n- provides reservation data and updates reservations\n- looks up and stores reservations through PersistenceManager" as e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 <<domain>>
+  component "Seat\n--\n- decides whether it is free for a date and time slot by checking reservations" as e_cmp_it_unina_reservations_entity_Seat_9ad090 <<domain>>
+  component "Area\n--\n- groups seats within a study room\n- lists the seats available for a date and time slot" as e_cmp_it_unina_reservations_entity_Area_f48c8f <<domain>>
+  component "ReservationRequestDTO" as e_cmp_it_unina_reservations_dto_ReservationRequestDTO_08de17 <<domain>>
+}
+package "Persistence" as e_group_layer_persistence_95cc76 <<layer>> {
+  component "PersistenceManager\n--\n- persists entities in JPA transactions with rollback on failure\n- finds entities by id\n- saves and finds JPA entities within transactions with rollback on error" as e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 <<persistence>>
+}
+@enduml

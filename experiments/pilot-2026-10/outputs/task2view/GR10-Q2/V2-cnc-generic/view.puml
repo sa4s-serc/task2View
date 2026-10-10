@@ -1,0 +1,11 @@
+@startuml
+title Component-and-Connector view — progetto_ing_software_gr10-main-English
+allowmixing
+top to bottom direction
+component "Persistence\n--\n- PersistenceService: gives save, update and find operations over JPA EntityManager\n- JpaUtil: creates the EntityManagerFactory for the persistence unit" as e_fold_persistence_339e85 <<persistence>>
+component "Application\n--\n- SystemServicesController: facade that delegates feature requests to the per-feature controllers\n- UserRegistrationController\n- ReportCreationController\n- ReportReviewController\n- ReportDetailsController\n- ReportStatusUpdateController\n- … 2 more" as e_fold_application_8cad04 <<application>>
+component "Domain\n--\n- ReportService: registers new reports for citizens\n- Report: JPA entity mapped to table reports\n- InternalNote: JPA entity mapped to table internal_notes\n- Notification: JPA entity mapped to table notifications\n- StatusUpdate: JPA entity mapped to table status_updates\n- User: JPA entity mapped to table users with single-table inheritance (Citizen, MunicipalOperator)" as e_fold_domain_2d105a <<domain>>
+component "Presentation\n--\n- HomePageGUI: Swing GUI entry point launched on the client JVM via main" as e_fold_presentation_a66ceb <<presentation>>
+e_fold_application_8cad04 --> e_fold_domain_2d105a : 6 dependencies
+e_fold_domain_2d105a --> e_fold_persistence_339e85 : 1 dependencies
+@enduml

@@ -1,0 +1,569 @@
+{
+  "id": "V2-uses",
+  "viewpoint_id": "uses",
+  "viewpoint_name": "Uses",
+  "vb_ref": "2.2 Uses Style",
+  "model_kind": "uml-package",
+  "title": "Uses view — persistence layer",
+  "purpose": "Uses (2.2 Uses Style) answering dependencies for persistence layer",
+  "detail_level": "detailed",
+  "max_elements": 15,
+  "addresses": [
+    "AQ10"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "group:layer:domain",
+      "kind": "layer",
+      "name": "Domain",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:persistence",
+      "kind": "layer",
+      "name": "Persistence",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "cmp:Database.PersistenceService",
+      "kind": "component",
+      "name": "PersistenceService",
+      "stereotype": "persistence",
+      "parent": "group:layer:persistence",
+      "responsibilities": [
+        "persistence access for entities through an EntityManager"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Database.PersistenceService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Database.JpaUtil",
+      "kind": "component",
+      "name": "JpaUtil",
+      "stereotype": "persistence",
+      "parent": "group:layer:persistence",
+      "responsibilities": [
+        "singleton providing EntityManager access"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Database.JpaUtil"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.ReportService",
+      "kind": "component",
+      "name": "ReportService",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "report operations that use persistence"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.ReportService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.UserService",
+      "kind": "component",
+      "name": "UserService",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "user operations that use persistence"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.UserService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.Report",
+      "kind": "component",
+      "name": "Report",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "citizen-submitted report of an issue",
+        "persisted municipal report",
+        "persisted municipal report with category, embedded location, citizen, operator, notes and status updates",
+        "registered entity in persistence unit"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.Report"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.Citizen",
+      "kind": "component",
+      "name": "Citizen",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "citizen user subtype with discriminator CITIZEN",
+        "citizen user subtype",
+        "registered entity in persistence unit"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.Citizen"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.Notification",
+      "kind": "component",
+      "name": "Notification",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "message sent to a citizen about a report",
+        "registered entity in persistence unit"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.Notification"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.StatusUpdate",
+      "kind": "component",
+      "name": "StatusUpdate",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "records a status change of a report",
+        "records a status change of a report made by an operator"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.StatusUpdate"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.User",
+      "kind": "component",
+      "name": "User",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "abstract base entity for application users, single-table inheritance",
+        "abstract base entity for users, single-table inheritance with role discriminator"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.User"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.InternalNote",
+      "kind": "component",
+      "name": "InternalNote",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "registered entity in persistence unit"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.InternalNote"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.MunicipalOperator",
+      "kind": "component",
+      "name": "MunicipalOperator",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "registered entity in persistence unit"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.MunicipalOperator"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.ReportCategory",
+      "kind": "component",
+      "name": "ReportCategory",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "Entity.ReportCategory"
+      ],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:cmp-database-persistenceservice:uses:cmp-database-jpautil",
+      "kind": "uses",
+      "source": "cmp:Database.PersistenceService",
+      "target": "cmp:Database.JpaUtil",
+      "label": "getEntityManager, getInstance",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-internalnote:uses:cmp-entity-municipaloperator",
+      "kind": "uses",
+      "source": "cmp:Entity.InternalNote",
+      "target": "cmp:Entity.MunicipalOperator",
+      "label": null,
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-internalnote:uses:cmp-entity-report",
+      "kind": "uses",
+      "source": "cmp:Entity.InternalNote",
+      "target": "cmp:Entity.Report",
+      "label": null,
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-notification:uses:cmp-entity-citizen",
+      "kind": "uses",
+      "source": "cmp:Entity.Notification",
+      "target": "cmp:Entity.Citizen",
+      "label": "destinatario",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-notification:uses:cmp-entity-report",
+      "kind": "uses",
+      "source": "cmp:Entity.Notification",
+      "target": "cmp:Entity.Report",
+      "label": "report",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-report:uses:cmp-entity-reportcategory",
+      "kind": "uses",
+      "source": "cmp:Entity.Report",
+      "target": "cmp:Entity.ReportCategory",
+      "label": "category (enum, STRING)",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-report:uses:cmp-entity-citizen",
+      "kind": "uses",
+      "source": "cmp:Entity.Report",
+      "target": "cmp:Entity.Citizen",
+      "label": "citizenReporting (ManyToOne)",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-report:uses:cmp-entity-municipaloperator",
+      "kind": "uses",
+      "source": "cmp:Entity.Report",
+      "target": "cmp:Entity.MunicipalOperator",
+      "label": "operator (ManyToOne)",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-report:uses:cmp-entity-internalnote",
+      "kind": "uses",
+      "source": "cmp:Entity.Report",
+      "target": "cmp:Entity.InternalNote",
+      "label": "internalNotes (OneToMany, cascade ALL, orphanRemoval)",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-report:uses:cmp-entity-statusupdate",
+      "kind": "uses",
+      "source": "cmp:Entity.Report",
+      "target": "cmp:Entity.StatusUpdate",
+      "label": "statusUpdates (OneToMany, cascade ALL, orphanRemoval)",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-reportservice:uses:cmp-database-persistenceservice",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Database.PersistenceService",
+      "label": "findById, findByFields",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-reportservice:uses:cmp-entity-report",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Entity.Report",
+      "label": "getCurrentStatusName, getCitizenReporting",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-reportservice:uses:cmp-entity-notification",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Entity.Notification",
+      "label": "getNotificationId, getReport",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-reportservice:uses:cmp-entity-statusupdate",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Entity.StatusUpdate",
+      "label": "getOperator, getUpdateId",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-reportservice:uses:cmp-entity-reportcategory",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Entity.ReportCategory",
+      "label": null,
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-reportservice:uses:cmp-entity-internalnote",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Entity.InternalNote",
+      "label": "getOperator, getNoteId",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-statusupdate:uses:cmp-entity-report",
+      "kind": "uses",
+      "source": "cmp:Entity.StatusUpdate",
+      "target": "cmp:Entity.Report",
+      "label": "report",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-statusupdate:uses:cmp-entity-municipaloperator",
+      "kind": "uses",
+      "source": "cmp:Entity.StatusUpdate",
+      "target": "cmp:Entity.MunicipalOperator",
+      "label": "operator",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-userservice:uses:cmp-database-persistenceservice",
+      "kind": "uses",
+      "source": "cmp:Entity.UserService",
+      "target": "cmp:Database.PersistenceService",
+      "label": "findById, findByFields",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-userservice:uses:cmp-entity-user",
+      "kind": "uses",
+      "source": "cmp:Entity.UserService",
+      "target": "cmp:Entity.User",
+      "label": "getUserId, getName",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-userservice:uses:cmp-entity-citizen",
+      "kind": "uses",
+      "source": "cmp:Entity.UserService",
+      "target": "cmp:Entity.Citizen",
+      "label": null,
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-entity-userservice:uses:cmp-entity-municipaloperator",
+      "kind": "uses",
+      "source": "cmp:Entity.UserService",
+      "target": "cmp:Entity.MunicipalOperator",
+      "label": null,
+      "multiplicity": null,
+      "support": "observed"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "cmp:Database.PersistenceService",
+      "name": "PersistenceService",
+      "files": [
+        "src/main/java/Database/PersistenceService.java"
+      ],
+      "symbols": [
+        "Database.PersistenceService"
+      ]
+    },
+    {
+      "element": "cmp:Database.JpaUtil",
+      "name": "JpaUtil",
+      "files": [
+        "src/main/java/Database/JpaUtil.java"
+      ],
+      "symbols": [
+        "Database.JpaUtil"
+      ]
+    },
+    {
+      "element": "cmp:Entity.ReportService",
+      "name": "ReportService",
+      "files": [
+        "src/main/java/Entity/ReportService.java"
+      ],
+      "symbols": [
+        "Entity.ReportService"
+      ]
+    },
+    {
+      "element": "cmp:Entity.UserService",
+      "name": "UserService",
+      "files": [
+        "src/main/java/Entity/UserService.java"
+      ],
+      "symbols": [
+        "Entity.UserService"
+      ]
+    },
+    {
+      "element": "cmp:Entity.Report",
+      "name": "Report",
+      "files": [
+        "src/main/java/Entity/Report.java"
+      ],
+      "symbols": [
+        "Entity.Report"
+      ]
+    },
+    {
+      "element": "cmp:Entity.Citizen",
+      "name": "Citizen",
+      "files": [
+        "src/main/java/Entity/Citizen.java"
+      ],
+      "symbols": [
+        "Entity.Citizen"
+      ]
+    },
+    {
+      "element": "cmp:Entity.Notification",
+      "name": "Notification",
+      "files": [
+        "src/main/java/Entity/Notification.java"
+      ],
+      "symbols": [
+        "Entity.Notification"
+      ]
+    },
+    {
+      "element": "cmp:Entity.StatusUpdate",
+      "name": "StatusUpdate",
+      "files": [
+        "src/main/java/Entity/StatusUpdate.java"
+      ],
+      "symbols": [
+        "Entity.StatusUpdate"
+      ]
+    },
+    {
+      "element": "cmp:Entity.User",
+      "name": "User",
+      "files": [
+        "src/main/java/Entity/User.java"
+      ],
+      "symbols": [
+        "Entity.User"
+      ]
+    },
+    {
+      "element": "cmp:Entity.InternalNote",
+      "name": "InternalNote",
+      "files": [
+        "src/main/java/Entity/InternalNote.java"
+      ],
+      "symbols": [
+        "Entity.InternalNote"
+      ]
+    },
+    {
+      "element": "cmp:Entity.MunicipalOperator",
+      "name": "MunicipalOperator",
+      "files": [
+        "src/main/java/Entity/MunicipalOperator.java"
+      ],
+      "symbols": [
+        "Entity.MunicipalOperator"
+      ]
+    },
+    {
+      "element": "cmp:Entity.ReportCategory",
+      "name": "ReportCategory",
+      "files": [
+        "src/main/java/Entity/ReportCategory.java"
+      ],
+      "symbols": [
+        "Entity.ReportCategory"
+      ]
+    }
+  ],
+  "limitations": [],
+  "gaps": [],
+  "overflow": []
+}

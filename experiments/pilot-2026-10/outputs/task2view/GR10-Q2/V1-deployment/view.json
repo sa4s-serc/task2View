@@ -1,0 +1,214 @@
+{
+  "id": "V1-deployment",
+  "viewpoint_id": "deployment",
+  "viewpoint_name": "Deployment",
+  "vb_ref": "5.2 Deployment Style",
+  "model_kind": "uml-deployment",
+  "title": "Deployment view — progetto_ing_software_gr10-main-English",
+  "purpose": "Deployment (5.2 Deployment Style) answering deployment, build-packaging, data-storage",
+  "detail_level": "feature",
+  "max_elements": 12,
+  "addresses": [
+    "AQ1",
+    "AQ2",
+    "AQ3"
+  ],
+  "overlays": [],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "datastore:reports-db",
+      "kind": "datastore",
+      "name": "reports_db",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "MySQL database at 127.0.0.1:3306 that stores the persisted entities",
+        "MySQL database at 127.0.0.1:3306 holding report data",
+        "MySQL database storing reports, users, notes, status updates and notifications",
+        "MySQL database accessed through JPA EntityManager"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "execution_env:hibernate-jpa-persistence-unit-municipal-report-management-system",
+      "kind": "execution_env",
+      "name": "Hibernate JPA persistence unit Municipal_Report_Management_System",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "RESOURCE_LOCAL JPA persistence unit using the Hibernate provider inside the client JVM"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "artifact:municipal-report-management",
+      "kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "stereotype": null,
+      "parent": "execution_env:hibernate-jpa-persistence-unit-municipal-report-management-system",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "execution_env:municipal-report-management-system",
+      "kind": "execution_env",
+      "name": "Municipal_Report_Management_System",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "Hibernate JPA persistence unit with RESOURCE_LOCAL transactions"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "execution_env:hibernate",
+      "kind": "execution_env",
+      "name": "Hibernate",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "JPA provider that maps entities to MySQL"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "datastore:hbm2ddl-update-schema-generation",
+      "kind": "datastore",
+      "name": "hbm2ddl update schema generation",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "Hibernate updates the schema automatically at startup"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "datastore:municipal-report-management-system",
+      "kind": "datastore",
+      "name": "Municipal_Report_Management_System",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "JPA persistence unit backing the reports database"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:artifact-municipal-report-management:communicates:datastore-reports-db",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management",
+      "target": "datastore:reports-db",
+      "label": null,
+      "multiplicity": null,
+      "support": "inferred"
+    },
+    {
+      "id": "rel:artifact-municipal-report-management:communicates:datastore-hbm2ddl-update-schema-generation",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management",
+      "target": "datastore:hbm2ddl-update-schema-generation",
+      "label": null,
+      "multiplicity": null,
+      "support": "inferred"
+    },
+    {
+      "id": "rel:artifact-municipal-report-management:communicates:datastore-municipal-report-management-system",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management",
+      "target": "datastore:municipal-report-management-system",
+      "label": null,
+      "multiplicity": null,
+      "support": "inferred"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "datastore:reports-db",
+      "name": "reports_db",
+      "files": [
+        "src/main/java/Database/PersistenceService.java",
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "execution_env:hibernate-jpa-persistence-unit-municipal-report-management-system",
+      "name": "Hibernate JPA persistence unit Municipal_Report_Management_System",
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "artifact:municipal-report-management",
+      "name": "municipal-report-management.jar",
+      "files": [
+        "pom.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "execution_env:municipal-report-management-system",
+      "name": "Municipal_Report_Management_System",
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "execution_env:hibernate",
+      "name": "Hibernate",
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "datastore:hbm2ddl-update-schema-generation",
+      "name": "hbm2ddl update schema generation",
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "datastore:municipal-report-management-system",
+      "name": "Municipal_Report_Management_System",
+      "files": [
+        "src/main/java/Database/JpaUtil.java"
+      ],
+      "symbols": []
+    }
+  ],
+  "limitations": [
+    "5 mark(s) removed after failing validation"
+  ],
+  "gaps": [],
+  "overflow": []
+}

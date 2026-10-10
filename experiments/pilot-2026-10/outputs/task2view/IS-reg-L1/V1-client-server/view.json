@@ -1,0 +1,181 @@
+{
+  "id": "V1-client-server",
+  "viewpoint_id": "client-server",
+  "viewpoint_name": "Client-Server",
+  "vb_ref": "4.3.1 Client-Server Style",
+  "model_kind": "uml-component",
+  "title": "Client-Server view — user registration functionality",
+  "purpose": "Client-Server (4.3.1 Client-Server Style) answering collaboration for user registration functionality",
+  "detail_level": "overview",
+  "max_elements": 6,
+  "addresses": [
+    "AQ1"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "group:layer:application",
+      "kind": "layer",
+      "name": "Application",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:domain",
+      "kind": "layer",
+      "name": "Domain",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.UserManager",
+      "kind": "component",
+      "name": "UserManager",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "validates registration data",
+        "creates and registers users"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.UserManager"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "kind": "component",
+      "name": "LibraryFacade",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "single entry point that delegates registration to UserManager"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.entity.UserRegistry",
+      "kind": "component",
+      "name": "UserRegistry",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.UserRegistry"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.factory.UserFactory",
+      "kind": "component",
+      "name": "UserFactory",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.factory.UserFactory"
+      ],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-controller-usermanager",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "target": "cmp:it.unina.reservations.controller.UserManager",
+      "label": "getInstance",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-it-unina-reservations-controller-usermanager:uses:cmp-it-unina-reservations-entity-userregistry",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.entity.UserRegistry",
+      "label": "update, institutionalEmailExists",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:cmp-it-unina-reservations-controller-usermanager:uses:cmp-it-unina-reservations-controller-factory-userfactory",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.factory.UserFactory",
+      "label": "createUser",
+      "multiplicity": null,
+      "support": "observed"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "cmp:it.unina.reservations.controller.UserManager",
+      "name": "UserManager",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.UserManager"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "name": "LibraryFacade",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.entity.UserRegistry",
+      "name": "UserRegistry",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.UserRegistry"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.controller.factory.UserFactory",
+      "name": "UserFactory",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.factory.UserFactory"
+      ]
+    }
+  ],
+  "limitations": [],
+  "gaps": [],
+  "overflow": []
+}

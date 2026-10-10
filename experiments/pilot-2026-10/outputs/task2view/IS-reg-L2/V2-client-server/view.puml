@@ -1,0 +1,30 @@
+@startuml
+title Client-Server view — user registration functionality
+allowmixing
+top to bottom direction
+package "Presentation" as e_group_layer_presentation_8df40c <<layer>> {
+  component "AuthenticationController\n--\n- REST entry point for user registration at /api/auth/register\n- delegates registration to LibraryFacade\n- exposes REST endpoint /api/auth/register for user registration" as e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92 <<presentation>>
+}
+package "Application" as e_group_layer_application_663bcf <<layer>> {
+  component "UserManager\n--\n- manages user registration\n- picks the factory by role and registers the new user in UserRegistry\n- validates registration input\n- checks email and identifier uniqueness\n- creates the user through a factory\n- registers users with validation and duplicate checks\n- returns UserDTO on success" as e_cmp_it_unina_reservations_controller_UserManager_95503d <<application>>
+  component "UserFactory\n--\n- factory interface for creating users" as e_cmp_it_unina_reservations_controller_factory_UserFactory_b8da9a <<application>>
+  component "LibraryFacade\n--\n- facade exposing register to the boundary layer\n- forwards registration to UserManager" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 <<application>>
+  component "StudentFactory\n--\n- creates student users" as e_cmp_it_unina_reservations_controller_factory_StudentFactory_165e84 <<application>>
+  component "LibrarianFactory\n--\n- creates librarian users" as e_cmp_it_unina_reservations_controller_factory_LibrarianFactory_1de93f <<application>>
+}
+package "Domain" as e_group_layer_domain_e2a928 <<layer>> {
+  component "UserRegistry\n--\n- registry of users that delegates storage and lookup to PersistenceManager\n- persists new users via PersistenceManager\n- looks up users by email, student number and librarian code" as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 <<domain>>
+}
+package "Persistence" as e_group_layer_persistence_95cc76 <<layer>> {
+  component "PersistenceManager\n--\n- saves and queries User, Student and Librarian entities" as e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 <<persistence>>
+}
+database "reservationsdb" as e_datastore_reservationsdb_180af2
+e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 --> e_datastore_reservationsdb_180af2
+e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92 --> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : getInstance
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 --> e_cmp_it_unina_reservations_controller_UserManager_95503d : getInstance
+e_cmp_it_unina_reservations_controller_UserManager_95503d --> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : update, institutionalEmailExists
+e_cmp_it_unina_reservations_controller_UserManager_95503d --> e_cmp_it_unina_reservations_controller_factory_StudentFactory_165e84
+e_cmp_it_unina_reservations_controller_UserManager_95503d --> e_cmp_it_unina_reservations_controller_factory_LibrarianFactory_1de93f
+e_cmp_it_unina_reservations_controller_UserManager_95503d --> e_cmp_it_unina_reservations_controller_factory_UserFactory_b8da9a : createUser
+e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 --> e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : findFirstByFields, save
+@enduml

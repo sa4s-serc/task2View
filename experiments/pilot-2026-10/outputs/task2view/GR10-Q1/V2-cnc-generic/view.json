@@ -1,0 +1,216 @@
+{
+  "id": "V2-cnc-generic",
+  "viewpoint_id": "cnc-generic",
+  "viewpoint_name": "Component-and-Connector",
+  "vb_ref": "Ch. 3 Component-and-Connector Views",
+  "model_kind": "uml-component",
+  "title": "Component-and-Connector view — progetto_ing_software_gr10-main-English",
+  "purpose": "Component-and-Connector (Ch. 3 Component-and-Connector Views) answering layering, dependencies, collaboration",
+  "detail_level": "detailed",
+  "max_elements": 15,
+  "addresses": [
+    "AQ9",
+    "AQ10",
+    "AQ11",
+    "AQ12",
+    "AQ13",
+    "AQ14"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "fold:domain",
+      "kind": "component",
+      "name": "Domain",
+      "stereotype": "domain",
+      "parent": null,
+      "responsibilities": [
+        "ReportService: entity-layer service that holds a PersistenceService to access persistence",
+        "UserService: checks whether a user is registered",
+        "ReportCategory"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "cmp:Entity.ReportService",
+        "cmp:Entity.UserService",
+        "cmp:Entity.ReportCategory"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "fold:persistence",
+      "kind": "component",
+      "name": "Persistence",
+      "stereotype": "persistence",
+      "parent": null,
+      "responsibilities": [
+        "PersistenceService: saves and updates entities in transactions via JPA EntityManager",
+        "JpaUtil: singleton holding the EntityManagerFactory"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "cmp:Database.PersistenceService",
+        "cmp:Database.JpaUtil"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "fold:application",
+      "kind": "component",
+      "name": "Application",
+      "stereotype": "application",
+      "parent": null,
+      "responsibilities": [
+        "SystemServicesController: facade that delegates user and report operations to the specialised controllers",
+        "UserLoginController",
+        "UserRegistrationController: handles user registration requests",
+        "ReportCreationController: handles report creation requests"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "cmp:Control.SystemServicesController",
+        "cmp:Control.UserLoginController",
+        "cmp:Control.UserRegistrationController",
+        "cmp:Control.ReportCreationController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "fold:presentation",
+      "kind": "component",
+      "name": "Presentation",
+      "stereotype": "presentation",
+      "parent": null,
+      "responsibilities": [
+        "UserLoginGUI: presentation screen for user login",
+        "UserDashboardGUI",
+        "ReportCreationGUI",
+        "ActivityMonitoringGUI",
+        "ReceivedReportsGUI"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "cmp:Boundary.UserLoginGUI",
+        "cmp:Boundary.UserDashboardGUI",
+        "cmp:Boundary.ReportCreationGUI",
+        "cmp:Boundary.ActivityMonitoringGUI",
+        "cmp:Boundary.ReceivedReportsGUI"
+      ],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:fold:presentation:uses:fold:application",
+      "kind": "uses",
+      "source": "fold:presentation",
+      "target": "fold:application",
+      "label": "4 dependencies",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:fold:presentation:uses:fold:domain",
+      "kind": "uses",
+      "source": "fold:presentation",
+      "target": "fold:domain",
+      "label": "2 dependencies",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:fold:application:uses:fold:domain",
+      "kind": "uses",
+      "source": "fold:application",
+      "target": "fold:domain",
+      "label": "4 dependencies",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:fold:domain:uses:fold:persistence",
+      "kind": "uses",
+      "source": "fold:domain",
+      "target": "fold:persistence",
+      "label": "2 dependencies",
+      "multiplicity": null,
+      "support": "observed"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "fold:domain",
+      "name": "Domain",
+      "files": [
+        "src/main/java/Entity/ReportCategory.java",
+        "src/main/java/Entity/ReportService.java",
+        "src/main/java/Entity/UserService.java"
+      ],
+      "symbols": [
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Entity.ReportCategory"
+      ]
+    },
+    {
+      "element": "fold:persistence",
+      "name": "Persistence",
+      "files": [
+        "src/main/java/Database/JpaUtil.java",
+        "src/main/java/Database/PersistenceService.java"
+      ],
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ]
+    },
+    {
+      "element": "fold:application",
+      "name": "Application",
+      "files": [
+        "src/main/java/Control/ReportCreationController.java",
+        "src/main/java/Control/SystemServicesController.java",
+        "src/main/java/Control/UserLoginController.java",
+        "src/main/java/Control/UserRegistrationController.java"
+      ],
+      "symbols": [
+        "Control.SystemServicesController",
+        "Control.UserLoginController",
+        "Control.UserRegistrationController",
+        "Control.ReportCreationController"
+      ]
+    },
+    {
+      "element": "fold:presentation",
+      "name": "Presentation",
+      "files": [
+        "src/main/java/Boundary/ActivityMonitoringGUI.java",
+        "src/main/java/Boundary/ReceivedReportsGUI.java",
+        "src/main/java/Boundary/ReportCreationGUI.java",
+        "src/main/java/Boundary/UserDashboardGUI.java",
+        "src/main/java/Boundary/UserLoginGUI.java"
+      ],
+      "symbols": [
+        "Boundary.UserLoginGUI",
+        "Boundary.UserDashboardGUI",
+        "Boundary.ReportCreationGUI",
+        "Boundary.ActivityMonitoringGUI",
+        "Boundary.ReceivedReportsGUI"
+      ]
+    }
+  ],
+  "limitations": [
+    "simplified to one element per layer or package (Phase 6)"
+  ],
+  "gaps": [],
+  "overflow": []
+}

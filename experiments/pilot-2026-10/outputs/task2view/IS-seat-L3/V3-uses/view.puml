@@ -1,0 +1,66 @@
+@startuml
+title Uses view — seat booking functionality
+allowmixing
+top to bottom direction
+package "Application" as e_group_layer_application_663bcf <<layer>> {
+  component "ReservationManager\n--\n- validates that a student has no other active or confirmed reservation for the same date and slot\n- resolves and validates room, area and time slot for a booking\n- cancels reservations after an ownership check\n- performs check-in and ends reservations\n- cancels reservations after ownership validation\n- performs check-in and increments student visit count\n- ends reservations whose slot has expired\n- applies booking rules for room, area, seat, time slot and uniqueness\n- creates and saves reservations\n- makes and cancels seat reservations\n- validates room, area, seat and student" as e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 <<application>>
+  component "LibraryFacade\n--\n- singleton facade exposing use cases to the boundary\n- delegates reservation calls to ReservationManager\n- singleton facade delegating requests to managers" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 <<application>>
+  component "NotificationManager\n--\n- sends notifications through NotificationService\n- sends reservation reminders" as e_cmp_it_unina_reservations_controller_NotificationManager_02be8e <<application>>
+  component "FirstAvailableAssignment\n--\n- strategy interface for choosing a seat from the available seats" as e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1 <<application>>
+  component "StudyRoomManager\n--\n- computes available time slots and per-seat availability" as e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 <<application>>
+}
+package "Domain" as e_group_layer_domain_e2a928 <<layer>> {
+  component "Seat\n--\n- decides whether it is free for a date and time slot by checking reservations" as e_cmp_it_unina_reservations_entity_Seat_9ad090 <<domain>>
+  component "ReservationRegistry\n--\n- finds reservations by seat, date and time slot\n- delegates storage queries to PersistenceManager\n- provides save, update and query operations for reservations\n- delegates storage to PersistenceManager\n- provides reservation data and updates reservations\n- looks up and stores reservations through PersistenceManager" as e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 <<domain>>
+  component "Area\n--\n- groups seats within a study room\n- lists the seats available for a date and time slot" as e_cmp_it_unina_reservations_entity_Area_f48c8f <<domain>>
+  component "StudyRoomRegistry" as e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b <<domain>>
+  component "Reservation" as e_cmp_it_unina_reservations_entity_Reservation_1d4a5f <<domain>>
+  component "StudyRoom" as e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a <<domain>>
+  component "UserRegistry" as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 <<domain>>
+  component "ReservationRequestDTO" as e_cmp_it_unina_reservations_dto_ReservationRequestDTO_08de17 <<domain>>
+  component "ReservationDTO" as e_cmp_it_unina_reservations_dto_ReservationDTO_3c431a <<domain>>
+  component "ActiveState" as e_cmp_it_unina_reservations_entity_state_ActiveState_e3bd72 <<domain>>
+}
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 --> e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 : getInstance
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 --> e_cmp_it_unina_reservations_dto_ReservationRequestDTO_08de17
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 --> e_cmp_it_unina_reservations_dto_ReservationDTO_3c431a
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 --> e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 : getInstance
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 --> e_cmp_it_unina_reservations_controller_NotificationManager_02be8e : getInstance
+e_cmp_it_unina_reservations_controller_NotificationManager_02be8e --> e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 : getEndingReservations, update
+e_cmp_it_unina_reservations_controller_NotificationManager_02be8e --> e_cmp_it_unina_reservations_entity_Reservation_1d4a5f : getId, getStudent
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 : update, findById
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : findSeatById, findAreaById
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : findStudentById, update
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1 : selectSeat
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_dto_ReservationRequestDTO_08de17 : getRoomId, getAreaId
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_dto_ReservationDTO_3c431a : setReservationId, setDate
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getId, getAvailableSeats
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_Seat_9ad090 : getArea, getId
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_Reservation_1d4a5f : attach, getDate
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_controller_NotificationManager_02be8e : getInstance, sendNotification
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_state_ActiveState_e3bd72 : getInstance
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a : getId, isActive
+e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : findRoomById, getAreasForRoom
+e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 --> e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 : findAllByRoom, occupiesSlot
+e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a : getId, getName
+e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 --> e_cmp_it_unina_reservations_entity_Reservation_1d4a5f : getStudent, getSeat
+e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 --> e_cmp_it_unina_reservations_controller_NotificationManager_02be8e : getInstance
+e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getId, getType
+e_cmp_it_unina_reservations_controller_StudyRoomManager_432640 --> e_cmp_it_unina_reservations_entity_Seat_9ad090 : getId, isAvailable
+e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1 --> e_cmp_it_unina_reservations_entity_Seat_9ad090
+e_cmp_it_unina_reservations_entity_Area_f48c8f --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a
+e_cmp_it_unina_reservations_entity_Area_f48c8f --> e_cmp_it_unina_reservations_entity_Seat_9ad090 : isAvailable
+e_cmp_it_unina_reservations_entity_Area_f48c8f --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : getInstance, getSeatsForArea
+e_cmp_it_unina_reservations_entity_Reservation_1d4a5f --> e_cmp_it_unina_reservations_entity_Seat_9ad090
+e_cmp_it_unina_reservations_entity_Reservation_1d4a5f --> e_cmp_it_unina_reservations_entity_state_ActiveState_e3bd72 : getInstance
+e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 --> e_cmp_it_unina_reservations_entity_Reservation_1d4a5f : getState
+e_cmp_it_unina_reservations_entity_Seat_9ad090 --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getStudyRoom
+e_cmp_it_unina_reservations_entity_Seat_9ad090 --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a
+e_cmp_it_unina_reservations_entity_Seat_9ad090 --> e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 : getInstance, findReservationsBySeat
+e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getSeats, createSeats
+e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : getInstance, getAreasForRoom
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a : isOpenOnDate, getScheduledTimeSlots
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getAvailableSeats
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b --> e_cmp_it_unina_reservations_entity_Seat_9ad090
+e_cmp_it_unina_reservations_entity_state_ActiveState_e3bd72 --> e_cmp_it_unina_reservations_entity_Reservation_1d4a5f : setState
+@enduml

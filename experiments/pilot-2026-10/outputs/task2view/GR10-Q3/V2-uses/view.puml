@@ -1,0 +1,43 @@
+@startuml
+title Uses view — persistence layer
+allowmixing
+top to bottom direction
+package "Domain" as e_group_layer_domain_e2a928 <<layer>> {
+  component "ReportService\n--\n- report operations that use persistence" as e_cmp_Entity_ReportService_a6ddad <<domain>>
+  component "UserService\n--\n- user operations that use persistence" as e_cmp_Entity_UserService_080aa7 <<domain>>
+  component "Report\n--\n- citizen-submitted report of an issue\n- persisted municipal report\n- persisted municipal report with category, embedded location, citizen, operator, notes and status updates\n- registered entity in persistence unit" as e_cmp_Entity_Report_3e9eab <<domain>>
+  component "Citizen\n--\n- citizen user subtype with discriminator CITIZEN\n- citizen user subtype\n- registered entity in persistence unit" as e_cmp_Entity_Citizen_aa6c72 <<domain>>
+  component "Notification\n--\n- message sent to a citizen about a report\n- registered entity in persistence unit" as e_cmp_Entity_Notification_aeb6e1 <<domain>>
+  component "StatusUpdate\n--\n- records a status change of a report\n- records a status change of a report made by an operator" as e_cmp_Entity_StatusUpdate_7d45b0 <<domain>>
+  component "User\n--\n- abstract base entity for application users, single-table inheritance\n- abstract base entity for users, single-table inheritance with role discriminator" as e_cmp_Entity_User_26c587 <<domain>>
+  component "InternalNote\n--\n- registered entity in persistence unit" as e_cmp_Entity_InternalNote_06d507 <<domain>>
+  component "MunicipalOperator\n--\n- registered entity in persistence unit" as e_cmp_Entity_MunicipalOperator_5adc12 <<domain>>
+  component "ReportCategory" as e_cmp_Entity_ReportCategory_fd3c5b <<domain>>
+}
+package "Persistence" as e_group_layer_persistence_95cc76 <<layer>> {
+  component "PersistenceService\n--\n- persistence access for entities through an EntityManager" as e_cmp_Database_PersistenceService_8160ea <<persistence>>
+  component "JpaUtil\n--\n- singleton providing EntityManager access" as e_cmp_Database_JpaUtil_fd7e85 <<persistence>>
+}
+e_cmp_Database_PersistenceService_8160ea --> e_cmp_Database_JpaUtil_fd7e85 : getEntityManager, getInstance
+e_cmp_Entity_InternalNote_06d507 --> e_cmp_Entity_MunicipalOperator_5adc12
+e_cmp_Entity_InternalNote_06d507 --> e_cmp_Entity_Report_3e9eab
+e_cmp_Entity_Notification_aeb6e1 --> e_cmp_Entity_Citizen_aa6c72 : destinatario
+e_cmp_Entity_Notification_aeb6e1 --> e_cmp_Entity_Report_3e9eab : report
+e_cmp_Entity_Report_3e9eab --> e_cmp_Entity_ReportCategory_fd3c5b : category (enum, STRING)
+e_cmp_Entity_Report_3e9eab --> e_cmp_Entity_Citizen_aa6c72 : citizenReporting (ManyToOne)
+e_cmp_Entity_Report_3e9eab --> e_cmp_Entity_MunicipalOperator_5adc12 : operator (ManyToOne)
+e_cmp_Entity_Report_3e9eab --> e_cmp_Entity_InternalNote_06d507 : internalNotes (OneToMany, cascade ALL, orphanRemoval)
+e_cmp_Entity_Report_3e9eab --> e_cmp_Entity_StatusUpdate_7d45b0 : statusUpdates (OneToMany, cascade ALL, orphanRemoval)
+e_cmp_Entity_ReportService_a6ddad --> e_cmp_Database_PersistenceService_8160ea : findById, findByFields
+e_cmp_Entity_ReportService_a6ddad --> e_cmp_Entity_Report_3e9eab : getCurrentStatusName, getCitizenReporting
+e_cmp_Entity_ReportService_a6ddad --> e_cmp_Entity_Notification_aeb6e1 : getNotificationId, getReport
+e_cmp_Entity_ReportService_a6ddad --> e_cmp_Entity_StatusUpdate_7d45b0 : getOperator, getUpdateId
+e_cmp_Entity_ReportService_a6ddad --> e_cmp_Entity_ReportCategory_fd3c5b
+e_cmp_Entity_ReportService_a6ddad --> e_cmp_Entity_InternalNote_06d507 : getOperator, getNoteId
+e_cmp_Entity_StatusUpdate_7d45b0 --> e_cmp_Entity_Report_3e9eab : report
+e_cmp_Entity_StatusUpdate_7d45b0 --> e_cmp_Entity_MunicipalOperator_5adc12 : operator
+e_cmp_Entity_UserService_080aa7 --> e_cmp_Database_PersistenceService_8160ea : findById, findByFields
+e_cmp_Entity_UserService_080aa7 --> e_cmp_Entity_User_26c587 : getUserId, getName
+e_cmp_Entity_UserService_080aa7 --> e_cmp_Entity_Citizen_aa6c72
+e_cmp_Entity_UserService_080aa7 --> e_cmp_Entity_MunicipalOperator_5adc12
+@enduml

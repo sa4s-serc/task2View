@@ -1,0 +1,14 @@
+@startuml
+title Client-Server view — seat booking functionality
+allowmixing
+top to bottom direction
+package "Presentation" as e_group_layer_presentation_8df40c <<layer>> {
+  component "ReservationController\n--\n- REST entry point for creating, cancelling and checking in reservations under /api/reservations" as e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_9a6804 <<presentation>>
+}
+package "Application" as e_group_layer_application_663bcf <<layer>> {
+  component "LibraryFacade\n--\n- singleton facade that delegates reservation calls to ReservationManager" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 <<application>>
+  component "ReservationManager\n--\n- handles makeReservation requests delegated from LibraryFacade" as e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 <<application>>
+}
+e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_9a6804 --> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : getInstance
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 --> e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 : getInstance
+@enduml

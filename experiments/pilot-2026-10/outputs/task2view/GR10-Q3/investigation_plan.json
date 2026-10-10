@@ -1,0 +1,312 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "data-structure",
+    "subject": "users",
+    "goal": "Collect the JPA entity and enum definitions (Report, User, Credentials, Citizen, MunicipalOperator, Location, Notification, InternalNote, StatusUpdate, ReportCategory, ReportStatus) with their attributes, primary keys, relationship annotations (OneToMany, ManyToOne, OneToOne, embedded or composition), and inheritance mappings, plus the persistence unit's registered entity classes.",
+    "seeds": {
+      "symbols": [
+        "Entity.Report",
+        "Entity.User",
+        "Entity.Notification",
+        "Entity.InternalNote",
+        "Entity.MunicipalOperator",
+        "Entity.ReportCategory"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "schema",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "data-structure",
+    "subject": "reports",
+    "goal": "Collect the persisted entity and enum definitions related to reports (fields, primary keys, ORM relationship annotations, inheritance, and enum values) plus the persistence-unit's list of mapped classes, to establish attributes, keys, and associations among Report, Location, StatusUpdate, InternalNote, Notification, User, Citizen and MunicipalOperator.",
+    "seeds": {
+      "symbols": [
+        "Entity.Report",
+        "Entity.ReportCategory",
+        "Entity.ReportStatus",
+        "Entity.InternalNote",
+        "Entity.Notification",
+        "Entity.MunicipalOperator"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "schema",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ3"
+    ],
+    "need": "data-structure",
+    "subject": "locations",
+    "goal": "Find the Location entity's attributes, primary key and JPA mapping annotations, plus how Report references Location (relationship type, cardinality, cascade) and how locations are persisted and queried.",
+    "seeds": {
+      "symbols": [
+        "Entity.Location",
+        "Entity.Report",
+        "Database.PersistenceService",
+        "Database.JpaUtil",
+        "Control.SystemServicesController"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "schema",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT4",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ4"
+    ],
+    "need": "data-structure",
+    "subject": "categories",
+    "goal": "Collect the JPA entity and enum definitions (fields, id keys, relationship annotations, inheritance and embedded/composition mappings) for Report, ReportCategory, User, Citizen, MunicipalOperator, Credentials, Location, Notification, InternalNote and StatusUpdate, plus the persistence-unit's registered entity classes.",
+    "seeds": {
+      "symbols": [
+        "Entity.Report",
+        "Entity.ReportCategory",
+        "Entity.User",
+        "Entity.Notification",
+        "Entity.InternalNote",
+        "Entity.MunicipalOperator"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "schema",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT5",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ5"
+    ],
+    "need": "data-structure",
+    "subject": "states",
+    "goal": "Collect the JPA entity classes and enums with their attributes, primary keys, annotated relationships (one-to-many, many-to-one, embedded, inheritance) and the persistence-unit's registered entity classes to describe the data model.",
+    "seeds": {
+      "symbols": [
+        "Entity.Report",
+        "Entity.StatusUpdate",
+        "Entity.ReportStatus",
+        "Entity.User",
+        "Entity.Notification",
+        "Entity.InternalNote"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "schema",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT6",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ6",
+      "AQ7",
+      "AQ8",
+      "AQ9"
+    ],
+    "need": "data-structure",
+    "subject": "state changes",
+    "goal": "Collect the attributes, primary keys, relationship mappings (e.g. to Report, MunicipalOperator, Citizen) and enum types of the StatusUpdate, InternalNote and Notification entities, and find how the persistence unit, JPA/Hibernate setup and MySQL database are configured and used to store them.",
+    "seeds": {
+      "symbols": [
+        "Entity.StatusUpdate",
+        "Entity.InternalNote",
+        "Entity.Notification",
+        "Entity.ReportStatus",
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "schema",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT7",
+    "view_id": "V2-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ10"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect the import, field and call references among the persistence-layer classes (PersistenceService, JpaUtil) and the entities, services and controllers they use or that use them, to map which persistence parts depend on which other parts.",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil",
+        "Control.SystemServicesController",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Entity.Report"
+      ],
+      "paths": [
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

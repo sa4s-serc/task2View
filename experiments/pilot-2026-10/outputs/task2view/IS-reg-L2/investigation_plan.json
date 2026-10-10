@@ -1,0 +1,136 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "decomposition",
+    "subject": null,
+    "goal": "Collect evidence of which classes and packages take part in user registration (boundary entry points, facade, manager, factories, registry, entity, DTO, persistence), what each one is responsible for, and which layer or subsystem package contains each.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.controller.factory.UserFactory",
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "collaboration",
+    "subject": null,
+    "goal": "Collect evidence of how a registration request flows from the Swing Registration form and the REST /api/auth/register endpoint through LibraryFacade, UserManager, UserFactory and UserRegistry to PersistenceManager and the MySQL database, including the DTOs and call interfaces exchanged at each step.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.database.PersistenceManager"
+      ],
+      "paths": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "request-reply",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ3"
+    ],
+    "need": "interface-contract",
+    "subject": null,
+    "goal": "Collect the signatures, parameters, return values, validation rules and thrown exceptions or HTTP error responses of the registration operation across the REST endpoint and Swing client, through UserManager, UserFactory and UserRegistry, including how the user is persisted and what duplicate or invalid input errors result.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.controller.factory.UserFactory",
+        "it.unina.reservations.dto.UserDTO",
+        "it.unina.reservations.boundary.Swing.Registration"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "request-reply",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

@@ -1,3 +1,9 @@
 Task2View pipeline version used for all pilot-2026-10 task2view runs:
   git tag pilot-2026-10-frozen (commit 9f6b52a, 2026-10-10)
 Model: claude-code:claude-sonnet-5-5 via the Claude Agent SDK. Do not change the pipeline until these runs are complete.
+
+Known issues of the frozen version, found after the runs (2026-10-11); they affect verdict labels only, not the views:
+- Phase 8 coverage check: "the view has questions to answer but draws no relation" fails every decomposition view,
+  which shows is-part-of by nesting rather than edges (6 views: IS-seat-L2/L3, IS-reg-L2/L3, GR10-Q1 V1-decomposition).
+- Use-case projection caps use cases but not actors, so GR10-Q4 V1-use-case exceeds the max_elements cap (6 > 5).
+Fix after the pilot; report the verdicts with this note.

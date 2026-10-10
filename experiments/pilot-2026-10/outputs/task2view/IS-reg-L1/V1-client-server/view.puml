@@ -1,0 +1,16 @@
+@startuml
+title Client-Server view — user registration functionality
+allowmixing
+top to bottom direction
+package "Application" as e_group_layer_application_663bcf <<layer>> {
+  component "UserManager\n--\n- validates registration data\n- creates and registers users" as e_cmp_it_unina_reservations_controller_UserManager_95503d <<application>>
+  component "LibraryFacade\n--\n- single entry point that delegates registration to UserManager" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 <<application>>
+  component "UserFactory" as e_cmp_it_unina_reservations_controller_factory_UserFactory_b8da9a <<application>>
+}
+package "Domain" as e_group_layer_domain_e2a928 <<layer>> {
+  component "UserRegistry" as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 <<domain>>
+}
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 --> e_cmp_it_unina_reservations_controller_UserManager_95503d : getInstance
+e_cmp_it_unina_reservations_controller_UserManager_95503d --> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : update, institutionalEmailExists
+e_cmp_it_unina_reservations_controller_UserManager_95503d --> e_cmp_it_unina_reservations_controller_factory_UserFactory_b8da9a : createUser
+@enduml

@@ -1,0 +1,40 @@
+REPOSITORY progetto_ing_software_gr10-main-English
+languages: java (39 files)
+files: build 1, code 39, config 1, docs 1, other 5, test 5
+layers (top to bottom):
+  presentation: Boundary
+  application: Control
+  domain: Entity
+  persistence: Database
+entry points (3):
+  main Boundary.HomePageGUI — main (src/main/java/Boundary/HomePageGUI.java:75)
+  main Boundary.UserLoginGUI — main (src/main/java/Boundary/UserLoginGUI.java:91)
+  main Boundary.UserRegistrationGUI — main (src/main/java/Boundary/UserRegistrationGUI.java:145)
+persisted entities (9):
+  Citizen [orm] 
+  Credentials [orm] email, password
+  InternalNote [orm] noteId*, text, dateEntry, operator→MunicipalOperator, report→Report
+  Location [orm] city, cap, street, streetNumber, municipalArea
+  MunicipalOperator [orm] 
+  Notification [orm] notificationId*, sentDate, message, notifiedStatus, destinatario→Citizen, report→Report
+  Report [orm] reportId*, title, description, category, location→Location, dateReport, imageAttached, currentStatusName
+  StatusUpdate [orm] updateId*, updateDate, newStatus, report→Report, operator→MunicipalOperator
+  User [orm] userId*, name, lastName, phoneNumber, credentials→Credentials
+deployment / configuration:
+  persistence-unit Municipal_Report_Management_System {'provider': 'org.hibernate.jpa.HibernatePersistenceProvider', 'jdbc_url': 'jdbc:mysql://127.0.0.1:3306/reports_db'}
+build:
+  maven municipal-report-management jar deps: junit-jupiter, forms_rt, mysql-connector-j, hibernate-core
+most depended-on symbols:
+  Entity.Report (60 incoming)
+  Entity.ReportService (29 incoming)
+  Database.PersistenceService (28 incoming)
+  Entity.UserService (27 incoming)
+  Control.SystemServicesController (26 incoming)
+  Boundary.UserDashboardGUI (12 incoming)
+  Entity.MunicipalOperator (11 incoming)
+  Entity.User (10 incoming)
+  Entity.Notification (10 incoming)
+  Entity.ReportCategory (9 incoming)
+  Entity.ReportStatus (8 incoming)
+  Entity.InternalNote (8 incoming)
+signals: build-config, deploy-config, gui-client, inheritance, layered, lifecycle, persisted-data, tests

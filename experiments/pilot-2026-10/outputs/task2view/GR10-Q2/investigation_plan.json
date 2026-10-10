@@ -1,0 +1,291 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-deployment",
+    "viewpoint_id": "deployment",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "deployment",
+    "subject": null,
+    "goal": "Collect evidence of the persistence unit's JDBC/MySQL connection settings, the build/packaging artifact (jar and dependencies), the GUI main entry points launched on the client JVM, and how the Boundary and Control code reaches the database via PersistenceService, to identify runtime nodes, execution environments, artifacts, the datastore and their communication links.",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Control.SystemServicesController",
+        "Boundary.HomePageGUI",
+        "Boundary.UserLoginGUI",
+        "Boundary.UserRegistrationGUI",
+        "Boundary.UserDashboardGUI"
+      ],
+      "paths": [
+        "pom.xml",
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "deploy",
+        "config",
+        "build",
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "node",
+      "execution_env",
+      "artifact",
+      "datastore"
+    ],
+    "expect_relations": [
+      "deploys",
+      "communicates",
+      "contains"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V1-deployment",
+    "viewpoint_id": "deployment",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "build-packaging",
+    "subject": null,
+    "goal": "Collect evidence of the deployable artifacts (the jar and its main entry points), how Maven builds and packages them (dependencies, packaging and plugin settings), and how the application connects to the MySQL reports_db datastore through the Hibernate persistence unit.",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Boundary.HomePageGUI",
+        "Boundary.UserLoginGUI",
+        "Boundary.UserRegistrationGUI",
+        "Control.SystemServicesController"
+      ],
+      "paths": [
+        "src/main/java/Boundary/HomePageGUI.java",
+        "src/main/java/Boundary/UserLoginGUI.java",
+        "src/main/java/Boundary/UserRegistrationGUI.java"
+      ],
+      "classes": [
+        "deploy",
+        "config",
+        "build",
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "node",
+      "execution_env",
+      "artifact",
+      "datastore"
+    ],
+    "expect_relations": [
+      "deploys",
+      "communicates",
+      "contains"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V1-deployment",
+    "viewpoint_id": "deployment",
+    "question_ids": [
+      "AQ3"
+    ],
+    "need": "data-storage",
+    "subject": null,
+    "goal": "Find the persistence-unit configuration (Hibernate provider, MySQL JDBC URL reports_db, schema generation settings), the JPA entity mappings and tables, and how PersistenceService/JpaUtil create the EntityManagerFactory and connect the Java desktop GUI application to the MySQL database.",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil",
+        "Control.SystemServicesController",
+        "Entity.Report",
+        "Entity.InternalNote"
+      ],
+      "paths": [
+        "pom.xml"
+      ],
+      "classes": [
+        "deploy",
+        "config",
+        "build",
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "node",
+      "execution_env",
+      "artifact",
+      "datastore"
+    ],
+    "expect_relations": [
+      "deploys",
+      "communicates",
+      "contains"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT4",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ4"
+    ],
+    "need": "collaboration",
+    "subject": null,
+    "goal": "Find which GUI boundary components call SystemServicesController and the Entity service classes (ReportService, UserService), how those reach PersistenceService/JpaUtil and the Hibernate persistence-unit MySQL datastore, and which calls read versus write data for each feature.",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Database.PersistenceService",
+        "Database.JpaUtil",
+        "Boundary.UserDashboardGUI",
+        "Entity.ReportService",
+        "Boundary.ActivityMonitoringGUI"
+      ],
+      "paths": [
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent"
+    ]
+  },
+  {
+    "id": "IT5",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ5"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect the import, instantiation and method-call dependencies among Boundary GUIs, Control, Entity services and Database persistence classes, plus the JPA persistence-unit configuration and MySQL datastore they use, to map which component uses or reads/writes which.",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Database.PersistenceService",
+        "Database.JpaUtil",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Boundary.UserDashboardGUI"
+      ],
+      "paths": [
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent"
+    ]
+  },
+  {
+    "id": "IT6",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ6"
+    ],
+    "need": "interface-contract",
+    "subject": null,
+    "goal": "Collect the public method signatures (parameters, return values, thrown exceptions and documented behavior) that the controller, service classes and persistence service provide to and require from the GUI boundary classes and the database.",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Database.PersistenceService",
+        "Entity.MunicipalOperator",
+        "Entity.ReportCategory"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

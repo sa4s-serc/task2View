@@ -1,0 +1,455 @@
+{
+  "id": "V1-decomposition",
+  "viewpoint_id": "decomposition",
+  "viewpoint_name": "Decomposition",
+  "vb_ref": "2.1 Decomposition Style",
+  "model_kind": "uml-package",
+  "title": "Decomposition view — progetto_ing_software_gr10-main-English",
+  "purpose": "Decomposition (2.1 Decomposition Style) answering decomposition, layering",
+  "detail_level": "detailed",
+  "max_elements": 15,
+  "addresses": [
+    "AQ1",
+    "AQ2",
+    "AQ3",
+    "AQ4",
+    "AQ5",
+    "AQ6",
+    "AQ7",
+    "AQ8"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "group:layer:presentation",
+      "kind": "layer",
+      "name": "Presentation",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:application",
+      "kind": "layer",
+      "name": "Application",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:domain",
+      "kind": "layer",
+      "name": "Domain",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "group:layer:persistence",
+      "kind": "layer",
+      "name": "Persistence",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": true
+    },
+    {
+      "id": "cmp:Database.PersistenceService",
+      "kind": "component",
+      "name": "PersistenceService",
+      "stereotype": "persistence",
+      "parent": "group:layer:persistence",
+      "responsibilities": [
+        "saves and updates entities in transactions via JPA EntityManager",
+        "rolls back on failure and closes the EntityManager",
+        "saves and updates objects in a database transaction through JPA EntityManager",
+        "saves entities within a transaction with rollback on failure",
+        "obtains EntityManager from JpaUtil",
+        "saves and updates entities inside JPA transactions"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Database.PersistenceService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Boundary.UserLoginGUI",
+      "kind": "component",
+      "name": "UserLoginGUI",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [
+        "presentation screen for user login",
+        "holds a UserLoginController to delegate login handling",
+        "Swing sign-in screen collecting email and password",
+        "delegates login to UserLoginController"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Boundary.UserLoginGUI"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.UserService",
+      "kind": "component",
+      "name": "UserService",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "checks whether a user is registered",
+        "verifies that a user is a citizen",
+        "uses PersistenceService from the Database package for data access",
+        "checks whether a user is registered or a citizen",
+        "looks up users through the persistence service",
+        "checks whether users are registered or are citizens/operators",
+        "registers users and retrieves user data by credentials"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.UserService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.SystemServicesController",
+      "kind": "component",
+      "name": "SystemServicesController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "facade that delegates user and report operations to the specialised controllers",
+        "catches runtime errors from controllers and returns a success flag",
+        "facade controller that delegates use-case requests to specialised controllers",
+        "facade that delegates to the specific Control-layer controllers"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.SystemServicesController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.UserRegistrationController",
+      "kind": "component",
+      "name": "UserRegistrationController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "handles user registration requests"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.UserRegistrationController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Database.JpaUtil",
+      "kind": "component",
+      "name": "JpaUtil",
+      "stereotype": "persistence",
+      "parent": "group:layer:persistence",
+      "responsibilities": [
+        "singleton holding the EntityManagerFactory",
+        "creates EntityManager instances",
+        "closes the factory"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Database.JpaUtil"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.ReportCreationController",
+      "kind": "component",
+      "name": "ReportCreationController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [
+        "handles report creation requests"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Control.ReportCreationController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Control.UserLoginController",
+      "kind": "component",
+      "name": "UserLoginController",
+      "stereotype": "application",
+      "parent": "group:layer:application",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "Control.UserLoginController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Boundary.UserDashboardGUI",
+      "kind": "component",
+      "name": "UserDashboardGUI",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "Boundary.UserDashboardGUI"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.ReportService",
+      "kind": "component",
+      "name": "ReportService",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [
+        "entity-layer service that holds a PersistenceService to access persistence",
+        "registers new reports for citizens"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.ReportService"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Boundary.ReportCreationGUI",
+      "kind": "component",
+      "name": "ReportCreationGUI",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "Boundary.ReportCreationGUI"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Boundary.ActivityMonitoringGUI",
+      "kind": "component",
+      "name": "ActivityMonitoringGUI",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "Boundary.ActivityMonitoringGUI"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Boundary.ReceivedReportsGUI",
+      "kind": "component",
+      "name": "ReceivedReportsGUI",
+      "stereotype": "presentation",
+      "parent": "group:layer:presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "Boundary.ReceivedReportsGUI"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "cmp:Entity.ReportCategory",
+      "kind": "component",
+      "name": "ReportCategory",
+      "stereotype": "domain",
+      "parent": "group:layer:domain",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "Entity.ReportCategory"
+      ],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "cmp:Database.PersistenceService",
+      "name": "PersistenceService",
+      "files": [
+        "src/main/java/Database/PersistenceService.java"
+      ],
+      "symbols": [
+        "Database.PersistenceService"
+      ]
+    },
+    {
+      "element": "cmp:Boundary.UserLoginGUI",
+      "name": "UserLoginGUI",
+      "files": [
+        "src/main/java/Boundary/UserLoginGUI.java"
+      ],
+      "symbols": [
+        "Boundary.UserLoginGUI"
+      ]
+    },
+    {
+      "element": "cmp:Entity.UserService",
+      "name": "UserService",
+      "files": [
+        "src/main/java/Entity/UserService.java"
+      ],
+      "symbols": [
+        "Entity.UserService"
+      ]
+    },
+    {
+      "element": "cmp:Control.SystemServicesController",
+      "name": "SystemServicesController",
+      "files": [
+        "src/main/java/Control/SystemServicesController.java"
+      ],
+      "symbols": [
+        "Control.SystemServicesController"
+      ]
+    },
+    {
+      "element": "cmp:Control.UserRegistrationController",
+      "name": "UserRegistrationController",
+      "files": [
+        "src/main/java/Control/UserRegistrationController.java"
+      ],
+      "symbols": [
+        "Control.UserRegistrationController"
+      ]
+    },
+    {
+      "element": "cmp:Database.JpaUtil",
+      "name": "JpaUtil",
+      "files": [
+        "src/main/java/Database/JpaUtil.java"
+      ],
+      "symbols": [
+        "Database.JpaUtil"
+      ]
+    },
+    {
+      "element": "cmp:Control.ReportCreationController",
+      "name": "ReportCreationController",
+      "files": [
+        "src/main/java/Control/ReportCreationController.java"
+      ],
+      "symbols": [
+        "Control.ReportCreationController"
+      ]
+    },
+    {
+      "element": "cmp:Control.UserLoginController",
+      "name": "UserLoginController",
+      "files": [
+        "src/main/java/Control/UserLoginController.java"
+      ],
+      "symbols": [
+        "Control.UserLoginController"
+      ]
+    },
+    {
+      "element": "cmp:Boundary.UserDashboardGUI",
+      "name": "UserDashboardGUI",
+      "files": [
+        "src/main/java/Boundary/UserDashboardGUI.java"
+      ],
+      "symbols": [
+        "Boundary.UserDashboardGUI"
+      ]
+    },
+    {
+      "element": "cmp:Entity.ReportService",
+      "name": "ReportService",
+      "files": [
+        "src/main/java/Entity/ReportService.java"
+      ],
+      "symbols": [
+        "Entity.ReportService"
+      ]
+    },
+    {
+      "element": "cmp:Boundary.ReportCreationGUI",
+      "name": "ReportCreationGUI",
+      "files": [
+        "src/main/java/Boundary/ReportCreationGUI.java"
+      ],
+      "symbols": [
+        "Boundary.ReportCreationGUI"
+      ]
+    },
+    {
+      "element": "cmp:Boundary.ActivityMonitoringGUI",
+      "name": "ActivityMonitoringGUI",
+      "files": [
+        "src/main/java/Boundary/ActivityMonitoringGUI.java"
+      ],
+      "symbols": [
+        "Boundary.ActivityMonitoringGUI"
+      ]
+    },
+    {
+      "element": "cmp:Boundary.ReceivedReportsGUI",
+      "name": "ReceivedReportsGUI",
+      "files": [
+        "src/main/java/Boundary/ReceivedReportsGUI.java"
+      ],
+      "symbols": [
+        "Boundary.ReceivedReportsGUI"
+      ]
+    },
+    {
+      "element": "cmp:Entity.ReportCategory",
+      "name": "ReportCategory",
+      "files": [
+        "src/main/java/Entity/ReportCategory.java"
+      ],
+      "symbols": [
+        "Entity.ReportCategory"
+      ]
+    }
+  ],
+  "limitations": [],
+  "gaps": [],
+  "overflow": []
+}

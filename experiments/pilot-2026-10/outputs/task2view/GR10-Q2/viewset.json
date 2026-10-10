@@ -1,0 +1,432 @@
+{
+  "system": "progetto_ing_software_gr10-main-English",
+  "stakeholder": "devops",
+  "goal": "I am a DevOps engineer. I need to deploy and configure the system in a new execution environment. Before preparing the deployment, I need to understand which runtime environments and software artifacts are required, where the application and its data are executed and stored, and how the main runtime elements communicate with each other. I also need to identify the technologies and runtime dependencies involved in the communication between the application and the database.",
+  "views": [
+    {
+      "id": "V1-deployment",
+      "viewpoint_id": "deployment",
+      "viewpoint_name": "Deployment",
+      "vb_ref": "5.2 Deployment Style",
+      "model_kind": "uml-deployment",
+      "title": "Deployment view — progetto_ing_software_gr10-main-English",
+      "purpose": "Deployment (5.2 Deployment Style) answering deployment, build-packaging, data-storage",
+      "detail_level": "feature",
+      "max_elements": 12,
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3"
+      ],
+      "overlays": [],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "datastore:reports-db",
+          "kind": "datastore",
+          "name": "reports_db",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "MySQL database at 127.0.0.1:3306 that stores the persisted entities",
+            "MySQL database at 127.0.0.1:3306 holding report data",
+            "MySQL database storing reports, users, notes, status updates and notifications",
+            "MySQL database accessed through JPA EntityManager"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "execution_env:hibernate-jpa-persistence-unit-municipal-report-management-system",
+          "kind": "execution_env",
+          "name": "Hibernate JPA persistence unit Municipal_Report_Management_System",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "RESOURCE_LOCAL JPA persistence unit using the Hibernate provider inside the client JVM"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "artifact:municipal-report-management",
+          "kind": "artifact",
+          "name": "municipal-report-management.jar",
+          "stereotype": null,
+          "parent": "execution_env:hibernate-jpa-persistence-unit-municipal-report-management-system",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "execution_env:municipal-report-management-system",
+          "kind": "execution_env",
+          "name": "Municipal_Report_Management_System",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "Hibernate JPA persistence unit with RESOURCE_LOCAL transactions"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "execution_env:hibernate",
+          "kind": "execution_env",
+          "name": "Hibernate",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "JPA provider that maps entities to MySQL"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "datastore:hbm2ddl-update-schema-generation",
+          "kind": "datastore",
+          "name": "hbm2ddl update schema generation",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "Hibernate updates the schema automatically at startup"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "datastore:municipal-report-management-system",
+          "kind": "datastore",
+          "name": "Municipal_Report_Management_System",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "JPA persistence unit backing the reports database"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:artifact-municipal-report-management:communicates:datastore-reports-db",
+          "kind": "communicates",
+          "source": "artifact:municipal-report-management",
+          "target": "datastore:reports-db",
+          "label": null,
+          "multiplicity": null,
+          "support": "inferred"
+        },
+        {
+          "id": "rel:artifact-municipal-report-management:communicates:datastore-hbm2ddl-update-schema-generation",
+          "kind": "communicates",
+          "source": "artifact:municipal-report-management",
+          "target": "datastore:hbm2ddl-update-schema-generation",
+          "label": null,
+          "multiplicity": null,
+          "support": "inferred"
+        },
+        {
+          "id": "rel:artifact-municipal-report-management:communicates:datastore-municipal-report-management-system",
+          "kind": "communicates",
+          "source": "artifact:municipal-report-management",
+          "target": "datastore:municipal-report-management-system",
+          "label": null,
+          "multiplicity": null,
+          "support": "inferred"
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "datastore:reports-db",
+          "name": "reports_db",
+          "files": [
+            "src/main/java/Database/PersistenceService.java",
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "execution_env:hibernate-jpa-persistence-unit-municipal-report-management-system",
+          "name": "Hibernate JPA persistence unit Municipal_Report_Management_System",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "artifact:municipal-report-management",
+          "name": "municipal-report-management.jar",
+          "files": [
+            "pom.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "execution_env:municipal-report-management-system",
+          "name": "Municipal_Report_Management_System",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "execution_env:hibernate",
+          "name": "Hibernate",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "datastore:hbm2ddl-update-schema-generation",
+          "name": "hbm2ddl update schema generation",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "datastore:municipal-report-management-system",
+          "name": "Municipal_Report_Management_System",
+          "files": [
+            "src/main/java/Database/JpaUtil.java"
+          ],
+          "symbols": []
+        }
+      ],
+      "limitations": [
+        "5 mark(s) removed after failing validation"
+      ],
+      "gaps": [],
+      "overflow": []
+    },
+    {
+      "id": "V2-cnc-generic",
+      "viewpoint_id": "cnc-generic",
+      "viewpoint_name": "Component-and-Connector",
+      "vb_ref": "Ch. 3 Component-and-Connector Views",
+      "model_kind": "uml-component",
+      "title": "Component-and-Connector view — progetto_ing_software_gr10-main-English",
+      "purpose": "Component-and-Connector (Ch. 3 Component-and-Connector Views) answering collaboration, dependencies, interface-contract",
+      "detail_level": "feature",
+      "max_elements": 10,
+      "addresses": [
+        "AQ4",
+        "AQ5",
+        "AQ6"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "fold:persistence",
+          "kind": "component",
+          "name": "Persistence",
+          "stereotype": "persistence",
+          "parent": null,
+          "responsibilities": [
+            "PersistenceService: gives save, update and find operations over JPA EntityManager",
+            "JpaUtil: creates the EntityManagerFactory for the persistence unit"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "cmp:Database.PersistenceService",
+            "cmp:Database.JpaUtil"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "fold:application",
+          "kind": "component",
+          "name": "Application",
+          "stereotype": "application",
+          "parent": null,
+          "responsibilities": [
+            "SystemServicesController: facade that delegates feature requests to the per-feature controllers",
+            "UserRegistrationController",
+            "ReportCreationController",
+            "ReportReviewController",
+            "ReportDetailsController",
+            "ReportStatusUpdateController",
+            "… 2 more"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "cmp:Control.SystemServicesController",
+            "cmp:Control.UserRegistrationController",
+            "cmp:Control.ReportCreationController",
+            "cmp:Control.ReportReviewController",
+            "cmp:Control.ReportDetailsController",
+            "cmp:Control.ReportStatusUpdateController",
+            "cmp:Control.InternalNoteController",
+            "cmp:Control.ActivityMonitoringController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "fold:domain",
+          "kind": "component",
+          "name": "Domain",
+          "stereotype": "domain",
+          "parent": null,
+          "responsibilities": [
+            "ReportService: registers new reports for citizens",
+            "Report: JPA entity mapped to table reports",
+            "InternalNote: JPA entity mapped to table internal_notes",
+            "Notification: JPA entity mapped to table notifications",
+            "StatusUpdate: JPA entity mapped to table status_updates",
+            "User: JPA entity mapped to table users with single-table inheritance (Citizen, MunicipalOperator)"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "cmp:Entity.ReportService",
+            "cmp:Entity.Report",
+            "cmp:Entity.InternalNote",
+            "cmp:Entity.Notification",
+            "cmp:Entity.StatusUpdate",
+            "cmp:Entity.User"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "fold:presentation",
+          "kind": "component",
+          "name": "Presentation",
+          "stereotype": "presentation",
+          "parent": null,
+          "responsibilities": [
+            "HomePageGUI: Swing GUI entry point launched on the client JVM via main"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "cmp:Boundary.HomePageGUI"
+          ],
+          "support": "observed",
+          "group": false
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:fold:application:uses:fold:domain",
+          "kind": "uses",
+          "source": "fold:application",
+          "target": "fold:domain",
+          "label": "6 dependencies",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:fold:domain:uses:fold:persistence",
+          "kind": "uses",
+          "source": "fold:domain",
+          "target": "fold:persistence",
+          "label": "1 dependencies",
+          "multiplicity": null,
+          "support": "observed"
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "fold:persistence",
+          "name": "Persistence",
+          "files": [
+            "src/main/java/Database/JpaUtil.java",
+            "src/main/java/Database/PersistenceService.java"
+          ],
+          "symbols": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ]
+        },
+        {
+          "element": "fold:application",
+          "name": "Application",
+          "files": [
+            "src/main/java/Control/ActivityMonitoringController.java",
+            "src/main/java/Control/InternalNoteController.java",
+            "src/main/java/Control/ReportCreationController.java",
+            "src/main/java/Control/ReportDetailsController.java",
+            "src/main/java/Control/ReportReviewController.java",
+            "src/main/java/Control/ReportStatusUpdateController.java",
+            "src/main/java/Control/SystemServicesController.java",
+            "src/main/java/Control/UserRegistrationController.java"
+          ],
+          "symbols": [
+            "Control.SystemServicesController",
+            "Control.UserRegistrationController",
+            "Control.ReportCreationController",
+            "Control.ReportReviewController",
+            "Control.ReportDetailsController",
+            "Control.ReportStatusUpdateController",
+            "Control.InternalNoteController",
+            "Control.ActivityMonitoringController"
+          ]
+        },
+        {
+          "element": "fold:domain",
+          "name": "Domain",
+          "files": [
+            "src/main/java/Entity/InternalNote.java",
+            "src/main/java/Entity/Notification.java",
+            "src/main/java/Entity/Report.java",
+            "src/main/java/Entity/ReportService.java",
+            "src/main/java/Entity/StatusUpdate.java",
+            "src/main/java/Entity/User.java"
+          ],
+          "symbols": [
+            "Entity.ReportService",
+            "Entity.Report",
+            "Entity.InternalNote",
+            "Entity.Notification",
+            "Entity.StatusUpdate",
+            "Entity.User"
+          ]
+        },
+        {
+          "element": "fold:presentation",
+          "name": "Presentation",
+          "files": [
+            "src/main/java/Boundary/HomePageGUI.java"
+          ],
+          "symbols": [
+            "Boundary.HomePageGUI"
+          ]
+        }
+      ],
+      "limitations": [
+        "simplified to one element per layer or package (Phase 6)"
+      ],
+      "gaps": [],
+      "overflow": []
+    }
+  ],
+  "correspondences": [],
+  "correspondence_gaps": [],
+  "declared_gaps": [],
+  "uncovered_needs": [],
+  "secondary_not_shown": []
+}

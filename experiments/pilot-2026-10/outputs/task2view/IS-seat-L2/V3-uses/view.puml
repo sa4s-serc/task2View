@@ -1,0 +1,38 @@
+@startuml
+title Uses view — seat booking functionality
+allowmixing
+top to bottom direction
+package "Application" as e_group_layer_application_663bcf <<layer>> {
+  component "ReservationManager\n--\n- creates a reservation for a student, room, area, time slot and seat\n- validates the seat and the student's uniqueness, then saves the reservation and notifies observers" as e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 <<application>>
+  component "FirstAvailableAssignment" as e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1 <<application>>
+}
+package "Domain" as e_group_layer_domain_e2a928 <<layer>> {
+  component "Seat" as e_cmp_it_unina_reservations_entity_Seat_9ad090 <<domain>>
+  component "ReservationRegistry\n--\n- stores and queries reservations through PersistenceManager" as e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 <<domain>>
+  component "Area" as e_cmp_it_unina_reservations_entity_Area_f48c8f <<domain>>
+  component "Reservation" as e_cmp_it_unina_reservations_entity_Reservation_1d4a5f <<domain>>
+  component "StudyRoomRegistry" as e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b <<domain>>
+  component "StudyRoom" as e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a <<domain>>
+}
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 : update, findById
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : findSeatById, findAreaById
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1 : selectSeat
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getId, getAvailableSeats
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_Seat_9ad090 : getArea, getId
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_Reservation_1d4a5f : attach, getDate
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a : getId, isActive
+e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1 --> e_cmp_it_unina_reservations_entity_Seat_9ad090
+e_cmp_it_unina_reservations_entity_Area_f48c8f --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a
+e_cmp_it_unina_reservations_entity_Area_f48c8f --> e_cmp_it_unina_reservations_entity_Seat_9ad090 : isAvailable
+e_cmp_it_unina_reservations_entity_Area_f48c8f --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : getInstance, getSeatsForArea
+e_cmp_it_unina_reservations_entity_Reservation_1d4a5f --> e_cmp_it_unina_reservations_entity_Seat_9ad090
+e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 --> e_cmp_it_unina_reservations_entity_Reservation_1d4a5f : getState
+e_cmp_it_unina_reservations_entity_Seat_9ad090 --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getStudyRoom
+e_cmp_it_unina_reservations_entity_Seat_9ad090 --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a
+e_cmp_it_unina_reservations_entity_Seat_9ad090 --> e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 : getInstance, findReservationsBySeat
+e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getSeats, createSeats
+e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a --> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : getInstance, getAreasForRoom
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b --> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a : isOpenOnDate, getScheduledTimeSlots
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b --> e_cmp_it_unina_reservations_entity_Area_f48c8f : getAvailableSeats
+e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b --> e_cmp_it_unina_reservations_entity_Seat_9ad090
+@enduml

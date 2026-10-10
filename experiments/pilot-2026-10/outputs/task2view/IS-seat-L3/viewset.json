@@ -1,0 +1,2195 @@
+{
+  "system": "Progetto-IS-main-English",
+  "stakeholder": "developer",
+  "goal": "I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes.",
+  "views": [
+    {
+      "id": "V1-decomposition",
+      "viewpoint_id": "decomposition",
+      "viewpoint_name": "Decomposition",
+      "vb_ref": "2.1 Decomposition Style",
+      "model_kind": "uml-package",
+      "title": "Decomposition view — seat booking functionality",
+      "purpose": "Decomposition (2.1 Decomposition Style) answering decomposition for seat booking functionality",
+      "detail_level": "detailed",
+      "max_elements": 15,
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3",
+        "AQ4",
+        "AQ5"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "group:layer:presentation",
+          "kind": "layer",
+          "name": "Presentation",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:application",
+          "kind": "layer",
+          "name": "Application",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:domain",
+          "kind": "layer",
+          "name": "Domain",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:persistence",
+          "kind": "layer",
+          "name": "Persistence",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.ReservationManager",
+          "kind": "component",
+          "name": "ReservationManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "validates that a student has no other active or confirmed reservation for the same date and slot",
+            "resolves and validates room, area and time slot for a booking",
+            "cancels reservations after an ownership check",
+            "performs check-in and ends reservations",
+            "cancels reservations after ownership validation",
+            "performs check-in and increments student visit count",
+            "ends reservations whose slot has expired",
+            "applies booking rules for room, area, seat, time slot and uniqueness",
+            "creates and saves reservations",
+            "makes and cancels seat reservations",
+            "validates room, area, seat and student"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.ReservationManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+          "kind": "component",
+          "name": "NotificationServiceAdapter",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "sends notification emails to recipients through an external email gateway",
+            "fails with an exception when email delivery does not return code 200",
+            "declares the interface for sending notifications to a list of users",
+            "abstracts sending notifications to recipients",
+            "implements NotificationService",
+            "sends emails through the external gateway"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.NotificationServiceAdapter",
+            "it.unina.reservations.controller.NotificationService"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "kind": "component",
+          "name": "ReservationRegistry",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "finds reservations by seat, date and time slot",
+            "delegates storage queries to PersistenceManager",
+            "provides save, update and query operations for reservations",
+            "delegates storage to PersistenceManager",
+            "provides reservation data and updates reservations",
+            "looks up and stores reservations through PersistenceManager"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.ReservationRegistry"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+          "kind": "component",
+          "name": "ReservationController",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "exposes REST endpoints to create, cancel and check in reservations",
+            "exposes REST endpoints for creating, cancelling and checking in reservations",
+            "exposes REST endpoint for creating reservations",
+            "exposes REST routes for creating, cancelling and checking in reservations"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.SpringBoot.ReservationController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.database.PersistenceManager",
+          "kind": "component",
+          "name": "PersistenceManager",
+          "stereotype": "persistence",
+          "parent": "group:layer:persistence",
+          "responsibilities": [
+            "persists entities in JPA transactions with rollback on failure",
+            "finds entities by id",
+            "saves and finds JPA entities within transactions with rollback on error"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.database.PersistenceManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.NotificationScheduler",
+          "kind": "component",
+          "name": "NotificationScheduler",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "periodically triggers reservation-end handling and reminder sending",
+            "periodically triggers reservation-end handling and reminders"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.NotificationScheduler"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.Seat",
+          "kind": "component",
+          "name": "Seat",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "decides whether it is free for a date and time slot by checking reservations"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.Seat"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "kind": "component",
+          "name": "FirstAvailableAssignment",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "strategy interface for choosing a seat from the available seats"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+            "it.unina.reservations.controller.strategy.AssignmentStrategy"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "kind": "component",
+          "name": "LibraryFacade",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "singleton facade exposing use cases to the boundary",
+            "delegates reservation calls to ReservationManager",
+            "singleton facade delegating requests to managers"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.LibraryFacade"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+          "kind": "component",
+          "name": "StudyRoomController",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "exposes REST endpoints for study rooms, available time slots and room detail",
+            "exposes REST endpoints under /api/rooms for room and seat availability queries"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.SpringBoot.StudyRoomController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.Area",
+          "kind": "component",
+          "name": "Area",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "groups seats within a study room",
+            "lists the seats available for a date and time slot"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.Area"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.NotificationManager",
+          "kind": "component",
+          "name": "NotificationManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "sends notifications through NotificationService",
+            "sends reservation reminders"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.NotificationManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "kind": "component",
+          "name": "ReservationRequestDTO",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.dto.ReservationRequestDTO"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "kind": "component",
+          "name": "StudyRoomManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "computes available time slots and per-seat availability"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.StudyRoomManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.ExternalEmailGateway",
+          "kind": "component",
+          "name": "ExternalEmailGateway",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "external email delivery returning a status code"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.ExternalEmailGateway"
+          ],
+          "support": "observed",
+          "group": false
+        }
+      ],
+      "relations": [],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "cmp:it.unina.reservations.controller.ReservationManager",
+          "name": "ReservationManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.ReservationManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+          "name": "NotificationServiceAdapter",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java",
+            "JavaProject/src/main/java/it/unina/reservations/controller/NotificationService.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.NotificationServiceAdapter",
+            "it.unina.reservations.controller.NotificationService"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "name": "ReservationRegistry",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.ReservationRegistry"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+          "name": "ReservationController",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.SpringBoot.ReservationController"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.database.PersistenceManager",
+          "name": "PersistenceManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.database.PersistenceManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.NotificationScheduler",
+          "name": "NotificationScheduler",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.NotificationScheduler"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.Seat",
+          "name": "Seat",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.Seat"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "name": "FirstAvailableAssignment",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java",
+            "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+            "it.unina.reservations.controller.strategy.AssignmentStrategy"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "name": "LibraryFacade",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.LibraryFacade"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+          "name": "StudyRoomController",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.SpringBoot.StudyRoomController"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.Area",
+          "name": "Area",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/Area.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.Area"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.NotificationManager",
+          "name": "NotificationManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.NotificationManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "name": "ReservationRequestDTO",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/dto/ReservationRequestDTO.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.dto.ReservationRequestDTO"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "name": "StudyRoomManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.StudyRoomManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.ExternalEmailGateway",
+          "name": "ExternalEmailGateway",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.ExternalEmailGateway"
+          ]
+        }
+      ],
+      "limitations": [
+        "10 further element(s) exceed the detailed cap of 15"
+      ],
+      "gaps": [],
+      "overflow": [
+        "cmp:it.unina.reservations.controller.UserManager",
+        "cmp:it.unina.reservations.entity.Reservation",
+        "cmp:it.unina.reservations.dto.AvailableTimeSlotDTO",
+        "cmp:it.unina.reservations.dto.ReservationDTO",
+        "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+        "cmp:it.unina.reservations.entity.StudyRoom",
+        "cmp:it.unina.reservations.database.JpaUtil",
+        "cmp:it.unina.reservations.entity.UserRegistry",
+        "cmp:it.unina.reservations.entity.state.ActiveState",
+        "cmp:it.unina.reservations.dto.RoomDetailDTO"
+      ]
+    },
+    {
+      "id": "V2-client-server",
+      "viewpoint_id": "client-server",
+      "viewpoint_name": "Client-Server",
+      "vb_ref": "4.3.1 Client-Server Style",
+      "model_kind": "uml-component",
+      "title": "Client-Server view — seat booking functionality",
+      "purpose": "Client-Server (4.3.1 Client-Server Style) answering collaboration, dependencies for seat booking functionality",
+      "detail_level": "detailed",
+      "max_elements": 15,
+      "addresses": [
+        "AQ6",
+        "AQ7",
+        "AQ8",
+        "AQ9",
+        "AQ10",
+        "AQ11"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "group:layer:presentation",
+          "kind": "layer",
+          "name": "Presentation",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:application",
+          "kind": "layer",
+          "name": "Application",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:domain",
+          "kind": "layer",
+          "name": "Domain",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:persistence",
+          "kind": "layer",
+          "name": "Persistence",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+          "kind": "component",
+          "name": "ReservationController",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "exposes REST endpoints to create, cancel and check in reservations",
+            "exposes REST endpoints for creating, cancelling and checking in reservations",
+            "exposes REST endpoint for creating reservations",
+            "exposes REST routes for creating, cancelling and checking in reservations"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.SpringBoot.ReservationController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+          "kind": "component",
+          "name": "NotificationServiceAdapter",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "sends notification emails to recipients through an external email gateway",
+            "fails with an exception when email delivery does not return code 200",
+            "declares the interface for sending notifications to a list of users",
+            "abstracts sending notifications to recipients",
+            "implements NotificationService",
+            "sends emails through the external gateway"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.NotificationServiceAdapter",
+            "it.unina.reservations.controller.NotificationService"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "kind": "component",
+          "name": "ReservationRegistry",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "finds reservations by seat, date and time slot",
+            "delegates storage queries to PersistenceManager",
+            "provides save, update and query operations for reservations",
+            "delegates storage to PersistenceManager",
+            "provides reservation data and updates reservations",
+            "looks up and stores reservations through PersistenceManager"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.ReservationRegistry"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.ReservationManager",
+          "kind": "component",
+          "name": "ReservationManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "validates that a student has no other active or confirmed reservation for the same date and slot",
+            "resolves and validates room, area and time slot for a booking",
+            "cancels reservations after an ownership check",
+            "performs check-in and ends reservations",
+            "cancels reservations after ownership validation",
+            "performs check-in and increments student visit count",
+            "ends reservations whose slot has expired",
+            "applies booking rules for room, area, seat, time slot and uniqueness",
+            "creates and saves reservations",
+            "makes and cancels seat reservations",
+            "validates room, area, seat and student"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.ReservationManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.NotificationManager",
+          "kind": "component",
+          "name": "NotificationManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "sends notifications through NotificationService",
+            "sends reservation reminders"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.NotificationManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.database.PersistenceManager",
+          "kind": "component",
+          "name": "PersistenceManager",
+          "stereotype": "persistence",
+          "parent": "group:layer:persistence",
+          "responsibilities": [
+            "persists entities in JPA transactions with rollback on failure",
+            "finds entities by id",
+            "saves and finds JPA entities within transactions with rollback on error"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.database.PersistenceManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.NotificationScheduler",
+          "kind": "component",
+          "name": "NotificationScheduler",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "periodically triggers reservation-end handling and reminder sending",
+            "periodically triggers reservation-end handling and reminders"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.NotificationScheduler"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "kind": "component",
+          "name": "StudyRoomManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "computes available time slots and per-seat availability"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.StudyRoomManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.ExternalEmailGateway",
+          "kind": "component",
+          "name": "ExternalEmailGateway",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "external email delivery returning a status code"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.ExternalEmailGateway"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "kind": "component",
+          "name": "LibraryFacade",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "singleton facade exposing use cases to the boundary",
+            "delegates reservation calls to ReservationManager",
+            "singleton facade delegating requests to managers"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.LibraryFacade"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+          "kind": "component",
+          "name": "StudyRoomController",
+          "stereotype": "presentation",
+          "parent": "group:layer:presentation",
+          "responsibilities": [
+            "exposes REST endpoints for study rooms, available time slots and room detail",
+            "exposes REST endpoints under /api/rooms for room and seat availability queries"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.boundary.SpringBoot.StudyRoomController"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "kind": "component",
+          "name": "ReservationRequestDTO",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.dto.ReservationRequestDTO"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.Seat",
+          "kind": "component",
+          "name": "Seat",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "decides whether it is free for a date and time slot by checking reservations"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.Seat"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "kind": "component",
+          "name": "FirstAvailableAssignment",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "strategy interface for choosing a seat from the available seats"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+            "it.unina.reservations.controller.strategy.AssignmentStrategy"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "datastore:reservationsdb",
+          "kind": "datastore",
+          "name": "reservationsdb",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:cmp:it.unina.reservations.database.PersistenceManager:writes:datastore:reservationsdb",
+          "kind": "writes",
+          "source": "cmp:it.unina.reservations.database.PersistenceManager",
+          "target": "datastore:reservationsdb",
+          "label": null,
+          "multiplicity": null,
+          "support": "inferred"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-boundary-notificationscheduler:uses:cmp-it-unina-reservations-controller-libraryfacade",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.boundary.NotificationScheduler",
+          "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-boundary-notificationserviceadapter:uses:cmp-it-unina-reservations-boundary-externalemailgateway",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+          "target": "cmp:it.unina.reservations.boundary.ExternalEmailGateway",
+          "label": "send",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-boundary-springboot-reservationcontroller:uses:cmp-it-unina-reservations-controller-libraryfacade",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+          "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-boundary-springboot-reservationcontroller:uses:cmp-it-unina-reservations-dto-reservationrequestdto",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+          "target": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "label": "builds request DTO",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-boundary-springboot-studyroomcontroller:uses:cmp-it-unina-reservations-controller-libraryfacade",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+          "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-controller-studyroommanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-dto-reservationrequestdto",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-controller-reservationmanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.controller.ReservationManager",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-controller-notificationmanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.controller.NotificationManager",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-notificationmanager:uses:cmp-it-unina-reservations-entity-reservationregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.NotificationManager",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "label": "getEndingReservations, update",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-notificationmanager:uses:cmp-it-unina-reservations-boundary-notificationserviceadapter",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.NotificationManager",
+          "target": "cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+          "label": "sendNotification",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-reservationregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "label": "update, findById",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-strategy-firstavailableassignment",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "label": "selectSeat",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-dto-reservationrequestdto",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "label": "getRoomId, getAreaId",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": "getArea, getId",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-notificationmanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.controller.NotificationManager",
+          "label": "getInstance, sendNotification",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-reservationregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "label": "findAllByRoom, occupiesSlot",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-controller-notificationmanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.controller.NotificationManager",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": "getId, isAvailable",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-strategy-firstavailableassignment:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-reservationregistry:uses:cmp-it-unina-reservations-database-persistencemanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "target": "cmp:it.unina.reservations.database.PersistenceManager",
+          "label": "findByField, findByFields",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-reservationregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Seat",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "label": "getInstance, findReservationsBySeat",
+          "multiplicity": null,
+          "support": "observed"
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+          "name": "ReservationController",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.SpringBoot.ReservationController"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+          "name": "NotificationServiceAdapter",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java",
+            "JavaProject/src/main/java/it/unina/reservations/controller/NotificationService.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.NotificationServiceAdapter",
+            "it.unina.reservations.controller.NotificationService"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "name": "ReservationRegistry",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.ReservationRegistry"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.ReservationManager",
+          "name": "ReservationManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.ReservationManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.NotificationManager",
+          "name": "NotificationManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.NotificationManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.database.PersistenceManager",
+          "name": "PersistenceManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.database.PersistenceManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.NotificationScheduler",
+          "name": "NotificationScheduler",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.NotificationScheduler"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "name": "StudyRoomManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.StudyRoomManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.ExternalEmailGateway",
+          "name": "ExternalEmailGateway",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.ExternalEmailGateway"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "name": "LibraryFacade",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.LibraryFacade"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+          "name": "StudyRoomController",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.boundary.SpringBoot.StudyRoomController"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "name": "ReservationRequestDTO",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/dto/ReservationRequestDTO.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.dto.ReservationRequestDTO"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.Seat",
+          "name": "Seat",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.Seat"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "name": "FirstAvailableAssignment",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java",
+            "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+            "it.unina.reservations.controller.strategy.AssignmentStrategy"
+          ]
+        },
+        {
+          "element": "datastore:reservationsdb",
+          "name": "reservationsdb",
+          "files": [],
+          "symbols": []
+        }
+      ],
+      "limitations": [
+        "11 further element(s) exceed the detailed cap of 15"
+      ],
+      "gaps": [],
+      "overflow": [
+        "cmp:it.unina.reservations.controller.UserManager",
+        "cmp:it.unina.reservations.entity.Reservation",
+        "cmp:it.unina.reservations.dto.AvailableTimeSlotDTO",
+        "cmp:it.unina.reservations.dto.ReservationDTO",
+        "cmp:it.unina.reservations.entity.Area",
+        "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+        "cmp:it.unina.reservations.entity.StudyRoom",
+        "cmp:it.unina.reservations.database.JpaUtil",
+        "cmp:it.unina.reservations.entity.UserRegistry",
+        "cmp:it.unina.reservations.entity.state.ActiveState",
+        "cmp:it.unina.reservations.dto.RoomDetailDTO"
+      ]
+    },
+    {
+      "id": "V3-uses",
+      "viewpoint_id": "uses",
+      "viewpoint_name": "Uses",
+      "vb_ref": "2.2 Uses Style",
+      "model_kind": "uml-package",
+      "title": "Uses view — seat booking functionality",
+      "purpose": "Uses (2.2 Uses Style) answering dependencies, change-impact for seat booking functionality",
+      "detail_level": "detailed",
+      "max_elements": 15,
+      "addresses": [
+        "AQ12",
+        "AQ13"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "group:layer:application",
+          "kind": "layer",
+          "name": "Application",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "group:layer:domain",
+          "kind": "layer",
+          "name": "Domain",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": true
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.ReservationManager",
+          "kind": "component",
+          "name": "ReservationManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "validates that a student has no other active or confirmed reservation for the same date and slot",
+            "resolves and validates room, area and time slot for a booking",
+            "cancels reservations after an ownership check",
+            "performs check-in and ends reservations",
+            "cancels reservations after ownership validation",
+            "performs check-in and increments student visit count",
+            "ends reservations whose slot has expired",
+            "applies booking rules for room, area, seat, time slot and uniqueness",
+            "creates and saves reservations",
+            "makes and cancels seat reservations",
+            "validates room, area, seat and student"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.ReservationManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.Seat",
+          "kind": "component",
+          "name": "Seat",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "decides whether it is free for a date and time slot by checking reservations"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.Seat"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "kind": "component",
+          "name": "ReservationRegistry",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "finds reservations by seat, date and time slot",
+            "delegates storage queries to PersistenceManager",
+            "provides save, update and query operations for reservations",
+            "delegates storage to PersistenceManager",
+            "provides reservation data and updates reservations",
+            "looks up and stores reservations through PersistenceManager"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.ReservationRegistry"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "kind": "component",
+          "name": "LibraryFacade",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "singleton facade exposing use cases to the boundary",
+            "delegates reservation calls to ReservationManager",
+            "singleton facade delegating requests to managers"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.LibraryFacade"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.Area",
+          "kind": "component",
+          "name": "Area",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [
+            "groups seats within a study room",
+            "lists the seats available for a date and time slot"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.Area"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.NotificationManager",
+          "kind": "component",
+          "name": "NotificationManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "sends notifications through NotificationService",
+            "sends reservation reminders"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.NotificationManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "kind": "component",
+          "name": "FirstAvailableAssignment",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "strategy interface for choosing a seat from the available seats"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+            "it.unina.reservations.controller.strategy.AssignmentStrategy"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "kind": "component",
+          "name": "StudyRoomManager",
+          "stereotype": "application",
+          "parent": "group:layer:application",
+          "responsibilities": [
+            "computes available time slots and per-seat availability"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.controller.StudyRoomManager"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "kind": "component",
+          "name": "StudyRoomRegistry",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.StudyRoomRegistry"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.Reservation",
+          "kind": "component",
+          "name": "Reservation",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.Reservation"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.StudyRoom",
+          "kind": "component",
+          "name": "StudyRoom",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.StudyRoom"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.UserRegistry",
+          "kind": "component",
+          "name": "UserRegistry",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.UserRegistry"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "kind": "component",
+          "name": "ReservationRequestDTO",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.dto.ReservationRequestDTO"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.dto.ReservationDTO",
+          "kind": "component",
+          "name": "ReservationDTO",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.dto.ReservationDTO"
+          ],
+          "support": "observed",
+          "group": false
+        },
+        {
+          "id": "cmp:it.unina.reservations.entity.state.ActiveState",
+          "kind": "component",
+          "name": "ActiveState",
+          "stereotype": "domain",
+          "parent": "group:layer:domain",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "it.unina.reservations.entity.state.ActiveState"
+          ],
+          "support": "observed",
+          "group": false
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-controller-studyroommanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-dto-reservationrequestdto",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-dto-reservationdto",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.dto.ReservationDTO",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-controller-reservationmanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.controller.ReservationManager",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-controller-notificationmanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.controller.NotificationManager",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-notificationmanager:uses:cmp-it-unina-reservations-entity-reservationregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.NotificationManager",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "label": "getEndingReservations, update",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-notificationmanager:uses:cmp-it-unina-reservations-entity-reservation",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.NotificationManager",
+          "target": "cmp:it.unina.reservations.entity.Reservation",
+          "label": "getId, getStudent",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-reservationregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "label": "update, findById",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-studyroomregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "label": "findSeatById, findAreaById",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-userregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.UserRegistry",
+          "label": "findStudentById, update",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-strategy-firstavailableassignment",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "label": "selectSeat",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-dto-reservationrequestdto",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "label": "getRoomId, getAreaId",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-dto-reservationdto",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.dto.ReservationDTO",
+          "label": "setReservationId, setDate",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-area",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.Area",
+          "label": "getId, getAvailableSeats",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": "getArea, getId",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-reservation",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.Reservation",
+          "label": "attach, getDate",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-notificationmanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.controller.NotificationManager",
+          "label": "getInstance, sendNotification",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-state-activestate",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.state.ActiveState",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-studyroom",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.StudyRoom",
+          "label": "getId, isActive",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-studyroomregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "label": "findRoomById, getAreasForRoom",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-reservationregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "label": "findAllByRoom, occupiesSlot",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-studyroom",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.entity.StudyRoom",
+          "label": "getId, getName",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-reservation",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.entity.Reservation",
+          "label": "getStudent, getSeat",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-controller-notificationmanager",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.controller.NotificationManager",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-area",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.entity.Area",
+          "label": "getId, getType",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": "getId, isAvailable",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-controller-strategy-firstavailableassignment:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-area:uses:cmp-it-unina-reservations-entity-studyroom",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Area",
+          "target": "cmp:it.unina.reservations.entity.StudyRoom",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-area:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Area",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": "isAvailable",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-area:uses:cmp-it-unina-reservations-entity-studyroomregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Area",
+          "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "label": "getInstance, getSeatsForArea",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-reservation:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Reservation",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-reservation:uses:cmp-it-unina-reservations-entity-state-activestate",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Reservation",
+          "target": "cmp:it.unina.reservations.entity.state.ActiveState",
+          "label": "getInstance",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-reservationregistry:uses:cmp-it-unina-reservations-entity-reservation",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "target": "cmp:it.unina.reservations.entity.Reservation",
+          "label": "getState",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-area",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Seat",
+          "target": "cmp:it.unina.reservations.entity.Area",
+          "label": "getStudyRoom",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-studyroom",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Seat",
+          "target": "cmp:it.unina.reservations.entity.StudyRoom",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-reservationregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.Seat",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "label": "getInstance, findReservationsBySeat",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-studyroom:uses:cmp-it-unina-reservations-entity-area",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.StudyRoom",
+          "target": "cmp:it.unina.reservations.entity.Area",
+          "label": "getSeats, createSeats",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-studyroom:uses:cmp-it-unina-reservations-entity-studyroomregistry",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.StudyRoom",
+          "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "label": "getInstance, getAreasForRoom",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-entity-studyroom",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "target": "cmp:it.unina.reservations.entity.StudyRoom",
+          "label": "isOpenOnDate, getScheduledTimeSlots",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-entity-area",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "target": "cmp:it.unina.reservations.entity.Area",
+          "label": "getAvailableSeats",
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-entity-seat",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "label": null,
+          "multiplicity": null,
+          "support": "observed"
+        },
+        {
+          "id": "rel:cmp-it-unina-reservations-entity-state-activestate:uses:cmp-it-unina-reservations-entity-reservation",
+          "kind": "uses",
+          "source": "cmp:it.unina.reservations.entity.state.ActiveState",
+          "target": "cmp:it.unina.reservations.entity.Reservation",
+          "label": "setState",
+          "multiplicity": null,
+          "support": "observed"
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "cmp:it.unina.reservations.controller.ReservationManager",
+          "name": "ReservationManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.ReservationManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.Seat",
+          "name": "Seat",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.Seat"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "name": "ReservationRegistry",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.ReservationRegistry"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "name": "LibraryFacade",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.LibraryFacade"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.Area",
+          "name": "Area",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/Area.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.Area"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.NotificationManager",
+          "name": "NotificationManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.NotificationManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+          "name": "FirstAvailableAssignment",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java",
+            "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+            "it.unina.reservations.controller.strategy.AssignmentStrategy"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.controller.StudyRoomManager",
+          "name": "StudyRoomManager",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.controller.StudyRoomManager"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "name": "StudyRoomRegistry",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.StudyRoomRegistry"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.Reservation",
+          "name": "Reservation",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.Reservation"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.StudyRoom",
+          "name": "StudyRoom",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.StudyRoom"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.UserRegistry",
+          "name": "UserRegistry",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.UserRegistry"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
+          "name": "ReservationRequestDTO",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/dto/ReservationRequestDTO.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.dto.ReservationRequestDTO"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.dto.ReservationDTO",
+          "name": "ReservationDTO",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/dto/ReservationDTO.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.dto.ReservationDTO"
+          ]
+        },
+        {
+          "element": "cmp:it.unina.reservations.entity.state.ActiveState",
+          "name": "ActiveState",
+          "files": [
+            "JavaProject/src/main/java/it/unina/reservations/entity/state/ActiveState.java"
+          ],
+          "symbols": [
+            "it.unina.reservations.entity.state.ActiveState"
+          ]
+        }
+      ],
+      "limitations": [],
+      "gaps": [],
+      "overflow": []
+    }
+  ],
+  "correspondences": [
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.controller.ReservationManager",
+        "V2-client-server:cmp:it.unina.reservations.controller.ReservationManager",
+        "V3-uses:cmp:it.unina.reservations.controller.ReservationManager"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.boundary.NotificationServiceAdapter",
+        "V2-client-server:cmp:it.unina.reservations.boundary.NotificationServiceAdapter"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.entity.ReservationRegistry",
+        "V2-client-server:cmp:it.unina.reservations.entity.ReservationRegistry",
+        "V3-uses:cmp:it.unina.reservations.entity.ReservationRegistry"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "V2-client-server:cmp:it.unina.reservations.boundary.SpringBoot.ReservationController"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.database.PersistenceManager",
+        "V2-client-server:cmp:it.unina.reservations.database.PersistenceManager"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.boundary.NotificationScheduler",
+        "V2-client-server:cmp:it.unina.reservations.boundary.NotificationScheduler"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.entity.Seat",
+        "V2-client-server:cmp:it.unina.reservations.entity.Seat",
+        "V3-uses:cmp:it.unina.reservations.entity.Seat"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+        "V2-client-server:cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+        "V3-uses:cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.controller.LibraryFacade",
+        "V2-client-server:cmp:it.unina.reservations.controller.LibraryFacade",
+        "V3-uses:cmp:it.unina.reservations.controller.LibraryFacade"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+        "V2-client-server:cmp:it.unina.reservations.boundary.SpringBoot.StudyRoomController"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.entity.Area",
+        "V3-uses:cmp:it.unina.reservations.entity.Area"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.controller.NotificationManager",
+        "V2-client-server:cmp:it.unina.reservations.controller.NotificationManager",
+        "V3-uses:cmp:it.unina.reservations.controller.NotificationManager"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.dto.ReservationRequestDTO",
+        "V2-client-server:cmp:it.unina.reservations.dto.ReservationRequestDTO",
+        "V3-uses:cmp:it.unina.reservations.dto.ReservationRequestDTO"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.controller.StudyRoomManager",
+        "V2-client-server:cmp:it.unina.reservations.controller.StudyRoomManager",
+        "V3-uses:cmp:it.unina.reservations.controller.StudyRoomManager"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:cmp:it.unina.reservations.boundary.ExternalEmailGateway",
+        "V2-client-server:cmp:it.unina.reservations.boundary.ExternalEmailGateway"
+      ]
+    }
+  ],
+  "correspondence_gaps": [],
+  "declared_gaps": [],
+  "uncovered_needs": [],
+  "secondary_not_shown": [
+    "boundary"
+  ]
+}

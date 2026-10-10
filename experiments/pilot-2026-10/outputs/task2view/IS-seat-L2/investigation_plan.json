@@ -1,0 +1,132 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "decomposition",
+    "subject": null,
+    "goal": "Identify the classes and packages that implement seat booking across boundary, controller, entity and database layers, with each one's responsibility and which package or subsystem contains it.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.entity.ReservationRegistry"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ2"
+    ],
+    "need": "collaboration",
+    "subject": null,
+    "goal": "Find how the Swing and REST clients invoke seat booking through LibraryFacade and ReservationManager, which entities (Seat, Area, Reservation, TimeSlot) they read or write, and how PersistenceManager accesses the MySQL database.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.controller.StudyRoomManager",
+        "it.unina.reservations.database.PersistenceManager"
+      ],
+      "paths": [
+        "JavaProject/src/main/java/it/unina/reservations/Launcher.java"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "request-reply",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V3-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ3"
+    ],
+    "need": "change-impact",
+    "subject": null,
+    "goal": "Collect the uses dependencies (imports, field types, method calls) among the seat booking boundary, controller, entity and DTO classes to determine which modules depend on Seat, Area, Reservation and the managers, and so which are affected when one of them changes.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager",
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.entity.ReservationRegistry"
+      ],
+      "paths": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java"
+      ],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

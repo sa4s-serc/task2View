@@ -1,0 +1,27 @@
+@startuml
+title Decomposition view — progetto_ing_software_gr10-main-English
+allowmixing
+top to bottom direction
+package "Presentation" as e_group_layer_presentation_8df40c <<layer>> {
+  component "UserLoginGUI\n--\n- presentation screen for user login\n- holds a UserLoginController to delegate login handling\n- Swing sign-in screen collecting email and password\n- delegates login to UserLoginController" as e_cmp_Boundary_UserLoginGUI_77270b <<presentation>>
+  component "UserDashboardGUI" as e_cmp_Boundary_UserDashboardGUI_05f7da <<presentation>>
+  component "ReportCreationGUI" as e_cmp_Boundary_ReportCreationGUI_12c930 <<presentation>>
+  component "ActivityMonitoringGUI" as e_cmp_Boundary_ActivityMonitoringGUI_27815b <<presentation>>
+  component "ReceivedReportsGUI" as e_cmp_Boundary_ReceivedReportsGUI_f4e644 <<presentation>>
+}
+package "Application" as e_group_layer_application_663bcf <<layer>> {
+  component "SystemServicesController\n--\n- facade that delegates user and report operations to the specialised controllers\n- catches runtime errors from controllers and returns a success flag\n- facade controller that delegates use-case requests to specialised controllers\n- facade that delegates to the specific Control-layer controllers" as e_cmp_Control_SystemServicesController_c3960b <<application>>
+  component "UserRegistrationController\n--\n- handles user registration requests" as e_cmp_Control_UserRegistrationController_91d6e3 <<application>>
+  component "ReportCreationController\n--\n- handles report creation requests" as e_cmp_Control_ReportCreationController_aa9c76 <<application>>
+  component "UserLoginController" as e_cmp_Control_UserLoginController_ef1b80 <<application>>
+}
+package "Domain" as e_group_layer_domain_e2a928 <<layer>> {
+  component "UserService\n--\n- checks whether a user is registered\n- verifies that a user is a citizen\n- uses PersistenceService from the Database package for data access\n- checks whether a user is registered or a citizen\n- looks up users through the persistence service\n- checks whether users are registered or are citizens/operators\n- registers users and retrieves user data by credentials" as e_cmp_Entity_UserService_080aa7 <<domain>>
+  component "ReportService\n--\n- entity-layer service that holds a PersistenceService to access persistence\n- registers new reports for citizens" as e_cmp_Entity_ReportService_a6ddad <<domain>>
+  component "ReportCategory" as e_cmp_Entity_ReportCategory_fd3c5b <<domain>>
+}
+package "Persistence" as e_group_layer_persistence_95cc76 <<layer>> {
+  component "PersistenceService\n--\n- saves and updates entities in transactions via JPA EntityManager\n- rolls back on failure and closes the EntityManager\n- saves and updates objects in a database transaction through JPA EntityManager\n- saves entities within a transaction with rollback on failure\n- obtains EntityManager from JpaUtil\n- saves and updates entities inside JPA transactions" as e_cmp_Database_PersistenceService_8160ea <<persistence>>
+  component "JpaUtil\n--\n- singleton holding the EntityManagerFactory\n- creates EntityManager instances\n- closes the factory" as e_cmp_Database_JpaUtil_fd7e85 <<persistence>>
+}
+@enduml

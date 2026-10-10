@@ -1,0 +1,3841 @@
+{
+  "elements": {
+    "cmp:Boundary.UserLoginGUI": {
+      "id": "cmp:Boundary.UserLoginGUI",
+      "kind": "component",
+      "name": "UserLoginGUI",
+      "realized_by": [
+        "Boundary.UserLoginGUI"
+      ],
+      "layer": "presentation",
+      "responsibilities": [
+        {
+          "text": "presentation screen for user login",
+          "claims": [
+            "C1"
+          ]
+        },
+        {
+          "text": "holds a UserLoginController to delegate login handling",
+          "claims": [
+            "C1"
+          ]
+        },
+        {
+          "text": "Swing sign-in screen collecting email and password",
+          "claims": [
+            "C16"
+          ]
+        },
+        {
+          "text": "delegates login to UserLoginController",
+          "claims": [
+            "C16"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C1",
+        "C16"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Entity.UserService": {
+      "id": "cmp:Entity.UserService",
+      "kind": "component",
+      "name": "UserService",
+      "realized_by": [
+        "Entity.UserService"
+      ],
+      "layer": "domain",
+      "responsibilities": [
+        {
+          "text": "checks whether a user is registered",
+          "claims": [
+            "C2"
+          ]
+        },
+        {
+          "text": "verifies that a user is a citizen",
+          "claims": [
+            "C2"
+          ]
+        },
+        {
+          "text": "uses PersistenceService from the Database package for data access",
+          "claims": [
+            "C2"
+          ]
+        },
+        {
+          "text": "checks whether a user is registered or a citizen",
+          "claims": [
+            "C8"
+          ]
+        },
+        {
+          "text": "looks up users through the persistence service",
+          "claims": [
+            "C8"
+          ]
+        },
+        {
+          "text": "checks whether users are registered or are citizens/operators",
+          "claims": [
+            "C49"
+          ]
+        },
+        {
+          "text": "registers users and retrieves user data by credentials",
+          "claims": [
+            "C49"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C2",
+        "C8",
+        "C49"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Control.SystemServicesController": {
+      "id": "cmp:Control.SystemServicesController",
+      "kind": "component",
+      "name": "SystemServicesController",
+      "realized_by": [
+        "Control.SystemServicesController"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "facade that delegates user and report operations to the specialised controllers",
+          "claims": [
+            "C3"
+          ]
+        },
+        {
+          "text": "catches runtime errors from controllers and returns a success flag",
+          "claims": [
+            "C3"
+          ]
+        },
+        {
+          "text": "facade controller that delegates use-case requests to specialised controllers",
+          "claims": [
+            "C11"
+          ]
+        },
+        {
+          "text": "facade that delegates to the specific Control-layer controllers",
+          "claims": [
+            "C25"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C3",
+        "C11",
+        "C25"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Control.UserRegistrationController": {
+      "id": "cmp:Control.UserRegistrationController",
+      "kind": "component",
+      "name": "UserRegistrationController",
+      "realized_by": [
+        "Control.UserRegistrationController"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "handles user registration requests",
+          "claims": [
+            "C4"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C4"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Control.ReportCreationController": {
+      "id": "cmp:Control.ReportCreationController",
+      "kind": "component",
+      "name": "ReportCreationController",
+      "realized_by": [
+        "Control.ReportCreationController"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "handles report creation requests",
+          "claims": [
+            "C5"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C5"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Database.PersistenceService": {
+      "id": "cmp:Database.PersistenceService",
+      "kind": "component",
+      "name": "PersistenceService",
+      "realized_by": [
+        "Database.PersistenceService"
+      ],
+      "layer": "persistence",
+      "responsibilities": [
+        {
+          "text": "saves and updates entities in transactions via JPA EntityManager",
+          "claims": [
+            "C9"
+          ]
+        },
+        {
+          "text": "rolls back on failure and closes the EntityManager",
+          "claims": [
+            "C9"
+          ]
+        },
+        {
+          "text": "saves and updates objects in a database transaction through JPA EntityManager",
+          "claims": [
+            "C14"
+          ]
+        },
+        {
+          "text": "saves entities within a transaction with rollback on failure",
+          "claims": [
+            "C18"
+          ]
+        },
+        {
+          "text": "obtains EntityManager from JpaUtil",
+          "claims": [
+            "C18"
+          ]
+        },
+        {
+          "text": "saves and updates entities inside JPA transactions",
+          "claims": [
+            "C46"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C9",
+        "C14",
+        "C18",
+        "C46"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Database.JpaUtil": {
+      "id": "cmp:Database.JpaUtil",
+      "kind": "component",
+      "name": "JpaUtil",
+      "realized_by": [
+        "Database.JpaUtil"
+      ],
+      "layer": "persistence",
+      "responsibilities": [
+        {
+          "text": "singleton holding the EntityManagerFactory",
+          "claims": [
+            "C19"
+          ]
+        },
+        {
+          "text": "creates EntityManager instances",
+          "claims": [
+            "C19"
+          ]
+        },
+        {
+          "text": "closes the factory",
+          "claims": [
+            "C19"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C19"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Control.UserLoginController": {
+      "id": "cmp:Control.UserLoginController",
+      "kind": "component",
+      "name": "UserLoginController",
+      "realized_by": [
+        "Control.UserLoginController"
+      ],
+      "layer": "application",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:Boundary.ReportCreationGUI": {
+      "id": "cmp:Boundary.ReportCreationGUI",
+      "kind": "component",
+      "name": "ReportCreationGUI",
+      "realized_by": [
+        "Boundary.ReportCreationGUI"
+      ],
+      "layer": "presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:Entity.ReportService": {
+      "id": "cmp:Entity.ReportService",
+      "kind": "component",
+      "name": "ReportService",
+      "realized_by": [
+        "Entity.ReportService"
+      ],
+      "layer": "domain",
+      "responsibilities": [
+        {
+          "text": "entity-layer service that holds a PersistenceService to access persistence",
+          "claims": [
+            "C36"
+          ]
+        },
+        {
+          "text": "registers new reports for citizens",
+          "claims": [
+            "C54"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C36",
+        "C54"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:Boundary.ActivityMonitoringGUI": {
+      "id": "cmp:Boundary.ActivityMonitoringGUI",
+      "kind": "component",
+      "name": "ActivityMonitoringGUI",
+      "realized_by": [
+        "Boundary.ActivityMonitoringGUI"
+      ],
+      "layer": "presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:Boundary.ReceivedReportsGUI": {
+      "id": "cmp:Boundary.ReceivedReportsGUI",
+      "kind": "component",
+      "name": "ReceivedReportsGUI",
+      "realized_by": [
+        "Boundary.ReceivedReportsGUI"
+      ],
+      "layer": "presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:Boundary.UserDashboardGUI": {
+      "id": "cmp:Boundary.UserDashboardGUI",
+      "kind": "component",
+      "name": "UserDashboardGUI",
+      "realized_by": [
+        "Boundary.UserDashboardGUI"
+      ],
+      "layer": "presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:Entity.ReportCategory": {
+      "id": "cmp:Entity.ReportCategory",
+      "kind": "component",
+      "name": "ReportCategory",
+      "realized_by": [
+        "Entity.ReportCategory"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "datastore:mysql-reports-db": {
+      "id": "datastore:mysql-reports-db",
+      "kind": "datastore",
+      "name": "MySQL reports_db",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "MySQL database reached through persistence unit Municipal_Report_Management_System",
+          "claims": [
+            "C48"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C48"
+      ],
+      "named_by": "model"
+    },
+    "datastore:reports-db": {
+      "id": "datastore:reports-db",
+      "kind": "datastore",
+      "name": "reports_db",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "MySQL database holding persisted entities, configured by persistence unit Municipal_Report_Management_System",
+          "claims": [
+            "C53"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C53"
+      ],
+      "named_by": "model"
+    },
+    "ent:Entity.Citizen": {
+      "id": "ent:Entity.Citizen",
+      "kind": "entity",
+      "name": "Citizen",
+      "realized_by": [
+        "Entity.Citizen"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Citizen.java"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.Credentials": {
+      "id": "ent:Entity.Credentials",
+      "kind": "entity",
+      "name": "Credentials",
+      "realized_by": [
+        "Entity.Credentials"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "email",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Credentials.java"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.InternalNote": {
+      "id": "ent:Entity.InternalNote",
+      "kind": "entity",
+      "name": "InternalNote",
+      "realized_by": [
+        "Entity.InternalNote"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "noteId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "text",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "dateEntry",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/InternalNote.java",
+        "table": "internal_notes"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.Location": {
+      "id": "ent:Entity.Location",
+      "kind": "entity",
+      "name": "Location",
+      "realized_by": [
+        "Entity.Location"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "city",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "cap",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "street",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "streetNumber",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "municipalArea",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Location.java"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.MunicipalOperator": {
+      "id": "ent:Entity.MunicipalOperator",
+      "kind": "entity",
+      "name": "MunicipalOperator",
+      "realized_by": [
+        "Entity.MunicipalOperator"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/MunicipalOperator.java"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.Notification": {
+      "id": "ent:Entity.Notification",
+      "kind": "entity",
+      "name": "Notification",
+      "realized_by": [
+        "Entity.Notification"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "notificationId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "sentDate",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "notifiedStatus",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Notification.java",
+        "table": "notifications"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.Report": {
+      "id": "ent:Entity.Report",
+      "kind": "entity",
+      "name": "Report",
+      "realized_by": [
+        "Entity.Report"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "reportId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "category",
+          "type": "ReportCategory",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "location",
+          "type": "Location",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "dateReport",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "imageAttached",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "currentStatusName",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "citizenEditable",
+          "type": "boolean",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Report.java",
+        "table": "reports"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.StatusUpdate": {
+      "id": "ent:Entity.StatusUpdate",
+      "kind": "entity",
+      "name": "StatusUpdate",
+      "realized_by": [
+        "Entity.StatusUpdate"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "updateId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "updateDate",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "newStatus",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/StatusUpdate.java",
+        "table": "status_updates"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.User": {
+      "id": "ent:Entity.User",
+      "kind": "entity",
+      "name": "User",
+      "realized_by": [
+        "Entity.User"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "userId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "phoneNumber",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "credentials",
+          "type": "Credentials",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/User.java",
+        "table": "users"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "artifact:municipal-report-management": {
+      "id": "artifact:municipal-report-management",
+      "kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "tool": "maven",
+        "file": "pom.xml"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "state:reportstatus:assigned": {
+      "id": "state:reportstatus:assigned",
+      "kind": "state",
+      "name": "Assigned",
+      "realized_by": [
+        "Entity.Assigned"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "machine": "ReportStatus"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "state:reportstatus:inprogress": {
+      "id": "state:reportstatus:inprogress",
+      "kind": "state",
+      "name": "InProgress",
+      "realized_by": [
+        "Entity.InProgress"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "machine": "ReportStatus"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "state:reportstatus:resolved": {
+      "id": "state:reportstatus:resolved",
+      "kind": "state",
+      "name": "Resolved",
+      "realized_by": [
+        "Entity.Resolved"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "machine": "ReportStatus"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "state:reportstatus:submitted": {
+      "id": "state:reportstatus:submitted",
+      "kind": "state",
+      "name": "Submitted",
+      "realized_by": [
+        "Entity.Submitted"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "machine": "ReportStatus"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    }
+  },
+  "relations": {
+    "rel:cmp-boundary-activitymonitoringgui:uses:cmp-control-systemservicescontroller": {
+      "id": "rel:cmp-boundary-activitymonitoringgui:uses:cmp-control-systemservicescontroller",
+      "kind": "uses",
+      "source": "cmp:Boundary.ActivityMonitoringGUI",
+      "target": "cmp:Control.SystemServicesController",
+      "label": "monitorActivityTrends",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ActivityMonitoringGUI -calls-> Control.SystemServicesController (src/main/java/Boundary/ActivityMonitoringGUI.java:193)",
+        "Boundary.ActivityMonitoringGUI -field-> Control.SystemServicesController (src/main/java/Boundary/ActivityMonitoringGUI.java:54)",
+        "Boundary.ActivityMonitoringGUI -instantiates-> Control.SystemServicesController (src/main/java/Boundary/ActivityMonitoringGUI.java:72)",
+        "Boundary.ActivityMonitoringGUI -param-> Control.SystemServicesController (src/main/java/Boundary/ActivityMonitoringGUI.java:902)"
+      ],
+      "claims": [
+        "C42"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-activitymonitoringgui:uses:cmp-boundary-userdashboardgui": {
+      "id": "rel:cmp-boundary-activitymonitoringgui:uses:cmp-boundary-userdashboardgui",
+      "kind": "uses",
+      "source": "cmp:Boundary.ActivityMonitoringGUI",
+      "target": "cmp:Boundary.UserDashboardGUI",
+      "label": "getContentPanel",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ActivityMonitoringGUI -calls-> Boundary.UserDashboardGUI (src/main/java/Boundary/ActivityMonitoringGUI.java:701)",
+        "Boundary.ActivityMonitoringGUI -instantiates-> Boundary.UserDashboardGUI (src/main/java/Boundary/ActivityMonitoringGUI.java:698)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-receivedreportsgui:uses:cmp-control-systemservicescontroller": {
+      "id": "rel:cmp-boundary-receivedreportsgui:uses:cmp-control-systemservicescontroller",
+      "kind": "uses",
+      "source": "cmp:Boundary.ReceivedReportsGUI",
+      "target": "cmp:Control.SystemServicesController",
+      "label": "reviewReportsReceived, displayReportDetails",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ReceivedReportsGUI -calls-> Control.SystemServicesController (src/main/java/Boundary/ReceivedReportsGUI.java:117)",
+        "Boundary.ReceivedReportsGUI -calls-> Control.SystemServicesController (src/main/java/Boundary/ReceivedReportsGUI.java:176)",
+        "Boundary.ReceivedReportsGUI -calls-> Control.SystemServicesController (src/main/java/Boundary/ReceivedReportsGUI.java:254)",
+        "Boundary.ReceivedReportsGUI -field-> Control.SystemServicesController (src/main/java/Boundary/ReceivedReportsGUI.java:44)",
+        "Boundary.ReceivedReportsGUI -instantiates-> Control.SystemServicesController (src/main/java/Boundary/ReceivedReportsGUI.java:79)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-receivedreportsgui:uses:cmp-entity-reportcategory": {
+      "id": "rel:cmp-boundary-receivedreportsgui:uses:cmp-entity-reportcategory",
+      "kind": "uses",
+      "source": "cmp:Boundary.ReceivedReportsGUI",
+      "target": "cmp:Entity.ReportCategory",
+      "label": "values",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ReceivedReportsGUI -calls-> Entity.ReportCategory (src/main/java/Boundary/ReceivedReportsGUI.java:430)"
+      ],
+      "claims": [
+        "C44"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-receivedreportsgui:uses:cmp-boundary-userdashboardgui": {
+      "id": "rel:cmp-boundary-receivedreportsgui:uses:cmp-boundary-userdashboardgui",
+      "kind": "uses",
+      "source": "cmp:Boundary.ReceivedReportsGUI",
+      "target": "cmp:Boundary.UserDashboardGUI",
+      "label": "getContentPanel",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ReceivedReportsGUI -calls-> Boundary.UserDashboardGUI (src/main/java/Boundary/ReceivedReportsGUI.java:754)",
+        "Boundary.ReceivedReportsGUI -instantiates-> Boundary.UserDashboardGUI (src/main/java/Boundary/ReceivedReportsGUI.java:751)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-reportcreationgui:uses:cmp-control-systemservicescontroller": {
+      "id": "rel:cmp-boundary-reportcreationgui:uses:cmp-control-systemservicescontroller",
+      "kind": "uses",
+      "source": "cmp:Boundary.ReportCreationGUI",
+      "target": "cmp:Control.SystemServicesController",
+      "label": "createReport",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ReportCreationGUI -calls-> Control.SystemServicesController (src/main/java/Boundary/ReportCreationGUI.java:518)",
+        "Boundary.ReportCreationGUI -field-> Control.SystemServicesController (src/main/java/Boundary/ReportCreationGUI.java:57)",
+        "Boundary.ReportCreationGUI -instantiates-> Control.SystemServicesController (src/main/java/Boundary/ReportCreationGUI.java:70)"
+      ],
+      "claims": [
+        "C21",
+        "C28"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-reportcreationgui:uses:cmp-entity-reportcategory": {
+      "id": "rel:cmp-boundary-reportcreationgui:uses:cmp-entity-reportcategory",
+      "kind": "uses",
+      "source": "cmp:Boundary.ReportCreationGUI",
+      "target": "cmp:Entity.ReportCategory",
+      "label": "Boundary imports Entity type directly",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ReportCreationGUI -returns-> Entity.ReportCategory (src/main/java/Boundary/ReportCreationGUI.java:682)"
+      ],
+      "claims": [
+        "C30",
+        "C45"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-reportcreationgui:uses:cmp-boundary-userdashboardgui": {
+      "id": "rel:cmp-boundary-reportcreationgui:uses:cmp-boundary-userdashboardgui",
+      "kind": "uses",
+      "source": "cmp:Boundary.ReportCreationGUI",
+      "target": "cmp:Boundary.UserDashboardGUI",
+      "label": "getContentPanel",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.ReportCreationGUI -calls-> Boundary.UserDashboardGUI (src/main/java/Boundary/ReportCreationGUI.java:724)",
+        "Boundary.ReportCreationGUI -instantiates-> Boundary.UserDashboardGUI (src/main/java/Boundary/ReportCreationGUI.java:721)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-reportcreationgui": {
+      "id": "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-reportcreationgui",
+      "kind": "uses",
+      "source": "cmp:Boundary.UserDashboardGUI",
+      "target": "cmp:Boundary.ReportCreationGUI",
+      "label": "getContentPanel",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.UserDashboardGUI -calls-> Boundary.ReportCreationGUI (src/main/java/Boundary/UserDashboardGUI.java:459)",
+        "Boundary.UserDashboardGUI -instantiates-> Boundary.ReportCreationGUI (src/main/java/Boundary/UserDashboardGUI.java:455)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-receivedreportsgui": {
+      "id": "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-receivedreportsgui",
+      "kind": "uses",
+      "source": "cmp:Boundary.UserDashboardGUI",
+      "target": "cmp:Boundary.ReceivedReportsGUI",
+      "label": "getContentPanel",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.UserDashboardGUI -calls-> Boundary.ReceivedReportsGUI (src/main/java/Boundary/UserDashboardGUI.java:519)",
+        "Boundary.UserDashboardGUI -calls-> Boundary.ReceivedReportsGUI (src/main/java/Boundary/UserDashboardGUI.java:579)",
+        "Boundary.UserDashboardGUI -instantiates-> Boundary.ReceivedReportsGUI (src/main/java/Boundary/UserDashboardGUI.java:515)",
+        "Boundary.UserDashboardGUI -instantiates-> Boundary.ReceivedReportsGUI (src/main/java/Boundary/UserDashboardGUI.java:575)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-activitymonitoringgui": {
+      "id": "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-activitymonitoringgui",
+      "kind": "uses",
+      "source": "cmp:Boundary.UserDashboardGUI",
+      "target": "cmp:Boundary.ActivityMonitoringGUI",
+      "label": "getContentPanel",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.UserDashboardGUI -calls-> Boundary.ActivityMonitoringGUI (src/main/java/Boundary/UserDashboardGUI.java:549)",
+        "Boundary.UserDashboardGUI -instantiates-> Boundary.ActivityMonitoringGUI (src/main/java/Boundary/UserDashboardGUI.java:545)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-userlogingui:uses:cmp-control-userlogincontroller": {
+      "id": "rel:cmp-boundary-userlogingui:uses:cmp-control-userlogincontroller",
+      "kind": "uses",
+      "source": "cmp:Boundary.UserLoginGUI",
+      "target": "cmp:Control.UserLoginController",
+      "label": "verifyCredentialsLogin",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.UserLoginGUI -calls-> Control.UserLoginController (src/main/java/Boundary/UserLoginGUI.java:170)",
+        "Boundary.UserLoginGUI -field-> Control.UserLoginController (src/main/java/Boundary/UserLoginGUI.java:25)",
+        "Boundary.UserLoginGUI -instantiates-> Control.UserLoginController (src/main/java/Boundary/UserLoginGUI.java:111)"
+      ],
+      "claims": [
+        "C17",
+        "C29",
+        "C43"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-boundary-userlogingui:uses:cmp-boundary-userdashboardgui": {
+      "id": "rel:cmp-boundary-userlogingui:uses:cmp-boundary-userdashboardgui",
+      "kind": "uses",
+      "source": "cmp:Boundary.UserLoginGUI",
+      "target": "cmp:Boundary.UserDashboardGUI",
+      "label": "getContentPanel",
+      "multiplicity": null,
+      "member_edges": [
+        "Boundary.UserLoginGUI -calls-> Boundary.UserDashboardGUI (src/main/java/Boundary/UserLoginGUI.java:270)",
+        "Boundary.UserLoginGUI -instantiates-> Boundary.UserDashboardGUI (src/main/java/Boundary/UserLoginGUI.java:267)"
+      ],
+      "claims": [
+        "C57"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-control-reportcreationcontroller:uses:cmp-entity-userservice": {
+      "id": "rel:cmp-control-reportcreationcontroller:uses:cmp-entity-userservice",
+      "kind": "uses",
+      "source": "cmp:Control.ReportCreationController",
+      "target": "cmp:Entity.UserService",
+      "label": "verifyUserCitizen",
+      "multiplicity": null,
+      "member_edges": [
+        "Control.ReportCreationController -calls-> Entity.UserService (src/main/java/Control/ReportCreationController.java:155)",
+        "Control.ReportCreationController -field-> Entity.UserService (src/main/java/Control/ReportCreationController.java:14)",
+        "Control.ReportCreationController -instantiates-> Entity.UserService (src/main/java/Control/ReportCreationController.java:21)"
+      ],
+      "claims": [
+        "C22",
+        "C32",
+        "C40"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-control-reportcreationcontroller:uses:cmp-entity-reportservice": {
+      "id": "rel:cmp-control-reportcreationcontroller:uses:cmp-entity-reportservice",
+      "kind": "uses",
+      "source": "cmp:Control.ReportCreationController",
+      "target": "cmp:Entity.ReportService",
+      "label": "registerNewReport",
+      "multiplicity": null,
+      "member_edges": [
+        "Control.ReportCreationController -calls-> Entity.ReportService (src/main/java/Control/ReportCreationController.java:163)",
+        "Control.ReportCreationController -field-> Entity.ReportService (src/main/java/Control/ReportCreationController.java:15)",
+        "Control.ReportCreationController -instantiates-> Entity.ReportService (src/main/java/Control/ReportCreationController.java:22)"
+      ],
+      "claims": [
+        "C23",
+        "C31",
+        "C39"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-control-systemservicescontroller:uses:cmp-control-userregistrationcontroller": {
+      "id": "rel:cmp-control-systemservicescontroller:uses:cmp-control-userregistrationcontroller",
+      "kind": "uses",
+      "source": "cmp:Control.SystemServicesController",
+      "target": "cmp:Control.UserRegistrationController",
+      "label": "requestRegistrationUser",
+      "multiplicity": null,
+      "member_edges": [
+        "Control.SystemServicesController -calls-> Control.UserRegistrationController (src/main/java/Control/SystemServicesController.java:41)",
+        "Control.SystemServicesController -field-> Control.UserRegistrationController (src/main/java/Control/SystemServicesController.java:11)",
+        "Control.SystemServicesController -instantiates-> Control.UserRegistrationController (src/main/java/Control/SystemServicesController.java:23)"
+      ],
+      "claims": [
+        "C12",
+        "C27"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-control-systemservicescontroller:uses:cmp-control-reportcreationcontroller": {
+      "id": "rel:cmp-control-systemservicescontroller:uses:cmp-control-reportcreationcontroller",
+      "kind": "uses",
+      "source": "cmp:Control.SystemServicesController",
+      "target": "cmp:Control.ReportCreationController",
+      "label": "requestRegistrationReport",
+      "multiplicity": null,
+      "member_edges": [
+        "Control.SystemServicesController -calls-> Control.ReportCreationController (src/main/java/Control/SystemServicesController.java:68)",
+        "Control.SystemServicesController -field-> Control.ReportCreationController (src/main/java/Control/SystemServicesController.java:12)",
+        "Control.SystemServicesController -instantiates-> Control.ReportCreationController (src/main/java/Control/SystemServicesController.java:24)"
+      ],
+      "claims": [
+        "C13",
+        "C26"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-control-userlogincontroller:uses:cmp-entity-userservice": {
+      "id": "rel:cmp-control-userlogincontroller:uses:cmp-entity-userservice",
+      "kind": "uses",
+      "source": "cmp:Control.UserLoginController",
+      "target": "cmp:Entity.UserService",
+      "label": "retrieveUserDataByCredentials",
+      "multiplicity": null,
+      "member_edges": [
+        "Control.UserLoginController -calls-> Entity.UserService (src/main/java/Control/UserLoginController.java:30)",
+        "Control.UserLoginController -field-> Entity.UserService (src/main/java/Control/UserLoginController.java:12)",
+        "Control.UserLoginController -instantiates-> Entity.UserService (src/main/java/Control/UserLoginController.java:18)"
+      ],
+      "claims": [
+        "C33",
+        "C41"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-control-userregistrationcontroller:uses:cmp-entity-userservice": {
+      "id": "rel:cmp-control-userregistrationcontroller:uses:cmp-entity-userservice",
+      "kind": "uses",
+      "source": "cmp:Control.UserRegistrationController",
+      "target": "cmp:Entity.UserService",
+      "label": "isUserRegistered, registerUser",
+      "multiplicity": null,
+      "member_edges": [
+        "Control.UserRegistrationController -calls-> Entity.UserService (src/main/java/Control/UserRegistrationController.java:33)",
+        "Control.UserRegistrationController -calls-> Entity.UserService (src/main/java/Control/UserRegistrationController.java:37)",
+        "Control.UserRegistrationController -field-> Entity.UserService (src/main/java/Control/UserRegistrationController.java:11)",
+        "Control.UserRegistrationController -instantiates-> Entity.UserService (src/main/java/Control/UserRegistrationController.java:17)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-database-persistenceservice:uses:cmp-database-jpautil": {
+      "id": "rel:cmp-database-persistenceservice:uses:cmp-database-jpautil",
+      "kind": "uses",
+      "source": "cmp:Database.PersistenceService",
+      "target": "cmp:Database.JpaUtil",
+      "label": "getEntityManager, getInstance",
+      "multiplicity": null,
+      "member_edges": [
+        "Database.PersistenceService -calls-> Database.JpaUtil (src/main/java/Database/PersistenceService.java:125)",
+        "Database.PersistenceService -calls-> Database.JpaUtil (src/main/java/Database/PersistenceService.java:18)",
+        "Database.PersistenceService -calls-> Database.JpaUtil (src/main/java/Database/PersistenceService.java:183)",
+        "Database.PersistenceService -calls-> Database.JpaUtil (src/main/java/Database/PersistenceService.java:30)",
+        "Database.PersistenceService -calls-> Database.JpaUtil (src/main/java/Database/PersistenceService.java:57)",
+        "Database.PersistenceService -calls-> Database.JpaUtil (src/main/java/Database/PersistenceService.java:92)",
+        "Database.PersistenceService -field-> Database.JpaUtil (src/main/java/Database/PersistenceService.java:15)"
+      ],
+      "claims": [
+        "C15",
+        "C20",
+        "C47"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-entity-reportservice:uses:cmp-database-persistenceservice": {
+      "id": "rel:cmp-entity-reportservice:uses:cmp-database-persistenceservice",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Database.PersistenceService",
+      "label": "findById, findByFields",
+      "multiplicity": null,
+      "member_edges": [
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:113)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:140)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:166)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:186)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:200)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:213)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:236)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:248)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:269)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:278)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:298)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:323)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:332)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:346)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:375)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:398)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:43)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:445)",
+        "Entity.ReportService -calls-> Database.PersistenceService (src/main/java/Entity/ReportService.java:480)",
+        "Entity.ReportService -field-> Database.PersistenceService (src/main/java/Entity/ReportService.java:16)"
+      ],
+      "claims": [
+        "C24",
+        "C34",
+        "C37",
+        "C55",
+        "C56"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-entity-reportservice:uses:cmp-entity-reportcategory": {
+      "id": "rel:cmp-entity-reportservice:uses:cmp-entity-reportcategory",
+      "kind": "uses",
+      "source": "cmp:Entity.ReportService",
+      "target": "cmp:Entity.ReportCategory",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [
+        "Entity.ReportService -returns-> Entity.ReportCategory (src/main/java/Entity/ReportService.java:756)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-entity-userservice:uses:cmp-database-persistenceservice": {
+      "id": "rel:cmp-entity-userservice:uses:cmp-database-persistenceservice",
+      "kind": "uses",
+      "source": "cmp:Entity.UserService",
+      "target": "cmp:Database.PersistenceService",
+      "label": "findById, findByFields",
+      "multiplicity": null,
+      "member_edges": [
+        "Entity.UserService -calls-> Database.PersistenceService (src/main/java/Entity/UserService.java:123)",
+        "Entity.UserService -calls-> Database.PersistenceService (src/main/java/Entity/UserService.java:167)",
+        "Entity.UserService -calls-> Database.PersistenceService (src/main/java/Entity/UserService.java:44)",
+        "Entity.UserService -calls-> Database.PersistenceService (src/main/java/Entity/UserService.java:61)",
+        "Entity.UserService -calls-> Database.PersistenceService (src/main/java/Entity/UserService.java:89)",
+        "Entity.UserService -field-> Database.PersistenceService (src/main/java/Entity/UserService.java:14)",
+        "Entity.UserService -instantiates-> Database.PersistenceService (src/main/java/Entity/UserService.java:20)"
+      ],
+      "claims": [
+        "C10",
+        "C35",
+        "C38",
+        "C50",
+        "C51",
+        "C52"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-control-userregistrationcontroller:is-part-of:cmp-control-systemservicescontroller": {
+      "id": "rel:cmp-control-userregistrationcontroller:is-part-of:cmp-control-systemservicescontroller",
+      "kind": "is-part-of",
+      "source": "cmp:Control.UserRegistrationController",
+      "target": "cmp:Control.SystemServicesController",
+      "label": "controllerRegistrationUser",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C6"
+      ],
+      "support": "observed"
+    },
+    "rel:cmp-control-reportcreationcontroller:is-part-of:cmp-control-systemservicescontroller": {
+      "id": "rel:cmp-control-reportcreationcontroller:is-part-of:cmp-control-systemservicescontroller",
+      "kind": "is-part-of",
+      "source": "cmp:Control.ReportCreationController",
+      "target": "cmp:Control.SystemServicesController",
+      "label": "controllerCreationReport",
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [
+        "C7"
+      ],
+      "support": "observed"
+    },
+    "rel:ent-entity-internalnote:association:ent-entity-municipaloperator:operator": {
+      "id": "rel:ent-entity-internalnote:association:ent-entity-municipaloperator:operator",
+      "kind": "association",
+      "source": "ent:Entity.InternalNote",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.InternalNote.operator -many-to-one-> Entity.MunicipalOperator"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-internalnote:association:ent-entity-report:report": {
+      "id": "rel:ent-entity-internalnote:association:ent-entity-report:report",
+      "kind": "association",
+      "source": "ent:Entity.InternalNote",
+      "target": "ent:Entity.Report",
+      "label": "report",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.InternalNote.report -many-to-one-> Entity.Report"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-notification:association:ent-entity-citizen:destinatario": {
+      "id": "rel:ent-entity-notification:association:ent-entity-citizen:destinatario",
+      "kind": "association",
+      "source": "ent:Entity.Notification",
+      "target": "ent:Entity.Citizen",
+      "label": "destinatario",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.Notification.destinatario -many-to-one-> Entity.Citizen"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-notification:association:ent-entity-report:report": {
+      "id": "rel:ent-entity-notification:association:ent-entity-report:report",
+      "kind": "association",
+      "source": "ent:Entity.Notification",
+      "target": "ent:Entity.Report",
+      "label": "report",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.Notification.report -many-to-one-> Entity.Report"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-report:composition:ent-entity-location:location": {
+      "id": "rel:ent-entity-report:composition:ent-entity-location:location",
+      "kind": "composition",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.Location",
+      "label": "location",
+      "multiplicity": null,
+      "member_edges": [
+        "Entity.Report.location -embedded-> Entity.Location"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-report:association:ent-entity-citizen:citizenreporting": {
+      "id": "rel:ent-entity-report:association:ent-entity-citizen:citizenreporting",
+      "kind": "association",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.Citizen",
+      "label": "citizenReporting",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.Report.citizenReporting -many-to-one-> Entity.Citizen"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-report:association:ent-entity-municipaloperator:operator": {
+      "id": "rel:ent-entity-report:association:ent-entity-municipaloperator:operator",
+      "kind": "association",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.Report.operator -many-to-one-> Entity.MunicipalOperator"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-report:association:ent-entity-statusupdate:statusupdates": {
+      "id": "rel:ent-entity-report:association:ent-entity-statusupdate:statusupdates",
+      "kind": "association",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.StatusUpdate",
+      "label": "statusUpdates",
+      "multiplicity": "1..*",
+      "member_edges": [
+        "Entity.Report.statusUpdates -one-to-many-> Entity.StatusUpdate"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-statusupdate:association:ent-entity-municipaloperator:operator": {
+      "id": "rel:ent-entity-statusupdate:association:ent-entity-municipaloperator:operator",
+      "kind": "association",
+      "source": "ent:Entity.StatusUpdate",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.StatusUpdate.operator -many-to-one-> Entity.MunicipalOperator"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-user:composition:ent-entity-credentials:credentials": {
+      "id": "rel:ent-entity-user:composition:ent-entity-credentials:credentials",
+      "kind": "composition",
+      "source": "ent:Entity.User",
+      "target": "ent:Entity.Credentials",
+      "label": "credentials",
+      "multiplicity": null,
+      "member_edges": [
+        "Entity.User.credentials -embedded-> Entity.Credentials"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:artifact-municipal-report-management:communicates:datastore-mysql-reports-db": {
+      "id": "rel:artifact-municipal-report-management:communicates:datastore-mysql-reports-db",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management",
+      "target": "datastore:mysql-reports-db",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [],
+      "support": "inferred"
+    },
+    "rel:artifact-municipal-report-management:communicates:datastore-reports-db": {
+      "id": "rel:artifact-municipal-report-management:communicates:datastore-reports-db",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management",
+      "target": "datastore:reports-db",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [],
+      "support": "inferred"
+    }
+  },
+  "scenarios": {},
+  "claims": {
+    "C1": {
+      "id": "C1",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "UserLoginGUI",
+      "symbol": "Boundary.UserLoginGUI",
+      "responsibilities": [
+        "presentation screen for user login",
+        "holds a UserLoginController to delegate login handling"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": "Boundary.UserLoginGUI",
+          "lines": [
+            16,
+            16
+          ],
+          "excerpt": "public class UserLoginGUI {"
+        },
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": "Boundary.UserLoginGUI",
+          "lines": [
+            25,
+            25
+          ],
+          "excerpt": "private UserLoginController controllerLoginUser;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ1",
+        "AQ5"
+      ]
+    },
+    "C2": {
+      "id": "C2",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "UserService",
+      "symbol": "Entity.UserService",
+      "responsibilities": [
+        "checks whether a user is registered",
+        "verifies that a user is a citizen",
+        "uses PersistenceService from the Database package for data access"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": "Entity.UserService",
+          "lines": [
+            12,
+            12
+          ],
+          "excerpt": "public class UserService {"
+        },
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": "Entity.UserService",
+          "lines": [
+            20,
+            20
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ1",
+        "AQ5"
+      ]
+    },
+    "C3": {
+      "id": "C3",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "SystemServicesController",
+      "symbol": "Control.SystemServicesController",
+      "responsibilities": [
+        "facade that delegates user and report operations to the specialised controllers",
+        "catches runtime errors from controllers and returns a success flag"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            9,
+            9
+          ],
+          "excerpt": "public class SystemServicesController {"
+        },
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            41,
+            41
+          ],
+          "excerpt": "Long registeredUserId = controllerRegistrationUser.requestRegistrationUser(registrationData);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ2",
+        "AQ6"
+      ]
+    },
+    "C4": {
+      "id": "C4",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "UserRegistrationController",
+      "symbol": "Control.UserRegistrationController",
+      "responsibilities": [
+        "handles user registration requests"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            11,
+            11
+          ],
+          "excerpt": "private UserRegistrationController controllerRegistrationUser;"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ2",
+        "AQ6"
+      ]
+    },
+    "C5": {
+      "id": "C5",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "ReportCreationController",
+      "symbol": "Control.ReportCreationController",
+      "responsibilities": [
+        "handles report creation requests"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            67,
+            68
+          ],
+          "excerpt": "Long registeredReportId =\n\t\t\t\t\tcontrollerCreationReport.requestRegistrationReport("
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.6,
+      "question_ids": [
+        "AQ2",
+        "AQ6"
+      ]
+    },
+    "C6": {
+      "id": "C6",
+      "task": "IT2",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.UserRegistrationController",
+      "target": "Control.SystemServicesController",
+      "relation": "is-part-of",
+      "label": "controllerRegistrationUser",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            11,
+            11
+          ],
+          "excerpt": "private UserRegistrationController controllerRegistrationUser;"
+        },
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            23,
+            23
+          ],
+          "excerpt": "this.controllerRegistrationUser = new UserRegistrationController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ2",
+        "AQ6"
+      ]
+    },
+    "C7": {
+      "id": "C7",
+      "task": "IT2",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.ReportCreationController",
+      "target": "Control.SystemServicesController",
+      "relation": "is-part-of",
+      "label": "controllerCreationReport",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            12,
+            12
+          ],
+          "excerpt": "private ReportCreationController controllerCreationReport;"
+        },
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            24,
+            24
+          ],
+          "excerpt": "this.controllerCreationReport = new ReportCreationController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ2",
+        "AQ6"
+      ]
+    },
+    "C8": {
+      "id": "C8",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "UserService",
+      "symbol": "Entity.UserService",
+      "responsibilities": [
+        "checks whether a user is registered or a citizen",
+        "looks up users through the persistence service"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            12,
+            12
+          ],
+          "excerpt": "public class UserService {"
+        },
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            44,
+            47
+          ],
+          "excerpt": "Citizen citizen = persistenceService.findById(\n\t\t\t\tCitizen.class,\n\t\t\t\tuserId\n\t\t);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ2",
+        "AQ6"
+      ]
+    },
+    "C9": {
+      "id": "C9",
+      "task": "IT2",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "PersistenceService",
+      "symbol": "Database.PersistenceService",
+      "responsibilities": [
+        "saves and updates entities in transactions via JPA EntityManager",
+        "rolls back on failure and closes the EntityManager"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            13,
+            13
+          ],
+          "excerpt": "public class PersistenceService {"
+        },
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            34,
+            36
+          ],
+          "excerpt": "transaction.begin();\n\t\t\tentityManager.persist(object);\n\t\t\ttransaction.commit();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ2",
+        "AQ6"
+      ]
+    },
+    "C10": {
+      "id": "C10",
+      "task": "IT2",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.UserService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "persistenceService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Database.PersistenceService;"
+        },
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            20,
+            20
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ2",
+        "AQ6"
+      ]
+    },
+    "C11": {
+      "id": "C11",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "SystemServicesController",
+      "symbol": "Control.SystemServicesController",
+      "responsibilities": [
+        "facade controller that delegates use-case requests to specialised controllers"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            9,
+            9
+          ],
+          "excerpt": "public class SystemServicesController {"
+        },
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            23,
+            24
+          ],
+          "excerpt": "this.controllerRegistrationUser = new UserRegistrationController();\n\t\tthis.controllerCreationReport = new ReportCreationController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ3",
+        "AQ7"
+      ]
+    },
+    "C12": {
+      "id": "C12",
+      "task": "IT3",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController",
+      "target": "Control.UserRegistrationController",
+      "relation": "is-part-of",
+      "label": "registerUser",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            11,
+            11
+          ],
+          "excerpt": "private UserRegistrationController controllerRegistrationUser;"
+        },
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            41,
+            41
+          ],
+          "excerpt": "Long registeredUserId = controllerRegistrationUser.requestRegistrationUser(registrationData);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ3",
+        "AQ7"
+      ]
+    },
+    "C13": {
+      "id": "C13",
+      "task": "IT3",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController",
+      "target": "Control.ReportCreationController",
+      "relation": "is-part-of",
+      "label": "createReport",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            12,
+            12
+          ],
+          "excerpt": "private ReportCreationController controllerCreationReport;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.75,
+      "question_ids": [
+        "AQ3",
+        "AQ7"
+      ]
+    },
+    "C14": {
+      "id": "C14",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "PersistenceService",
+      "symbol": "Database.PersistenceService",
+      "responsibilities": [
+        "saves and updates objects in a database transaction through JPA EntityManager"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            13,
+            19
+          ],
+          "excerpt": "public class PersistenceService {\n\n\tprivate JpaUtil jpaUtil;\n\n\tpublic PersistenceService() {\n\t\tthis.jpaUtil = JpaUtil.getInstance();\n\t}"
+        },
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            34,
+            36
+          ],
+          "excerpt": "transaction.begin();\n\t\t\tentityManager.persist(object);\n\t\t\ttransaction.commit();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ3",
+        "AQ7"
+      ]
+    },
+    "C15": {
+      "id": "C15",
+      "task": "IT3",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Database.PersistenceService",
+      "target": "Database.JpaUtil",
+      "relation": "is-part-of",
+      "label": "obtains EntityManager",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            15,
+            18
+          ],
+          "excerpt": "private JpaUtil jpaUtil;\n\n\tpublic PersistenceService() {\n\t\tthis.jpaUtil = JpaUtil.getInstance();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ3",
+        "AQ7"
+      ]
+    },
+    "C16": {
+      "id": "C16",
+      "task": "IT3",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "UserLoginGUI",
+      "symbol": "Boundary.UserLoginGUI",
+      "responsibilities": [
+        "Swing sign-in screen collecting email and password",
+        "delegates login to UserLoginController"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": null,
+          "lines": [
+            16,
+            16
+          ],
+          "excerpt": "public class UserLoginGUI {"
+        },
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": null,
+          "lines": [
+            25,
+            25
+          ],
+          "excerpt": "private UserLoginController controllerLoginUser;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ3",
+        "AQ7"
+      ]
+    },
+    "C17": {
+      "id": "C17",
+      "task": "IT3",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.UserLoginGUI",
+      "target": "Control.UserLoginController",
+      "relation": "is-part-of",
+      "label": "Boundary uses Control",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Control.UserLoginController;"
+        },
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": null,
+          "lines": [
+            25,
+            25
+          ],
+          "excerpt": "private UserLoginController controllerLoginUser;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ3",
+        "AQ7"
+      ]
+    },
+    "C18": {
+      "id": "C18",
+      "task": "IT4",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "PersistenceService",
+      "symbol": "Database.PersistenceService",
+      "responsibilities": [
+        "saves entities within a transaction with rollback on failure",
+        "obtains EntityManager from JpaUtil"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            24,
+            45
+          ],
+          "excerpt": "public <T> void save(T object) {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ4",
+        "AQ8"
+      ]
+    },
+    "C19": {
+      "id": "C19",
+      "task": "IT4",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "JpaUtil",
+      "symbol": "Database.JpaUtil",
+      "responsibilities": [
+        "singleton holding the EntityManagerFactory",
+        "creates EntityManager instances",
+        "closes the factory"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/JpaUtil.java",
+          "symbol": null,
+          "lines": [
+            11,
+            14
+          ],
+          "excerpt": "public class JpaUtil {"
+        },
+        {
+          "file": "src/main/java/Database/JpaUtil.java",
+          "symbol": null,
+          "lines": [
+            28,
+            30
+          ],
+          "excerpt": "public EntityManager getEntityManager() {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4",
+        "AQ8"
+      ]
+    },
+    "C20": {
+      "id": "C20",
+      "task": "IT4",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Database.PersistenceService",
+      "target": "Database.JpaUtil",
+      "relation": "uses",
+      "label": "getInstance / getEntityManager",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            17,
+            19
+          ],
+          "excerpt": "public PersistenceService() {\n\t\tthis.jpaUtil = JpaUtil.getInstance();\n\t}"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4",
+        "AQ8"
+      ]
+    },
+    "C21": {
+      "id": "C21",
+      "task": "IT5",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.ReportCreationGUI",
+      "target": "Control.SystemServicesController",
+      "relation": "uses",
+      "label": "creates and holds SystemServicesController",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReportCreationGUI.java",
+          "symbol": null,
+          "lines": [
+            70,
+            70
+          ],
+          "excerpt": "this.systemServicesController = new SystemServicesController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ9"
+      ]
+    },
+    "C22": {
+      "id": "C22",
+      "task": "IT5",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.ReportCreationController",
+      "target": "Entity.UserService",
+      "relation": "uses",
+      "label": "instantiates UserService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            21,
+            21
+          ],
+          "excerpt": "this.userService = new UserService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ9"
+      ]
+    },
+    "C23": {
+      "id": "C23",
+      "task": "IT5",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.ReportCreationController",
+      "target": "Entity.ReportService",
+      "relation": "uses",
+      "label": "instantiates ReportService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            22,
+            22
+          ],
+          "excerpt": "this.reportService = new ReportService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ9"
+      ]
+    },
+    "C24": {
+      "id": "C24",
+      "task": "IT5",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.ReportService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "instantiates PersistenceService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            22,
+            22
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ9"
+      ]
+    },
+    "C25": {
+      "id": "C25",
+      "task": "IT6",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "SystemServicesController",
+      "symbol": "Control.SystemServicesController",
+      "responsibilities": [
+        "facade that delegates to the specific Control-layer controllers"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            9,
+            9
+          ],
+          "excerpt": "public class SystemServicesController {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C26": {
+      "id": "C26",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController",
+      "target": "Control.ReportCreationController",
+      "relation": "uses",
+      "label": "delegates report creation",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            24,
+            24
+          ],
+          "excerpt": "this.controllerCreationReport = new ReportCreationController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C27": {
+      "id": "C27",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.SystemServicesController",
+      "target": "Control.UserRegistrationController",
+      "relation": "uses",
+      "label": "delegates user registration",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/SystemServicesController.java",
+          "symbol": null,
+          "lines": [
+            23,
+            23
+          ],
+          "excerpt": "this.controllerRegistrationUser = new UserRegistrationController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C28": {
+      "id": "C28",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.ReportCreationGUI",
+      "target": "Control.SystemServicesController",
+      "relation": "uses",
+      "label": "Boundary calls Control",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReportCreationGUI.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Control.SystemServicesController;"
+        },
+        {
+          "file": "src/main/java/Boundary/ReportCreationGUI.java",
+          "symbol": null,
+          "lines": [
+            70,
+            70
+          ],
+          "excerpt": "this.systemServicesController = new SystemServicesController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C29": {
+      "id": "C29",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.UserLoginGUI",
+      "target": "Control.UserLoginController",
+      "relation": "uses",
+      "label": "Boundary calls Control",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Control.UserLoginController;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C30": {
+      "id": "C30",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.ReportCreationGUI",
+      "target": "Entity.ReportCategory",
+      "relation": "uses",
+      "label": "Boundary imports Entity type directly",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReportCreationGUI.java",
+          "symbol": null,
+          "lines": [
+            4,
+            4
+          ],
+          "excerpt": "import Entity.ReportCategory;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C31": {
+      "id": "C31",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.ReportCreationController",
+      "target": "Entity.ReportService",
+      "relation": "uses",
+      "label": "Control calls Entity service",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            4,
+            4
+          ],
+          "excerpt": "import Entity.ReportService;"
+        },
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            22,
+            22
+          ],
+          "excerpt": "this.reportService = new ReportService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C32": {
+      "id": "C32",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.ReportCreationController",
+      "target": "Entity.UserService",
+      "relation": "uses",
+      "label": "Control calls Entity service",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            5,
+            5
+          ],
+          "excerpt": "import Entity.UserService;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C33": {
+      "id": "C33",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.UserLoginController",
+      "target": "Entity.UserService",
+      "relation": "uses",
+      "label": "Control calls Entity service",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/UserLoginController.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Entity.UserService;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C34": {
+      "id": "C34",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.ReportService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "Entity service persists via Database",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Database.PersistenceService;"
+        },
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            22,
+            22
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C35": {
+      "id": "C35",
+      "task": "IT6",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.UserService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "Entity service persists via Database",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Database.PersistenceService;"
+        },
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            20,
+            20
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ10"
+      ]
+    },
+    "C36": {
+      "id": "C36",
+      "task": "IT7",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "ReportService",
+      "symbol": "Entity.ReportService",
+      "responsibilities": [
+        "entity-layer service that holds a PersistenceService to access persistence"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            14,
+            14
+          ],
+          "excerpt": "public class ReportService {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C37": {
+      "id": "C37",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.ReportService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "creates and holds PersistenceService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Database.PersistenceService;"
+        },
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            22,
+            22
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C38": {
+      "id": "C38",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.UserService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "creates and holds PersistenceService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Database.PersistenceService;"
+        },
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            20,
+            20
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C39": {
+      "id": "C39",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.ReportCreationController",
+      "target": "Entity.ReportService",
+      "relation": "uses",
+      "label": "creates ReportService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            4,
+            4
+          ],
+          "excerpt": "import Entity.ReportService;"
+        },
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            22,
+            22
+          ],
+          "excerpt": "this.reportService = new ReportService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C40": {
+      "id": "C40",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.ReportCreationController",
+      "target": "Entity.UserService",
+      "relation": "uses",
+      "label": "creates UserService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            5,
+            5
+          ],
+          "excerpt": "import Entity.UserService;"
+        },
+        {
+          "file": "src/main/java/Control/ReportCreationController.java",
+          "symbol": null,
+          "lines": [
+            21,
+            21
+          ],
+          "excerpt": "this.userService = new UserService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C41": {
+      "id": "C41",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Control.UserLoginController",
+      "target": "Entity.UserService",
+      "relation": "uses",
+      "label": "creates UserService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Control/UserLoginController.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Entity.UserService;"
+        },
+        {
+          "file": "src/main/java/Control/UserLoginController.java",
+          "symbol": null,
+          "lines": [
+            18,
+            18
+          ],
+          "excerpt": "this.userService = new UserService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C42": {
+      "id": "C42",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.ActivityMonitoringGUI",
+      "target": "Control.SystemServicesController",
+      "relation": "uses",
+      "label": "creates SystemServicesController",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ActivityMonitoringGUI.java",
+          "symbol": null,
+          "lines": [
+            4,
+            4
+          ],
+          "excerpt": "import Control.SystemServicesController;"
+        },
+        {
+          "file": "src/main/java/Boundary/ActivityMonitoringGUI.java",
+          "symbol": null,
+          "lines": [
+            72,
+            72
+          ],
+          "excerpt": "this.systemServicesController = new SystemServicesController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C43": {
+      "id": "C43",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.UserLoginGUI",
+      "target": "Control.UserLoginController",
+      "relation": "uses",
+      "label": "creates UserLoginController",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Control.UserLoginController;"
+        },
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": null,
+          "lines": [
+            111,
+            111
+          ],
+          "excerpt": "this.controllerLoginUser = new UserLoginController();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C44": {
+      "id": "C44",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.ReceivedReportsGUI",
+      "target": "Entity.ReportCategory",
+      "relation": "uses",
+      "label": "imports Entity type directly",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReceivedReportsGUI.java",
+          "symbol": null,
+          "lines": [
+            4,
+            4
+          ],
+          "excerpt": "import Entity.ReportCategory;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C45": {
+      "id": "C45",
+      "task": "IT7",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.ReportCreationGUI",
+      "target": "Entity.ReportCategory",
+      "relation": "uses",
+      "label": "imports Entity type directly",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/ReportCreationGUI.java",
+          "symbol": null,
+          "lines": [
+            4,
+            4
+          ],
+          "excerpt": "import Entity.ReportCategory;"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ11"
+      ]
+    },
+    "C46": {
+      "id": "C46",
+      "task": "IT8",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "PersistenceService",
+      "symbol": "Database.PersistenceService",
+      "responsibilities": [
+        "saves and updates entities inside JPA transactions"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            13,
+            19
+          ],
+          "excerpt": "public class PersistenceService {\n\n\tprivate JpaUtil jpaUtil;\n\n\tpublic PersistenceService() {\n\t\tthis.jpaUtil = JpaUtil.getInstance();\n\t}"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ12"
+      ]
+    },
+    "C47": {
+      "id": "C47",
+      "task": "IT8",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Database.PersistenceService",
+      "target": "Database.JpaUtil",
+      "relation": "uses",
+      "label": "getInstance / getEntityManager",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": null,
+          "lines": [
+            30,
+            31
+          ],
+          "excerpt": "\t\tEntityManager entityManager = jpaUtil.getEntityManager();\n\t\tEntityTransaction transaction = entityManager.getTransaction();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ12"
+      ]
+    },
+    "C48": {
+      "id": "C48",
+      "task": "IT8",
+      "kind": "element",
+      "element_kind": "datastore",
+      "name": "MySQL reports_db",
+      "symbol": null,
+      "responsibilities": [
+        "MySQL database reached through persistence unit Municipal_Report_Management_System"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            26,
+            27
+          ],
+          "excerpt": "<property name=\"jakarta.persistence.jdbc.url\"\n value=\"jdbc:mysql://127.0.0.1:3306/reports_db\"/>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ12"
+      ]
+    },
+    "C49": {
+      "id": "C49",
+      "task": "IT9",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "UserService",
+      "symbol": "Entity.UserService",
+      "responsibilities": [
+        "checks whether users are registered or are citizens/operators",
+        "registers users and retrieves user data by credentials"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            12,
+            12
+          ],
+          "excerpt": "public class UserService {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ13"
+      ]
+    },
+    "C50": {
+      "id": "C50",
+      "task": "IT9",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.UserService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "holds PersistenceService field",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            3,
+            3
+          ],
+          "excerpt": "import Database.PersistenceService;"
+        },
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            14,
+            14
+          ],
+          "excerpt": "private PersistenceService persistenceService;"
+        },
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            20,
+            20
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.95,
+      "question_ids": [
+        "AQ13"
+      ]
+    },
+    "C51": {
+      "id": "C51",
+      "task": "IT9",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.UserService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "findById",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            44,
+            44
+          ],
+          "excerpt": "Citizen citizen = persistenceService.findById("
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ13"
+      ]
+    },
+    "C52": {
+      "id": "C52",
+      "task": "IT9",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.UserService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "save",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/UserService.java",
+          "symbol": null,
+          "lines": [
+            89,
+            89
+          ],
+          "excerpt": "persistenceService.save(user);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ13"
+      ]
+    },
+    "C53": {
+      "id": "C53",
+      "task": "IT9",
+      "kind": "element",
+      "element_kind": "datastore",
+      "name": "reports_db",
+      "symbol": null,
+      "responsibilities": [
+        "MySQL database holding persisted entities, configured by persistence unit Municipal_Report_Management_System"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            10,
+            10
+          ],
+          "excerpt": "<persistence-unit name=\"Municipal_Report_Management_System\" transaction-type=\"RESOURCE_LOCAL\">"
+        },
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            27,
+            27
+          ],
+          "excerpt": "value=\"jdbc:mysql://127.0.0.1:3306/reports_db\"/>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ13"
+      ]
+    },
+    "C54": {
+      "id": "C54",
+      "task": "IT10",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "ReportService",
+      "symbol": "Entity.ReportService",
+      "responsibilities": [
+        "registers new reports for citizens"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            29,
+            32
+          ],
+          "excerpt": "public Long registerNewReport("
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ14"
+      ]
+    },
+    "C55": {
+      "id": "C55",
+      "task": "IT10",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.ReportService",
+      "target": "Database.PersistenceService",
+      "relation": "uses",
+      "label": "creates and holds PersistenceService",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            16,
+            16
+          ],
+          "excerpt": "private PersistenceService persistenceService;"
+        },
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            22,
+            22
+          ],
+          "excerpt": "this.persistenceService = new PersistenceService();"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ14"
+      ]
+    },
+    "C56": {
+      "id": "C56",
+      "task": "IT10",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Entity.ReportService",
+      "target": "Database.PersistenceService",
+      "relation": "reads",
+      "label": "findById(User.class, userId)",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Entity/ReportService.java",
+          "symbol": null,
+          "lines": [
+            43,
+            46
+          ],
+          "excerpt": "User user = persistenceService.findById("
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ14"
+      ]
+    },
+    "C57": {
+      "id": "C57",
+      "task": "IT10",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Boundary.UserLoginGUI",
+      "target": "Boundary.UserDashboardGUI",
+      "relation": "uses",
+      "label": "opens dashboard after login",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Boundary/UserLoginGUI.java",
+          "symbol": null,
+          "lines": [
+            267,
+            267
+          ],
+          "excerpt": "UserDashboardGUI guiDashboard = new UserDashboardGUI(userSessionData);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ14"
+      ]
+    }
+  },
+  "rejected_claims": [
+    {
+      "task": "IT4",
+      "claim": {
+        "kind": "relation",
+        "source": "Database.JpaUtil",
+        "target": "Municipal_Report_Management_System",
+        "relation": "uses",
+        "label": "creates EntityManagerFactory for persistence unit",
+        "evidence": [
+          {
+            "file": "src/main/java/Database/JpaUtil.java",
+            "lines": [
+              17,
+              17
+            ],
+            "excerpt": "this.emf = Persistence.createEntityManagerFactory(\"Municipal_Report_Management_System\");"
+          }
+        ],
+        "confidence": 0.85
+      },
+      "reason": "relation endpoint not in the repository: 'Database.JpaUtil' -> 'Municipal_Report_Management_System'"
+    },
+    {
+      "task": "IT8",
+      "claim": {
+        "kind": "relation",
+        "source": "Database.PersistenceService",
+        "target": "MySQL reports_db",
+        "relation": "writes",
+        "label": "persist",
+        "evidence": [
+          {
+            "file": "src/main/java/Database/PersistenceService.java",
+            "lines": [
+              34,
+              36
+            ],
+            "excerpt": "\t\t\ttransaction.begin();\n\t\t\tentityManager.persist(object);\n\t\t\ttransaction.commit();"
+          }
+        ],
+        "confidence": 0.7
+      },
+      "reason": "relation endpoint not in the repository: 'Database.PersistenceService' -> 'MySQL reports_db'"
+    },
+    {
+      "task": "IT8",
+      "claim": {
+        "kind": "element",
+        "element_kind": "component",
+        "name": "Municipal_Report_Management_System",
+        "responsibilities": [
+          "JPA persistence unit using Hibernate provider"
+        ],
+        "evidence": [
+          {
+            "file": "src/main/resources/META-INF/persistence.xml",
+            "lines": [
+              10,
+              12
+            ],
+            "excerpt": "<persistence-unit name=\"Municipal_Report_Management_System\" transaction-type=\"RESOURCE_LOCAL\">\n\n <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>"
+          }
+        ],
+        "confidence": 0.8
+      },
+      "reason": "element 'Municipal_Report_Management_System' is not a symbol in the repository"
+    }
+  ],
+  "component_of": {
+    "Boundary.UserLoginGUI": "cmp:Boundary.UserLoginGUI",
+    "Entity.UserService": "cmp:Entity.UserService",
+    "Control.SystemServicesController": "cmp:Control.SystemServicesController",
+    "Control.UserRegistrationController": "cmp:Control.UserRegistrationController",
+    "Control.ReportCreationController": "cmp:Control.ReportCreationController",
+    "Database.PersistenceService": "cmp:Database.PersistenceService",
+    "Database.JpaUtil": "cmp:Database.JpaUtil",
+    "Control.UserLoginController": "cmp:Control.UserLoginController",
+    "Boundary.ReportCreationGUI": "cmp:Boundary.ReportCreationGUI",
+    "Entity.ReportService": "cmp:Entity.ReportService",
+    "Boundary.ActivityMonitoringGUI": "cmp:Boundary.ActivityMonitoringGUI",
+    "Boundary.ReceivedReportsGUI": "cmp:Boundary.ReceivedReportsGUI",
+    "Boundary.UserDashboardGUI": "cmp:Boundary.UserDashboardGUI",
+    "Entity.ReportCategory": "cmp:Entity.ReportCategory"
+  },
+  "correspondences": [],
+  "reflexion": {
+    "convergence": [
+      "rel:cmp-boundary-activitymonitoringgui:uses:cmp-control-systemservicescontroller",
+      "rel:cmp-boundary-receivedreportsgui:uses:cmp-entity-reportcategory",
+      "rel:cmp-boundary-reportcreationgui:uses:cmp-control-systemservicescontroller",
+      "rel:cmp-boundary-reportcreationgui:uses:cmp-entity-reportcategory",
+      "rel:cmp-boundary-userlogingui:uses:cmp-control-userlogincontroller",
+      "rel:cmp-boundary-userlogingui:uses:cmp-boundary-userdashboardgui",
+      "rel:cmp-control-reportcreationcontroller:uses:cmp-entity-userservice",
+      "rel:cmp-control-reportcreationcontroller:uses:cmp-entity-reportservice",
+      "rel:cmp-control-systemservicescontroller:uses:cmp-control-userregistrationcontroller",
+      "rel:cmp-control-systemservicescontroller:uses:cmp-control-reportcreationcontroller",
+      "rel:cmp-control-userlogincontroller:uses:cmp-entity-userservice",
+      "rel:cmp-database-persistenceservice:uses:cmp-database-jpautil",
+      "rel:cmp-entity-reportservice:uses:cmp-database-persistenceservice",
+      "rel:cmp-entity-userservice:uses:cmp-database-persistenceservice"
+    ],
+    "divergence": [
+      "rel:cmp-boundary-activitymonitoringgui:uses:cmp-boundary-userdashboardgui",
+      "rel:cmp-boundary-receivedreportsgui:uses:cmp-control-systemservicescontroller",
+      "rel:cmp-boundary-receivedreportsgui:uses:cmp-boundary-userdashboardgui",
+      "rel:cmp-boundary-reportcreationgui:uses:cmp-boundary-userdashboardgui",
+      "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-reportcreationgui",
+      "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-receivedreportsgui",
+      "rel:cmp-boundary-userdashboardgui:uses:cmp-boundary-activitymonitoringgui",
+      "rel:cmp-control-userregistrationcontroller:uses:cmp-entity-userservice",
+      "rel:cmp-entity-reportservice:uses:cmp-entity-reportcategory"
+    ],
+    "absence": [
+      "rel:cmp-control-userregistrationcontroller:is-part-of:cmp-control-systemservicescontroller",
+      "rel:cmp-control-reportcreationcontroller:is-part-of:cmp-control-systemservicescontroller"
+    ]
+  },
+  "notes": [
+    "IT1: 2 claims, read 5 files; list_tree 2, read 14",
+    "IT2: 8 claims, read 5 files; list_tree 2, neighbours 1, read 6, search 1, symbol 1",
+    "IT3: 7 claims, read 6 files; list_tree 2, read 8",
+    "IT4: 4 claims, read 3 files; neighbours 1, read 12, symbol 1",
+    "IT5: 4 claims, read 5 files; read 5, search 2, symbol 2",
+    "IT6: 11 claims, read 4 files; neighbours 3, read 5, search 3",
+    "IT7: 10 claims, read 3 files; read 7, search 4, symbol 3",
+    "IT8: 5 claims, read 4 files; read 12, search 2, symbol 1",
+    "IT9: 5 claims, read 6 files; read 11, symbol 1",
+    "IT10: 4 claims, read 4 files; read 10, search 3, symbol 1"
+  ]
+}

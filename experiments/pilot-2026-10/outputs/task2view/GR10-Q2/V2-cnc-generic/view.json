@@ -1,0 +1,206 @@
+{
+  "id": "V2-cnc-generic",
+  "viewpoint_id": "cnc-generic",
+  "viewpoint_name": "Component-and-Connector",
+  "vb_ref": "Ch. 3 Component-and-Connector Views",
+  "model_kind": "uml-component",
+  "title": "Component-and-Connector view — progetto_ing_software_gr10-main-English",
+  "purpose": "Component-and-Connector (Ch. 3 Component-and-Connector Views) answering collaboration, dependencies, interface-contract",
+  "detail_level": "feature",
+  "max_elements": 10,
+  "addresses": [
+    "AQ4",
+    "AQ5",
+    "AQ6"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "fold:persistence",
+      "kind": "component",
+      "name": "Persistence",
+      "stereotype": "persistence",
+      "parent": null,
+      "responsibilities": [
+        "PersistenceService: gives save, update and find operations over JPA EntityManager",
+        "JpaUtil: creates the EntityManagerFactory for the persistence unit"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "cmp:Database.PersistenceService",
+        "cmp:Database.JpaUtil"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "fold:application",
+      "kind": "component",
+      "name": "Application",
+      "stereotype": "application",
+      "parent": null,
+      "responsibilities": [
+        "SystemServicesController: facade that delegates feature requests to the per-feature controllers",
+        "UserRegistrationController",
+        "ReportCreationController",
+        "ReportReviewController",
+        "ReportDetailsController",
+        "ReportStatusUpdateController",
+        "… 2 more"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "cmp:Control.SystemServicesController",
+        "cmp:Control.UserRegistrationController",
+        "cmp:Control.ReportCreationController",
+        "cmp:Control.ReportReviewController",
+        "cmp:Control.ReportDetailsController",
+        "cmp:Control.ReportStatusUpdateController",
+        "cmp:Control.InternalNoteController",
+        "cmp:Control.ActivityMonitoringController"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "fold:domain",
+      "kind": "component",
+      "name": "Domain",
+      "stereotype": "domain",
+      "parent": null,
+      "responsibilities": [
+        "ReportService: registers new reports for citizens",
+        "Report: JPA entity mapped to table reports",
+        "InternalNote: JPA entity mapped to table internal_notes",
+        "Notification: JPA entity mapped to table notifications",
+        "StatusUpdate: JPA entity mapped to table status_updates",
+        "User: JPA entity mapped to table users with single-table inheritance (Citizen, MunicipalOperator)"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "cmp:Entity.ReportService",
+        "cmp:Entity.Report",
+        "cmp:Entity.InternalNote",
+        "cmp:Entity.Notification",
+        "cmp:Entity.StatusUpdate",
+        "cmp:Entity.User"
+      ],
+      "support": "observed",
+      "group": false
+    },
+    {
+      "id": "fold:presentation",
+      "kind": "component",
+      "name": "Presentation",
+      "stereotype": "presentation",
+      "parent": null,
+      "responsibilities": [
+        "HomePageGUI: Swing GUI entry point launched on the client JVM via main"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "cmp:Boundary.HomePageGUI"
+      ],
+      "support": "observed",
+      "group": false
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:fold:application:uses:fold:domain",
+      "kind": "uses",
+      "source": "fold:application",
+      "target": "fold:domain",
+      "label": "6 dependencies",
+      "multiplicity": null,
+      "support": "observed"
+    },
+    {
+      "id": "rel:fold:domain:uses:fold:persistence",
+      "kind": "uses",
+      "source": "fold:domain",
+      "target": "fold:persistence",
+      "label": "1 dependencies",
+      "multiplicity": null,
+      "support": "observed"
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "fold:persistence",
+      "name": "Persistence",
+      "files": [
+        "src/main/java/Database/JpaUtil.java",
+        "src/main/java/Database/PersistenceService.java"
+      ],
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ]
+    },
+    {
+      "element": "fold:application",
+      "name": "Application",
+      "files": [
+        "src/main/java/Control/ActivityMonitoringController.java",
+        "src/main/java/Control/InternalNoteController.java",
+        "src/main/java/Control/ReportCreationController.java",
+        "src/main/java/Control/ReportDetailsController.java",
+        "src/main/java/Control/ReportReviewController.java",
+        "src/main/java/Control/ReportStatusUpdateController.java",
+        "src/main/java/Control/SystemServicesController.java",
+        "src/main/java/Control/UserRegistrationController.java"
+      ],
+      "symbols": [
+        "Control.SystemServicesController",
+        "Control.UserRegistrationController",
+        "Control.ReportCreationController",
+        "Control.ReportReviewController",
+        "Control.ReportDetailsController",
+        "Control.ReportStatusUpdateController",
+        "Control.InternalNoteController",
+        "Control.ActivityMonitoringController"
+      ]
+    },
+    {
+      "element": "fold:domain",
+      "name": "Domain",
+      "files": [
+        "src/main/java/Entity/InternalNote.java",
+        "src/main/java/Entity/Notification.java",
+        "src/main/java/Entity/Report.java",
+        "src/main/java/Entity/ReportService.java",
+        "src/main/java/Entity/StatusUpdate.java",
+        "src/main/java/Entity/User.java"
+      ],
+      "symbols": [
+        "Entity.ReportService",
+        "Entity.Report",
+        "Entity.InternalNote",
+        "Entity.Notification",
+        "Entity.StatusUpdate",
+        "Entity.User"
+      ]
+    },
+    {
+      "element": "fold:presentation",
+      "name": "Presentation",
+      "files": [
+        "src/main/java/Boundary/HomePageGUI.java"
+      ],
+      "symbols": [
+        "Boundary.HomePageGUI"
+      ]
+    }
+  ],
+  "limitations": [
+    "simplified to one element per layer or package (Phase 6)"
+  ],
+  "gaps": [],
+  "overflow": []
+}

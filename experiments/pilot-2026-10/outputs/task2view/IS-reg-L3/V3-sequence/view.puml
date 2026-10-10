@@ -1,0 +1,53 @@
+@startuml
+title Sequence view — user registration functionality
+participant "AuthenticationController" as e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92 <<presentation>>
+participant "LibraryFacade" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 <<application>>
+participant "Registration" as e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 <<presentation>>
+participant "UserManager" as e_cmp_it_unina_reservations_controller_UserManager_95503d <<application>>
+participant "UserRegistry" as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 <<domain>>
+participant "PersistenceManager" as e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 <<persistence>>
+participant "StudentFactory" as e_cmp_it_unina_reservations_controller_factory_StudentFactory_165e84 <<application>>
+participant "UserFactory" as e_cmp_it_unina_reservations_controller_factory_UserFactory_b8da9a <<application>>
+alt POST /api/auth/register
+e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92 -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 1. register(role, name, surname, email, password, identifier)
+end
+e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92 -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 2. register(role, name, surname, email, password, identifier): UserDTO
+alt all fields are non-blank (Swing path)
+e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 3. register(role, name, surname, email, password, identifier)
+end
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 4. register(role, name, surname, email, password, identifier)
+alt role must be Student or Librarian; password 8-32 chars; name, surname, email and identifier formats checked
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 5. validate(role, name, password) then validateStudent or validateLibrarian
+end
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 6. register(role, name, surname, email, password, identifier): UserDTO
+alt start of register
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 7. validate(role, name, password)
+end
+e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 -> e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 8. save(newUser)
+alt throws IllegalArgumentException if email already used
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 9. institutionalEmailExists(email)
+end
+alt role is Student -> validateStudent, otherwise validateLibrarian
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 10. validateStudent / validateLibrarian
+end
+alt role is Student, else LibrarianFactory
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_factory_StudentFactory_165e84 : 11. createUser(name, surname, email, password, identifier)
+end
+alt validation passed
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 12. institutionalEmailExists(email)
+end
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 13. registerUser(newUser)
+alt email not yet used
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 14. findStudentByStudentNumber(identifier) / findLibrarianByCode(identifier)
+end
+e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 -> e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 15. save(newUser)
+alt StudentFactory if student, else LibrarianFactory
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_factory_UserFactory_b8da9a : 16. createUser(name, surname, email, password, identifier)
+end
+alt user created
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 17. registerUser(newUser)
+end
+alt registerUser succeeded
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92 : 18. return UserDTO
+end
+@enduml
