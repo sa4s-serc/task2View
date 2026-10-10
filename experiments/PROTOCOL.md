@@ -2,7 +2,7 @@
 
 How to run one goal set through the conditions so the results can be compared. It works for any goal set and any repositories.
 
-**The pilot** is `experiments/pilot-2026-10/` (run book: its README): the 2 repositories and their 10 goals in `goals.yaml`, **1 run per goal and condition**. Every condition uses Claude Sonnet 4.5 on the researcher's own Claude subscription: the agents in interactive Claude Code, the pipeline through the Claude Agent SDK (`--llm claude-code:claude-sonnet-4-5`). The goals were used while Task2View was designed, so the pilot is **exploratory**: it reports effect sizes with intervals and describes what happened, and makes no claim of generalisation or significance. No external diagram dataset is used.
+**The pilot** is `experiments/pilot-2026-10/` (run book: its README): the 2 repositories and their 10 goals in `goals.yaml`, **1 run per goal and condition**. Every condition uses Claude Sonnet 5.5 on the researcher's own Claude subscription: the agents in interactive Claude Code, the pipeline through the Claude Agent SDK (`--llm claude-code:claude-sonnet-5-5`). The goals were used while Task2View was designed, so the pilot is **exploratory**: it reports effect sizes with intervals and describes what happened, and makes no claim of generalisation or significance. No external diagram dataset is used.
 
 | Condition | Who produces the views | Instruction |
 |---|---|---|
@@ -22,7 +22,7 @@ Fix these in writing, with a date, before the first run (a short pre-registratio
 ## 1. Hold fixed across conditions
 - **The same repositories:** a prepared copy of each subject (§2), one fresh copy per run.
 - **The same goals:** pasted verbatim, with the same run ids.
-- **The same generator model in every condition:** Claude Sonnet 4.5 (`claude --model claude-sonnet-4-5` for the agents, `--llm claude-code:claude-sonnet-4-5` for the pipeline). Record the exact model id for every run. A condition on another model confounds the comparison.
+- **The same generator model in every condition:** Claude Sonnet 5.5 (`claude --model claude-sonnet-5-5` for the agents, `--llm claude-code:claude-sonnet-5-5` for the pipeline). Record the exact model id for every run. A condition on another model confounds the comparison.
 - **Runs per goal:** the pilot makes 1 per goal and condition (run id = case id). More runs (`--repeat N`, run ids `<case>@<k>`) would show run-to-run variation.
 - **The same notation:** PlantUML.
 - **If an LLM judge is used later:** one judge model from a **different model family** than the generator scores all conditions afterwards (§4).
@@ -40,9 +40,9 @@ The script copies the repository without UML models, diagram images, binaries or
 ## 3. Run
 
 ### Running agents in interactive Claude Code
-- One fresh session per run: `cd` into that run's prepared copy and start `claude --model claude-sonnet-4-5`. Paste the instruction below as the first message, then let it work; approve file writes in `./task2view-out/` when asked.
+- One fresh session per run: `cd` into that run's prepared copy and start `claude --model claude-sonnet-5-5`. Paste the instruction below as the first message, then let it work; approve file writes in `./task2view-out/` when asked.
 - **Usage limit reached:** Claude Code says when the limit resets. Nothing is lost: the session's history is saved, and the views already written stay in `./task2view-out/`. After the reset, type `continue` in the same window, or reopen the session later with `claude --resume` from the same folder and pick it.
-- Do not run the pipeline while an agent session is working: both draw on the same subscription limits.
+- Order for the pilot: all plain-agent runs, then all skill-agent runs, then the Task2View runs; never two at once, since all draw on the same subscription limits.
 - Record the session's name or id in `runs.csv` (see Collect), so an interrupted run can be resumed.
 
 ### 3.1 plain-agent
@@ -75,7 +75,7 @@ Use the task2view skill.
 ```bash
 cd Task2View/code
 caffeinate -i .venv/bin/python scripts/run_goal_set.py --goals ../experiments/pilot-2026-10/goals.yaml \
-  --out ../experiments/pilot-2026-10/outputs/task2view --llm claude-code:claude-sonnet-4-5 --notations plantuml --wait
+  --out ../experiments/pilot-2026-10/outputs/task2view --llm claude-code:claude-sonnet-5-5 --notations plantuml --wait
 ```
 In the goal-set file, `systems:` points to the prepared copies. Leave `--judge-llm` out. `caffeinate -i` keeps the Mac awake.
 

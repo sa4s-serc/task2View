@@ -1,6 +1,6 @@
 """Claude through the Claude Agent SDK, signed in with your own Claude subscription (no API key).
 
-Spec: ``claude-code:<model>``, e.g. ``claude-code:claude-sonnet-4-5``. Install with
+Spec: ``claude-code:<model>``, e.g. ``claude-code:claude-sonnet-5-5``. Install with
 ``pip install -e ".[claude-code]"`` and sign in once by running ``claude`` and ``/login``.
 
 Each call is one turn with no tools, no filesystem settings (no CLAUDE.md, hooks or MCP
@@ -21,7 +21,7 @@ from task2view.contracts.models import PipelineError
 from task2view.llm.base import JSON_INSTRUCTION, LLMClient, Prompt, Usage, joined
 from task2view.llm.registry import register_provider
 
-DEFAULT_MODEL = os.environ.get("CLAUDE_CODE_MODEL", "claude-sonnet-4-5")
+DEFAULT_MODEL = os.environ.get("CLAUDE_CODE_MODEL", "claude-sonnet-5-5")
 
 
 class UsageLimitReached(RuntimeError):

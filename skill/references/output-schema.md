@@ -130,7 +130,7 @@ The pipeline records every model call (purpose, model, tokens, seconds, cost) an
 ```json
 {"total": {"calls": 42, "input_tokens": 512000, "output_tokens": 18000, "cache_read_tokens": 0, "cache_write_tokens": 0,
            "seconds": 310.2, "cost_usd": 1.806, "cost_complete": true},
- "by_phase": {"phase1": {"…": "…"}, "phase5": {"…": "…"}}, "by_model": {"anthropic:claude-sonnet-4-5": {"…": "…"}},
+ "by_phase": {"phase1": {"…": "…"}, "phase5": {"…": "…"}}, "by_model": {"anthropic:claude-sonnet-5-5": {"…": "…"}},
  "pricing_source": "https://platform.claude.com/docs/en/about-claude/pricing (read 2026-10-09)", "calls": [ … ]}
 ```
 

@@ -12,7 +12,7 @@ Goal-set format (same as scripts/eval_view_selection.py):
       <name>: /path/to/repo
 
     .venv/bin/python scripts/run_goal_set.py --goals goals.yaml --out runs/my-eval \\
-        --llm anthropic:claude-sonnet-4-5 --judge-llm openai:<model> --notations plantuml,mermaid
+        --llm anthropic:claude-sonnet-5-5 --judge-llm openai:<model> --notations plantuml,mermaid
 
 Writes <out>/<run-id>/ (run id = case id, or <case>@<k> with --repeat; see agents/write_v2.py) and <out>/summary.jsonl. Each
 line records the generator and judge models, so results from different models

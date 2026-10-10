@@ -9,6 +9,6 @@ pip install -e ".[dev,anthropic]"
 cp .env.example .env   # put API keys here — gitignored
 pytest
 
-task2view run --code /path/to/repo --goal "..." --out runs/demo --llm anthropic:claude-sonnet-4-5
+task2view run --code /path/to/repo --goal "..." --out runs/demo --llm anthropic:claude-sonnet-5-5
 task2view plugins
 ```
