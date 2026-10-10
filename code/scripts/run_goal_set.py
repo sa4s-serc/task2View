@@ -93,10 +93,10 @@ def main() -> int:
             if not args.wait:
                 print(f"{exc}. Progress is saved; run the same command again after the reset.", flush=True)
                 return 3
-            pause = max(60, (exc.resets_at or time.time() + 3600) - time.time() + 60)
-            resume = datetime.fromtimestamp(time.time() + pause).strftime("%H:%M")
-            print(f"{exc}. Waiting until about {resume}, then continuing {run_id}.", flush=True)
-            time.sleep(pause)
+            target = max(time.time() + 60, (exc.resets_at or time.time() + 3600) + 60)
+            print(f"{exc}. Waiting until about {datetime.fromtimestamp(target):%H:%M}, then continuing {run_id}.", flush=True)
+            while time.time() < target:  # wall-clock checks: a sleeping Mac pauses time.sleep's clock
+                time.sleep(min(60, max(1, target - time.time())))
             continue
         except Exception as exc:  # one failing case must not stop the set; the error is recorded
             row.update(error=str(exc)[:500], trace=traceback.format_exc(limit=3))
