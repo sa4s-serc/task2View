@@ -19,7 +19,7 @@ from task2view.phase5.card_tools import CardTools
 from task2view.prompts import load_prompt
 
 
-_MAX_OBSERVATION = 12000
+_MAX_OBSERVATION = 30000
 _FINAL_NUDGE = "Step budget reached. Return {\"final\": {\"claims\": [...]}} now with the claims you can cite."
 
 

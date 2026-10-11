@@ -58,6 +58,7 @@ Each turn, reply with exactly one JSON object: either one tool call or your fina
 | `{"tool": "list_tree", "args": {"path": ".", "depth": 2}}` | Files and folders under a path, with each file's class (code, config, …). |
 | `{"tool": "search", "args": {"pattern": "regex", "path": "optional/dir"}}` | Matching lines as `file:line: text`. |
 | `{"tool": "read", "args": {"path": "file", "start": 1, "end": 120}}` | The file's lines, each prefixed with its line number. Use these numbers in citations. |
+| `{"tool": "read", "args": {"paths": ["file1", "file2"]}}` | Up to 5 files in one step, each from line 1 with line numbers. Prefer this when you already know which files you need: steps are limited. |
 | `{"tool": "symbol", "args": {"id": "symbol id or simple name"}}` | A class or module: file and lines, annotations, fields, methods with their calls. |
 | `{"tool": "neighbours", "args": {"id": "symbol id", "direction": "out"}}` | Code dependencies of a symbol (`out`) or on it (`in`), with file and line. |
 | `{"final": {"claims": [ ... ]}}` | Ends the task with your claims. |

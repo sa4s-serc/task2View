@@ -33,6 +33,8 @@ class CardTools:
                 return self.list_tree(str(args.get("path", ".")), int(args.get("depth", 2)))
             if name == "search":
                 return self.search(str(args.get("pattern", "")), args.get("path"))
+            if name == "read" and isinstance(args.get("paths"), list):
+                return self.read_many([str(p) for p in args["paths"]])
             if name == "read":
                 return self.read(str(args.get("path", "")), int(args.get("start", 1)), args.get("end"))
             if name == "symbol":
@@ -89,6 +91,13 @@ class CardTools:
         if found:
             return None, f"error: {ref!r} is ambiguous; use one of: {', '.join(sorted(s.id for s in found)[:10])}"
         return None, f"error: no symbol {ref!r}"
+
+    def read_many(self, paths: list[str], limit: int = 5) -> str:
+        """Several files in one step (each from line 1, up to the line cap): fewer steps for the same reading."""
+        if not paths:
+            return "error: paths is empty"
+        out = [f"=== {p}\n{self.read(p)}" for p in paths[:limit]]
+        return "\n\n".join(out) + (f"\n\n[only the first {limit} paths were read]" if len(paths) > limit else "")
 
     def symbol(self, ref: str) -> str:
         sym, error = self._lookup(ref)

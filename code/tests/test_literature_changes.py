@@ -163,3 +163,10 @@ def test_small_overflow_keeps_detail_unless_whole_system(result):
     assert decision(1, whole_system=False) == "confirm"
     assert decision(1, whole_system=True) == "simplify"
     assert decision(7, whole_system=False) == "simplify"
+
+
+def test_read_several_files_in_one_step(card):
+    tools = CardTools(card, ["code"])
+    out = tools.dispatch("read", {"paths": [SVC, "src/main/java/com/shop/web/OrderController.java"]})
+    assert out.count("=== ") == 2 and "OrderController" in out and tools.calls["read"] == 1
+    assert {SVC, "src/main/java/com/shop/web/OrderController.java"} <= tools.opened
