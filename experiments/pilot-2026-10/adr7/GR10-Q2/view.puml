@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+title System: parts involved and how they interact
+
+System_Boundary(app, "progetto_ing_software_gr10-main-English") {
+  Component(ui, "User interface", "Java Swing", "ReportCreationGUI, ActivityMonitoringGUI, ReceivedReportsGUI, …")
+  Component(service, "Application services", "Java", "ReportService, SystemServicesController, ReportDetailsController, …")
+  Component(domain, "Domain model", "JPA entities", "Report, Notification, StatusUpdate, …")
+  Component(data_access, "Data access", "JPA / Hibernate", "PersistenceService")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reports_db")
+
+Rel(service, domain, "creates and updates")
+Rel(ui, service, "requests operations", "in-process")
+Rel(service, data_access, "reads and saves")
+Rel(data_access, database, "persists", "JPA / JDBC")
+
+SHOW_LEGEND()
+@enduml

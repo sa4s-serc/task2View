@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+title User registration functionality: parts involved and how they interact
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+  Component(ui, "User interface", "Java Swing", "Registration, StudentDashboard, LibrarianDashboard")
+  Component(api, "REST API", "Spring Boot REST", "AuthenticationController, StudentController")
+  Component(service, "Application services", "Java", "LibraryFacade, UserManager")
+  Component(domain, "Domain model", "JPA entities", "Librarian, Reservation, Student, …")
+  Component(data_access, "Data access", "JPA / Hibernate", "PersistenceManager, UserRegistry, ReservationRegistry")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+Rel(service, domain, "creates and updates")
+Rel(service, data_access, "reads and saves")
+Rel(ui, service, "requests operations", "in-process")
+Rel(api, service, "delegates requests", "in-process")
+Rel(data_access, database, "persists", "JPA / JDBC")
+Rel(web_client, api, "sends requests", "HTTP/JSON")
+
+SHOW_LEGEND()
+@enduml

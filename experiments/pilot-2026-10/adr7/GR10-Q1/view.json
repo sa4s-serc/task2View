@@ -1,0 +1,155 @@
+{
+  "view": {
+    "title": "System: parts involved and how they interact",
+    "parts": [
+      {
+        "id": "ui",
+        "name": "User interface",
+        "role": "ui",
+        "technology": "Java Swing",
+        "description": "ReportCreationGUI, ActivityMonitoringGUI, UserDashboardGUI, \u2026",
+        "members": [
+          "Boundary.ReportCreationGUI",
+          "Boundary.ActivityMonitoringGUI",
+          "Boundary.UserDashboardGUI",
+          "Boundary.ReceivedReportsGUI",
+          "Boundary.ReportStatusUpdateGUI",
+          "Boundary.SubmittedReportsGUI",
+          "Boundary.InternalNoteGUI"
+        ],
+        "files": []
+      },
+      {
+        "id": "service",
+        "name": "Application services",
+        "role": "service",
+        "technology": "Java",
+        "description": "ReportService, SystemServicesController, UserService, \u2026",
+        "members": [
+          "Entity.ReportService",
+          "Control.SystemServicesController",
+          "Entity.UserService",
+          "Control.ReportCreationController",
+          "Control.UserRegistrationController",
+          "Control.UserLoginController"
+        ],
+        "files": []
+      },
+      {
+        "id": "domain",
+        "name": "Domain model",
+        "role": "domain",
+        "technology": "JPA entities",
+        "description": "Report, Notification, MunicipalOperator, \u2026",
+        "members": [
+          "Entity.Report",
+          "Entity.Notification",
+          "Entity.MunicipalOperator",
+          "Entity.StatusUpdate",
+          "Entity.InternalNote",
+          "Entity.User",
+          "Entity.Citizen",
+          "Entity.ReportStatus",
+          "Entity.Location",
+          "Entity.Assigned",
+          "Entity.InProgress",
+          "Entity.Submitted",
+          "Entity.Resolved",
+          "Entity.Credentials"
+        ],
+        "files": []
+      },
+      {
+        "id": "data_access",
+        "name": "Data access",
+        "role": "data_access",
+        "technology": "JPA / Hibernate",
+        "description": "PersistenceService",
+        "members": [
+          "Database.PersistenceService",
+          "Database.JpaUtil"
+        ],
+        "files": []
+      },
+      {
+        "id": "database",
+        "name": "MySQL database",
+        "role": "database",
+        "technology": "MySQL",
+        "description": "reports_db",
+        "members": [],
+        "files": [
+          "src/main/resources/META-INF/persistence.xml"
+        ]
+      }
+    ],
+    "connectors": [
+      {
+        "source": "service",
+        "target": "domain",
+        "label": "creates and updates",
+        "protocol": "",
+        "weight": 76,
+        "against_layering": false,
+        "evidence": [
+          "ReportService -> Report (44)",
+          "ReportService -> Notification (10)",
+          "UserService -> User (8)",
+          "ReportService -> StatusUpdate (6)",
+          "ReportService -> InternalNote (6)"
+        ]
+      },
+      {
+        "source": "service",
+        "target": "data_access",
+        "label": "reads and saves",
+        "protocol": "",
+        "weight": 28,
+        "against_layering": false,
+        "evidence": [
+          "ReportService -> PersistenceService (21)",
+          "UserService -> PersistenceService (7)"
+        ]
+      },
+      {
+        "source": "ui",
+        "target": "service",
+        "label": "requests operations",
+        "protocol": "in-process",
+        "weight": 23,
+        "against_layering": false,
+        "evidence": [
+          "ReceivedReportsGUI -> SystemServicesController (5)",
+          "ActivityMonitoringGUI -> SystemServicesController (4)",
+          "ReportStatusUpdateGUI -> SystemServicesController (4)",
+          "SubmittedReportsGUI -> SystemServicesController (4)",
+          "InternalNoteGUI -> SystemServicesController (3)"
+        ]
+      },
+      {
+        "source": "data_access",
+        "target": "database",
+        "label": "persists",
+        "protocol": "JPA / JDBC",
+        "weight": 3,
+        "against_layering": false,
+        "evidence": [
+          "persistence unit (deployment config) (3)"
+        ]
+      }
+    ],
+    "omitted": [],
+    "notes": [
+      "shared data types (not drawn, no arrows through them): ReportCategory",
+      "not drawn (start-up and configuration): UserLoginGUI"
+    ]
+  },
+  "readability": {
+    "boxes": 5,
+    "arrows": 4,
+    "method_names_on_arrows": 0,
+    "against_layering": 0,
+    "omitted_relations": 0,
+    "classes_behind_boxes": 29
+  }
+}

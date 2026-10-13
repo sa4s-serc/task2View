@@ -1,6 +1,6 @@
 # ADR-007: Architectural views, not code diagrams
 
-- **Status:** proposed (2026-10-13)
+- **Status:** accepted (2026-10-13); implementation in progress (step 1: abstraction)
 - **Builds on:** ADR-006 (evidence model, viewpoint selection, validation)
 - **Changes:** ADR-006 D2 (component naming and grain), D3 (projection and the task-fit judge)
 - **Evidence:** the pilot (`experiments/pilot-2026-10/`), the CodeToDiagram corpus and studies, and the literature report `reports/Realistic architecture diagram generation.md` (research folder root)
