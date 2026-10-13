@@ -48,6 +48,7 @@ class ViewDecision(BaseModel):
 
 def _drawn_claims(view: ArchitectureView, aem: EvidenceModel) -> set[str]:
     ids = {e.id for e in view.elements} | {m for e in view.elements for m in e.realized_by}
+    ids |= {aem.component_of[m] for m in set(ids) if m in aem.component_of}  # ADR-007 parts list member symbols
     drawn: set[str] = set()
     for eid in ids:
         el = aem.elements.get(eid)

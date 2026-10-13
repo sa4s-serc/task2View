@@ -33,17 +33,15 @@ def scripted(prompt, model=None):
         if "RESULT:" not in prompt:
             return {"tool": "symbol", "args": {"id": "OrderService"}}
         return {"final": {"claims": GOOD_CLAIMS + BAD_CLAIMS}}
+    if "Phase 5c: Naming the parts" in prompt:
+        return {"parts": [{"id": "service", "name": "Order payment service", "description": "checks orders and charges payments"}],
+                "splits": []}
     raise AssertionError("unexpected prompt")
-
-
-def judge(prompt, model=None):
-    assert "Phase 8: Task-fit review" in prompt
-    return {"reason": "fits", "score": 4}
 
 
 @pytest.fixture(scope="module")
 def result():
-    return run_v2(GOAL, str(SHOP), generate=scripted, judge_generate=judge, languages=["plantuml", "plantuml"])
+    return run_v2(GOAL, str(SHOP), generate=scripted, languages=["plantuml", "plantuml"])
 
 
 def test_selects_component_and_sequence_views(result):
@@ -51,15 +49,16 @@ def test_selects_component_and_sequence_views(result):
     assert result.viewset.stakeholder == "developer"
 
 
-def test_component_view_layers_responsibilities_and_evidence(result):
+def test_component_view_shows_named_parts_with_their_classes(result):
     view = result.viewset.views[0]
-    layers = [e for e in view.elements if e.kind == "layer"]
-    assert layers and all(e.group for e in layers)
-    svc = next(e for e in view.elements if e.name == "OrderService")
-    assert svc.parent == "group:layer:application" and "charges the payment gateway" in svc.responsibilities
-    assert any(r.label == "pay" for r in view.relations)
-    row = next(t for t in view.traceability if t.name == "OrderService")
-    assert row.files == ["src/main/java/com/shop/service/OrderService.java"]
+    svc = next(e for e in view.elements if e.id == "part:service")
+    assert svc.name == "Order payment service" and "com.shop.service.OrderService" in svc.realized_by
+    assert "checks orders and charges payments" in svc.responsibilities[0]
+    assert any(r.source == "part:api" and r.target == "part:service" and r.protocol == "in-process" for r in view.relations)
+    row = next(t for t in view.traceability if t.element == "part:service")
+    assert "src/main/java/com/shop/service/OrderService.java" in row.files
+    assert result.renders["V1-client-server"][0].source.startswith("@startuml\n!include <C4/C4_Component>")
+    assert result.arch_views["V1-client-server"].parts
 
 
 def test_sequence_view_orders_messages_with_alternative(result):
@@ -68,12 +67,12 @@ def test_sequence_view_orders_messages_with_alternative(result):
     assert seq.fragments and seq.fragments[0].guard == "order status is NEW"
 
 
-def test_validation_layers_and_judge(result):
+def test_validation_layers_without_a_judge(result):
     for vid, report in result.validation.items():
-        assert report.verdict in {"pass", "pass_with_limitations"}, (vid, report.constraints, report.faithfulness)
+        assert report.verdict in {"pass", "pass_with_limitations"}, (vid, report.constraints, report.faithfulness,
+                                                                     report.readability)
         assert report.notation["model_kind_matches"]
-        # scripted models have no spec, so independence cannot be established
-        assert report.task_fit["status"] == "scored" and report.task_fit["independent"] is None
+    assert result.validation["V1-client-server"].metrics["parts"] >= 4
     assert result.decisions["V1-client-server"].coverage
 
 
@@ -151,5 +150,5 @@ def test_cli_run_v2_writes_package(tmp_path, capsys):
     summary = json.loads(capsys.readouterr().out)
     assert code == 0
     assert [v["viewpoint"] for v in summary["views"]] == ["client-server", "sequence"]
-    assert summary["generator"] == "scripted-run:m" and summary["judge"] is None
+    assert summary["generator"] == "scripted-run:m" and "judge" not in summary
     assert (out / "V2-sequence" / "view.mermaid.mmd").exists()

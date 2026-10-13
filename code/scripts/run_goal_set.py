@@ -12,10 +12,10 @@ Goal-set format (same as scripts/eval_view_selection.py):
       <name>: /path/to/repo
 
     .venv/bin/python scripts/run_goal_set.py --goals goals.yaml --out runs/my-eval \\
-        --llm anthropic:claude-sonnet-5-5 --judge-llm openai:<model> --notations plantuml,mermaid
+        --llm anthropic:claude-sonnet-5-5 --notations plantuml,mermaid
 
 Writes <out>/<run-id>/ (run id = case id, or <case>@<k> with --repeat; see agents/write_v2.py) and <out>/summary.jsonl. Each
-line records the generator and judge models, so results from different models
+line records the generator model, so results from different models
 are never mixed silently.
 
 Resumable: every model reply is cached in <out>/.llm-cache, and a run whose package is complete
@@ -45,7 +45,6 @@ def main() -> int:
     parser.add_argument("--goals", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--llm")
-    parser.add_argument("--judge-llm")
     parser.add_argument("--notations", default="plantuml")
     parser.add_argument("--max-views", type=int, default=3)
     parser.add_argument("--evidence", choices=["agent", "retrieval"], default="agent", help="retrieval = baseline B1")
@@ -72,12 +71,12 @@ def main() -> int:
             pending.pop(0)
             continue
         code = case.get("code") or systems.get(case.get("system", ""))
-        row = {"case": case_id, "run_id": run_id, "llm": args.llm, "judge_llm": args.judge_llm,
+        row = {"case": case_id, "run_id": run_id, "llm": args.llm,
                "evidence": args.evidence, "code": code}
         try:
             if not code:
                 raise ValueError(f"no repository path for {case_id} (set `code:` or a `systems:` entry)")
-            result = run_v2(case["goal"], code, llm=args.llm, judge_llm=args.judge_llm, max_views=args.max_views,
+            result = run_v2(case["goal"], code, llm=args.llm, max_views=args.max_views,
                             evidence_mode=args.evidence, cache_dir=cache,
                             languages=[n.strip() for n in args.notations.split(",") if n.strip()])
             write_run_v2(result, out / run_id)
@@ -85,8 +84,7 @@ def main() -> int:
             want = (case.get("expect") or {}).get("views")
             row.update(views=got, expected=want, match=None if want is None else got == want,
                        verdicts={vid: v.verdict for vid, v in result.validation.items()},
-                       judge={vid: {k: s["score"] for k, s in v.task_fit.get("scores", {}).items()}
-                              for vid, v in result.validation.items()},
+                       readability={vid: v.metrics for vid, v in result.validation.items()},
                        claims=len(result.aem.claims), rejected=len(result.aem.rejected_claims),
                        usage=result.usage.get("total", {}))
         except UsageLimitReached as exc:  # stop (or wait) and resume this same run later from the cache

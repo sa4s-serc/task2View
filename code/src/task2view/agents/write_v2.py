@@ -35,6 +35,8 @@ def write_run_v2(result: RunV2Result, out: str | Path) -> Path:
         vdir = out / view.id
         vdir.mkdir(exist_ok=True)
         _dump(vdir / "view.json", view)
+        if view.id in result.arch_views:  # ADR-007: parts with their member classes, arrows with their code evidence
+            _dump(vdir / "architecture.json", result.arch_views[view.id])
         for render in result.renders.get(view.id, []):
             name = f"view.{render.language}.{render.extension}" if render.language != "plantuml" else f"view.{render.extension}"
             (vdir / name).write_text(render.source, encoding="utf-8")
@@ -64,7 +66,9 @@ def _readme(result: RunV2Result) -> str:
         f"**Goal:** {result.goal}", "",
         f"- Role: {p.role or p.role_label or 'unknown'}; target: {p.target or 'whole system'}; detail level: {p.detail_level}",
         f"- Needs (primary): {', '.join(plan.needs) or 'none'}; secondary: {', '.join(plan.secondary_needs) or 'none'}",
-        f"- Generator model: {result.llm}; judge model: {result.judge_llm or 'none'}",
+        f"- Generator model: {result.llm}",
+        f"- View spec: {p.spec.scope} scope, {p.spec.granularity} granularity, {p.spec.behaviour}"
+        + "".join(f"; asked: {c.question} → {c.answer or c.default + ' (default)'}" for c in p.clarifications),
         f"- Repository signals: {', '.join(sorted(result.card.signals))}", "",
         "## Views", "",
         "| View | Viewpoint | Decision | Verdict | Elements | Notation |", "|---|---|---|---|---|---|",

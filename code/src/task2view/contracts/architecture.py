@@ -11,6 +11,7 @@ class Part(BaseModel):
     role: str  # ui, api, job, service, integration, domain, data_access, database, web_client
     technology: str = ""
     description: str = ""
+    examples: list[str] = Field(default_factory=list)  # the most relevant member names, shown in the box
     members: list[str] = Field(default_factory=list)  # symbol ids: the verification handle
     files: list[str] = Field(default_factory=list)  # for parts without classes (web pages, deploy facts)
 

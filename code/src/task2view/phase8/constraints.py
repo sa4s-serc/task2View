@@ -157,8 +157,8 @@ def _relation_has_evidence(view, vp, aem, card):
     out = []
     for r in view.relations:
         rel = aem.relations.get(r.id)
-        if r.id.startswith("rel:fold:") or (rel is None and r.support == "inferred"):
-            continue  # folded or projection-inferred relations carry their own support label
+        if r.id.startswith(("rel:fold:", "conn:")) or (rel is None and r.support == "inferred"):
+            continue  # folded, projection-inferred, or lifted from code by the abstraction step (ADR-007)
         if rel is None or not (rel.member_edges or rel.claims):
             out.append((r.id, f"relation {r.source} -> {r.target} has no evidence"))
     return out

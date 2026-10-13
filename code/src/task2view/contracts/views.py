@@ -29,6 +29,7 @@ class ViewElement(BaseModel):
     realized_by: list[str] = Field(default_factory=list)
     support: str = "observed"
     group: bool = False  # container added by projection (layer, boundary), not an AEM element
+    technology: str = ""
 
 
 class ViewRelation(BaseModel):
@@ -39,6 +40,8 @@ class ViewRelation(BaseModel):
     label: str | None = None
     multiplicity: str | None = None  # "source..target", e.g. "*..1"
     support: str = "observed"
+    protocol: str = ""
+    against_layering: bool = False
 
 
 class Interaction(BaseModel):

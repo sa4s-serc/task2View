@@ -11,11 +11,12 @@ inputs:
   needs: the 23 information needs with definitions and example wording (knowledge/data/vb/needs.yaml)
   roles: the stakeholder roles with alternative names (knowledge/data/vb/roles.yaml)
   qualities: ISO/IEC 25010 quality attribute ids
-output: JSON {role_label, role, target, needs[{need, evidence, salience}], subjects[{text, needs}], quality_attributes}
+output: JSON {role_label, role, target, needs[{need, evidence, salience}], subjects[{text, needs}], quality_attributes, clarifications[{field, question, default}]}
 checked_by: >-
   validate_needs drops any need, subject or target whose words are not in the goal, and any id not
   in the vocabulary, and records each drop. The detail level is computed afterwards from the
-  checked profile, not asked of the model.
+  checked profile, not asked of the model. Clarifications are kept only for the three spec fields with
+  allowed defaults (at most 3); without a person to ask, the defaults are used.
 ---
 # Task2View — Phase 1: Stakeholder-task interpretation
 
@@ -60,6 +61,13 @@ You do not choose diagrams. A program chooses them from your answer, and every n
 4. **subjects** are the specific items the request enumerates as things to understand, for example a list of sub-functions, data items or cases. Copy each exactly and give the need ids it belongs to. The system, the feature being changed and the person are not subjects. A request that enumerates nothing has no subjects.
    *Why:* every subject must appear in a view, so the details of a long request are not lost.
 5. **quality_attributes** are quality ids the request stresses, or an empty list. They never choose diagrams.
+6. **clarifications**: questions for the person, only where the request leaves one of these open, at most 3, usually none:
+   - `scope`: whole system ("system") or one feature ("feature");
+   - `granularity`: big blocks ("coarse"), the main parts ("medium") or individual classes ("fine");
+   - `behaviour`: parts only ("structure"), order of calls only ("interaction"), or both ("both").
+
+   Give each as `{"field": ..., "question": "...", "default": ...}`, with the default being your best reading of the request.
+   *Why:* asking only when it matters improves the result; asking about what the request already says wastes the person's time.
 
 ## Output
 Return one JSON object and nothing else, in this shape:
@@ -75,7 +83,10 @@ Return one JSON object and nothing else, in this shape:
   "subjects": [
     {"text": "retrying a declined card payment", "needs": ["interaction-order"]}
   ],
-  "quality_attributes": []
+  "quality_attributes": [],
+  "clarifications": [
+    {"field": "behaviour", "question": "Do you also want the order in which they are called, or only which parts are involved?", "default": "both"}
+  ]
 }
 ```
 The example shows the shape only; your values must come from the request above.
@@ -85,3 +96,4 @@ The example shows the shape only; your values must come from the request above.
 - Every need, role and quality id is from the lists above.
 - Each behavioural need is there because the request asks how something happens, not because a word looked similar.
 - Nothing is marked primary that the request only mentions in passing.
+- Each clarification is about something the request really leaves open; most requests need none.

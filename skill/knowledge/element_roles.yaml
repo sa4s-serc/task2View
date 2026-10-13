@@ -1,0 +1,99 @@
+# ADR-007 step 3: the architectural role of a class, from framework and naming conventions.
+# General rules only (no project names). Evidence is checked by strength across all roles:
+# framework facts (entry, annotations, supertypes, entity, kinds) first, then the class name
+# (suffixes, prefixes), then the package; within a level the first role listed wins. A class
+# matching none falls back to its card layer. Evidence kinds:
+#   entry:        entry-point kinds from the Phase 0 card (http-route, gui, scheduled, main)
+#   annotations:  annotation names on the class (Spring, JAX-RS, JPA, ...)
+#   supertypes:   simple names of extended/implemented types
+#   suffixes:     class-name suffixes (prefixes: class-name prefixes)
+#   packages:     package or folder segments (case-insensitive)
+#   entity:       the class is a persisted entity in the card
+
+roles:
+  - id: helper          # attached to the part that uses it most; never a part on its own
+    suffixes: [DTO, Dto, Request, Response, Exception, Error, Factory, Strategy, Util, Utils, Helper, Mapper, Converter, Constants]
+    kinds: [enum, record]
+    packages: [dto, dtos, util, utils, helper, helpers, factory, strategy, mapper, exception, exceptions]
+  - id: api
+    entry: [http-route]
+    annotations: [RestController, Controller, Path, RequestMapping, ControllerAdvice, RestControllerAdvice, api_view]
+    suffixes: [ExceptionHandler]
+  - id: ui
+    entry: [gui]
+    supertypes: [JFrame, JPanel, JDialog, JComponent, Application, Stage, QWidget, QMainWindow, Frame, Tk, Activity, Fragment]
+    packages: [swing, gui, ui, view, views, screens, pages, frontend, components]
+  - id: job
+    entry: [scheduled]
+    annotations: [Scheduled, EnableScheduling]
+    suffixes: [Scheduler, Job, Worker, Task]
+  - id: integration
+    annotations: [FeignClient, KafkaListener, RabbitListener, JmsListener]
+    suffixes: [Gateway, Adapter, Client, Sender, Publisher, Consumer, Listener, Notifier]
+  - id: bootstrap       # start-up and configuration classes, not drawn; used only when no other role matches
+    entry: [main]
+    annotations: [SpringBootApplication, Configuration]
+    suffixes: [Application, Launcher, Config, Configuration]
+  - id: data_access
+    prefixes: [Persistence]
+    annotations: [Repository, Mapper, Dao]
+    supertypes: [JpaRepository, CrudRepository, PagingAndSortingRepository, Repository]
+    suffixes: [Repository, Registry, Dao, DAO, Store, PersistenceManager, EntityManager]
+    packages: [repository, repositories, dao, daos, persistence, database, db, store, storage]
+  - id: domain
+    entity: true
+    annotations: [Entity, Embeddable, Document, MappedSuperclass]
+    supertypes: [Model, DeclarativeBase, Base, SQLModel]
+    packages: [entity, entities, domain, model, models]
+  - id: service
+    annotations: [Service, Component, Transactional, Injectable]
+    suffixes: [Service, Manager, Facade, Handler, UseCase, Interactor, Controller, Processor, Engine]
+    packages: [service, services, controller, controllers, application, usecase, usecases, core, logic]
+
+layer_fallback: {presentation: ui, application: service, domain: domain, persistence: data_access, infrastructure: integration}
+
+# Drawing order (top to bottom) and the dependencies a layered architecture allows; any other
+# dependency between parts is drawn but marked as against the layering.
+rank: {web_client: 0, ui: 0, api: 0, job: 0, presentation: 0, service: 1, application: 1, integration: 2, domain: 2, data_access: 3, database: 4}
+allowed:
+  ui: [api, service]
+  api: [service]
+  job: [service, integration]
+  service: [service, domain, data_access, integration]
+  integration: [domain]
+  data_access: [domain, database]
+  domain: []
+  presentation: [application]
+  application: [application, domain, data_access]
+
+labels:          # default part names (an optional LLM call may rename or split parts)
+  ui: User interface
+  api: REST API
+  job: Scheduled jobs
+  service: Application services
+  integration: External integrations
+  domain: Domain model
+  data_access: Data access
+  presentation: Presentation
+  application: Application
+connectors:      # default intent label per (source role, target role)
+  web_client>api: sends requests
+  ui>api: sends requests
+  ui>service: requests operations
+  api>service: delegates requests
+  job>service: triggers periodic work
+  job>integration: triggers sending
+  service>service: uses
+  service>domain: creates and updates
+  service>data_access: reads and saves
+  service>integration: sends through
+  integration>domain: reads
+  data_access>domain: loads and stores
+  data_access>database: persists
+  domain>data_access: queries
+  domain>service: calls back
+  integration>service: calls back
+  presentation>application: sends requests
+  application>domain: creates and updates
+  application>data_access: reads and saves
+  domain>application: calls back

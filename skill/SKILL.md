@@ -45,6 +45,8 @@ Read only the goal. Record:
 - **subjects:** items the goal enumerates as things to understand, copied exactly, each with its need ids.
 - **quality_attributes:** ISO 25010 ids the goal stresses (they never choose diagrams).
 - **detail_level:** computed, not judged (see the end of catalogs.md).
+- **spec** (ADR-007): `scope` ("feature" if there is a target, else "system"); `granularity` ("coarse" for a whole-system overview, else "medium"; "fine" only if the person asks for classes); `behaviour` ("structure", "interaction" or "both", from the primary needs).
+- **clarifications:** at most 3 questions, only where the goal leaves scope, granularity or behaviour open, each with a default. If you can ask the person, ask; otherwise use the defaults and record them.
 
 How to type needs:
 - Words that only name the person's work ("I will change the persistence layer") are not a need.
@@ -100,23 +102,25 @@ For each view and each of its questions, decide `supported`, `partial` or `unsup
 Write `reconciliation.json`.
 
 ### Phase 7 — Views
-Build each view from the evidence model only, using the projection rules for its viewpoint family in [references/views.md](references/views.md):
-- **Never invent, rename or merge an element.**
+**Structural views** (decomposition, uses, layered, C&C, client-server, multi-tier, shared data, SOA) are drawn as **parts**, not classes: follow "Abstraction" in [references/views.md](references/views.md#abstraction-adr-007). Other views use the projection rules for their viewpoint family in the same file:
+- **Never invent an element.** Parts get architectural names, but every part lists its member classes.
 - **Put content in the right place:** responsibilities inside elements, attributes inside entities, layers or packages as containers.
 - **Behaviour views:** ordered messages with `alt` blocks.
 - **Cap the elements** at the view's `max_elements`; list the rest under `overflow`.
 
 Then write the diagram in the requested notation.
 
-Write `V*/view.json`, `V*/view.puml` (or the notation's file), and `viewset.json` with correspondences: the same element in several views.
+Write `V*/view.json`, `V*/view.puml` (C4-PlantUML for structural views), `V*/architecture.json` (parts with members, arrows with their code evidence) and `viewset.json` with correspondences: the same element in several views, and each class to the part it belongs to.
 
 ### Phase 8 — Validation
-Check each view against the five layers in [references/views.md](references/views.md#phase-8-validation):
+Check each view against the layers in [references/views.md](references/views.md#phase-8-validation):
 1. notation;
 2. the viewpoint's constraints;
-3. faithfulness to the evidence model;
+3. faithfulness: true to the code;
 4. coverage;
-5. task fit — leave it as `not-run`, because a different model must judge.
+5. readability and the view spec.
+
+No model judges the view: "true to the code" and "readable" are rule checks; "right view" is for the person.
 
 On a failure, remove the offending marks, redraw (at most 2 times), and record what you removed.
 

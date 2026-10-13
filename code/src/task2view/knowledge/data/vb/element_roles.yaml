@@ -54,7 +54,7 @@ layer_fallback: {presentation: ui, application: service, domain: domain, persist
 
 # Drawing order (top to bottom) and the dependencies a layered architecture allows; any other
 # dependency between parts is drawn but marked as against the layering.
-rank: {ui: 0, api: 0, job: 0, service: 1, integration: 2, domain: 2, data_access: 3, database: 4}
+rank: {web_client: 0, ui: 0, api: 0, job: 0, presentation: 0, service: 1, application: 1, integration: 2, domain: 2, data_access: 3, database: 4}
 allowed:
   ui: [api, service]
   api: [service]
@@ -63,6 +63,8 @@ allowed:
   integration: [domain]
   data_access: [domain, database]
   domain: []
+  presentation: [application]
+  application: [application, domain, data_access]
 
 labels:          # default part names (an optional LLM call may rename or split parts)
   ui: User interface
@@ -72,6 +74,8 @@ labels:          # default part names (an optional LLM call may rename or split 
   integration: External integrations
   domain: Domain model
   data_access: Data access
+  presentation: Presentation
+  application: Application
 connectors:      # default intent label per (source role, target role)
   web_client>api: sends requests
   ui>api: sends requests
@@ -89,3 +93,7 @@ connectors:      # default intent label per (source role, target role)
   domain>data_access: queries
   domain>service: calls back
   integration>service: calls back
+  presentation>application: sends requests
+  application>domain: creates and updates
+  application>data_access: reads and saves
+  domain>application: calls back

@@ -331,7 +331,7 @@ def _use_cases(view: ArchitectureView, aem: EvidenceModel, card: RepositoryCard)
     system = ViewElement(id="group:system", kind="system", name=card.name, group=True)
     view.elements.append(system)
     view.elements.extend(_element(a, "actor") for a in actors)
-    for uc in _cap(view, cases):
+    for uc in _cap(view, cases, reserve=len(actors)):  # actors count toward the cap too
         el = _element(uc, "use_case")
         el.parent = system.id
         view.elements.append(el)

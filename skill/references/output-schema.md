@@ -13,6 +13,7 @@ Write these files under `--out`, with exactly these names and fields. They are t
   usage.json                   (tokens and cost; agents: what your tool reports, else omit)
   run.log                      (pipeline only: one line per phase decision)
   V1-<viewpoint id>/view.json  V1-<viewpoint id>/view.puml   (one folder per view)
+  V1-<viewpoint id>/architecture.json                       (structural views: parts with member classes, arrows with code evidence)
   V1-<viewpoint id>/view.<notation>.<ext>                   (each further notation asked for)
   V1-<viewpoint id>/render_notes.json                       (only when a notation could not draw something)
 ```
@@ -121,7 +122,8 @@ Write these files under `--out`, with exactly these names and fields. They are t
   "notation": {"status": "pass", "language": "plantuml", "approximated": false, "model_kind_matches": true},
   "constraints": [{"constraint": "component_has_responsibility", "severity": "warning", "mark": "cmp:…", "message": "… shows no responsibility"}],
   "faithfulness": [], "coverage": [{"question": "AQ1", "status": "supported", "claims": ["C1"], "note": ""}],
-  "task_fit": {"status": "not-run", "model": null, "rubric": "v1", "independent": null, "scores": {}, "summary": "a different model must judge"},
+  "readability": [{"check": "crossings", "severity": "warning", "mark": "view", "message": "3 crossing arrows in the layered layout"}],
+  "metrics": {"parts": 7, "arrows": 7, "crossings": 3, "against_layering": 1, "omitted_relations": 1, "classes_behind_parts": 39},
   "errors": 0, "warnings": 1, "repair_marks": []}}
 ```
 

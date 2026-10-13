@@ -27,6 +27,25 @@ class NeedEvidence(BaseModel):
     salience: Literal["primary", "secondary"] = "primary"
 
 
+SPEC_VALUES = {"scope": ("system", "feature"), "granularity": ("coarse", "medium", "fine"),
+               "behaviour": ("structure", "interaction", "both")}
+
+
+class ViewSpec(BaseModel):
+    """ADR-007 D1: how the views should be drawn. scope: whole system or one feature; granularity: layers
+    (coarse), the main parts (medium) or classes (fine); behaviour: parts, order of calls, or both."""
+    scope: Literal["system", "feature"] = "system"
+    granularity: Literal["coarse", "medium", "fine"] = "medium"
+    behaviour: Literal["structure", "interaction", "both"] = "structure"
+
+
+class Clarification(BaseModel):
+    field: Literal["scope", "granularity", "behaviour"]
+    question: str
+    default: str
+    answer: str = ""  # the person's answer; empty when the run used the default
+
+
 class NeedProfile(BaseModel):
     goal: str
     role_label: str = ""
@@ -36,6 +55,8 @@ class NeedProfile(BaseModel):
     subjects: list[GoalSubject] = Field(default_factory=list)
     quality_attributes: list[str] = Field(default_factory=list)
     detail_level: str = "feature"
+    spec: ViewSpec = Field(default_factory=ViewSpec)
+    clarifications: list[Clarification] = Field(default_factory=list)
     dropped: list[str] = Field(default_factory=list)
 
     def selection_input(self) -> SelectionInput:
@@ -130,6 +151,16 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
     role = raw.get("role")
     role = role if role in catalog.roles else catalog.resolve_role(label)
     qualities = [q for q in raw.get("quality_attributes") or [] if q in catalog.quality_attributes]
+    clarifications = []
+    for row in raw.get("clarifications") or []:
+        row = row if isinstance(row, dict) else {}
+        field, default = str(row.get("field") or ""), str(row.get("default") or "")
+        question = str(row.get("question") or "").strip()
+        if field in SPEC_VALUES and default in SPEC_VALUES[field] and question and field not in {c.field for c in clarifications}:
+            clarifications.append(Clarification(field=field, question=question[:200], default=default))
+        else:
+            dropped.append(f"clarification {row!r}: not one of the spec fields with an allowed default")
+    level = detail_level(sum(n.salience == "primary" for n in needs), len(subjects), catalog.detail_rule)
     return NeedProfile(
         goal=goal,
         role_label=label,
@@ -138,6 +169,42 @@ def validate_needs(goal: str, raw: dict, catalog: Catalog) -> NeedProfile:
         needs=needs,
         subjects=subjects,
         quality_attributes=qualities,
-        detail_level=detail_level(sum(n.salience == "primary" for n in needs), len(subjects), catalog.detail_rule),
+        detail_level=level,
+        spec=default_spec(needs, target, level, catalog),
+        clarifications=clarifications[:3],
         dropped=dropped,
     )
+
+
+def default_spec(needs: list[NeedEvidence], target: str, level: str, catalog: Catalog) -> ViewSpec:
+    """The spec the request implies: a feature slice when it names a target; layers only for a
+    whole-system overview; behaviour from the categories of its primary needs."""
+    kinds = {catalog.needs[n.need].category for n in needs if n.salience == "primary"}
+    behaviour = "both" if "behavior" in kinds and kinds - {"behavior"} else "interaction" if kinds == {"behavior"} else "structure"
+    return ViewSpec(scope="feature" if target else "system",
+                    granularity="coarse" if level == "overview" and not target else "medium", behaviour=behaviour)
+
+
+def apply_clarifications(profile: NeedProfile, catalog: Catalog, ask=None) -> list[str]:
+    """Answer each clarification (``ask(question, options, default)`` for a person; the default
+    otherwise) and update the spec. Returns one log line per clarification."""
+    log = []
+    for c in profile.clarifications:
+        answer = c.default
+        if ask is not None:
+            given = str(ask(c.question, SPEC_VALUES[c.field], c.default) or "").strip().lower()
+            if given in SPEC_VALUES[c.field]:
+                answer = c.answer = given
+        setattr(profile.spec, c.field, answer)
+        log.append(f"clarification {c.field}: {answer}{'' if c.answer else ' (default)'} — {c.question}")
+    if profile.spec.scope == "system":
+        profile.target = ""
+    behavioural = {n for n, d in catalog.needs.items() if d.category == "behavior"}
+    if profile.spec.behaviour in {"interaction", "both"} and not any(n.need in behavioural and n.salience == "primary"
+                                                                   for n in profile.needs):
+        profile.needs.append(NeedEvidence(need="interaction-order", evidence="(clarification)", salience="primary"))
+    if profile.spec.behaviour == "structure":
+        for n in profile.needs:
+            if n.need in behavioural:
+                n.salience = "secondary"
+    return log

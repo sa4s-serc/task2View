@@ -2,6 +2,15 @@
 
 The pipeline does this in `phase6/decide.py`, `phase7/project.py`, `phase7/notations/` and `phase8/`.
 
+## Abstraction (ADR-007)
+For structural views at medium or coarse granularity:
+1. **Scope:** the classes the verified claims are about; plus API, UI and job classes that call them and share the request's words (follow screen-to-screen navigation); plus the data access, domain and integration classes they reach (two hops).
+2. **Role per class**, strongest evidence first: framework facts (entry point kind, annotations like `@RestController`/`@Service`/`@Repository`/`@Entity`, supertypes, persisted entity), then the class name (`…Controller` with routes = API, `…Service`/`…Manager`/`…Facade` = service, `…Repository`/`…Registry`/`Persistence…` = data access, `…DTO`/`…Factory`/`…Strategy` = helper), then the package (`swing`/`ui` = UI, `entity`/`domain` = domain). Start-up/configuration only when nothing else fits. Catalogue: `knowledge/element_roles.yaml`.
+3. **Parts:** one per role (coarse: one per layer: presentation, application, domain, data access). Helpers join the one part that uses them; a data type used by several parts is listed, not drawn. Facts add the database (from the JDBC URL) and the web client (pages that call `/api`).
+4. **Names:** name each part as an architect would (1–5 words, the system's own words, never a class name unless it has one class) with a one-line description; split a part into 2–3 only if its members do different jobs. Every member stays listed.
+5. **Arrows:** one per pair of parts, only where their members have code dependencies; label with the intent for the pair of roles (e.g. "delegates requests", "reads and saves", "persists") and the protocol (HTTP/JSON, in-process, JPA / JDBC). Mark arrows the layering does not allow; list weak (< 3 dependencies) or implied ones instead of drawing them. Decomposition views draw no arrows.
+6. **Draw** C4-PlantUML: `Component` per part inside a `System_Boundary`, `ComponentDb` for the database, `Rel` with label and protocol, a dashed red tag for arrows against the layering, `SHOW_LEGEND()`.
+
 ## Phase 7 projection
 A view is drawn from the evidence model only:
 - **Never invent, rename or merge an element.** Each mark keeps its evidence-model id and name.
@@ -56,12 +65,12 @@ Then decide, checking these rules in order:
 1. **Notation:** the source is well formed in its language (compile it if you can), and the model kind matches the viewpoint.
 2. **Constraints:** every constraint the viewpoint lists in `viewpoints.yaml`. Severities and rules are in catalogs.md; `error` fails the view, `warning` is reported.
 3. **Faithfulness:**
-   - every element is in the evidence model (or is a group or fold of evidence-model elements) and is not weakly supported;
+   - every element is in the evidence model (or is a group or fold of evidence-model elements) and is not weakly supported; a **part** lists member classes or files that all exist, and no class belongs to two parts;
    - names are unchanged;
    - no element is drawn twice, and no symbol is drawn by two elements (states of one enum share its symbol and are exempt);
    - every interaction is a step of a recovered scenario.
-4. **Coverage:** the Phase 6 table. A view with questions and at least two elements must draw at least one relation or interaction.
-5. **Task fit:** `{"status": "not-run"}`. A model from another family scores it afterwards, one theme per call (rubric v1: answers-questions, second-view, layers, placement, layout).
+4. **Coverage:** the Phase 6 table. A view with questions and at least two elements must draw at least one relation or interaction (except decomposition and use-case views, which show containment).
+5. **Readability and spec** (structural views): no method names on arrows (error); at most max(1, 10% of the arrows) crossings when laid out top-down (warning); descriptions of at most 12 words (warning); a title and a legend (warning); coarse views at most 6 parts; no single class shown as a part at medium or coarse granularity; a feature view shows where requests enter; decomposition views have no arrows. No model judges the view.
 6. **Correspondence:** list in `viewset.json` `correspondence_gaps` every component of a sequence, communication or activity view that no structural view of the set draws.
 
 **Verdict:**

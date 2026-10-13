@@ -16,7 +16,7 @@ from task2view.phase5.verify import ClaimVerifier
 from task2view.phase8.judge import THEMES, judge_view
 
 from .test_evidence_model import CATALOG, GOAL, GOOD_CLAIMS, SVC, _scripted_agent, setup  # noqa: F401
-from .test_run_v2 import SHOP, judge, scripted
+from .test_run_v2 import SHOP, scripted
 
 
 @pytest.fixture(scope="module")
@@ -118,7 +118,7 @@ def test_package_grain_names_components_after_packages(setup):  # noqa: F811
 
 @pytest.fixture(scope="module")
 def result():
-    return run_v2(GOAL, str(SHOP), generate=scripted, judge_generate=judge)
+    return run_v2(GOAL, str(SHOP), generate=scripted)
 
 
 def test_reflexion_separates_agreement_omission_and_claim_only(result):
@@ -132,13 +132,7 @@ def test_sequence_participants_correspond_to_the_component_view(result):
     assert result.viewset.correspondence_gaps == []
 
 
-# -------------------------------------------------------------------- judge
-
-def test_judge_scores_one_theme_per_call_with_reason_first(result):
-    report = result.validation["V1-client-server"].task_fit
-    assert set(report["scores"]) == set(THEMES) and report["rubric"] == "v1"
-    assert list(report["scores"]["layers"]) == ["reason", "score"]
-
+# ------------------------------------------- judge (post-hoc research tool, not in the pipeline)
 
 def test_judge_reports_unusable_replies_without_failing(result):
     view = result.viewset.views[0]

@@ -82,7 +82,10 @@ def _links(card: RepositoryCard) -> tuple[dict, dict]:
     return out, inc
 
 
-def abstract_view(card: RepositoryCard, aem: EvidenceModel, *, target: str = "", title: str = "") -> ArchView:
+def abstract_view(card: RepositoryCard, aem: EvidenceModel, *, target: str = "", title: str = "",
+                  granularity: str = "medium", arrows: bool = True) -> ArchView:
+    """``granularity``: "medium" (one part per role) or "coarse" (one part per layer).
+    ``arrows``: False for decomposition views, which show containment only."""
     cat = role_catalog()
     entry_kinds: dict[str, set[str]] = defaultdict(set)
     for ep in card.entry_points:
@@ -135,38 +138,74 @@ def abstract_view(card: RepositoryCard, aem: EvidenceModel, *, target: str = "",
         ms = sorted(members[r], key=lambda m: (m not in core, -degree(m), prod[m].name))  # most relevant first
         named = [prod[m].name for m in ms if role[m] != "helper"]
         view.parts.append(Part(id=r, name=cat["labels"].get(r, r), role=r, technology=tech.get(r, ""), members=ms,
-                               description=", ".join(named[:3]) + (", …" if len(named) > 3 else "")))
+                               examples=named[:3]))
     _fact_parts(view, card, tech)
+    if granularity == "coarse":
+        _coarsen(view)
+    if shared:
+        view.notes.append(f"shared data types (not drawn, no arrows through them): {', '.join(shared)}")
+    bootstrap = sorted(prod[s].name for s in core if role[s] == "bootstrap")
+    if bootstrap:
+        view.notes.append(f"not drawn (start-up and configuration): {', '.join(bootstrap)}")
+    lift_connectors(view, card, arrows=arrows)
+    return view
 
-    # 4. connectors lifted from member dependencies
+
+_LAYERS = {"web_client": "presentation", "ui": "presentation", "api": "presentation", "job": "application",
+           "service": "application", "integration": "application", "domain": "domain", "data_access": "data_access"}
+
+
+def _coarsen(view: ArchView) -> None:
+    """Coarse grain: one part per layer (presentation, application, domain, data access) plus the database."""
+    cat = role_catalog()
+    merged: dict[str, Part] = {}
+    for p in view.parts:
+        layer = _LAYERS.get(p.role)
+        if layer is None:
+            merged[p.id] = p
+            continue
+        into = merged.setdefault(layer, Part(id=layer, name=cat["labels"][layer], role=layer))
+        into.members += p.members
+        into.files += p.files
+        into.technology = ", ".join(t for t in dict.fromkeys([*into.technology.split(", "), p.technology]) if t)
+        into.examples.append(p.name)
+    view.parts = sorted(merged.values(), key=lambda p: cat["rank"].get(p.role, 9))
+
+
+def lift_connectors(view: ArchView, card: RepositoryCard, *, arrows: bool = True) -> None:
+    """(Re)compute the arrows from the parts' members: code dependencies merged per pair of parts,
+    plus the facts that link the web client and the database. Weak or implied relations are listed."""
+    cat = role_catalog()
+    view.connectors, view.omitted = [], []
+    if not arrows:  # decomposition: containment only
+        return
+    prod = card.symbols
     owner = {m: p.id for p in view.parts for m in p.members}
     lifted: dict[tuple[str, str], Counter] = defaultdict(Counter)
     for e in card.edges:
         a, b = owner.get(e.source), owner.get(e.target)
         if e.kind in _DEP_KINDS and a and b and a != b:
             lifted[(a, b)][f"{prod[e.source].name} -> {prod[e.target].name}"] += 1
-    if any(p.role == "database" for p in view.parts) and "data_access" in members:
-        lifted[("data_access", "database")]["persistence unit (deployment config)"] += MIN_WEIGHT
-    if any(p.role == "web_client" for p in view.parts) and "api" in members:
-        lifted[("web_client", "api")]["web pages call /api routes"] += MIN_WEIGHT
+    by_role = {p.role: p.id for p in view.parts}
+    store = by_role.get("data_access")
+    if "database" in by_role and store:
+        lifted[(store, "database")]["persistence unit (deployment config)"] += MIN_WEIGHT
+    if "web_client" in by_role and "api" in by_role:
+        lifted[("web_client", by_role["api"])]["web pages call /api routes"] += MIN_WEIGHT
+    roles = {p.id: p.role for p in view.parts}
     for (a, b), ev in sorted(lifted.items(), key=lambda x: -sum(x[1].values())):
+        ra, rb = roles[a], roles[b]
         weight = sum(ev.values())
-        against = b not in cat["allowed"].get(a, [b]) and a != "web_client"
-        implied = a == "data_access" and b == "domain"
+        against = rb not in cat["allowed"].get(ra, [rb]) and ra != "web_client"
+        implied = ra == "data_access" and rb == "domain"
         if weight < MIN_WEIGHT or (implied and not against):
             reason = "implied: storage returns domain objects" if implied else "weak" + (", against the layering" if against else "")
             view.omitted.append(f"{view.part(a).name} -> {view.part(b).name}: {weight} code dependencies ({reason})")
             continue
         view.connectors.append(Connector(
             source=a, target=b, weight=weight, against_layering=against,
-            label=cat["connectors"].get(f"{a}>{b}", "depends on"),
-            protocol=_protocol(a, b, card), evidence=[f"{k} ({n})" for k, n in ev.most_common(5)]))
-    if shared:
-        view.notes.append(f"shared data types (not drawn, no arrows through them): {', '.join(shared)}")
-    bootstrap = sorted(prod[s].name for s in core if role[s] == "bootstrap")
-    if bootstrap:
-        view.notes.append(f"not drawn (start-up and configuration): {', '.join(bootstrap)}")
-    return view
+            label=cat["connectors"].get(f"{ra}>{rb}", "depends on"),
+            protocol=_protocol(ra, rb, card), evidence=[f"{k} ({n})" for k, n in ev.most_common(5)]))
 
 
 def _technologies(card: RepositoryCard) -> dict[str, str]:
@@ -186,7 +225,7 @@ def _fact_parts(view: ArchView, card: RepositoryCard, tech: dict) -> None:
         if m and not any(p.role == "database" for p in view.parts):
             engine = {"mysql": "MySQL", "postgresql": "PostgreSQL", "mariadb": "MariaDB", "h2": "H2"}.get(m.group(1), m.group(1))
             view.parts.append(Part(id="database", name=f"{engine} database", role="database", technology=engine,
-                                   description=m.group(2), files=[unit.file]))
+                                   examples=[m.group(2)], files=[unit.file]))
     if any(p.role == "api" for p in view.parts):
         root = Path(card.root)
         pages = []
@@ -199,8 +238,7 @@ def _fact_parts(view: ArchView, card: RepositoryCard, tech: dict) -> None:
                     continue
         if pages:
             view.parts.insert(0, Part(id="web_client", name="Web client", role="web_client", technology="HTML / JavaScript",
-                                      description=", ".join(Path(p).name for p in pages[:3]) + (", …" if len(pages) > 3 else ""),
-                                      files=pages))
+                                      examples=[Path(p).name for p in pages[:3]], files=pages))
 
 
 def _protocol(a: str, b: str, card: RepositoryCard) -> str:
@@ -208,6 +246,67 @@ def _protocol(a: str, b: str, card: RepositoryCard) -> str:
         return "HTTP/JSON"
     if b == "database":
         return "JPA / JDBC"
-    if a in {"ui", "api", "job"}:
+    if a in {"ui", "api", "job", "presentation"}:
         return "in-process"
     return ""
+
+
+_NAME = re.compile(r"^[A-Za-z][\w&/' -]{1,39}$")
+
+
+def name_parts(view: ArchView, card: RepositoryCard, aem: EvidenceModel, runtime, *, goal: str,
+               purpose: str = "phase5c") -> ArchView:
+    """One model call: architectural names, one-line descriptions, optional splits. Every reply is
+    checked; what fails keeps the code's default, and arrows are recomputed from the code."""
+    from task2view.contracts.models import PipelineError
+    from task2view.prompts import load_prompt
+
+    nameable = [p for p in view.parts if p.members]
+    if not nameable:
+        return view
+    simple = {m: card.symbols[m].name for p in nameable for m in p.members if m in card.symbols}
+    lines = []
+    for p in nameable:
+        resp = {r.text for m in p.members if m in aem.component_of for r in aem.elements[aem.component_of[m]].responsibilities}
+        lines.append(f"- id: {p.id} | role: {p.role} | current name: {p.name} | technology: {p.technology}\n"
+                     f"  members: {', '.join(simple[m] for m in p.members if m in simple)}\n"
+                     f"  responsibilities: {'; '.join(sorted(resp)[:6]) or 'none verified'}")
+    try:
+        reply = runtime.complete_json(load_prompt("phase5c_name").render(goal=goal, parts="\n".join(lines)), purpose=purpose)
+    except PipelineError as exc:
+        view.notes.append(f"naming kept the defaults: {str(exc)[:120]}")
+        return view
+    class_names = set(simple.values()) | {mt.name for s in card.symbols.values() for mt in s.methods}
+    by_id = {p.id: p for p in nameable}
+
+    def good_name(name, part_size):
+        return isinstance(name, str) and _NAME.match(name.strip()) and (part_size == 1 or name.strip() not in class_names)
+
+    for row in reply.get("parts") or []:
+        p = by_id.get(str((row or {}).get("id")))
+        if p is None:
+            continue
+        if good_name(row.get("name"), len(p.members)):
+            p.name = row["name"].strip()
+        desc = str(row.get("description") or "").strip()
+        if desc and len(desc.split()) <= 12:
+            p.description = desc
+    for split in reply.get("splits") or []:
+        p = by_id.get(str((split or {}).get("id")))
+        groups = split.get("into") if isinstance(split, dict) else None
+        if p is None or not isinstance(groups, list) or not 2 <= len(groups) <= 3:
+            continue
+        by_simple = {simple[m]: m for m in p.members if m in simple}
+        assigned = [[by_simple.get(str(x)) for x in (g.get("members") or [])] for g in groups if isinstance(g, dict)]
+        flat = [m for g in assigned for m in g]
+        if None in flat or sorted(flat) != sorted(by_simple.values()) or len(assigned) != len(groups) \
+                or not all(good_name(g.get("name"), len(a)) for g, a in zip(groups, assigned)):
+            view.notes.append(f"split of {p.name} rejected: members must be partitioned exactly")
+            continue
+        at = view.parts.index(p)
+        new = [Part(id=f"{p.id}-{k + 1}", name=g["name"].strip(), role=p.role, technology=p.technology, members=a,
+                    description=str(g.get("description") or "")[:100],
+                    examples=[simple[m] for m in a][:3]) for k, (g, a) in enumerate(zip(groups, assigned))]
+        view.parts[at:at + 1] = new
+    lift_connectors(view, card, arrows=bool(view.connectors) or bool(view.omitted))
+    return view

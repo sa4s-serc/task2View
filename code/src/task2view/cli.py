@@ -20,7 +20,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--goal", required=True, help="Stakeholder goal, verbatim")
     run.add_argument("--out", required=True, help="Output directory")
     run.add_argument("--llm", help="provider:model for every phase (default: TASK2VIEW_LLM, else gemini)")
-    run.add_argument("--judge-llm", help="provider:model for the task-fit judge; use a different model; omit to skip")
+    run.add_argument("--interactive", action="store_true",
+                     help="Ask the request's clarification questions (scope, granularity, behaviour) in the terminal")
     run.add_argument("--notations", default="plantuml", help="Comma-separated notations to write for every view")
     run.add_argument("--max-views", type=int, default=3)
     run.add_argument("--evidence", choices=["agent", "retrieval"], default="agent",
@@ -55,14 +56,13 @@ def _run(args) -> dict:
     from task2view.phase7.compile import compile_run_dir, parse_formats
 
     notations = [n.strip() for n in args.notations.split(",") if n.strip()]
-    result = run_v2(args.goal, args.code, llm=args.llm, judge_llm=args.judge_llm, max_views=args.max_views,
+    result = run_v2(args.goal, args.code, llm=args.llm, max_views=args.max_views, ask=_ask if args.interactive else None,
                     languages=notations, compile_enabled=not args.no_compile_check, evidence_mode=args.evidence)
     out = write_run_v2(result, args.out)
     images = compile_run_dir(out, formats=parse_formats(args.images), kroki_url=args.kroki_url) if args.images else None
     return {
         "out": str(out.resolve()),
         "generator": result.llm,
-        "judge": result.judge_llm,
         "views": [{"id": v.id, "viewpoint": v.viewpoint_id, "decision": result.decisions[v.id].decision,
                    "verdict": result.validation[v.id].verdict, "elements": len(v.content_elements())}
                   for v in result.viewset.views],
@@ -73,6 +73,11 @@ def _run(args) -> dict:
         "usage": result.usage.get("total", {}),
         "images": images,
     }
+
+
+def _ask(question: str, options, default: str) -> str:
+    answer = input(f"{question} [{'/'.join(options)}] (default: {default}): ").strip().lower()
+    return answer or default
 
 
 def _select(args) -> dict:

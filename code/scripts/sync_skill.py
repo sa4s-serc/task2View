@@ -18,7 +18,7 @@ from task2view.knowledge.catalog import Catalog, load_catalog
 CODE = Path(__file__).resolve().parents[1]
 SKILL = CODE.parent / "skill"
 SOURCE = CODE / "src" / "task2view" / "knowledge" / "data" / "vb"
-COPIED = ["needs.yaml", "viewpoints.yaml", "roles.yaml", "corpus.yaml", "pipeline.yaml"]
+COPIED = ["needs.yaml", "viewpoints.yaml", "roles.yaml", "corpus.yaml", "pipeline.yaml", "element_roles.yaml"]
 GOAL_SETS = {"pilot-2026-09": CODE / "tests" / "fixtures" / "pilot_goals.yaml"}
 SYSTEM_PATHS = {"progetto-is": "data/Progetto-IS-main-English", "gr10": "data/progetto_ing_software_gr10-main-English"}
 

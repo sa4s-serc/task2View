@@ -14,6 +14,12 @@ def _q(text: str) -> str:
     return text.replace('"', "'")
 
 
+def _text(part) -> str:
+    """The box text: what the part does, then a few of its classes (the rest are in the view's JSON)."""
+    examples = ", ".join(part.examples) + (", …" if len(part.members) + len(part.files) > len(part.examples) else "")
+    return "\\n".join(x for x in (part.description, examples) if x)
+
+
 def _alias(pid: str) -> str:
     return re.sub(r"\W", "_", pid)
 
@@ -25,11 +31,11 @@ def render_c4(view: ArchView, system: str) -> str:
              f"title {_q(view.title)}", "", f'System_Boundary(app, "{_q(system)}") {{']
     inside = sorted((p for p in view.parts if p.role != "database"), key=lambda p: _RANK.get(p.role, 9))
     for p in inside:
-        lines.append(f'  Component({_alias(p.id)}, "{_q(p.name)}", "{_q(p.technology)}", "{_q(p.description)}")')
+        lines.append(f'  Component({_alias(p.id)}, "{_q(p.name)}", "{_q(p.technology)}", "{_q(_text(p))}")')
     lines.append("}")
     for p in view.parts:
         if p.role == "database":
-            lines.append(f'ComponentDb({_alias(p.id)}, "{_q(p.name)}", "{_q(p.technology)}", "{_q(p.description)}")')
+            lines.append(f'ComponentDb({_alias(p.id)}, "{_q(p.name)}", "{_q(p.technology)}", "{_q(_text(p))}")')
     lines.append("")
     for c in view.connectors:
         tag = ', $tags="against"' if c.against_layering else ""
