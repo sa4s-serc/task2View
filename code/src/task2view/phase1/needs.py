@@ -180,8 +180,9 @@ def default_spec(needs: list[NeedEvidence], target: str, level: str, catalog: Ca
     """The spec the request implies: a feature slice when it names a target; layers only for a
     whole-system overview; behaviour from the categories of its primary needs."""
     kinds = {catalog.needs[n.need].category for n in needs if n.salience == "primary"}
-    # asking how parts interact (or in which order, or the flow) is asking about behaviour as well
-    dynamic = any(_DYNAMIC.search(n.evidence) for n in needs if n.salience == "primary")
+    # asking how parts interact (or in which order, or the flow) is asking about behaviour as well, unless the
+    # request is a concise overview, which gets its one view
+    dynamic = level != "overview" and any(_DYNAMIC.search(n.evidence) for n in needs if n.salience == "primary")
     if "behavior" in kinds or dynamic:
         behaviour = "both" if kinds - {"behavior"} else "interaction"
     else:

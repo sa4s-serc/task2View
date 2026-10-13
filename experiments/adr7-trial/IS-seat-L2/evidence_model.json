@@ -10,27 +10,9 @@
       "layer": "presentation",
       "responsibilities": [
         {
-          "text": "REST entry point under /api/reservations for creating, cancelling and checking in reservations",
-          "claims": [
-            "C1"
-          ]
-        },
-        {
-          "text": "builds a ReservationRequestDTO with the room, area, seat, date, time slot and student, then delegates to LibraryFacade",
-          "claims": [
-            "C1"
-          ]
-        },
-        {
-          "text": "REST endpoints under /api/reservations for creating, cancelling and checking in reservations",
-          "claims": [
-            "C9"
-          ]
-        },
-        {
           "text": "REST entry point for creating, cancelling and checking in reservations",
           "claims": [
-            "C50"
+            "C1"
           ]
         }
       ],
@@ -39,288 +21,7 @@
       "support": "observed",
       "claims": [
         "C1",
-        "C9",
-        "C50"
-      ],
-      "named_by": "symbol"
-    },
-    "cmp:it.unina.reservations.boundary.Swing.SeatSelection": {
-      "id": "cmp:it.unina.reservations.boundary.Swing.SeatSelection",
-      "kind": "component",
-      "name": "SeatSelection",
-      "realized_by": [
-        "it.unina.reservations.boundary.Swing.SeatSelection"
-      ],
-      "layer": "presentation",
-      "responsibilities": [
-        {
-          "text": "Swing wizard screen that shows the seats of the chosen area as a grid",
-          "claims": [
-            "C2"
-          ]
-        },
-        {
-          "text": "lets the user pick a specific seat or automatic assignment and records the choice in WizardState",
-          "claims": [
-            "C2"
-          ]
-        },
-        {
-          "text": "Swing wizard step 4: shows seats and records the chosen seat or automatic assignment in WizardState",
-          "claims": [
-            "C10"
-          ]
-        },
-        {
-          "text": "Swing screen for choosing a seat or automatic assignment",
-          "claims": [
-            "C53"
-          ]
-        }
-      ],
-      "attributes": [],
-      "details": {},
-      "support": "observed",
-      "claims": [
-        "C2",
-        "C10",
-        "C53"
-      ],
-      "named_by": "symbol"
-    },
-    "cmp:it.unina.reservations.controller.LibraryFacade": {
-      "id": "cmp:it.unina.reservations.controller.LibraryFacade",
-      "kind": "component",
-      "name": "LibraryFacade",
-      "realized_by": [
-        "it.unina.reservations.controller.LibraryFacade"
-      ],
-      "layer": "application",
-      "responsibilities": [
-        {
-          "text": "singleton facade of the application layer",
-          "claims": [
-            "C3"
-          ]
-        },
-        {
-          "text": "forwards reservation operations to ReservationManager",
-          "claims": [
-            "C3"
-          ]
-        },
-        {
-          "text": "singleton facade delegating requests to the managers",
-          "claims": [
-            "C12"
-          ]
-        },
-        {
-          "text": "facade delegating to the managers",
-          "claims": [
-            "C51"
-          ]
-        }
-      ],
-      "attributes": [],
-      "details": {},
-      "support": "observed",
-      "claims": [
-        "C3",
-        "C12",
-        "C51"
-      ],
-      "named_by": "symbol"
-    },
-    "cmp:it.unina.reservations.controller.ReservationManager": {
-      "id": "cmp:it.unina.reservations.controller.ReservationManager",
-      "kind": "component",
-      "name": "ReservationManager",
-      "realized_by": [
-        "it.unina.reservations.controller.ReservationManager"
-      ],
-      "layer": "application",
-      "responsibilities": [
-        {
-          "text": "orchestrates seat booking: validates student, room, area, time slot and seat",
-          "claims": [
-            "C4"
-          ]
-        },
-        {
-          "text": "checks that the student has no other reservation for the slot and picks an available seat",
-          "claims": [
-            "C4"
-          ]
-        },
-        {
-          "text": "creates and saves the Reservation and notifies observers",
-          "claims": [
-            "C4"
-          ]
-        },
-        {
-          "text": "validates the request, picks a seat and saves the reservation",
-          "claims": [
-            "C13"
-          ]
-        },
-        {
-          "text": "validates and creates seat reservations",
-          "claims": [
-            "C52"
-          ]
-        }
-      ],
-      "attributes": [],
-      "details": {},
-      "support": "observed",
-      "claims": [
-        "C4",
-        "C13",
-        "C52"
-      ],
-      "named_by": "symbol"
-    },
-    "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment": {
-      "id": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
-      "kind": "component",
-      "name": "FirstAvailableAssignment",
-      "realized_by": [
-        "it.unina.reservations.controller.strategy.FirstAvailableAssignment"
-      ],
-      "layer": "application",
-      "responsibilities": [
-        {
-          "text": "assignment strategy that picks the first available seat from the list",
-          "claims": [
-            "C5"
-          ]
-        },
-        {
-          "text": "default strategy set in ReservationManager",
-          "claims": [
-            "C5"
-          ]
-        }
-      ],
-      "attributes": [],
-      "details": {},
-      "support": "observed",
-      "claims": [
-        "C5"
-      ],
-      "named_by": "symbol"
-    },
-    "cmp:it.unina.reservations.entity.ReservationRegistry": {
-      "id": "cmp:it.unina.reservations.entity.ReservationRegistry",
-      "kind": "component",
-      "name": "ReservationRegistry",
-      "realized_by": [
-        "it.unina.reservations.entity.ReservationRegistry"
-      ],
-      "layer": "domain",
-      "responsibilities": [
-        {
-          "text": "registry of Reservation entities: save, update and find",
-          "claims": [
-            "C6"
-          ]
-        },
-        {
-          "text": "delegates storage to PersistenceManager",
-          "claims": [
-            "C6"
-          ]
-        },
-        {
-          "text": "registry that stores and queries Reservation entities through PersistenceManager",
-          "claims": [
-            "C15"
-          ]
-        },
-        {
-          "text": "stores and queries reservations through PersistenceManager",
-          "claims": [
-            "C54"
-          ]
-        }
-      ],
-      "attributes": [],
-      "details": {},
-      "support": "observed",
-      "claims": [
-        "C6",
-        "C15",
-        "C54"
-      ],
-      "named_by": "symbol"
-    },
-    "cmp:it.unina.reservations.entity.Seat": {
-      "id": "cmp:it.unina.reservations.entity.Seat",
-      "kind": "component",
-      "name": "Seat",
-      "realized_by": [
-        "it.unina.reservations.entity.Seat"
-      ],
-      "layer": "domain",
-      "responsibilities": [
-        {
-          "text": "persistent entity for a seat that belongs to an Area",
-          "claims": [
-            "C7"
-          ]
-        },
-        {
-          "text": "tells whether it is free for a date and time slot by querying ReservationRegistry",
-          "claims": [
-            "C7"
-          ]
-        },
-        {
-          "text": "persisted seat that checks its own availability",
-          "claims": [
-            "C55"
-          ]
-        }
-      ],
-      "attributes": [],
-      "details": {},
-      "support": "observed",
-      "claims": [
-        "C7",
-        "C55"
-      ],
-      "named_by": "symbol"
-    },
-    "cmp:it.unina.reservations.database.PersistenceManager": {
-      "id": "cmp:it.unina.reservations.database.PersistenceManager",
-      "kind": "component",
-      "name": "PersistenceManager",
-      "realized_by": [
-        "it.unina.reservations.database.PersistenceManager"
-      ],
-      "layer": "persistence",
-      "responsibilities": [
-        {
-          "text": "persistence layer class that saves, updates and queries entities through a JPA EntityManager",
-          "claims": [
-            "C8"
-          ]
-        },
-        {
-          "text": "JPA gateway that saves, updates and queries entities within transactions",
-          "claims": [
-            "C16"
-          ]
-        }
-      ],
-      "attributes": [],
-      "details": {},
-      "support": "observed",
-      "claims": [
-        "C8",
-        "C16"
+        "C43"
       ],
       "named_by": "symbol"
     },
@@ -334,9 +35,9 @@
       "layer": "presentation",
       "responsibilities": [
         {
-          "text": "Swing wizard step 5: confirms the reservation by calling LibraryFacade",
+          "text": "Swing wizard final step that confirms the reservation",
           "claims": [
-            "C11"
+            "C2"
           ]
         }
       ],
@@ -344,7 +45,100 @@
       "details": {},
       "support": "observed",
       "claims": [
-        "C11"
+        "C2"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.boundary.Swing.SeatSelection": {
+      "id": "cmp:it.unina.reservations.boundary.Swing.SeatSelection",
+      "kind": "component",
+      "name": "SeatSelection",
+      "realized_by": [
+        "it.unina.reservations.boundary.Swing.SeatSelection"
+      ],
+      "layer": "presentation",
+      "responsibilities": [
+        {
+          "text": "Swing screen where the user picks a seat or automatic assignment",
+          "claims": [
+            "C3"
+          ]
+        },
+        {
+          "text": "Swing screen for choosing a seat or automatic assignment",
+          "claims": [
+            "C46"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C3",
+        "C46"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.controller.LibraryFacade": {
+      "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "kind": "component",
+      "name": "LibraryFacade",
+      "realized_by": [
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "single facade delegating requests to the managers",
+          "claims": [
+            "C4"
+          ]
+        },
+        {
+          "text": "facade delegating to the managers",
+          "claims": [
+            "C44"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C4",
+        "C44"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.controller.ReservationManager": {
+      "id": "cmp:it.unina.reservations.controller.ReservationManager",
+      "kind": "component",
+      "name": "ReservationManager",
+      "realized_by": [
+        "it.unina.reservations.controller.ReservationManager"
+      ],
+      "layer": "application",
+      "responsibilities": [
+        {
+          "text": "validates and creates reservations, assigns seats, cancels and checks in",
+          "claims": [
+            "C5"
+          ]
+        },
+        {
+          "text": "validates and creates seat reservations",
+          "claims": [
+            "C45"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C5",
+        "C45"
       ],
       "named_by": "symbol"
     },
@@ -358,9 +152,9 @@
       "layer": "application",
       "responsibilities": [
         {
-          "text": "provides room, time slot and room detail data for the wizard",
+          "text": "manages study rooms, areas, time slots and availability",
           "claims": [
-            "C14"
+            "C6"
           ]
         }
       ],
@@ -368,7 +162,56 @@
       "details": {},
       "support": "observed",
       "claims": [
-        "C14"
+        "C6"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.entity.ReservationRegistry": {
+      "id": "cmp:it.unina.reservations.entity.ReservationRegistry",
+      "kind": "component",
+      "name": "ReservationRegistry",
+      "realized_by": [
+        "it.unina.reservations.entity.ReservationRegistry"
+      ],
+      "layer": "domain",
+      "responsibilities": [
+        {
+          "text": "stores and queries reservations through PersistenceManager",
+          "claims": [
+            "C7"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C7",
+        "C47"
+      ],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.database.PersistenceManager": {
+      "id": "cmp:it.unina.reservations.database.PersistenceManager",
+      "kind": "component",
+      "name": "PersistenceManager",
+      "realized_by": [
+        "it.unina.reservations.database.PersistenceManager"
+      ],
+      "layer": "persistence",
+      "responsibilities": [
+        {
+          "text": "JPA persist, find, query and merge operations",
+          "claims": [
+            "C8"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C8"
       ],
       "named_by": "symbol"
     },
@@ -400,6 +243,30 @@
       "details": {},
       "support": "observed",
       "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.entity.Seat": {
+      "id": "cmp:it.unina.reservations.entity.Seat",
+      "kind": "component",
+      "name": "Seat",
+      "realized_by": [
+        "it.unina.reservations.entity.Seat"
+      ],
+      "layer": "domain",
+      "responsibilities": [
+        {
+          "text": "persisted seat that checks its own availability",
+          "claims": [
+            "C48"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C48"
+      ],
       "named_by": "symbol"
     },
     "cmp:it.unina.reservations.entity.Area": {
@@ -455,6 +322,51 @@
         "it.unina.reservations.boundary.Swing.AreaSelection"
       ],
       "layer": "presentation",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.entity.StudyRoom": {
+      "id": "cmp:it.unina.reservations.entity.StudyRoom",
+      "kind": "component",
+      "name": "StudyRoom",
+      "realized_by": [
+        "it.unina.reservations.entity.StudyRoom"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.entity.Student": {
+      "id": "cmp:it.unina.reservations.entity.Student",
+      "kind": "component",
+      "name": "Student",
+      "realized_by": [
+        "it.unina.reservations.entity.Student"
+      ],
+      "layer": "domain",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "cmp:it.unina.reservations.controller.strategy.AssignmentStrategy": {
+      "id": "cmp:it.unina.reservations.controller.strategy.AssignmentStrategy",
+      "kind": "component",
+      "name": "AssignmentStrategy",
+      "realized_by": [
+        "it.unina.reservations.controller.strategy.AssignmentStrategy"
+      ],
+      "layer": "application",
       "responsibilities": [],
       "attributes": [],
       "details": {},
@@ -637,12 +549,6 @@
           "type": "Long",
           "key": true,
           "foreign_key": false
-        },
-        {
-          "name": "area",
-          "type": "Area",
-          "key": false,
-          "foreign_key": false
         }
       ],
       "details": {
@@ -650,9 +556,7 @@
         "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java"
       },
       "support": "observed",
-      "claims": [
-        "C7"
-      ],
+      "claims": [],
       "named_by": "fact"
     },
     "ent:it.unina.reservations.entity.Student": {
@@ -964,7 +868,7 @@
         "it.unina.reservations.boundary.SpringBoot.ReservationController -returns-> it.unina.reservations.dto.ReservationDTO (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:21)"
       ],
       "claims": [
-        "C31"
+        "C24"
       ],
       "support": "observed"
     },
@@ -981,8 +885,8 @@
         "it.unina.reservations.boundary.SpringBoot.ReservationController -calls-> it.unina.reservations.controller.LibraryFacade (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:48)"
       ],
       "claims": [
-        "C17",
-        "C29"
+        "C9",
+        "C22"
       ],
       "support": "observed"
     },
@@ -997,7 +901,7 @@
         "it.unina.reservations.boundary.SpringBoot.ReservationController -instantiates-> it.unina.reservations.dto.ReservationRequestDTO (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:30)"
       ],
       "claims": [
-        "C30"
+        "C23"
       ],
       "support": "observed"
     },
@@ -1113,7 +1017,7 @@
         "it.unina.reservations.boundary.Swing.ReservationSummary -calls-> it.unina.reservations.controller.LibraryFacade (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java:100)"
       ],
       "claims": [
-        "C18"
+        "C10"
       ],
       "support": "observed"
     },
@@ -1157,7 +1061,7 @@
         "it.unina.reservations.boundary.Swing.SeatSelection -param-> it.unina.reservations.boundary.Swing.WizardState (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java:49)"
       ],
       "claims": [
-        "C47"
+        "C40"
       ],
       "support": "observed"
     },
@@ -1172,7 +1076,7 @@
         "it.unina.reservations.boundary.Swing.SeatSelection -instantiates-> it.unina.reservations.boundary.Swing.AreaSelection (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java:79)"
       ],
       "claims": [
-        "C49"
+        "C42"
       ],
       "support": "observed"
     },
@@ -1190,7 +1094,7 @@
         "it.unina.reservations.boundary.Swing.SeatSelection -returns-> it.unina.reservations.dto.AreaDetailDTO (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java:162)"
       ],
       "claims": [
-        "C46"
+        "C39"
       ],
       "support": "observed"
     },
@@ -1211,7 +1115,7 @@
         "it.unina.reservations.boundary.Swing.SeatSelection -param-> it.unina.reservations.dto.SeatDTO (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java:135)"
       ],
       "claims": [
-        "C45"
+        "C38"
       ],
       "support": "observed"
     },
@@ -1226,7 +1130,7 @@
         "it.unina.reservations.boundary.Swing.SeatSelection -instantiates-> it.unina.reservations.boundary.Swing.ReservationSummary (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java:180)"
       ],
       "claims": [
-        "C48"
+        "C41"
       ],
       "support": "observed"
     },
@@ -1246,8 +1150,8 @@
         "it.unina.reservations.controller.LibraryFacade -calls-> it.unina.reservations.controller.StudyRoomManager (JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:91)"
       ],
       "claims": [
-        "C20",
-        "C33"
+        "C12",
+        "C26"
       ],
       "support": "observed"
     },
@@ -1294,8 +1198,8 @@
         "it.unina.reservations.controller.LibraryFacade -calls-> it.unina.reservations.controller.ReservationManager (JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:156)"
       ],
       "claims": [
-        "C19",
-        "C32"
+        "C11",
+        "C25"
       ],
       "support": "observed"
     },
@@ -1320,8 +1224,8 @@
         "it.unina.reservations.controller.ReservationManager -field-> it.unina.reservations.entity.ReservationRegistry (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:28)"
       ],
       "claims": [
-        "C21",
-        "C34"
+        "C13",
+        "C27"
       ],
       "support": "observed"
     },
@@ -1342,8 +1246,8 @@
         "it.unina.reservations.controller.ReservationManager -field-> it.unina.reservations.entity.StudyRoomRegistry (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:29)"
       ],
       "claims": [
-        "C22",
-        "C35"
+        "C14",
+        "C28"
       ],
       "support": "observed"
     },
@@ -1361,19 +1265,40 @@
         "it.unina.reservations.controller.ReservationManager -field-> it.unina.reservations.entity.UserRegistry (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:30)"
       ],
       "claims": [
-        "C36"
+        "C29"
       ],
       "support": "observed"
     },
-    "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-strategy-firstavailableassignment": {
-      "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-strategy-firstavailableassignment",
+    "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-strategy-assignmentstrategy": {
+      "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-strategy-assignmentstrategy",
       "kind": "uses",
       "source": "cmp:it.unina.reservations.controller.ReservationManager",
-      "target": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
-      "label": null,
+      "target": "cmp:it.unina.reservations.controller.strategy.AssignmentStrategy",
+      "label": "selectSeat",
       "multiplicity": null,
       "member_edges": [
-        "it.unina.reservations.controller.ReservationManager -instantiates-> it.unina.reservations.controller.strategy.FirstAvailableAssignment (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:39)"
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.controller.strategy.AssignmentStrategy (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:400)",
+        "it.unina.reservations.controller.ReservationManager -field-> it.unina.reservations.controller.strategy.AssignmentStrategy (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:31)",
+        "it.unina.reservations.controller.ReservationManager -param-> it.unina.reservations.controller.strategy.AssignmentStrategy (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:46)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-student": {
+      "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-student",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.controller.ReservationManager",
+      "target": "cmp:it.unina.reservations.entity.Student",
+      "label": "hasActiveOrConfirmedReservationForDateAndSlot, getId",
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:152)",
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:230)",
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:269)",
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:284)",
+        "it.unina.reservations.controller.ReservationManager -param-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:125)",
+        "it.unina.reservations.controller.ReservationManager -param-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:151)",
+        "it.unina.reservations.controller.ReservationManager -returns-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:51)"
       ],
       "claims": [],
       "support": "observed"
@@ -1395,7 +1320,7 @@
         "it.unina.reservations.controller.ReservationManager -param-> it.unina.reservations.dto.ReservationRequestDTO (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:65)"
       ],
       "claims": [
-        "C40"
+        "C33"
       ],
       "support": "observed"
     },
@@ -1440,7 +1365,7 @@
         "it.unina.reservations.controller.ReservationManager -returns-> it.unina.reservations.entity.Area (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:157)"
       ],
       "claims": [
-        "C38"
+        "C31"
       ],
       "support": "observed"
     },
@@ -1466,7 +1391,7 @@
         "it.unina.reservations.controller.ReservationManager -returns-> it.unina.reservations.entity.Seat (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:378)"
       ],
       "claims": [
-        "C37"
+        "C30"
       ],
       "support": "observed"
     },
@@ -1500,8 +1425,28 @@
         "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.Reservation (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:306)"
       ],
       "claims": [
-        "C39"
+        "C32"
       ],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-studyroom": {
+      "id": "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-studyroom",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.controller.ReservationManager",
+      "target": "cmp:it.unina.reservations.entity.StudyRoom",
+      "label": "getId, isActive",
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:166)",
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:189)",
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:192)",
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:344)",
+        "it.unina.reservations.controller.ReservationManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:366)",
+        "it.unina.reservations.controller.ReservationManager -param-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:157)",
+        "it.unina.reservations.controller.ReservationManager -param-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:357)",
+        "it.unina.reservations.controller.ReservationManager -returns-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:173)"
+      ],
+      "claims": [],
       "support": "observed"
     },
     "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-studyroomregistry": {
@@ -1530,7 +1475,9 @@
         "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoomRegistry (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:60)",
         "it.unina.reservations.controller.StudyRoomManager -field-> it.unina.reservations.entity.StudyRoomRegistry (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:21)"
       ],
-      "claims": [],
+      "claims": [
+        "C15"
+      ],
       "support": "observed"
     },
     "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-reservationregistry": {
@@ -1546,6 +1493,38 @@
         "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.ReservationRegistry (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:175)",
         "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.ReservationRegistry (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:329)",
         "it.unina.reservations.controller.StudyRoomManager -field-> it.unina.reservations.entity.ReservationRegistry (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:22)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-studyroom": {
+      "id": "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-studyroom",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.controller.StudyRoomManager",
+      "target": "cmp:it.unina.reservations.entity.StudyRoom",
+      "label": "getId, getName",
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:111)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:115)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:163)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:189)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:231)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:275)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:315)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:345)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:346)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:347)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:353)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:431)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:432)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:433)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:434)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:435)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:439)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:93)",
+        "it.unina.reservations.controller.StudyRoomManager -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:99)",
+        "it.unina.reservations.controller.StudyRoomManager -instantiates-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:53)"
       ],
       "claims": [],
       "support": "observed"
@@ -1636,16 +1615,16 @@
       "claims": [],
       "support": "observed"
     },
-    "rel:cmp-it-unina-reservations-controller-strategy-firstavailableassignment:uses:cmp-it-unina-reservations-entity-seat": {
-      "id": "rel:cmp-it-unina-reservations-controller-strategy-firstavailableassignment:uses:cmp-it-unina-reservations-entity-seat",
+    "rel:cmp-it-unina-reservations-controller-strategy-assignmentstrategy:uses:cmp-it-unina-reservations-entity-seat": {
+      "id": "rel:cmp-it-unina-reservations-controller-strategy-assignmentstrategy:uses:cmp-it-unina-reservations-entity-seat",
       "kind": "uses",
-      "source": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
+      "source": "cmp:it.unina.reservations.controller.strategy.AssignmentStrategy",
       "target": "cmp:it.unina.reservations.entity.Seat",
       "label": null,
       "multiplicity": null,
       "member_edges": [
-        "it.unina.reservations.controller.strategy.FirstAvailableAssignment -param-> it.unina.reservations.entity.Seat (JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java:15)",
-        "it.unina.reservations.controller.strategy.FirstAvailableAssignment -returns-> it.unina.reservations.entity.Seat (JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java:14)"
+        "it.unina.reservations.controller.strategy.AssignmentStrategy -param-> it.unina.reservations.entity.Seat (JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java:11)",
+        "it.unina.reservations.controller.strategy.AssignmentStrategy -returns-> it.unina.reservations.entity.Seat (JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java:11)"
       ],
       "claims": [],
       "support": "observed"
@@ -1661,6 +1640,21 @@
         "it.unina.reservations.dto.AreaDetailDTO -field-> it.unina.reservations.dto.SeatDTO (JavaProject/src/main/java/it/unina/reservations/dto/AreaDetailDTO.java:11)",
         "it.unina.reservations.dto.AreaDetailDTO -param-> it.unina.reservations.dto.SeatDTO (JavaProject/src/main/java/it/unina/reservations/dto/AreaDetailDTO.java:27)",
         "it.unina.reservations.dto.AreaDetailDTO -returns-> it.unina.reservations.dto.SeatDTO (JavaProject/src/main/java/it/unina/reservations/dto/AreaDetailDTO.java:26)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-area:uses:cmp-it-unina-reservations-entity-studyroom": {
+      "id": "rel:cmp-it-unina-reservations-entity-area:uses:cmp-it-unina-reservations-entity-studyroom",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.Area",
+      "target": "cmp:it.unina.reservations.entity.StudyRoom",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.Area -field-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/Area.java:21)",
+        "it.unina.reservations.entity.Area -param-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/Area.java:30)",
+        "it.unina.reservations.entity.Area -returns-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/Area.java:40)"
       ],
       "claims": [],
       "support": "observed"
@@ -1692,6 +1686,21 @@
       "member_edges": [
         "it.unina.reservations.entity.Area -calls-> it.unina.reservations.entity.StudyRoomRegistry (JavaProject/src/main/java/it/unina/reservations/entity/Area.java:51)",
         "it.unina.reservations.entity.Area -calls-> it.unina.reservations.entity.StudyRoomRegistry (JavaProject/src/main/java/it/unina/reservations/entity/Area.java:52)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-reservation:uses:cmp-it-unina-reservations-entity-student": {
+      "id": "rel:cmp-it-unina-reservations-entity-reservation:uses:cmp-it-unina-reservations-entity-student",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.Reservation",
+      "target": "cmp:it.unina.reservations.entity.Student",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.Reservation -field-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java:50)",
+        "it.unina.reservations.entity.Reservation -param-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java:169)",
+        "it.unina.reservations.entity.Reservation -returns-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java:167)"
       ],
       "claims": [],
       "support": "observed"
@@ -1734,8 +1743,9 @@
         "it.unina.reservations.entity.ReservationRegistry -instantiates-> it.unina.reservations.database.PersistenceManager (JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java:20)"
       ],
       "claims": [
-        "C23",
-        "C43"
+        "C16",
+        "C17",
+        "C36"
       ],
       "support": "observed"
     },
@@ -1762,7 +1772,7 @@
         "it.unina.reservations.entity.ReservationRegistry -returns-> it.unina.reservations.entity.Reservation (JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java:86)"
       ],
       "claims": [
-        "C44"
+        "C37"
       ],
       "support": "observed"
     },
@@ -1780,8 +1790,21 @@
         "it.unina.reservations.entity.Seat -returns-> it.unina.reservations.entity.Area (JavaProject/src/main/java/it/unina/reservations/entity/Seat.java:29)"
       ],
       "claims": [
-        "C42"
+        "C35"
       ],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-studyroom": {
+      "id": "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-studyroom",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.Seat",
+      "target": "cmp:it.unina.reservations.entity.StudyRoom",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.Seat -returns-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/Seat.java:32)"
+      ],
+      "claims": [],
       "support": "observed"
     },
     "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-reservationregistry": {
@@ -1797,8 +1820,68 @@
         "it.unina.reservations.entity.Seat -calls-> it.unina.reservations.entity.ReservationRegistry (JavaProject/src/main/java/it/unina/reservations/entity/Seat.java:47)"
       ],
       "claims": [
-        "C41"
+        "C34"
       ],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-student:uses:cmp-it-unina-reservations-entity-reservation": {
+      "id": "rel:cmp-it-unina-reservations-entity-student:uses:cmp-it-unina-reservations-entity-reservation",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.Student",
+      "target": "cmp:it.unina.reservations.entity.Reservation",
+      "label": "getTimeSlot",
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.Student -calls-> it.unina.reservations.entity.Reservation (JavaProject/src/main/java/it/unina/reservations/entity/Student.java:45)",
+        "it.unina.reservations.entity.Student -field-> it.unina.reservations.entity.Reservation (JavaProject/src/main/java/it/unina/reservations/entity/Student.java:26)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-student:uses:cmp-it-unina-reservations-entity-reservationregistry": {
+      "id": "rel:cmp-it-unina-reservations-entity-student:uses:cmp-it-unina-reservations-entity-reservationregistry",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.Student",
+      "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+      "label": "getInstance, findActiveReservations",
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.Student -calls-> it.unina.reservations.entity.ReservationRegistry (JavaProject/src/main/java/it/unina/reservations/entity/Student.java:43)",
+        "it.unina.reservations.entity.Student -calls-> it.unina.reservations.entity.ReservationRegistry (JavaProject/src/main/java/it/unina/reservations/entity/Student.java:44)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-studyroom:uses:cmp-it-unina-reservations-entity-area": {
+      "id": "rel:cmp-it-unina-reservations-entity-studyroom:uses:cmp-it-unina-reservations-entity-area",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.StudyRoom",
+      "target": "cmp:it.unina.reservations.entity.Area",
+      "label": "getSeats, createSeats",
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.StudyRoom -calls-> it.unina.reservations.entity.Area (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java:106)",
+        "it.unina.reservations.entity.StudyRoom -calls-> it.unina.reservations.entity.Area (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java:113)",
+        "it.unina.reservations.entity.StudyRoom -calls-> it.unina.reservations.entity.Area (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java:197)",
+        "it.unina.reservations.entity.StudyRoom -field-> it.unina.reservations.entity.Area (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java:28)",
+        "it.unina.reservations.entity.StudyRoom -instantiates-> it.unina.reservations.entity.Area (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java:111)",
+        "it.unina.reservations.entity.StudyRoom -returns-> it.unina.reservations.entity.Area (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java:98)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-studyroom:uses:cmp-it-unina-reservations-entity-studyroomregistry": {
+      "id": "rel:cmp-it-unina-reservations-entity-studyroom:uses:cmp-it-unina-reservations-entity-studyroomregistry",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.StudyRoom",
+      "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+      "label": "getInstance, getAreasForRoom",
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.StudyRoom -calls-> it.unina.reservations.entity.StudyRoomRegistry (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java:195)",
+        "it.unina.reservations.entity.StudyRoom -calls-> it.unina.reservations.entity.StudyRoomRegistry (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java:196)"
+      ],
+      "claims": [],
       "support": "observed"
     },
     "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-database-persistencemanager": {
@@ -1823,6 +1906,28 @@
         "it.unina.reservations.entity.StudyRoomRegistry -calls-> it.unina.reservations.database.PersistenceManager (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:60)",
         "it.unina.reservations.entity.StudyRoomRegistry -field-> it.unina.reservations.database.PersistenceManager (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:17)",
         "it.unina.reservations.entity.StudyRoomRegistry -instantiates-> it.unina.reservations.database.PersistenceManager (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:20)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-entity-studyroom": {
+      "id": "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-entity-studyroom",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+      "target": "cmp:it.unina.reservations.entity.StudyRoom",
+      "label": "isOpenOnDate, getScheduledTimeSlots",
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.StudyRoomRegistry -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:77)",
+        "it.unina.reservations.entity.StudyRoomRegistry -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:80)",
+        "it.unina.reservations.entity.StudyRoomRegistry -calls-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:83)",
+        "it.unina.reservations.entity.StudyRoomRegistry -param-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:35)",
+        "it.unina.reservations.entity.StudyRoomRegistry -param-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:42)",
+        "it.unina.reservations.entity.StudyRoomRegistry -returns-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:42)",
+        "it.unina.reservations.entity.StudyRoomRegistry -returns-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:49)",
+        "it.unina.reservations.entity.StudyRoomRegistry -returns-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:54)",
+        "it.unina.reservations.entity.StudyRoomRegistry -returns-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:59)",
+        "it.unina.reservations.entity.StudyRoomRegistry -returns-> it.unina.reservations.entity.StudyRoom (JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:73)"
       ],
       "claims": [],
       "support": "observed"
@@ -1873,6 +1978,20 @@
         "it.unina.reservations.entity.UserRegistry -calls-> it.unina.reservations.database.PersistenceManager (JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:59)",
         "it.unina.reservations.entity.UserRegistry -field-> it.unina.reservations.database.PersistenceManager (JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:13)",
         "it.unina.reservations.entity.UserRegistry -instantiates-> it.unina.reservations.database.PersistenceManager (JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:16)"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:cmp-it-unina-reservations-entity-userregistry:uses:cmp-it-unina-reservations-entity-student": {
+      "id": "rel:cmp-it-unina-reservations-entity-userregistry:uses:cmp-it-unina-reservations-entity-student",
+      "kind": "uses",
+      "source": "cmp:it.unina.reservations.entity.UserRegistry",
+      "target": "cmp:it.unina.reservations.entity.Student",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [
+        "it.unina.reservations.entity.UserRegistry -returns-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:44)",
+        "it.unina.reservations.entity.UserRegistry -returns-> it.unina.reservations.entity.Student (JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:51)"
       ],
       "claims": [],
       "support": "observed"
@@ -1981,19 +2100,19 @@
     }
   },
   "scenarios": {
-    "scn:make-seat-reservation": {
-      "id": "scn:make-seat-reservation",
-      "name": "make seat reservation",
+    "scn:make-reservation": {
+      "id": "scn:make-reservation",
+      "name": "make reservation",
       "steps": [
         {
           "order": 1,
-          "source": "cmp:it.unina.reservations.boundary.Swing.ReservationSummary",
+          "source": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
           "target": "cmp:it.unina.reservations.controller.LibraryFacade",
           "message": "makeReservation(ReservationRequestDTO)",
           "kind": "call",
-          "fragment": "scn:make-seat-reservation:alt1",
+          "fragment": null,
           "claims": [
-            "C24"
+            "C18"
           ]
         },
         {
@@ -2004,40 +2123,179 @@
           "kind": "call",
           "fragment": null,
           "claims": [
-            "C25"
+            "C19"
           ]
         },
         {
           "order": 3,
           "source": "cmp:it.unina.reservations.controller.ReservationManager",
-          "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
-          "message": "findRoomById(roomId)",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "message": "saveReservation(reservation)",
           "kind": "call",
           "fragment": null,
           "claims": [
-            "C26"
+            "C20"
           ]
         },
         {
           "order": 4,
-          "source": "cmp:it.unina.reservations.controller.ReservationManager",
-          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
-          "message": "saveReservation(reservation)",
-          "kind": "call",
-          "fragment": "scn:make-seat-reservation:alt2",
-          "claims": [
-            "C27"
-          ]
-        },
-        {
-          "order": 5,
           "source": "cmp:it.unina.reservations.entity.ReservationRegistry",
           "target": "cmp:it.unina.reservations.database.PersistenceManager",
           "message": "save(reservation)",
           "kind": "call",
           "fragment": null,
           "claims": [
-            "C28"
+            "C21"
+          ]
+        }
+      ],
+      "fragments": []
+    },
+    "scn:make-seat-reservation": {
+      "id": "scn:make-seat-reservation",
+      "name": "make seat reservation",
+      "steps": [
+        {
+          "order": 1,
+          "source": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+          "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "message": "makeReservation(ReservationRequestDTO)",
+          "kind": "call",
+          "fragment": null,
+          "claims": [
+            "C49"
+          ]
+        },
+        {
+          "order": 2,
+          "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+          "target": "cmp:it.unina.reservations.controller.ReservationManager",
+          "message": "makeReservation(request)",
+          "kind": "call",
+          "fragment": null,
+          "claims": [
+            "C50"
+          ]
+        },
+        {
+          "order": 3,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.UserRegistry",
+          "message": "findStudentById(studentId)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt1",
+          "claims": [
+            "C51"
+          ]
+        },
+        {
+          "order": 4,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "message": "findRoomById(roomId)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt2",
+          "claims": [
+            "C52"
+          ]
+        },
+        {
+          "order": 5,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "message": "findAreaById(areaId)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt3",
+          "claims": [
+            "C53"
+          ]
+        },
+        {
+          "order": 6,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.StudyRoom",
+          "message": "getScheduledTimeSlots(date)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt4",
+          "claims": [
+            "C54"
+          ]
+        },
+        {
+          "order": 7,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
+          "message": "findSeatById(seatId)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt5",
+          "claims": [
+            "C55"
+          ]
+        },
+        {
+          "order": 8,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.Student",
+          "message": "hasActiveOrConfirmedReservationForDateAndSlot(date, label)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt6",
+          "claims": [
+            "C56"
+          ]
+        },
+        {
+          "order": 9,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.Area",
+          "message": "getAvailableSeats(date, timeSlot)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt7",
+          "claims": [
+            "C57"
+          ]
+        },
+        {
+          "order": 10,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.Seat",
+          "message": "isAvailable(date, timeSlot)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt8",
+          "claims": [
+            "C58"
+          ]
+        },
+        {
+          "order": 11,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.controller.strategy.AssignmentStrategy",
+          "message": "selectSeat(available)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt9",
+          "claims": [
+            "C59"
+          ]
+        },
+        {
+          "order": 12,
+          "source": "cmp:it.unina.reservations.controller.ReservationManager",
+          "target": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "message": "saveReservation(reservation)",
+          "kind": "call",
+          "fragment": "scn:make-seat-reservation:alt10",
+          "claims": [
+            "C60"
+          ]
+        },
+        {
+          "order": 13,
+          "source": "cmp:it.unina.reservations.entity.ReservationRegistry",
+          "target": "cmp:it.unina.reservations.database.PersistenceManager",
+          "message": "save(reservation)",
+          "kind": "call",
+          "fragment": null,
+          "claims": [
+            "C61"
           ]
         }
       ],
@@ -2045,12 +2303,52 @@
         {
           "id": "scn:make-seat-reservation:alt1",
           "kind": "alt",
-          "guard": "user confirms in the Swing wizard"
+          "guard": "student is null -> IllegalArgumentException(\"Student not found.\")"
         },
         {
           "id": "scn:make-seat-reservation:alt2",
           "kind": "alt",
-          "guard": "a seat is available and the student has no conflicting reservation"
+          "guard": "room missing, inactive or closed on date -> IllegalArgumentException"
+        },
+        {
+          "id": "scn:make-seat-reservation:alt3",
+          "kind": "alt",
+          "guard": "area null or not in selected room -> IllegalArgumentException(\"The area is not in the selected room\")"
+        },
+        {
+          "id": "scn:make-seat-reservation:alt4",
+          "kind": "alt",
+          "guard": "date in the past, or slot not found/already started -> IllegalArgumentException(\"The selected time slot is not available\")"
+        },
+        {
+          "id": "scn:make-seat-reservation:alt5",
+          "kind": "alt",
+          "guard": "seatId != 0 and seat not found or not in area -> IllegalArgumentException"
+        },
+        {
+          "id": "scn:make-seat-reservation:alt6",
+          "kind": "alt",
+          "guard": "duplicate reservation -> IllegalArgumentException(\"You already have an active or confirmed reservation...\")"
+        },
+        {
+          "id": "scn:make-seat-reservation:alt7",
+          "kind": "alt",
+          "guard": "no available seats -> IllegalArgumentException(\"No seats are available in the selected area\")"
+        },
+        {
+          "id": "scn:make-seat-reservation:alt8",
+          "kind": "alt",
+          "guard": "seatId > 0 and seat taken -> IllegalStateException(\"The selected seat is no longer available\")"
+        },
+        {
+          "id": "scn:make-seat-reservation:alt9",
+          "kind": "alt",
+          "guard": "seatId == 0 (automatic assignment)"
+        },
+        {
+          "id": "scn:make-seat-reservation:alt10",
+          "kind": "alt",
+          "guard": "save returns false -> RuntimeException(\"Server error: the reservation could not be saved...\")"
         }
       ]
     }
@@ -2064,377 +2362,7 @@
       "name": "ReservationController",
       "symbol": "it.unina.reservations.boundary.SpringBoot.ReservationController",
       "responsibilities": [
-        "REST entry point under /api/reservations for creating, cancelling and checking in reservations",
-        "builds a ReservationRequestDTO with the room, area, seat, date, time slot and student, then delegates to LibraryFacade"
-      ],
-      "attributes": [],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
-          "symbol": null,
-          "lines": [
-            16,
-            16
-          ],
-          "excerpt": "public class ReservationController {"
-        },
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
-          "symbol": null,
-          "lines": [
-            29,
-            29
-          ],
-          "excerpt": "return LibraryFacade.getInstance().makeReservation("
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ1"
-      ]
-    },
-    "C2": {
-      "id": "C2",
-      "task": "IT1",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "SeatSelection",
-      "symbol": "it.unina.reservations.boundary.Swing.SeatSelection",
-      "responsibilities": [
-        "Swing wizard screen that shows the seats of the chosen area as a grid",
-        "lets the user pick a specific seat or automatic assignment and records the choice in WizardState"
-      ],
-      "attributes": [],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
-          "symbol": null,
-          "lines": [
-            17,
-            17
-          ],
-          "excerpt": "public class SeatSelection {"
-        },
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
-          "symbol": null,
-          "lines": [
-            158,
-            158
-          ],
-          "excerpt": "status.setSeatId(WizardState.AUTO_ASSIGNMENT);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ1"
-      ]
-    },
-    "C3": {
-      "id": "C3",
-      "task": "IT1",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "LibraryFacade",
-      "symbol": "it.unina.reservations.controller.LibraryFacade",
-      "responsibilities": [
-        "singleton facade of the application layer",
-        "forwards reservation operations to ReservationManager"
-      ],
-      "attributes": [],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
-          "symbol": null,
-          "lines": [
-            13,
-            13
-          ],
-          "excerpt": "public class LibraryFacade {"
-        },
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
-          "symbol": null,
-          "lines": [
-            118,
-            118
-          ],
-          "excerpt": "return ReservationManager.getInstance().makeReservation(request);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ1"
-      ]
-    },
-    "C4": {
-      "id": "C4",
-      "task": "IT1",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "ReservationManager",
-      "symbol": "it.unina.reservations.controller.ReservationManager",
-      "responsibilities": [
-        "orchestrates seat booking: validates student, room, area, time slot and seat",
-        "checks that the student has no other reservation for the slot and picks an available seat",
-        "creates and saves the Reservation and notifies observers"
-      ],
-      "attributes": [],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
-          "symbol": null,
-          "lines": [
-            24,
-            24
-          ],
-          "excerpt": "public class ReservationManager {"
-        },
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
-          "symbol": null,
-          "lines": [
-            134,
-            134
-          ],
-          "excerpt": "boolean success = reservationRegistry.saveReservation(reservation);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ1"
-      ]
-    },
-    "C5": {
-      "id": "C5",
-      "task": "IT1",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "FirstAvailableAssignment",
-      "symbol": "it.unina.reservations.controller.strategy.FirstAvailableAssignment",
-      "responsibilities": [
-        "assignment strategy that picks the first available seat from the list",
-        "default strategy set in ReservationManager"
-      ],
-      "attributes": [],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java",
-          "symbol": null,
-          "lines": [
-            8,
-            8
-          ],
-          "excerpt": "public class FirstAvailableAssignment implements AssignmentStrategy {"
-        },
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
-          "symbol": null,
-          "lines": [
-            39,
-            39
-          ],
-          "excerpt": "instance.setAssignmentStrategy(new FirstAvailableAssignment());"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ1"
-      ]
-    },
-    "C6": {
-      "id": "C6",
-      "task": "IT1",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "ReservationRegistry",
-      "symbol": "it.unina.reservations.entity.ReservationRegistry",
-      "responsibilities": [
-        "registry of Reservation entities: save, update and find",
-        "delegates storage to PersistenceManager"
-      ],
-      "attributes": [],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
-          "symbol": null,
-          "lines": [
-            14,
-            14
-          ],
-          "excerpt": "public class ReservationRegistry {"
-        },
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
-          "symbol": null,
-          "lines": [
-            34,
-            34
-          ],
-          "excerpt": "return persistenceManager.save(reservation);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ1"
-      ]
-    },
-    "C7": {
-      "id": "C7",
-      "task": "IT1",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "Seat",
-      "symbol": "it.unina.reservations.entity.Seat",
-      "responsibilities": [
-        "persistent entity for a seat that belongs to an Area",
-        "tells whether it is free for a date and time slot by querying ReservationRegistry"
-      ],
-      "attributes": [
-        {
-          "name": "id",
-          "type": "Long",
-          "key": true
-        },
-        {
-          "name": "area",
-          "type": "Area"
-        }
-      ],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
-          "symbol": null,
-          "lines": [
-            10,
-            11
-          ],
-          "excerpt": "@Entity\npublic class Seat {"
-        },
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
-          "symbol": null,
-          "lines": [
-            45,
-            45
-          ],
-          "excerpt": "ReservationRegistry registry = ReservationRegistry.getInstance();"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ1"
-      ]
-    },
-    "C8": {
-      "id": "C8",
-      "task": "IT1",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "PersistenceManager",
-      "symbol": "it.unina.reservations.database.PersistenceManager",
-      "responsibilities": [
-        "persistence layer class that saves, updates and queries entities through a JPA EntityManager"
-      ],
-      "attributes": [],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
-          "symbol": null,
-          "lines": [
-            16,
-            16
-          ],
-          "excerpt": "public class PersistenceManager {"
-        },
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
-          "symbol": null,
-          "lines": [
-            25,
-            25
-          ],
-          "excerpt": "em.persist(object);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ1"
-      ]
-    },
-    "C9": {
-      "id": "C9",
-      "task": "IT2",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "ReservationController",
-      "symbol": "it.unina.reservations.boundary.SpringBoot.ReservationController",
-      "responsibilities": [
-        "REST endpoints under /api/reservations for creating, cancelling and checking in reservations"
+        "REST entry point for creating, cancelling and checking in reservations"
       ],
       "attributes": [],
       "source": null,
@@ -2458,18 +2386,53 @@
       "support": "observed",
       "confidence": 0.9,
       "question_ids": [
-        "AQ2"
+        "AQ1"
       ]
     },
-    "C10": {
-      "id": "C10",
-      "task": "IT2",
+    "C2": {
+      "id": "C2",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "component",
+      "name": "ReservationSummary",
+      "symbol": "it.unina.reservations.boundary.Swing.ReservationSummary",
+      "responsibilities": [
+        "Swing wizard final step that confirms the reservation"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java",
+          "symbol": null,
+          "lines": [
+            98,
+            100
+          ],
+          "excerpt": "private void confirm() {\n        try {\n            ReservationDTO reservation = LibraryFacade.getInstance().makeReservation("
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C3": {
+      "id": "C3",
+      "task": "IT1",
       "kind": "element",
       "element_kind": "component",
       "name": "SeatSelection",
       "symbol": "it.unina.reservations.boundary.Swing.SeatSelection",
       "responsibilities": [
-        "Swing wizard step 4: shows seats and records the chosen seat or automatic assignment in WizardState"
+        "Swing screen where the user picks a seat or automatic assignment"
       ],
       "attributes": [],
       "source": null,
@@ -2493,53 +2456,18 @@
       "support": "observed",
       "confidence": 0.85,
       "question_ids": [
-        "AQ2"
+        "AQ1"
       ]
     },
-    "C11": {
-      "id": "C11",
-      "task": "IT2",
-      "kind": "element",
-      "element_kind": "component",
-      "name": "ReservationSummary",
-      "symbol": "it.unina.reservations.boundary.Swing.ReservationSummary",
-      "responsibilities": [
-        "Swing wizard step 5: confirms the reservation by calling LibraryFacade"
-      ],
-      "attributes": [],
-      "source": null,
-      "target": null,
-      "relation": null,
-      "label": null,
-      "order": null,
-      "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java",
-          "symbol": null,
-          "lines": [
-            98,
-            100
-          ],
-          "excerpt": "private void confirm() {\n        try {\n            ReservationDTO reservation = LibraryFacade.getInstance().makeReservation("
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ2"
-      ]
-    },
-    "C12": {
-      "id": "C12",
-      "task": "IT2",
+    "C4": {
+      "id": "C4",
+      "task": "IT1",
       "kind": "element",
       "element_kind": "component",
       "name": "LibraryFacade",
       "symbol": "it.unina.reservations.controller.LibraryFacade",
       "responsibilities": [
-        "singleton facade delegating requests to the managers"
+        "single facade delegating requests to the managers"
       ],
       "attributes": [],
       "source": null,
@@ -2555,26 +2483,26 @@
           "symbol": null,
           "lines": [
             13,
-            19
+            13
           ],
-          "excerpt": "public class LibraryFacade {\n\n    private static LibraryFacade instance;\n\n    private LibraryFacade() {}\n\n    public static LibraryFacade getInstance() {"
+          "excerpt": "public class LibraryFacade {"
         }
       ],
       "support": "observed",
       "confidence": 0.9,
       "question_ids": [
-        "AQ2"
+        "AQ1"
       ]
     },
-    "C13": {
-      "id": "C13",
-      "task": "IT2",
+    "C5": {
+      "id": "C5",
+      "task": "IT1",
       "kind": "element",
       "element_kind": "component",
       "name": "ReservationManager",
       "symbol": "it.unina.reservations.controller.ReservationManager",
       "responsibilities": [
-        "validates the request, picks a seat and saves the reservation"
+        "validates and creates reservations, assigns seats, cancels and checks in"
       ],
       "attributes": [],
       "source": null,
@@ -2589,27 +2517,27 @@
           "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
           "symbol": null,
           "lines": [
-            65,
-            65
+            24,
+            24
           ],
-          "excerpt": "public ReservationDTO makeReservation(ReservationRequestDTO request) {"
+          "excerpt": "public class ReservationManager {"
         }
       ],
       "support": "observed",
       "confidence": 0.9,
       "question_ids": [
-        "AQ2"
+        "AQ1"
       ]
     },
-    "C14": {
-      "id": "C14",
-      "task": "IT2",
+    "C6": {
+      "id": "C6",
+      "task": "IT1",
       "kind": "element",
       "element_kind": "component",
       "name": "StudyRoomManager",
       "symbol": "it.unina.reservations.controller.StudyRoomManager",
       "responsibilities": [
-        "provides room, time slot and room detail data for the wizard"
+        "manages study rooms, areas, time slots and availability"
       ],
       "attributes": [],
       "source": null,
@@ -2624,27 +2552,27 @@
           "file": "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java",
           "symbol": null,
           "lines": [
-            21,
-            22
+            17,
+            17
           ],
-          "excerpt": "private final StudyRoomRegistry roomRegistry = StudyRoomRegistry.getInstance();\n    private final ReservationRegistry reservationRegistry = ReservationRegistry.getInstance();"
+          "excerpt": "public class StudyRoomManager {"
         }
       ],
       "support": "observed",
-      "confidence": 0.8,
+      "confidence": 0.9,
       "question_ids": [
-        "AQ2"
+        "AQ1"
       ]
     },
-    "C15": {
-      "id": "C15",
-      "task": "IT2",
+    "C7": {
+      "id": "C7",
+      "task": "IT1",
       "kind": "element",
       "element_kind": "component",
       "name": "ReservationRegistry",
       "symbol": "it.unina.reservations.entity.ReservationRegistry",
       "responsibilities": [
-        "registry that stores and queries Reservation entities through PersistenceManager"
+        "stores and queries reservations through PersistenceManager"
       ],
       "attributes": [],
       "source": null,
@@ -2659,27 +2587,27 @@
           "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
           "symbol": null,
           "lines": [
-            19,
-            21
+            14,
+            14
           ],
-          "excerpt": "private ReservationRegistry() {\n        this.persistenceManager = new PersistenceManager();\n    }"
+          "excerpt": "public class ReservationRegistry {"
         }
       ],
       "support": "observed",
       "confidence": 0.9,
       "question_ids": [
-        "AQ2"
+        "AQ1"
       ]
     },
-    "C16": {
-      "id": "C16",
-      "task": "IT2",
+    "C8": {
+      "id": "C8",
+      "task": "IT1",
       "kind": "element",
       "element_kind": "component",
       "name": "PersistenceManager",
       "symbol": "it.unina.reservations.database.PersistenceManager",
       "responsibilities": [
-        "JPA gateway that saves, updates and queries entities within transactions"
+        "JPA persist, find, query and merge operations"
       ],
       "attributes": [],
       "source": null,
@@ -2694,21 +2622,21 @@
           "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
           "symbol": null,
           "lines": [
-            19,
-            25
+            16,
+            16
           ],
-          "excerpt": "public boolean save(Object object) {\n        EntityManager em = JpaUtil.getInstance().getEntityManager();\n\n        try {\n            em.getTransaction().begin();\n\n            em.persist(object);"
+          "excerpt": "public class PersistenceManager {"
         }
       ],
       "support": "observed",
       "confidence": 0.9,
       "question_ids": [
-        "AQ2"
+        "AQ1"
       ]
     },
-    "C17": {
-      "id": "C17",
-      "task": "IT2",
+    "C9": {
+      "id": "C9",
+      "task": "IT1",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -2734,14 +2662,15 @@
         }
       ],
       "support": "observed",
-      "confidence": 0.95,
+      "confidence": 0.9,
       "question_ids": [
+        "AQ1",
         "AQ2"
       ]
     },
-    "C18": {
-      "id": "C18",
-      "task": "IT2",
+    "C10": {
+      "id": "C10",
+      "task": "IT1",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -2767,14 +2696,15 @@
         }
       ],
       "support": "observed",
-      "confidence": 0.95,
+      "confidence": 0.9,
       "question_ids": [
+        "AQ1",
         "AQ2"
       ]
     },
-    "C19": {
-      "id": "C19",
-      "task": "IT2",
+    "C11": {
+      "id": "C11",
+      "task": "IT1",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -2800,14 +2730,15 @@
         }
       ],
       "support": "observed",
-      "confidence": 0.95,
+      "confidence": 0.9,
       "question_ids": [
+        "AQ1",
         "AQ2"
       ]
     },
-    "C20": {
-      "id": "C20",
-      "task": "IT2",
+    "C12": {
+      "id": "C12",
+      "task": "IT1",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -2835,12 +2766,13 @@
       "support": "observed",
       "confidence": 0.9,
       "question_ids": [
+        "AQ1",
         "AQ2"
       ]
     },
-    "C21": {
-      "id": "C21",
-      "task": "IT2",
+    "C13": {
+      "id": "C13",
+      "task": "IT1",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -2866,14 +2798,15 @@
         }
       ],
       "support": "observed",
-      "confidence": 0.95,
+      "confidence": 0.9,
       "question_ids": [
+        "AQ1",
         "AQ2"
       ]
     },
-    "C22": {
-      "id": "C22",
-      "task": "IT2",
+    "C14": {
+      "id": "C14",
+      "task": "IT1",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -2882,8 +2815,8 @@
       "attributes": [],
       "source": "it.unina.reservations.controller.ReservationManager",
       "target": "it.unina.reservations.entity.StudyRoomRegistry",
-      "relation": "reads",
-      "label": "findRoomById",
+      "relation": "uses",
+      "label": "findSeatById",
       "order": null,
       "scenario": null,
       "condition": null,
@@ -2892,21 +2825,56 @@
           "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
           "symbol": null,
           "lines": [
-            182,
-            182
+            109,
+            109
           ],
-          "excerpt": "room = roomRegistry.findRoomById(roomId);"
+          "excerpt": "Seat seat = roomRegistry.findSeatById(seatId);"
         }
       ],
       "support": "observed",
       "confidence": 0.85,
       "question_ids": [
+        "AQ1",
         "AQ2"
       ]
     },
-    "C23": {
-      "id": "C23",
-      "task": "IT2",
+    "C15": {
+      "id": "C15",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.StudyRoomManager",
+      "target": "it.unina.reservations.entity.StudyRoomRegistry",
+      "relation": "uses",
+      "label": "saveRoom",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java",
+          "symbol": null,
+          "lines": [
+            60,
+            60
+          ],
+          "excerpt": "boolean success = roomRegistry.saveRoom(room);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.85,
+      "question_ids": [
+        "AQ1",
+        "AQ2"
+      ]
+    },
+    "C16": {
+      "id": "C16",
+      "task": "IT1",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -2916,174 +2884,9 @@
       "source": "it.unina.reservations.entity.ReservationRegistry",
       "target": "it.unina.reservations.database.PersistenceManager",
       "relation": "writes",
-      "label": "save(Reservation)",
+      "label": "save reservation",
       "order": null,
       "scenario": null,
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
-          "symbol": null,
-          "lines": [
-            33,
-            34
-          ],
-          "excerpt": "public boolean saveReservation(Reservation reservation) {\n        return persistenceManager.save(reservation);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.95,
-      "question_ids": [
-        "AQ2"
-      ]
-    },
-    "C24": {
-      "id": "C24",
-      "task": "IT2",
-      "kind": "interaction",
-      "element_kind": null,
-      "name": null,
-      "symbol": null,
-      "responsibilities": [],
-      "attributes": [],
-      "source": "it.unina.reservations.boundary.Swing.ReservationSummary",
-      "target": "it.unina.reservations.controller.LibraryFacade",
-      "relation": null,
-      "label": "makeReservation(ReservationRequestDTO)",
-      "order": 1,
-      "scenario": "make seat reservation",
-      "condition": "user confirms in the Swing wizard",
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java",
-          "symbol": null,
-          "lines": [
-            100,
-            100
-          ],
-          "excerpt": "ReservationDTO reservation = LibraryFacade.getInstance().makeReservation("
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ2"
-      ]
-    },
-    "C25": {
-      "id": "C25",
-      "task": "IT2",
-      "kind": "interaction",
-      "element_kind": null,
-      "name": null,
-      "symbol": null,
-      "responsibilities": [],
-      "attributes": [],
-      "source": "it.unina.reservations.controller.LibraryFacade",
-      "target": "it.unina.reservations.controller.ReservationManager",
-      "relation": null,
-      "label": "makeReservation(request)",
-      "order": 2,
-      "scenario": "make seat reservation",
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
-          "symbol": null,
-          "lines": [
-            118,
-            118
-          ],
-          "excerpt": "return ReservationManager.getInstance().makeReservation(request);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ2"
-      ]
-    },
-    "C26": {
-      "id": "C26",
-      "task": "IT2",
-      "kind": "interaction",
-      "element_kind": null,
-      "name": null,
-      "symbol": null,
-      "responsibilities": [],
-      "attributes": [],
-      "source": "it.unina.reservations.controller.ReservationManager",
-      "target": "it.unina.reservations.entity.StudyRoomRegistry",
-      "relation": null,
-      "label": "findRoomById(roomId)",
-      "order": 3,
-      "scenario": "make seat reservation",
-      "condition": null,
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
-          "symbol": null,
-          "lines": [
-            182,
-            182
-          ],
-          "excerpt": "room = roomRegistry.findRoomById(roomId);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.8,
-      "question_ids": [
-        "AQ2"
-      ]
-    },
-    "C27": {
-      "id": "C27",
-      "task": "IT2",
-      "kind": "interaction",
-      "element_kind": null,
-      "name": null,
-      "symbol": null,
-      "responsibilities": [],
-      "attributes": [],
-      "source": "it.unina.reservations.controller.ReservationManager",
-      "target": "it.unina.reservations.entity.ReservationRegistry",
-      "relation": null,
-      "label": "saveReservation(reservation)",
-      "order": 4,
-      "scenario": "make seat reservation",
-      "condition": "a seat is available and the student has no conflicting reservation",
-      "evidence": [
-        {
-          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
-          "symbol": null,
-          "lines": [
-            134,
-            134
-          ],
-          "excerpt": "boolean success = reservationRegistry.saveReservation(reservation);"
-        }
-      ],
-      "support": "observed",
-      "confidence": 0.9,
-      "question_ids": [
-        "AQ2"
-      ]
-    },
-    "C28": {
-      "id": "C28",
-      "task": "IT2",
-      "kind": "interaction",
-      "element_kind": null,
-      "name": null,
-      "symbol": null,
-      "responsibilities": [],
-      "attributes": [],
-      "source": "it.unina.reservations.entity.ReservationRegistry",
-      "target": "it.unina.reservations.database.PersistenceManager",
-      "relation": null,
-      "label": "save(reservation)",
-      "order": 5,
-      "scenario": "make seat reservation",
       "condition": null,
       "evidence": [
         {
@@ -3099,12 +2902,183 @@
       "support": "observed",
       "confidence": 0.9,
       "question_ids": [
+        "AQ1",
         "AQ2"
       ]
     },
-    "C29": {
-      "id": "C29",
-      "task": "IT3",
+    "C17": {
+      "id": "C17",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.entity.ReservationRegistry",
+      "target": "it.unina.reservations.database.PersistenceManager",
+      "relation": "reads",
+      "label": "find reservations",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+          "symbol": null,
+          "lines": [
+            48,
+            48
+          ],
+          "excerpt": "return persistenceManager.findById(Reservation.class, id);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1",
+        "AQ2"
+      ]
+    },
+    "C18": {
+      "id": "C18",
+      "task": "IT1",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.boundary.SpringBoot.ReservationController",
+      "target": "it.unina.reservations.controller.LibraryFacade",
+      "relation": null,
+      "label": "makeReservation(ReservationRequestDTO)",
+      "order": 1,
+      "scenario": "make reservation",
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
+          "symbol": null,
+          "lines": [
+            29,
+            30
+          ],
+          "excerpt": "return LibraryFacade.getInstance().makeReservation(\n                new ReservationRequestDTO(roomId, areaId, seatId, date, timeSlotId, studentId));"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1",
+        "AQ2"
+      ]
+    },
+    "C19": {
+      "id": "C19",
+      "task": "IT1",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.LibraryFacade",
+      "target": "it.unina.reservations.controller.ReservationManager",
+      "relation": null,
+      "label": "makeReservation(request)",
+      "order": 2,
+      "scenario": "make reservation",
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+          "symbol": null,
+          "lines": [
+            118,
+            118
+          ],
+          "excerpt": "return ReservationManager.getInstance().makeReservation(request);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1",
+        "AQ2"
+      ]
+    },
+    "C20": {
+      "id": "C20",
+      "task": "IT1",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.ReservationRegistry",
+      "relation": null,
+      "label": "saveReservation(reservation)",
+      "order": 3,
+      "scenario": "make reservation",
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            134,
+            134
+          ],
+          "excerpt": "boolean success = reservationRegistry.saveReservation(reservation);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1",
+        "AQ2"
+      ]
+    },
+    "C21": {
+      "id": "C21",
+      "task": "IT1",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.entity.ReservationRegistry",
+      "target": "it.unina.reservations.database.PersistenceManager",
+      "relation": null,
+      "label": "save(reservation)",
+      "order": 4,
+      "scenario": "make reservation",
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+          "symbol": null,
+          "lines": [
+            34,
+            34
+          ],
+          "excerpt": "return persistenceManager.save(reservation);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1",
+        "AQ2"
+      ]
+    },
+    "C22": {
+      "id": "C22",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3135,9 +3109,9 @@
         "AQ3"
       ]
     },
-    "C30": {
-      "id": "C30",
-      "task": "IT3",
+    "C23": {
+      "id": "C23",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3168,9 +3142,9 @@
         "AQ3"
       ]
     },
-    "C31": {
-      "id": "C31",
-      "task": "IT3",
+    "C24": {
+      "id": "C24",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3201,9 +3175,9 @@
         "AQ3"
       ]
     },
-    "C32": {
-      "id": "C32",
-      "task": "IT3",
+    "C25": {
+      "id": "C25",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3234,9 +3208,9 @@
         "AQ3"
       ]
     },
-    "C33": {
-      "id": "C33",
-      "task": "IT3",
+    "C26": {
+      "id": "C26",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3267,9 +3241,9 @@
         "AQ3"
       ]
     },
-    "C34": {
-      "id": "C34",
-      "task": "IT3",
+    "C27": {
+      "id": "C27",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3309,9 +3283,9 @@
         "AQ3"
       ]
     },
-    "C35": {
-      "id": "C35",
-      "task": "IT3",
+    "C28": {
+      "id": "C28",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3351,9 +3325,9 @@
         "AQ3"
       ]
     },
-    "C36": {
-      "id": "C36",
-      "task": "IT3",
+    "C29": {
+      "id": "C29",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3384,9 +3358,9 @@
         "AQ3"
       ]
     },
-    "C37": {
-      "id": "C37",
-      "task": "IT3",
+    "C30": {
+      "id": "C30",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3417,9 +3391,9 @@
         "AQ3"
       ]
     },
-    "C38": {
-      "id": "C38",
-      "task": "IT3",
+    "C31": {
+      "id": "C31",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3450,9 +3424,9 @@
         "AQ3"
       ]
     },
-    "C39": {
-      "id": "C39",
-      "task": "IT3",
+    "C32": {
+      "id": "C32",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3483,9 +3457,9 @@
         "AQ3"
       ]
     },
-    "C40": {
-      "id": "C40",
-      "task": "IT3",
+    "C33": {
+      "id": "C33",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3516,9 +3490,9 @@
         "AQ3"
       ]
     },
-    "C41": {
-      "id": "C41",
-      "task": "IT3",
+    "C34": {
+      "id": "C34",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3549,9 +3523,9 @@
         "AQ3"
       ]
     },
-    "C42": {
-      "id": "C42",
-      "task": "IT3",
+    "C35": {
+      "id": "C35",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3582,9 +3556,9 @@
         "AQ3"
       ]
     },
-    "C43": {
-      "id": "C43",
-      "task": "IT3",
+    "C36": {
+      "id": "C36",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3624,9 +3598,9 @@
         "AQ3"
       ]
     },
-    "C44": {
-      "id": "C44",
-      "task": "IT3",
+    "C37": {
+      "id": "C37",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3657,9 +3631,9 @@
         "AQ3"
       ]
     },
-    "C45": {
-      "id": "C45",
-      "task": "IT3",
+    "C38": {
+      "id": "C38",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3690,9 +3664,9 @@
         "AQ3"
       ]
     },
-    "C46": {
-      "id": "C46",
-      "task": "IT3",
+    "C39": {
+      "id": "C39",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3723,9 +3697,9 @@
         "AQ3"
       ]
     },
-    "C47": {
-      "id": "C47",
-      "task": "IT3",
+    "C40": {
+      "id": "C40",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3756,9 +3730,9 @@
         "AQ3"
       ]
     },
-    "C48": {
-      "id": "C48",
-      "task": "IT3",
+    "C41": {
+      "id": "C41",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3789,9 +3763,9 @@
         "AQ3"
       ]
     },
-    "C49": {
-      "id": "C49",
-      "task": "IT3",
+    "C42": {
+      "id": "C42",
+      "task": "IT2",
       "kind": "relation",
       "element_kind": null,
       "name": null,
@@ -3822,9 +3796,9 @@
         "AQ3"
       ]
     },
-    "C50": {
-      "id": "C50",
-      "task": "IT3",
+    "C43": {
+      "id": "C43",
+      "task": "IT2",
       "kind": "element",
       "element_kind": "component",
       "name": "ReservationController",
@@ -3857,9 +3831,9 @@
         "AQ3"
       ]
     },
-    "C51": {
-      "id": "C51",
-      "task": "IT3",
+    "C44": {
+      "id": "C44",
+      "task": "IT2",
       "kind": "element",
       "element_kind": "component",
       "name": "LibraryFacade",
@@ -3892,9 +3866,9 @@
         "AQ3"
       ]
     },
-    "C52": {
-      "id": "C52",
-      "task": "IT3",
+    "C45": {
+      "id": "C45",
+      "task": "IT2",
       "kind": "element",
       "element_kind": "component",
       "name": "ReservationManager",
@@ -3927,9 +3901,9 @@
         "AQ3"
       ]
     },
-    "C53": {
-      "id": "C53",
-      "task": "IT3",
+    "C46": {
+      "id": "C46",
+      "task": "IT2",
       "kind": "element",
       "element_kind": "component",
       "name": "SeatSelection",
@@ -3962,9 +3936,9 @@
         "AQ3"
       ]
     },
-    "C54": {
-      "id": "C54",
-      "task": "IT3",
+    "C47": {
+      "id": "C47",
+      "task": "IT2",
       "kind": "element",
       "element_kind": "component",
       "name": "ReservationRegistry",
@@ -3997,9 +3971,9 @@
         "AQ3"
       ]
     },
-    "C55": {
-      "id": "C55",
-      "task": "IT3",
+    "C48": {
+      "id": "C48",
+      "task": "IT2",
       "kind": "element",
       "element_kind": "component",
       "name": "Seat",
@@ -4031,53 +4005,490 @@
       "question_ids": [
         "AQ3"
       ]
+    },
+    "C49": {
+      "id": "C49",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.boundary.SpringBoot.ReservationController",
+      "target": "it.unina.reservations.controller.LibraryFacade",
+      "relation": null,
+      "label": "makeReservation(ReservationRequestDTO)",
+      "order": 1,
+      "scenario": "make seat reservation",
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
+          "symbol": null,
+          "lines": [
+            29,
+            30
+          ],
+          "excerpt": "return LibraryFacade.getInstance().makeReservation("
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.95,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C50": {
+      "id": "C50",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.LibraryFacade",
+      "target": "it.unina.reservations.controller.ReservationManager",
+      "relation": null,
+      "label": "makeReservation(request)",
+      "order": 2,
+      "scenario": "make seat reservation",
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+          "symbol": null,
+          "lines": [
+            118,
+            118
+          ],
+          "excerpt": "return ReservationManager.getInstance().makeReservation(request);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.95,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C51": {
+      "id": "C51",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.UserRegistry",
+      "relation": null,
+      "label": "findStudentById(studentId)",
+      "order": 3,
+      "scenario": "make seat reservation",
+      "condition": "student is null -> IllegalArgumentException(\"Student not found.\")",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            52,
+            54
+          ],
+          "excerpt": "Student student = userRegistry.findStudentById(studentId);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C52": {
+      "id": "C52",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.StudyRoomRegistry",
+      "relation": null,
+      "label": "findRoomById(roomId)",
+      "order": 4,
+      "scenario": "make seat reservation",
+      "condition": "room missing, inactive or closed on date -> IllegalArgumentException",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            182,
+            191
+          ],
+          "excerpt": "room = roomRegistry.findRoomById(roomId);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C53": {
+      "id": "C53",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.StudyRoomRegistry",
+      "relation": null,
+      "label": "findAreaById(areaId)",
+      "order": 5,
+      "scenario": "make seat reservation",
+      "condition": "area null or not in selected room -> IllegalArgumentException(\"The area is not in the selected room\")",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            165,
+            168
+          ],
+          "excerpt": "Area area = roomRegistry.findAreaById(areaId);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C54": {
+      "id": "C54",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.StudyRoom",
+      "relation": null,
+      "label": "getScheduledTimeSlots(date)",
+      "order": 6,
+      "scenario": "make seat reservation",
+      "condition": "date in the past, or slot not found/already started -> IllegalArgumentException(\"The selected time slot is not available\")",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            366,
+            374
+          ],
+          "excerpt": "for (TimeSlot f : room.getScheduledTimeSlots(date)){"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C55": {
+      "id": "C55",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.StudyRoomRegistry",
+      "relation": null,
+      "label": "findSeatById(seatId)",
+      "order": 7,
+      "scenario": "make seat reservation",
+      "condition": "seatId != 0 and seat not found or not in area -> IllegalArgumentException",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            108,
+            115
+          ],
+          "excerpt": "Seat seat = roomRegistry.findSeatById(seatId);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C56": {
+      "id": "C56",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.Student",
+      "relation": null,
+      "label": "hasActiveOrConfirmedReservationForDateAndSlot(date, label)",
+      "order": 8,
+      "scenario": "make seat reservation",
+      "condition": "duplicate reservation -> IllegalArgumentException(\"You already have an active or confirmed reservation...\")",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            152,
+            153
+          ],
+          "excerpt": "if(student.hasActiveOrConfirmedReservationForDateAndSlot(date, timeSlot.getLabel())){"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C57": {
+      "id": "C57",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.Area",
+      "relation": null,
+      "label": "getAvailableSeats(date, timeSlot)",
+      "order": 9,
+      "scenario": "make seat reservation",
+      "condition": "no available seats -> IllegalArgumentException(\"No seats are available in the selected area\")",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            144,
+            146
+          ],
+          "excerpt": "List<Seat> available = area.getAvailableSeats(date, timeSlot);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C58": {
+      "id": "C58",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.Seat",
+      "relation": null,
+      "label": "isAvailable(date, timeSlot)",
+      "order": 10,
+      "scenario": "make seat reservation",
+      "condition": "seatId > 0 and seat taken -> IllegalStateException(\"The selected seat is no longer available\")",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            394,
+            395
+          ],
+          "excerpt": "if (!selected.isAvailable(date, timeSlot)) {"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C59": {
+      "id": "C59",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.controller.strategy.AssignmentStrategy",
+      "relation": null,
+      "label": "selectSeat(available)",
+      "order": 11,
+      "scenario": "make seat reservation",
+      "condition": "seatId == 0 (automatic assignment)",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            400,
+            400
+          ],
+          "excerpt": "return assignmentStrategy.selectSeat(available);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C60": {
+      "id": "C60",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.controller.ReservationManager",
+      "target": "it.unina.reservations.entity.ReservationRegistry",
+      "relation": null,
+      "label": "saveReservation(reservation)",
+      "order": 12,
+      "scenario": "make seat reservation",
+      "condition": "save returns false -> RuntimeException(\"Server error: the reservation could not be saved...\")",
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+          "symbol": null,
+          "lines": [
+            134,
+            136
+          ],
+          "excerpt": "boolean success = reservationRegistry.saveReservation(reservation);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C61": {
+      "id": "C61",
+      "task": "IT3",
+      "kind": "interaction",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.entity.ReservationRegistry",
+      "target": "it.unina.reservations.database.PersistenceManager",
+      "relation": null,
+      "label": "save(reservation)",
+      "order": 13,
+      "scenario": "make seat reservation",
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+          "symbol": null,
+          "lines": [
+            33,
+            35
+          ],
+          "excerpt": "return persistenceManager.save(reservation);"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.95,
+      "question_ids": [
+        "AQ4"
+      ]
+    },
+    "C62": {
+      "id": "C62",
+      "task": "IT3",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "it.unina.reservations.database.PersistenceManager",
+      "target": "it.unina.reservations.database.PersistenceManager",
+      "relation": "return",
+      "label": "true on commit; false after rollback on RuntimeException",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+          "symbol": null,
+          "lines": [
+            25,
+            38
+          ],
+          "excerpt": "em.persist(object);"
+        }
+      ],
+      "support": "inferred",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ4"
+      ]
     }
   },
-  "rejected_claims": [
-    {
-      "task": "IT2",
-      "claim": {
-        "kind": "element",
-        "element_kind": "interface",
-        "name": "POST /api/reservations/create",
-        "answers": [
-          "AQ2"
-        ],
-        "responsibilities": [
-          "accepts roomId, areaId, seatId, date, timeSlotId and studentId as request parameters and returns a ReservationDTO"
-        ],
-        "evidence": [
-          {
-            "file": "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
-            "lines": [
-              21,
-              22
-            ],
-            "excerpt": "@PostMapping(\"/create\")\n    public ReservationDTO makeReservation("
-          }
-        ],
-        "confidence": 0.85
-      },
-      "reason": "element 'POST /api/reservations/create' is not a symbol in the repository"
-    }
-  ],
+  "rejected_claims": [],
   "component_of": {
     "it.unina.reservations.boundary.SpringBoot.ReservationController": "cmp:it.unina.reservations.boundary.SpringBoot.ReservationController",
+    "it.unina.reservations.boundary.Swing.ReservationSummary": "cmp:it.unina.reservations.boundary.Swing.ReservationSummary",
     "it.unina.reservations.boundary.Swing.SeatSelection": "cmp:it.unina.reservations.boundary.Swing.SeatSelection",
     "it.unina.reservations.controller.LibraryFacade": "cmp:it.unina.reservations.controller.LibraryFacade",
     "it.unina.reservations.controller.ReservationManager": "cmp:it.unina.reservations.controller.ReservationManager",
-    "it.unina.reservations.controller.strategy.FirstAvailableAssignment": "cmp:it.unina.reservations.controller.strategy.FirstAvailableAssignment",
-    "it.unina.reservations.entity.ReservationRegistry": "cmp:it.unina.reservations.entity.ReservationRegistry",
-    "it.unina.reservations.entity.Seat": "cmp:it.unina.reservations.entity.Seat",
-    "it.unina.reservations.database.PersistenceManager": "cmp:it.unina.reservations.database.PersistenceManager",
-    "it.unina.reservations.boundary.Swing.ReservationSummary": "cmp:it.unina.reservations.boundary.Swing.ReservationSummary",
     "it.unina.reservations.controller.StudyRoomManager": "cmp:it.unina.reservations.controller.StudyRoomManager",
+    "it.unina.reservations.entity.ReservationRegistry": "cmp:it.unina.reservations.entity.ReservationRegistry",
+    "it.unina.reservations.database.PersistenceManager": "cmp:it.unina.reservations.database.PersistenceManager",
     "it.unina.reservations.entity.StudyRoomRegistry": "cmp:it.unina.reservations.entity.StudyRoomRegistry",
     "it.unina.reservations.entity.UserRegistry": "cmp:it.unina.reservations.entity.UserRegistry",
+    "it.unina.reservations.entity.Seat": "cmp:it.unina.reservations.entity.Seat",
     "it.unina.reservations.entity.Area": "cmp:it.unina.reservations.entity.Area",
     "it.unina.reservations.entity.Reservation": "cmp:it.unina.reservations.entity.Reservation",
     "it.unina.reservations.boundary.Swing.WizardState": "cmp:it.unina.reservations.boundary.Swing.WizardState",
     "it.unina.reservations.boundary.Swing.AreaSelection": "cmp:it.unina.reservations.boundary.Swing.AreaSelection",
+    "it.unina.reservations.entity.StudyRoom": "cmp:it.unina.reservations.entity.StudyRoom",
+    "it.unina.reservations.entity.Student": "cmp:it.unina.reservations.entity.Student",
+    "it.unina.reservations.controller.strategy.AssignmentStrategy": "cmp:it.unina.reservations.controller.strategy.AssignmentStrategy",
     "it.unina.reservations.dto.ReservationRequestDTO": "cmp:it.unina.reservations.dto.ReservationRequestDTO",
     "it.unina.reservations.dto.ReservationDTO": "cmp:it.unina.reservations.dto.ReservationDTO",
     "it.unina.reservations.dto.SeatDTO": "cmp:it.unina.reservations.dto.SeatDTO",
@@ -4107,6 +4518,22 @@
         "cmp:it.unina.reservations.entity.Seat"
       ],
       "note": ""
+    },
+    {
+      "rule": "entity-realized-by-component",
+      "elements": [
+        "ent:it.unina.reservations.entity.Student",
+        "cmp:it.unina.reservations.entity.Student"
+      ],
+      "note": ""
+    },
+    {
+      "rule": "entity-realized-by-component",
+      "elements": [
+        "ent:it.unina.reservations.entity.StudyRoom",
+        "cmp:it.unina.reservations.entity.StudyRoom"
+      ],
+      "note": ""
     }
   ],
   "reflexion": {
@@ -4129,6 +4556,7 @@
       "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-area",
       "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-seat",
       "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-reservation",
+      "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-studyroomregistry",
       "rel:cmp-it-unina-reservations-entity-reservationregistry:uses:cmp-it-unina-reservations-database-persistencemanager",
       "rel:cmp-it-unina-reservations-entity-reservationregistry:uses:cmp-it-unina-reservations-entity-reservation",
       "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-area",
@@ -4144,29 +4572,40 @@
       "rel:cmp-it-unina-reservations-boundary-swing-reservationsummary:uses:cmp-it-unina-reservations-dto-reservationrequestdto",
       "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-dto-reservationrequestdto",
       "rel:cmp-it-unina-reservations-controller-libraryfacade:uses:cmp-it-unina-reservations-dto-reservationdto",
-      "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-strategy-firstavailableassignment",
+      "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-controller-strategy-assignmentstrategy",
+      "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-student",
       "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-dto-reservationdto",
-      "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-studyroomregistry",
+      "rel:cmp-it-unina-reservations-controller-reservationmanager:uses:cmp-it-unina-reservations-entity-studyroom",
       "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-reservationregistry",
+      "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-studyroom",
       "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-reservation",
       "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-dto-areadetaildto",
       "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-area",
       "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-entity-seat",
       "rel:cmp-it-unina-reservations-controller-studyroommanager:uses:cmp-it-unina-reservations-dto-seatdto",
-      "rel:cmp-it-unina-reservations-controller-strategy-firstavailableassignment:uses:cmp-it-unina-reservations-entity-seat",
+      "rel:cmp-it-unina-reservations-controller-strategy-assignmentstrategy:uses:cmp-it-unina-reservations-entity-seat",
       "rel:cmp-it-unina-reservations-dto-areadetaildto:uses:cmp-it-unina-reservations-dto-seatdto",
+      "rel:cmp-it-unina-reservations-entity-area:uses:cmp-it-unina-reservations-entity-studyroom",
       "rel:cmp-it-unina-reservations-entity-area:uses:cmp-it-unina-reservations-entity-seat",
       "rel:cmp-it-unina-reservations-entity-area:uses:cmp-it-unina-reservations-entity-studyroomregistry",
+      "rel:cmp-it-unina-reservations-entity-reservation:uses:cmp-it-unina-reservations-entity-student",
       "rel:cmp-it-unina-reservations-entity-reservation:uses:cmp-it-unina-reservations-entity-seat",
+      "rel:cmp-it-unina-reservations-entity-seat:uses:cmp-it-unina-reservations-entity-studyroom",
+      "rel:cmp-it-unina-reservations-entity-student:uses:cmp-it-unina-reservations-entity-reservation",
+      "rel:cmp-it-unina-reservations-entity-student:uses:cmp-it-unina-reservations-entity-reservationregistry",
+      "rel:cmp-it-unina-reservations-entity-studyroom:uses:cmp-it-unina-reservations-entity-area",
+      "rel:cmp-it-unina-reservations-entity-studyroom:uses:cmp-it-unina-reservations-entity-studyroomregistry",
       "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-database-persistencemanager",
+      "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-entity-studyroom",
       "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-entity-area",
       "rel:cmp-it-unina-reservations-entity-studyroomregistry:uses:cmp-it-unina-reservations-entity-seat",
-      "rel:cmp-it-unina-reservations-entity-userregistry:uses:cmp-it-unina-reservations-database-persistencemanager"
+      "rel:cmp-it-unina-reservations-entity-userregistry:uses:cmp-it-unina-reservations-database-persistencemanager",
+      "rel:cmp-it-unina-reservations-entity-userregistry:uses:cmp-it-unina-reservations-entity-student"
     ]
   },
   "notes": [
-    "IT1: 8 claims, read 8 files; read 4",
-    "IT2: 21 claims, read 8 files; read 3, search 1",
-    "IT3: 27 claims, read 6 files; read 3, search 1, symbol 1"
+    "IT1: 21 claims, read 8 files; read 3, search 1",
+    "IT2: 27 claims, read 6 files; read 3, search 1, symbol 1",
+    "IT3: 14 claims, read 7 files; read 7, search 2"
   ]
 }

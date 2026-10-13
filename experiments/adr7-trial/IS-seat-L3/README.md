@@ -12,50 +12,50 @@
 
 | View | Viewpoint | Decision | Verdict | Elements | Notation |
 |---|---|---|---|---|---|
-| V1-decomposition | Decomposition (2.1 Decomposition Style) | confirm | pass_with_limitations | 9 | plantuml |
-| V2-client-server | Client-Server (4.3.1 Client-Server Style) | confirm | pass_with_limitations | 9 | plantuml |
-| V3-uses | Uses (2.2 Uses Style) | confirm | pass_with_limitations | 9 | plantuml |
+| V1-client-server | Client-Server (4.3.1 Client-Server Style) | confirm | pass_with_limitations | 8 | plantuml |
+| V2-uses | Uses (2.2 Uses Style) | confirm | pass_with_limitations | 8 | plantuml |
+| V3-sequence | Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) | confirm | pass_with_limitations | 11 | plantuml |
 
 ## Rationale
 
-- decomposition: Decomposition (2.1 Decomposition Style) covers decomposition; combined with layered (V&B 6.6)
-- client-server: Client-Server (4.3.1 Client-Server Style) covers collaboration, dependencies; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6)
+- client-server: Client-Server (4.3.1 Client-Server Style) covers decomposition, collaboration, dependencies; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6)
 - uses: Uses (2.2 Uses Style) covers dependencies, change-impact; combined with layered (V&B 6.6)
+- sequence: Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) covers interaction-order; combined with layered (V&B 6.6)
 
 ## Limitations and declared gaps
 
 - need not covered: boundary
-- need not covered: interaction-order
-- V1-decomposition: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
-- V1-decomposition: split of Application services not applied: the view would exceed 9 parts
-- V2-client-server: not drawn: Reservation and room storage -> Reservation and seat model: 39 code dependencies (implied: storage returns domain objects)
-- V2-client-server: not drawn: Reminder scheduler -> Application services: 2 code dependencies (weak)
-- V2-client-server: not drawn: Application services -> External email notification adapters: 1 code dependencies (weak)
-- V2-client-server: not drawn: External email notification adapters -> Application services: 1 code dependencies (weak, against the layering)
-- V2-client-server: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
-- V2-client-server: split of Application services not applied: the view would exceed 9 parts
-- V3-uses: not drawn: Reservation storage -> Reservation and seat model: 39 code dependencies (implied: storage returns domain objects)
-- V3-uses: not drawn: Reservation reminder scheduler -> Application services: 2 code dependencies (weak)
-- V3-uses: not drawn: Application services -> Email notification gateway: 1 code dependencies (weak)
-- V3-uses: not drawn: Email notification gateway -> Application services: 1 code dependencies (weak, against the layering)
-- V3-uses: not drawn: Reservation storage -> MySQL database: not affected by a change to Application services
-- V3-uses: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
-- V3-uses: split of Application services not applied: the view would exceed 9 parts
+- V1-client-server: not drawn: Study room and user storage -> Reservation domain model: 26 code dependencies (implied: storage returns domain objects)
+- V1-client-server: not drawn: Reservation storage -> Reservation domain model: 13 code dependencies (implied: storage returns domain objects)
+- V1-client-server: not drawn: Notification and reminder scheduler -> Booking rules service: 2 code dependencies (weak)
+- V1-client-server: parts follow the request's subjects: handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, interacting with external services such as the notification service
+- V1-client-server: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
+- V2-uses: not drawn: Study room and user storage -> Reservation domain model: 26 code dependencies (implied: storage returns domain objects)
+- V2-uses: not drawn: Reservation storage -> Reservation domain model: 13 code dependencies (implied: storage returns domain objects)
+- V2-uses: not drawn: Notification and reminder scheduler -> Booking rules service: 2 code dependencies (weak)
+- V2-uses: not drawn: Notification and reminder scheduler -> Reservation domain model: not affected by a change to Booking rules service
+- V2-uses: not drawn: Study room and user storage -> Reservation storage: not affected by a change to Booking rules service
+- V2-uses: not drawn: Reservation storage -> Study room and user storage: not affected by a change to Booking rules service
+- V2-uses: not drawn: Notification and reminder scheduler -> Reservation storage: not affected by a change to Booking rules service
+- V2-uses: not drawn: Reservation storage -> MySQL database: not affected by a change to Booking rules service
+- V2-uses: parts follow the request's subjects: handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, interacting with external services such as the notification service
+- V2-uses: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
+- V3-sequence: one scenario per view; also recovered: reminder flow, cancel reservation, check in, send notification, expire or complete reservations
 
 ## Evidence
 
-- 59 verified claims, 0 rejected; 42 model elements; 73 relations; 1 scenarios
-- Component relations, code vs claims: 31 agree, 34 only in code (possible omissions), 0 only claimed (no code edge)
+- 68 verified claims, 1 rejected; 40 model elements; 71 relations; 6 scenarios
+- Component relations, code vs claims: 28 agree, 35 only in code (possible omissions), 0 only claimed (no code edge)
 
 ## Tokens, time and cost
 
-Total: 25 calls, 50 input + 19,462 cache-read + 291,448 cache-write + 19,565 output tokens, 261.3 s, **$0.9283**
+Total: 26 calls, 52 input + 0 cache-read + 321,212 cache-write + 20,365 output tokens, 202.9 s, **$1.0068**
 
 | Phase | Calls | Input | Output | Seconds | Cost (USD) |
 |---|---|---|---|---|---|
 | phase1 (replayed) | 1 | 3,971 | 1,016 | 8.4 | 0.0201 |
-| phase4 | 3 | 11,309 | 751 | 15.8 | 0.0358 |
-| phase5 | 18 | 287,907 | 15,645 | 215.7 | 0.8314 |
-| phase5c | 3 | 7,773 | 2,153 | 21.4 | 0.0410 |
+| phase4 | 3 | 11,583 | 777 | 14.3 | 0.0367 |
+| phase5 | 21 | 303,249 | 18,247 | 175.1 | 0.9406 |
+| phase5c | 1 | 2,461 | 325 | 5.1 | 0.0094 |
 
 Prices: https://platform.claude.com/docs/en/about-claude/pricing (read 2026-10-09)

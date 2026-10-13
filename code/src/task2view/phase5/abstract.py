@@ -171,9 +171,24 @@ def _subject_counts(aem: EvidenceModel, subjects: dict[str, set[str]]) -> dict[s
 def _split_by_subjects(view: ArchView, card: RepositoryCard, aem: EvidenceModel, subjects: dict[str, set[str]],
                        role: dict[str, str], max_parts: int) -> None:
     """A detailed request lists what it wants to understand; give each subject its own part where the
-    evidence puts it in different classes (services first, then API, UI, integration, data access)."""
+    evidence puts it in different classes (services first, then API, UI, integration, data access).
+    To make room, client parts that answer no subject become one part; afterwards, application parts
+    answering the same subject are combined. If the view still exceeds ``max_parts``, it is left as it
+    was (each part keeps the subjects it answers as a label)."""
+    before = view.model_copy(deep=True)
+    mark_answers(view, aem, subjects)
+    clients = [p for p in view.parts if p.role in {"web_client", "ui"} and not p.answers]
+    if len(clients) >= 2:
+        merged = Part(id="clients", name="Clients", role="ui",
+                      technology=", ".join(dict.fromkeys(p.technology for p in clients if p.technology)),
+                      members=[m for p in clients for m in p.members], files=[f for p in clients for f in p.files],
+                      examples=[p.name for p in clients])
+        at = view.parts.index(clients[0])
+        view.parts = [p for p in view.parts if p not in clients]
+        view.parts.insert(at, merged)
     counts = _subject_counts(aem, subjects)
     order = list(subjects)
+    split_any = False
     for r in ("service", "api", "ui", "integration", "data_access"):
         part = next((p for p in view.parts if p.id == r), None)
         if part is None:
@@ -186,20 +201,44 @@ def _split_by_subjects(view: ArchView, card: RepositoryCard, aem: EvidenceModel,
                 groups[best].append(m)
             else:
                 rest.append(m)
-        if len(groups) < 2 or len(view.parts) - 1 + len(groups) > max_parts:
+        if len(groups) < 2:
             continue
         largest = max(groups, key=lambda s: len(groups[s]))
         groups[largest] += rest  # helpers and unclaimed classes stay with the largest group
         at = view.parts.index(part)
-        new = []
-        for k, s in enumerate(sorted(groups, key=order.index)):
-            words = s.split()
-            name = " ".join(words[:5])
-            ms = groups[s]
-            new.append(Part(id=f"{r}-{k + 1}", name=name[:1].upper() + name[1:], role=r, technology=part.technology,
-                            members=ms, examples=[card.symbols[m].name for m in ms if role.get(m) != "helper"][:3]))
-        view.parts[at:at + 1] = new
-        view.notes.append(f"{part.name} split along the request's subjects: {', '.join(sorted(groups, key=order.index))}")
+        view.parts[at:at + 1] = [
+            Part(id=f"{r}-{k + 1}", name=_subject_name(s), role=r, technology=part.technology, members=groups[s],
+                 examples=[card.symbols[m].name for m in groups[s] if role.get(m) != "helper"][:3])
+            for k, s in enumerate(sorted(groups, key=order.index))]
+        split_any = True
+    if not split_any:
+        view.parts, view.notes = before.parts, before.notes
+        return
+    mark_answers(view, aem, subjects)
+    by_subject: dict[str, list[Part]] = defaultdict(list)
+    for p in view.parts:
+        if p.role in {"service", "integration", "job"} and p.answers:
+            by_subject[p.answers[0]].append(p)
+    for s, same in by_subject.items():
+        if len(same) > 1:  # e.g. the notification manager, its scheduler and its e-mail adapter
+            keep = same[0]
+            keep.role = "service" if any(p.role == "service" for p in same) else keep.role
+            keep.name = _subject_name(s)
+            for p in same[1:]:
+                keep.members += p.members
+                keep.examples = (keep.examples + p.examples)[:3]
+                keep.technology = ", ".join(dict.fromkeys(t for t in (keep.technology, p.technology) if t))
+            view.parts = [p for p in view.parts if p not in same[1:]]
+    if len(view.parts) > max_parts:
+        view.parts, view.notes = before.parts, before.notes + [
+            f"subjects shown as labels: one part per subject would exceed {max_parts} parts"]
+        return
+    view.notes.append("parts follow the request's subjects: " + ", ".join(order))
+
+
+def _subject_name(subject: str) -> str:
+    words = " ".join(subject.split()[:5])
+    return words[:1].upper() + words[1:]
 
 
 def mark_answers(view: ArchView, aem: EvidenceModel, subjects: dict[str, set[str]]) -> None:
@@ -234,7 +273,9 @@ def shape_for_viewpoint(view: ArchView, viewpoint_id: str, aem: EvidenceModel, f
                 for c in aem.claims.values():
                     if m in {c.symbol, c.source, c.target} and (not focus_questions or set(c.question_ids) & focus_questions):
                         claims[p.id] += 1
-        focus = [p for p, _ in claims.most_common(1) if roles[p] not in {"database", "web_client"}]
+        # the part being changed is logic, not where requests enter: entry parts are what depends on it
+        logic = [p for p, _ in claims.most_common() if roles[p] not in {"database", "web_client", "ui", "api", "job"}]
+        focus = logic[:1] or [p for p, _ in claims.most_common(1) if roles[p] not in {"database", "web_client"}]
         if not focus:
             return
         view.focus = focus
@@ -252,6 +293,7 @@ def shape_for_viewpoint(view: ArchView, viewpoint_id: str, aem: EvidenceModel, f
                 c.label = "depends on"
 
 
+_WEB = (".html", ".htm", ".js", ".ts", ".jsx", ".tsx")
 _LAYERS = {"web_client": "presentation", "ui": "presentation", "api": "presentation", "job": "application",
            "service": "application", "integration": "application", "domain": "domain", "data_access": "data_access"}
 
@@ -291,8 +333,10 @@ def lift_connectors(view: ArchView, card: RepositoryCard, *, arrows: bool = True
     store = by_role.get("data_access")
     if "database" in by_role and store:
         lifted[(store, "database")]["persistence unit (deployment config)"] += MIN_WEIGHT
-    if "web_client" in by_role and "api" in by_role:
-        lifted[("web_client", by_role["api"])]["web pages call /api routes"] += MIN_WEIGHT
+    web = next((p.id for p in view.parts if any(f.endswith(_WEB) for f in p.files)), None)
+    api = next((p.id for p in view.parts if p.role == "api"), None)
+    if web and api and web != api:
+        lifted[(web, api)]["web pages call /api routes"] += MIN_WEIGHT
     roles = {p.id: p.role for p in view.parts}
     for (a, b), ev in sorted(lifted.items(), key=lambda x: -sum(x[1].values())):
         ra, rb = roles[a], roles[b]
@@ -306,7 +350,8 @@ def lift_connectors(view: ArchView, card: RepositoryCard, *, arrows: bool = True
         view.connectors.append(Connector(
             source=a, target=b, weight=weight, against_layering=against,
             label=cat["connectors"].get(f"{ra}>{rb}", "uses" if ra == rb else "depends on"),
-            protocol=_protocol(ra, rb, card), evidence=[f"{k} ({n})" for k, n in ev.most_common(5)]))
+            protocol="HTTP/JSON" if (a, b) == (web, api) else _protocol(ra, rb, card),
+            evidence=[f"{k} ({n})" for k, n in ev.most_common(5)]))
 
 
 def _technologies(card: RepositoryCard) -> dict[str, str]:
@@ -365,11 +410,12 @@ def roles_of(card: RepositoryCard) -> dict[str, str]:
 
 
 def name_parts(view: ArchView, card: RepositoryCard, aem: EvidenceModel, runtime, *, goal: str,
-               purpose: str = "phase5c", max_parts: int = 99) -> ArchView:
+               purpose: str = "phase5c", max_parts: int = 99, single_class_parts: bool = True) -> ArchView:
     """One model call: architectural names, one-line descriptions, optional splits. Every reply is
     checked; what fails keeps the code's default, and arrows are recomputed from the code. A split
     is kept only if each new part has a class that is not a helper (no parts made of data types
-    only) and the view stays within ``max_parts``."""
+    only) and the view stays within ``max_parts``; with ``single_class_parts`` False (requests that are
+    not detailed), each new part also needs two or more classes."""
     from task2view.contracts.models import PipelineError
     from task2view.prompts import load_prompt
 
@@ -418,7 +464,8 @@ def name_parts(view: ArchView, card: RepositoryCard, aem: EvidenceModel, runtime
         flat = [m for g in assigned for m in g]
         if None in flat or sorted(flat) != sorted(by_simple.values()) or len(assigned) != len(groups) \
                 or not all(good_name(g.get("name"), len(a)) for g, a in zip(groups, assigned)) \
-                or not all(any(role.get(m) != "helper" for m in a) for a in assigned):
+                or not all(any(role.get(m) != "helper" for m in a) for a in assigned) \
+                or not (single_class_parts or all(sum(role.get(m) != "helper" for m in a) >= 2 for a in assigned)):
             view.notes.append(f"split of {p.name} rejected: members must be partitioned exactly, each part with a non-helper class")
             continue
         at = view.parts.index(p)

@@ -27,12 +27,12 @@ from task2view.phase0.card import build_card, render_card, repo_facts
 from task2view.contracts.architecture import ArchView
 from task2view.phase1.needs import NeedProfile, apply_clarifications, extract_needs
 from task2view.phase2.view_questions import derive_view_questions, view_id
-from task2view.phase3.selection import ViewPlan, select_views
+from task2view.phase3.selection import ViewPlan, select_views_for_spec
 from task2view.phase4.investigate import pipeline_config, plan_investigation
-from task2view.phase5.abstract import abstract_view, mark_answers, name_parts, shape_for_viewpoint
+from task2view.phase5.abstract import abstract_view, lift_connectors, mark_answers, name_parts, shape_for_viewpoint
 from task2view.phase5.collect import collect_evidence
 from task2view.phase6.decide import ViewDecision, coverage, decide
-from task2view.phase7.abstracted import ABSTRACTED, render_abstracted, to_architecture_view
+from task2view.phase7.abstracted import ABSTRACTED, render_abstracted, to_architecture_view, with_abstraction_coverage
 from task2view.phase7.notations import get_renderer
 from task2view.phase7.project import SCENARIO_KINDS, project_view
 from task2view.phase8.validate_view import ViewValidation, validate_view
@@ -84,7 +84,9 @@ def run_v2(
     profile = extract_needs(goal, runtime, catalog=catalog)
     log += apply_clarifications(profile, catalog, ask)
     log.append(f"view spec: {profile.spec.scope} scope, {profile.spec.granularity} granularity, {profile.spec.behaviour}")
-    plan = select_views(profile.selection_input(), catalog, repo_facts(card), max_views=max_views)
+    plan = select_views_for_spec(profile.selection_input(), catalog, repo_facts(card), max_views=max_views,
+                                 behaviour=profile.spec.behaviour,
+                                 compact_catalog=with_abstraction_coverage(catalog, profile.spec.granularity))
     questions = derive_view_questions(profile, plan, catalog)
     tasks = plan_investigation(plan, questions, card, catalog, target=profile.target, runtime=runtime, card_text=card_text)
     # package boxes only for a whole-system overview; a request about a feature needs the classes involved in it
@@ -127,6 +129,7 @@ def run_v2(
     renders: dict[str, list[RenderResult]] = {}
     validation: dict[str, ViewValidation] = {}
     arch_views: dict[str, ArchView] = {}
+    shared_parts: ArchView | None = None
     retries = int(cfg["repair"]["projection_retries"])
     for vid, view in views.items():
         if decisions[vid].decision == "drop":
@@ -136,21 +139,12 @@ def run_v2(
         if vp.id in ABSTRACTED and profile.spec.granularity != "fine":  # ADR-007: parts, not classes
             view.max_elements = int(cfg["abstraction"]["max_parts"].get(view.detail_level, 9))  # a part is coarser than a class
             view_qs = [q for q in questions if q.view_id == vid]
-            subjects: dict[str, set[str]] = defaultdict(set)
-            if profile.detail_level == "detailed":  # a detailed request's enumerated subjects shape the parts
-                for q in view_qs:
-                    if q.subject:
-                        subjects[q.subject].add(q.id)
-            arch = abstract_view(card, aem, target=profile.target, title=view.title, granularity=profile.spec.granularity,
-                                 arrows=vp.id != "decomposition", subjects=subjects, max_parts=view.max_elements)
-            if len(arch.parts) > view.max_elements and profile.spec.granularity != "coarse":
-                arch = abstract_view(card, aem, target=profile.target, title=view.title,  # one level coarser
-                                     granularity="coarse", arrows=vp.id != "decomposition")
-                log.append(f"{vid}: parts exceed the cap of {view.max_elements}; drawn by layer instead")
+            if shared_parts is None:  # one set of parts per request; each viewpoint draws its own arrows over them
+                shared_parts = _request_parts(card, aem, runtime, profile, questions, goal, view.max_elements, log)
+            arch = shared_parts.model_copy(deep=True)
+            arch.title = view.title
             if any(p.members for p in arch.parts):
-                arch = name_parts(arch, card, aem, runtime, goal=goal, purpose=f"phase5c:{vid}",
-                                  max_parts=view.max_elements)
-                mark_answers(arch, aem, subjects)
+                lift_connectors(arch, card, arrows=vp.id != "decomposition")
                 shape_for_viewpoint(arch, vp.id, aem, {q.id for q in view_qs if q.need in {"change-impact", "dependencies"}})
                 view = to_architecture_view(arch, view, vp, card)
                 render = render_abstracted(arch, view, card.name)
@@ -191,6 +185,26 @@ def run_v2(
     return RunV2Result(goal=goal, card=card, profile=profile, plan=plan, questions=questions, tasks=tasks, aem=aem,
                        decisions=decisions, viewset=viewset, renders=renders, validation=validation,
                        llm=llm_spec, arch_views=arch_views, usage=usage, log=log)
+
+
+def _request_parts(card, aem, runtime, profile, questions, goal: str, max_parts: int, log: list[str]) -> ArchView:
+    """ADR-007 step 3, once per request: the parts (with names) every structural view of the run shares.
+    A detailed request's enumerated subjects shape them."""
+    subjects: dict[str, set[str]] = defaultdict(set)
+    if profile.detail_level == "detailed":
+        for q in questions:
+            if q.subject:
+                subjects[q.subject].add(q.id)
+    arch = abstract_view(card, aem, target=profile.target, granularity=profile.spec.granularity,
+                         subjects=subjects, max_parts=max_parts)
+    if len(arch.parts) > max_parts and profile.spec.granularity != "coarse":
+        arch = abstract_view(card, aem, target=profile.target, granularity="coarse")  # one level coarser
+        log.append(f"parts exceed the cap of {max_parts}; drawn by layer instead")
+    if any(p.members for p in arch.parts):
+        arch = name_parts(arch, card, aem, runtime, goal=goal, purpose="phase5c", max_parts=max_parts,
+                          single_class_parts=profile.detail_level == "detailed")
+        mark_answers(arch, aem, subjects)
+    return arch
 
 
 def _merge_identical(final_views, renders, validation, arch_views, log) -> None:

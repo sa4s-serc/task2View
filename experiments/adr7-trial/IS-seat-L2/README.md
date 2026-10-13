@@ -12,40 +12,41 @@
 
 | View | Viewpoint | Decision | Verdict | Elements | Notation |
 |---|---|---|---|---|---|
-| V1-decomposition | Decomposition (2.1 Decomposition Style) | confirm | pass_with_limitations | 7 | plantuml |
-| V2-client-server | Client-Server (4.3.1 Client-Server Style) | confirm | pass_with_limitations | 7 | plantuml |
-| V3-uses | Uses (2.2 Uses Style) | confirm | pass_with_limitations | 7 | plantuml |
+| V1-client-server | Client-Server (4.3.1 Client-Server Style) | confirm | pass_with_limitations | 7 | plantuml |
+| V2-uses | Uses (2.2 Uses Style) | confirm | pass_with_limitations | 7 | plantuml |
+| V3-sequence | Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) | confirm | pass_with_limitations | 8 | plantuml |
 
 ## Rationale
 
-- decomposition: Decomposition (2.1 Decomposition Style) covers decomposition; combined with layered (V&B 6.6)
-- client-server: Client-Server (4.3.1 Client-Server Style) covers collaboration; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6)
+- client-server: Client-Server (4.3.1 Client-Server Style) covers decomposition, collaboration; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6)
 - uses: Uses (2.2 Uses Style) covers change-impact; combined with layered (V&B 6.6)
+- sequence: Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) covers interaction-order; combined with layered (V&B 6.6)
 
 ## Limitations and declared gaps
 
-- need not covered: interaction-order
-- V1-decomposition: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
-- V2-client-server: not drawn: Reservation storage -> Reservation domain model: 39 code dependencies (implied: storage returns domain objects)
-- V2-client-server: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
-- V3-uses: not drawn: Reservation storage -> Reservation domain model: 39 code dependencies (implied: storage returns domain objects)
-- V3-uses: not drawn: Reservation storage -> MySQL database: not affected by a change to Seat booking service
-- V3-uses: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
+- none
+- V1-client-server: not drawn: Reservation storage -> Library booking model: 39 code dependencies (implied: storage returns domain objects)
+- V1-client-server: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
+- V2-uses: not drawn: Reservation storage -> Library booking model: 39 code dependencies (implied: storage returns domain objects)
+- V2-uses: not drawn: Reservation storage -> MySQL database: not affected by a change to Reservation booking services
+- V2-uses: shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO
+- V3-sequence: one scenario per view; also recovered: make reservation
+- V3-sequence: 4 participant(s) exceed the feature cap
 
 ## Evidence
 
-- 55 verified claims, 1 rejected; 35 model elements; 57 relations; 1 scenarios
-- Component relations, code vs claims: 22 agree, 27 only in code (possible omissions), 0 only claimed (no code edge)
+- 62 verified claims, 0 rejected; 37 model elements; 69 relations; 2 scenarios
+- Component relations, code vs claims: 23 agree, 38 only in code (possible omissions), 0 only claimed (no code edge)
 
 ## Tokens, time and cost
 
-Total: 23 calls, 46 input + 0 cache-read + 245,072 cache-write + 16,711 output tokens, 168.8 s, **$0.7799**
+Total: 26 calls, 52 input + 0 cache-read + 330,790 cache-write + 17,649 output tokens, 188.8 s, **$1.0036**
 
 | Phase | Calls | Input | Output | Seconds | Cost (USD) |
 |---|---|---|---|---|---|
 | phase1 (replayed) | 1 | 3,873 | 173 | 4.4 | 0.0114 |
-| phase4 | 3 | 11,046 | 841 | 15.7 | 0.0360 |
-| phase5 | 16 | 222,918 | 14,926 | 134.6 | 0.7065 |
-| phase5c | 3 | 7,281 | 771 | 14.1 | 0.0259 |
+| phase4 | 3 | 11,099 | 907 | 19.6 | 0.0368 |
+| phase5 | 21 | 313,767 | 16,322 | 159.9 | 0.9476 |
+| phase5c | 1 | 2,103 | 247 | 4.9 | 0.0077 |
 
 Prices: https://platform.claude.com/docs/en/about-claude/pricing (read 2026-10-09)

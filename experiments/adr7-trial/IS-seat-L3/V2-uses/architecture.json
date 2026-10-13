@@ -1,0 +1,331 @@
+{
+  "title": "Uses view — seat booking functionality",
+  "parts": [
+    {
+      "id": "clients",
+      "name": "Student and librarian screens",
+      "role": "ui",
+      "technology": "HTML / JavaScript, Java Swing",
+      "description": "booking wizard, dashboards and reservation cards that users see",
+      "examples": [
+        "Web client",
+        "User interface"
+      ],
+      "members": [
+        "it.unina.reservations.boundary.Swing.WizardState",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.boundary.Swing.AreaSelection",
+        "it.unina.reservations.boundary.Swing.ReservationSummary",
+        "it.unina.reservations.boundary.Swing.WizardStyle",
+        "it.unina.reservations.boundary.Swing.DateAndRoomSelection",
+        "it.unina.reservations.boundary.Swing.StudentDashboard",
+        "it.unina.reservations.boundary.Swing.TimeSlotSelection",
+        "it.unina.reservations.boundary.Swing.CreateRoom",
+        "it.unina.reservations.boundary.Swing.LibrarianDashboard",
+        "it.unina.reservations.boundary.Swing.ReservationConfirmed",
+        "it.unina.reservations.boundary.Swing.ReservationCard",
+        "it.unina.reservations.boundary.Swing.RoomCard"
+      ],
+      "answers": [],
+      "files": [
+        "JavaProject/src/main/resources/static/app.js"
+      ]
+    },
+    {
+      "id": "job",
+      "name": "Notification and reminder scheduler",
+      "role": "service",
+      "technology": "scheduled, Java",
+      "description": "sends reservation reminders and end notifications to students via notification service",
+      "examples": [
+        "NotificationScheduler",
+        "NotificationManager",
+        "NotificationService"
+      ],
+      "members": [
+        "it.unina.reservations.boundary.NotificationScheduler",
+        "it.unina.reservations.controller.NotificationManager",
+        "it.unina.reservations.controller.NotificationService"
+      ],
+      "answers": [
+        "interacting with external services such as the notification service",
+        "managing and storing reservations"
+      ],
+      "files": []
+    },
+    {
+      "id": "api",
+      "name": "Booking REST API",
+      "role": "api",
+      "technology": "Spring Boot REST",
+      "description": "receives reservation, study room and student requests over REST",
+      "examples": [
+        "ReservationController",
+        "StudyRoomController",
+        "StudentController"
+      ],
+      "members": [
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+        "it.unina.reservations.boundary.SpringBoot.StudentController"
+      ],
+      "answers": [
+        "handling booking requests"
+      ],
+      "files": []
+    },
+    {
+      "id": "service-1",
+      "name": "Booking rules service",
+      "role": "service",
+      "technology": "Java",
+      "description": "applies booking rules, checks seat availability, creates, cancels and checks in reservations",
+      "examples": [
+        "LibraryFacade",
+        "ReservationManager",
+        "StudyRoomManager"
+      ],
+      "members": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager"
+      ],
+      "answers": [
+        "handling booking requests",
+        "interacting with external services such as the notification service",
+        "applying booking rules",
+        "managing and storing reservations",
+        "checking seat availability"
+      ],
+      "files": []
+    },
+    {
+      "id": "domain",
+      "name": "Reservation domain model",
+      "role": "domain",
+      "technology": "JPA entities",
+      "description": "entities for reservations, seats, rooms, time slots and reservation states",
+      "examples": [
+        "Reservation",
+        "Student",
+        "Area"
+      ],
+      "members": [
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.Area",
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.entity.StudyRoom",
+        "it.unina.reservations.entity.TimeSlot",
+        "it.unina.reservations.entity.User",
+        "it.unina.reservations.entity.state.ActiveState",
+        "it.unina.reservations.entity.state.ReservationState",
+        "it.unina.reservations.entity.state.ConfirmedState",
+        "it.unina.reservations.entity.state.CancelledState",
+        "it.unina.reservations.entity.state.CompletedState",
+        "it.unina.reservations.entity.state.ExpiredState",
+        "it.unina.reservations.entity.Librarian",
+        "it.unina.reservations.entity.Observer",
+        "it.unina.reservations.entity.Subject"
+      ],
+      "answers": [
+        "applying booking rules",
+        "checking seat availability"
+      ],
+      "files": []
+    },
+    {
+      "id": "data_access-1",
+      "name": "Study room and user storage",
+      "role": "data_access",
+      "technology": "JPA / Hibernate",
+      "description": "stores and retrieves study rooms and users through JPA",
+      "examples": [
+        "StudyRoomRegistry",
+        "UserRegistry"
+      ],
+      "members": [
+        "it.unina.reservations.entity.StudyRoomRegistry",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.database.JpaUtil"
+      ],
+      "answers": [
+        "handling booking requests",
+        "applying booking rules",
+        "managing and storing reservations"
+      ],
+      "files": []
+    },
+    {
+      "id": "data_access-2",
+      "name": "Reservation storage",
+      "role": "data_access",
+      "technology": "JPA / Hibernate",
+      "description": "saves, finds and updates reservations through JPA",
+      "examples": [
+        "ReservationRegistry",
+        "PersistenceManager"
+      ],
+      "members": [
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.database.PersistenceManager"
+      ],
+      "answers": [
+        "managing and storing reservations",
+        "interacting with external services such as the notification service",
+        "handling booking requests"
+      ],
+      "files": []
+    },
+    {
+      "id": "database",
+      "name": "MySQL database",
+      "role": "database",
+      "technology": "MySQL",
+      "description": "",
+      "examples": [
+        "reservationsdb"
+      ],
+      "members": [],
+      "answers": [],
+      "files": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ]
+    }
+  ],
+  "connectors": [
+    {
+      "source": "service-1",
+      "target": "domain",
+      "label": "creates and updates",
+      "protocol": "",
+      "weight": 137,
+      "against_layering": false,
+      "evidence": [
+        "ReservationManager -> Reservation (38)",
+        "StudyRoomManager -> StudyRoom (24)",
+        "StudyRoomManager -> TimeSlot (13)",
+        "ReservationManager -> Seat (12)",
+        "ReservationManager -> Student (8)"
+      ]
+    },
+    {
+      "source": "service-1",
+      "target": "data_access-1",
+      "label": "reads and saves",
+      "protocol": "",
+      "weight": 28,
+      "against_layering": false,
+      "evidence": [
+        "StudyRoomManager -> StudyRoomRegistry (17)",
+        "ReservationManager -> StudyRoomRegistry (7)",
+        "ReservationManager -> UserRegistry (4)"
+      ]
+    },
+    {
+      "source": "service-1",
+      "target": "data_access-2",
+      "label": "reads and saves",
+      "protocol": "",
+      "weight": 16,
+      "against_layering": false,
+      "evidence": [
+        "ReservationManager -> ReservationRegistry (11)",
+        "StudyRoomManager -> ReservationRegistry (5)"
+      ]
+    },
+    {
+      "source": "clients",
+      "target": "service-1",
+      "label": "depends on",
+      "protocol": "in-process",
+      "weight": 12,
+      "against_layering": false,
+      "evidence": [
+        "StudentDashboard -> LibraryFacade (4)",
+        "LibrarianDashboard -> LibraryFacade (3)",
+        "AreaSelection -> LibraryFacade (1)",
+        "CreateRoom -> LibraryFacade (1)",
+        "DateAndRoomSelection -> LibraryFacade (1)"
+      ]
+    },
+    {
+      "source": "api",
+      "target": "service-1",
+      "label": "depends on",
+      "protocol": "in-process",
+      "weight": 10,
+      "against_layering": false,
+      "evidence": [
+        "StudyRoomController -> LibraryFacade (5)",
+        "ReservationController -> LibraryFacade (3)",
+        "StudentController -> LibraryFacade (2)"
+      ]
+    },
+    {
+      "source": "service-1",
+      "target": "job",
+      "label": "uses",
+      "protocol": "",
+      "weight": 10,
+      "against_layering": false,
+      "evidence": [
+        "ReservationManager -> NotificationManager (7)",
+        "StudyRoomManager -> NotificationManager (2)",
+        "LibraryFacade -> NotificationManager (1)"
+      ]
+    },
+    {
+      "source": "domain",
+      "target": "data_access-2",
+      "label": "queries",
+      "protocol": "",
+      "weight": 5,
+      "against_layering": true,
+      "evidence": [
+        "Seat -> ReservationRegistry (3)",
+        "Student -> ReservationRegistry (2)"
+      ]
+    },
+    {
+      "source": "domain",
+      "target": "data_access-1",
+      "label": "queries",
+      "protocol": "",
+      "weight": 4,
+      "against_layering": true,
+      "evidence": [
+        "Area -> StudyRoomRegistry (2)",
+        "StudyRoom -> StudyRoomRegistry (2)"
+      ]
+    },
+    {
+      "source": "clients",
+      "target": "api",
+      "label": "depends on",
+      "protocol": "HTTP/JSON",
+      "weight": 3,
+      "against_layering": false,
+      "evidence": [
+        "web pages call /api routes (3)"
+      ]
+    }
+  ],
+  "omitted": [
+    "Study room and user storage -> Reservation domain model: 26 code dependencies (implied: storage returns domain objects)",
+    "Reservation storage -> Reservation domain model: 13 code dependencies (implied: storage returns domain objects)",
+    "Notification and reminder scheduler -> Booking rules service: 2 code dependencies (weak)",
+    "Notification and reminder scheduler -> Reservation domain model: not affected by a change to Booking rules service",
+    "Study room and user storage -> Reservation storage: not affected by a change to Booking rules service",
+    "Reservation storage -> Study room and user storage: not affected by a change to Booking rules service",
+    "Notification and reminder scheduler -> Reservation storage: not affected by a change to Booking rules service",
+    "Reservation storage -> MySQL database: not affected by a change to Booking rules service"
+  ],
+  "focus": [
+    "service-1"
+  ],
+  "notes": [
+    "parts follow the request's subjects: handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, interacting with external services such as the notification service",
+    "shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO"
+  ]
+}

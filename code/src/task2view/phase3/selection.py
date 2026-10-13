@@ -200,3 +200,27 @@ def _assign_subjects(views: list[PlannedView], subjects: list[GoalSubject], need
         targets = [v for v in views if set(subject.needs) & set(v.needs)] or [views[0]]
         for view in targets:
             view.subjects.append(subject.text)
+
+
+def select_views_for_spec(request: SelectionInput, catalog: Catalog, facts: RepoFacts, *, max_views: int = MAX_VIEWS,
+                          behaviour: str = "structure", compact_catalog: Catalog | None = None) -> ViewPlan:
+    """ADR-007: when the view spec says the request is about behaviour too, one view slot is kept for a
+    behavioural view, instead of letting structural views fill the budget and leave behaviour uncovered.
+    The remaining structural budget is chosen with ``compact_catalog`` when given: a catalog in which
+    part-level component views also cover decomposition (they show responsibilities inside layers)."""
+    plan = select_views(request, catalog, facts, max_views=max_views)
+    behavioural = [n for n in request.needs if catalog.needs[n].category == "behavior"]
+    if behaviour not in {"both", "interaction"} or not set(plan.uncovered_needs) & set(behavioural) or max_views < 2:
+        return plan
+    rest = request.model_copy(update={"needs": [n for n in request.needs if n not in behavioural]})
+    structural = select_views(rest, compact_catalog or catalog, facts, max_views=max_views - 1) if rest.needs else None
+    dynamic = select_views(request.model_copy(update={"needs": behavioural, "secondary_needs": []}), catalog, facts,
+                           max_views=1)
+    base = structural or dynamic
+    taken = {v.viewpoint_id for v in base.views}
+    return base.model_copy(update={
+        "views": base.views + ([v for v in dynamic.views if v.viewpoint_id not in taken] if structural else []),
+        "needs": request.needs,
+        "uncovered_needs": (structural.uncovered_needs if structural else []) + dynamic.uncovered_needs,
+        "notes": base.notes + [f"one view kept for the behaviour the request asks about ({', '.join(behavioural)})"],
+    })

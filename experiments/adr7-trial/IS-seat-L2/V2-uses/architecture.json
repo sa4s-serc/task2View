@@ -1,0 +1,249 @@
+{
+  "title": "Uses view — seat booking functionality",
+  "parts": [
+    {
+      "id": "web_client",
+      "name": "Web client",
+      "role": "web_client",
+      "technology": "HTML / JavaScript",
+      "description": "",
+      "examples": [
+        "app.js"
+      ],
+      "members": [],
+      "answers": [],
+      "files": [
+        "JavaProject/src/main/resources/static/app.js"
+      ]
+    },
+    {
+      "id": "api",
+      "name": "Reservation REST endpoints",
+      "role": "api",
+      "technology": "Spring Boot REST",
+      "description": "exposes creating, cancelling and checking in reservations over REST",
+      "examples": [
+        "ReservationController",
+        "StudyRoomController",
+        "StudentController"
+      ],
+      "members": [
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+        "it.unina.reservations.boundary.SpringBoot.StudentController"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "ui",
+      "name": "Seat booking screens",
+      "role": "ui",
+      "technology": "Java Swing",
+      "description": "Swing screens where users pick rooms, seats and confirm reservations",
+      "examples": [
+        "WizardState",
+        "SeatSelection",
+        "AreaSelection"
+      ],
+      "members": [
+        "it.unina.reservations.boundary.Swing.WizardState",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.boundary.Swing.AreaSelection",
+        "it.unina.reservations.boundary.Swing.ReservationSummary",
+        "it.unina.reservations.boundary.Swing.WizardStyle",
+        "it.unina.reservations.boundary.Swing.DateAndRoomSelection",
+        "it.unina.reservations.boundary.Swing.StudentDashboard",
+        "it.unina.reservations.boundary.Swing.TimeSlotSelection",
+        "it.unina.reservations.boundary.Swing.CreateRoom",
+        "it.unina.reservations.boundary.Swing.LibrarianDashboard",
+        "it.unina.reservations.boundary.Swing.ReservationConfirmed",
+        "it.unina.reservations.boundary.Swing.ReservationCard",
+        "it.unina.reservations.boundary.Swing.RoomCard"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "service",
+      "name": "Reservation booking services",
+      "role": "service",
+      "technology": "Java",
+      "description": "validates and creates reservations, assigns seats, cancels, checks in, manages rooms",
+      "examples": [
+        "LibraryFacade",
+        "ReservationManager",
+        "StudyRoomManager"
+      ],
+      "members": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "domain",
+      "name": "Library booking model",
+      "role": "domain",
+      "technology": "JPA entities",
+      "description": "reservations, students, rooms, areas, seats, time slots and reservation states",
+      "examples": [
+        "Reservation",
+        "Student",
+        "StudyRoom"
+      ],
+      "members": [
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.StudyRoom",
+        "it.unina.reservations.entity.Area",
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.entity.TimeSlot",
+        "it.unina.reservations.entity.User",
+        "it.unina.reservations.entity.state.ActiveState",
+        "it.unina.reservations.entity.state.ReservationState",
+        "it.unina.reservations.entity.state.ConfirmedState",
+        "it.unina.reservations.entity.state.CancelledState",
+        "it.unina.reservations.entity.state.CompletedState",
+        "it.unina.reservations.entity.state.ExpiredState",
+        "it.unina.reservations.entity.Librarian",
+        "it.unina.reservations.entity.Observer",
+        "it.unina.reservations.entity.Subject"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "data_access",
+      "name": "Reservation storage",
+      "role": "data_access",
+      "technology": "JPA / Hibernate",
+      "description": "persists and queries reservations, rooms and users through JPA",
+      "examples": [
+        "StudyRoomRegistry",
+        "ReservationRegistry",
+        "PersistenceManager"
+      ],
+      "members": [
+        "it.unina.reservations.entity.StudyRoomRegistry",
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.entity.UserRegistry"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "database",
+      "name": "MySQL database",
+      "role": "database",
+      "technology": "MySQL",
+      "description": "",
+      "examples": [
+        "reservationsdb"
+      ],
+      "members": [],
+      "answers": [],
+      "files": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ]
+    }
+  ],
+  "connectors": [
+    {
+      "source": "service",
+      "target": "domain",
+      "label": "creates and updates",
+      "protocol": "",
+      "weight": 137,
+      "against_layering": false,
+      "evidence": [
+        "ReservationManager -> Reservation (38)",
+        "StudyRoomManager -> StudyRoom (24)",
+        "StudyRoomManager -> TimeSlot (13)",
+        "ReservationManager -> Seat (12)",
+        "ReservationManager -> Student (8)"
+      ]
+    },
+    {
+      "source": "service",
+      "target": "data_access",
+      "label": "reads and saves",
+      "protocol": "",
+      "weight": 44,
+      "against_layering": false,
+      "evidence": [
+        "StudyRoomManager -> StudyRoomRegistry (17)",
+        "ReservationManager -> ReservationRegistry (11)",
+        "ReservationManager -> StudyRoomRegistry (7)",
+        "StudyRoomManager -> ReservationRegistry (5)",
+        "ReservationManager -> UserRegistry (4)"
+      ]
+    },
+    {
+      "source": "ui",
+      "target": "service",
+      "label": "depends on",
+      "protocol": "in-process",
+      "weight": 12,
+      "against_layering": false,
+      "evidence": [
+        "StudentDashboard -> LibraryFacade (4)",
+        "LibrarianDashboard -> LibraryFacade (3)",
+        "AreaSelection -> LibraryFacade (1)",
+        "CreateRoom -> LibraryFacade (1)",
+        "DateAndRoomSelection -> LibraryFacade (1)"
+      ]
+    },
+    {
+      "source": "api",
+      "target": "service",
+      "label": "depends on",
+      "protocol": "in-process",
+      "weight": 10,
+      "against_layering": false,
+      "evidence": [
+        "StudyRoomController -> LibraryFacade (5)",
+        "ReservationController -> LibraryFacade (3)",
+        "StudentController -> LibraryFacade (2)"
+      ]
+    },
+    {
+      "source": "domain",
+      "target": "data_access",
+      "label": "queries",
+      "protocol": "",
+      "weight": 9,
+      "against_layering": true,
+      "evidence": [
+        "Seat -> ReservationRegistry (3)",
+        "Area -> StudyRoomRegistry (2)",
+        "Student -> ReservationRegistry (2)",
+        "StudyRoom -> StudyRoomRegistry (2)"
+      ]
+    },
+    {
+      "source": "web_client",
+      "target": "api",
+      "label": "depends on",
+      "protocol": "HTTP/JSON",
+      "weight": 3,
+      "against_layering": false,
+      "evidence": [
+        "web pages call /api routes (3)"
+      ]
+    }
+  ],
+  "omitted": [
+    "Reservation storage -> Library booking model: 39 code dependencies (implied: storage returns domain objects)",
+    "Reservation storage -> MySQL database: not affected by a change to Reservation booking services"
+  ],
+  "focus": [
+    "service"
+  ],
+  "notes": [
+    "shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO"
+  ]
+}

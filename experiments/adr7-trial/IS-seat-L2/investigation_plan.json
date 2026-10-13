@@ -1,64 +1,23 @@
 [
   {
     "id": "IT1",
-    "view_id": "V1-decomposition",
-    "viewpoint_id": "decomposition",
+    "view_id": "V1-client-server",
+    "viewpoint_id": "client-server",
     "question_ids": [
-      "AQ1"
+      "AQ1",
+      "AQ2"
     ],
     "need": "decomposition",
     "subject": null,
-    "goal": "Collect evidence of which classes and packages (boundary, controller, entity, dto, database) take part in seat booking, what each one is responsible for, and how they are grouped into layers or subsystems.",
+    "goal": "Collect evidence of the seat booking flow: which Swing and Spring Boot REST client-side boundaries call LibraryFacade, ReservationManager and StudyRoomManager, how these use the registries, entities (Seat, Area, Reservation) and PersistenceManager to read and write the MySQL database, and how the code is divided into subsystems/layers.",
     "seeds": {
       "symbols": [
         "it.unina.reservations.controller.ReservationManager",
         "it.unina.reservations.controller.StudyRoomManager",
         "it.unina.reservations.controller.LibraryFacade",
         "it.unina.reservations.boundary.Swing.SeatSelection",
-        "it.unina.reservations.entity.Seat",
-        "it.unina.reservations.entity.ReservationRegistry"
-      ],
-      "paths": [
-        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java"
-      ],
-      "classes": [
-        "code",
-        "schema"
-      ]
-    },
-    "expect_elements": [
-      "module",
-      "component"
-    ],
-    "expect_relations": [
-      "is-part-of"
-    ],
-    "budget_steps": 16,
-    "suggested_by": [
-      "graph-neighbour",
-      "method-name",
-      "planning-agent",
-      "symbol-name"
-    ]
-  },
-  {
-    "id": "IT2",
-    "view_id": "V2-client-server",
-    "viewpoint_id": "client-server",
-    "question_ids": [
-      "AQ2"
-    ],
-    "need": "collaboration",
-    "subject": null,
-    "goal": "Collect evidence of how the seat booking flow passes from the Swing wizard and REST reservation endpoints through LibraryFacade, ReservationManager and StudyRoomManager to PersistenceManager and the database, including the interfaces, calls and data read or written at each step.",
-    "seeds": {
-      "symbols": [
-        "it.unina.reservations.boundary.SpringBoot.ReservationController",
-        "it.unina.reservations.controller.ReservationManager",
-        "it.unina.reservations.controller.LibraryFacade",
-        "it.unina.reservations.controller.StudyRoomManager",
-        "it.unina.reservations.database.PersistenceManager",
-        "it.unina.reservations.boundary.Swing.SeatSelection"
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.database.PersistenceManager"
       ],
       "paths": [
         "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java"
@@ -90,8 +49,8 @@
     ]
   },
   {
-    "id": "IT3",
-    "view_id": "V3-uses",
+    "id": "IT2",
+    "view_id": "V2-uses",
     "viewpoint_id": "uses",
     "question_ids": [
       "AQ3"
@@ -122,6 +81,48 @@
     ],
     "expect_relations": [
       "uses"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V3-sequence",
+    "viewpoint_id": "sequence",
+    "question_ids": [
+      "AQ4"
+    ],
+    "need": "interaction-order",
+    "subject": null,
+    "goal": "Collect the ordered call chain for creating a seat reservation from the boundary (Swing SeatSelection or REST makeReservation) through LibraryFacade, ReservationManager, StudyRoomManager and ReservationRegistry to persistence, including the validation checks, alternative branches (e.g. seat or slot unavailable, duplicate or invalid reservation) and the exceptions or error returns on failure paths.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.controller.StudyRoomManager",
+        "it.unina.reservations.boundary.SpringBoot.ReservationController"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "test",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "actor",
+      "lifeline"
+    ],
+    "expect_relations": [
+      "message",
+      "return"
     ],
     "budget_steps": 16,
     "suggested_by": [

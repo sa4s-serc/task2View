@@ -85,8 +85,12 @@ def test_interaction_wording_keeps_behaviour_and_defaults_cannot_remove_it():
     from task2view.phase1.needs import validate_needs, apply_clarifications
 
     cat = load_catalog()
-    goal = "I need to understand the main components and how they interact with each other."
-    raw = {"needs": [{"need": "collaboration", "evidence": "how they interact with each other", "salience": "primary"}],
+    goal = ("I need to understand the main components and how they interact with each other, "
+            "and which parts are affected by a change.")
+    overview = validate_needs(goal, {"needs": [{"need": "collaboration", "evidence": "how they interact with each other"}]}, cat)
+    assert overview.detail_level == "overview" and overview.spec.behaviour == "structure"  # concise: one view
+    raw = {"needs": [{"need": "collaboration", "evidence": "how they interact with each other", "salience": "primary"},
+                     {"need": "change-impact", "evidence": "which parts are affected by a change", "salience": "primary"}],
            "clarifications": [{"field": "behaviour", "question": "Order of calls too?", "default": "structure"}]}
     profile = validate_needs(goal, raw, cat)
     assert profile.spec.behaviour == "both"

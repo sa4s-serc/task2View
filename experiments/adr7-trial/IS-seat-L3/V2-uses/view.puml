@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Uses view — seat booking functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Component(clients, "Student and librarian screens", "HTML / JavaScript, Java Swing", "booking wizard, dashboards and reservation cards that users see\nWeb client, User interface, …")
+  Component(api, "Booking REST API", "Spring Boot REST", "receives reservation, study room and student requests over REST\nReservationController, StudyRoomController, StudentController\nanswers: handling booking requests")
+  Component(job, "Notification and reminder scheduler", "scheduled, Java", "sends reservation reminders and end notifications to students via notification service\nNotificationScheduler, NotificationManager, NotificationService\nanswers: interacting with external services such as the notification service; managing and storing reservations")
+  Component(service_1, "Booking rules service", "Java", "applies booking rules, checks seat availability, creates, cancels and checks in reservations\nLibraryFacade, ReservationManager, StudyRoomManager\nanswers: handling booking requests; interacting with external services such as the notification service; …", $tags="focus")
+  Component(domain, "Reservation domain model", "JPA entities", "entities for reservations, seats, rooms, time slots and reservation states\nReservation, Student, Area, …\nanswers: applying booking rules; checking seat availability")
+  Component(data_access_1, "Study room and user storage", "JPA / Hibernate", "stores and retrieves study rooms and users through JPA\nStudyRoomRegistry, UserRegistry, …\nanswers: handling booking requests; applying booking rules; …")
+  Component(data_access_2, "Reservation storage", "JPA / Hibernate", "saves, finds and updates reservations through JPA\nReservationRegistry, PersistenceManager\nanswers: managing and storing reservations; interacting with external services such as the notification service; …")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+Rel(service_1, domain, "creates and updates")
+Rel(service_1, data_access_1, "reads and saves")
+Rel(service_1, data_access_2, "reads and saves")
+Rel(clients, service_1, "depends on", "in-process")
+Rel(api, service_1, "depends on", "in-process")
+Rel(service_1, job, "uses")
+Rel(domain, data_access_2, "queries", $tags="against")
+Rel(domain, data_access_1, "queries", $tags="against")
+Rel(clients, api, "depends on", "HTTP/JSON")
+
+SHOW_LEGEND()
+@enduml

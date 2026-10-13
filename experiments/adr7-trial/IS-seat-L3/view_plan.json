@@ -1,34 +1,11 @@
 {
   "views": [
     {
-      "viewpoint_id": "decomposition",
-      "family": "module",
-      "model_kind": "uml-package",
-      "needs": [
-        "decomposition"
-      ],
-      "subjects": [
-        "handling booking requests",
-        "checking seat availability",
-        "applying booking rules",
-        "managing and storing reservations"
-      ],
-      "overlays": [
-        "layered"
-      ],
-      "specialised_from": null,
-      "detail_level": "detailed",
-      "granularity": {
-        "max_elements": 15
-      },
-      "evidence_gap": null,
-      "rationale": "Decomposition (2.1 Decomposition Style) covers decomposition; combined with layered (V&B 6.6)"
-    },
-    {
       "viewpoint_id": "client-server",
       "family": "cnc",
       "model_kind": "uml-component",
       "needs": [
+        "decomposition",
         "collaboration",
         "dependencies"
       ],
@@ -48,7 +25,7 @@
         "max_elements": 15
       },
       "evidence_gap": null,
-      "rationale": "Client-Server (4.3.1 Client-Server Style) covers collaboration, dependencies; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6)"
+      "rationale": "Client-Server (4.3.1 Client-Server Style) covers decomposition, collaboration, dependencies; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6)"
     },
     {
       "viewpoint_id": "uses",
@@ -69,6 +46,36 @@
       },
       "evidence_gap": null,
       "rationale": "Uses (2.2 Uses Style) covers dependencies, change-impact; combined with layered (V&B 6.6)"
+    },
+    {
+      "viewpoint_id": "sequence",
+      "family": "behavior",
+      "model_kind": "uml-sequence",
+      "needs": [
+        "interaction-order"
+      ],
+      "subjects": [
+        "handling booking requests",
+        "checking seat availability",
+        "applying booking rules",
+        "managing and storing reservations",
+        "interacting with external services such as the notification service"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": null,
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 12,
+        "fragments": [
+          "alt",
+          "opt",
+          "loop"
+        ]
+      },
+      "evidence_gap": null,
+      "rationale": "Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) covers interaction-order; combined with layered (V&B 6.6)"
     }
   ],
   "needs": [
@@ -82,12 +89,12 @@
   "secondary_needs": [],
   "needs_from_role": false,
   "uncovered_needs": [
-    "boundary",
-    "interaction-order"
+    "boundary"
   ],
   "secondary_not_shown": [],
   "detail_level": "detailed",
   "notes": [
-    "needs not covered within 3 views: boundary, interaction-order"
+    "needs not covered within 2 views: boundary",
+    "one view kept for the behaviour the request asks about (interaction-order)"
   ]
 }

@@ -84,7 +84,7 @@ def _select(args) -> dict:
     from task2view.agents.runtime import AgentRuntime
     from task2view.knowledge.catalog import load_catalog
     from task2view.phase1.needs import extract_needs
-    from task2view.phase3.selection import RepoFacts, select_views
+    from task2view.phase3.selection import RepoFacts, select_views_for_spec
 
     catalog = load_catalog()
     signals = {s.strip() for s in args.signals.split(",") if s.strip()}
@@ -96,7 +96,11 @@ def _select(args) -> dict:
 
         signals |= set(build_card(args.code).signals)
     profile = extract_needs(args.goal, AgentRuntime(model=args.llm), catalog=catalog)
-    plan = select_views(profile.selection_input(), catalog, RepoFacts(signals=signals), max_views=args.max_views)
+    from task2view.phase7.abstracted import with_abstraction_coverage
+
+    plan = select_views_for_spec(profile.selection_input(), catalog, RepoFacts(signals=signals), max_views=args.max_views,
+                                 behaviour=profile.spec.behaviour,
+                                 compact_catalog=with_abstraction_coverage(catalog, profile.spec.granularity))
     return {"profile": profile.model_dump(), "plan": plan.model_dump()}
 
 

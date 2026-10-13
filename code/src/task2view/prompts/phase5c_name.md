@@ -59,7 +59,7 @@ Return one JSON object and nothing else:
   ]
 }
 ```
-Leave `splits` empty when no part needs splitting. A part you split needs no entry in `parts`.
+Leave `splits` empty when no part needs splitting. Always give every part an entry in `parts` as well, including a part you propose to split: that name is used if the split is not applied.
 
 ## Check before answering
 - Every part id you mention exists in the input.

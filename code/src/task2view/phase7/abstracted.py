@@ -17,6 +17,19 @@ _KINDS = {"database": ["datastore"], "web_client": ["client", "component", "modu
           "api": ["interface", "server", "service", "component", "module"]}
 
 
+def with_abstraction_coverage(catalog, granularity: str):
+    """For a short view budget: part-level component views show each part's responsibilities inside its
+    layer, which is what a decomposition view documents, so they also cover the decomposition need.
+    Not at fine granularity (classes)."""
+    if granularity == "fine":
+        return catalog
+    catalog = catalog.model_copy(deep=True)
+    for vp in catalog.viewpoints.values():
+        if vp.id in ABSTRACTED - {"decomposition", "uses"} and "decomposition" not in vp.also_covers:
+            vp.also_covers.append("decomposition")
+    return catalog
+
+
 def _kind(role: str, vp: Viewpoint) -> str:
     for kind in _KINDS.get(role, []) + ["component", "service", "module", "tier"]:
         if kind in vp.element_kinds:

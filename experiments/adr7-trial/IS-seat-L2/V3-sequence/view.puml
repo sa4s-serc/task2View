@@ -1,0 +1,34 @@
+@startuml
+title Sequence view — seat booking functionality
+participant "ReservationController" as e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_9a6804 <<presentation>>
+participant "LibraryFacade" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 <<application>>
+participant "ReservationManager" as e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 <<application>>
+participant "UserRegistry" as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 <<domain>>
+participant "StudyRoomRegistry" as e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b <<domain>>
+participant "StudyRoom" as e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a <<domain>>
+participant "Student" as e_cmp_it_unina_reservations_entity_Student_135a6e <<domain>>
+participant "Area" as e_cmp_it_unina_reservations_entity_Area_f48c8f <<domain>>
+e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_9a6804 -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 1. makeReservation(ReservationRequestDTO)
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 -> e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 : 2. makeReservation(request)
+alt student is null -> IllegalArgumentException('Student not found.')
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 3. findStudentById(studentId)
+end
+alt room missing, inactive or closed on date -> IllegalArgumentException
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 4. findRoomById(roomId)
+end
+alt area null or not in selected room -> IllegalArgumentException('The area is not in the selected room')
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 5. findAreaById(areaId)
+end
+alt date in the past, or slot not found/already started -> IllegalArgumentException('The selected time slot is not available')
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoom_69bd2a : 6. getScheduledTimeSlots(date)
+end
+alt seatId != 0 and seat not found or not in area -> IllegalArgumentException
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 7. findSeatById(seatId)
+end
+alt duplicate reservation -> IllegalArgumentException('You already have an active or confirmed reservation...')
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_Student_135a6e : 8. hasActiveOrConfirmedReservationForDateAndSlot(date, label)
+end
+alt no available seats -> IllegalArgumentException('No seats are available in the selected area')
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_Area_f48c8f : 9. getAvailableSeats(date, timeSlot)
+end
+@enduml
