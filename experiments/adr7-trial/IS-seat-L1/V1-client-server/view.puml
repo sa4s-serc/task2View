@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+title Client-Server view — seat booking functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+  Component(ui, "User interface", "Java Swing", "SeatSelection, ReservationSummary, WizardState, …")
+  Component(api, "Reservation REST endpoints", "Spring Boot REST", "REST entry point for creating, cancelling and checking in reservations\nReservationController, StudyRoomController, StudentController")
+  Component(service, "Booking services", "Java", "validates and creates reservations, selects seats, and saves them via registry\nLibraryFacade, ReservationManager, …")
+  Component(domain, "Library booking model", "JPA entities", "reservations, students, rooms, areas, seats, time slots and reservation states\nReservation, Student, StudyRoom, …")
+  Component(data_access, "Reservation and room storage", "JPA / Hibernate", "persists and queries reservations, rooms, areas, seats and time slots via JPA\nStudyRoomRegistry, ReservationRegistry, PersistenceManager, …")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+Rel(service, domain, "creates and updates")
+Rel(service, data_access, "reads and saves")
+Rel(api, service, "delegates requests", "in-process")
+Rel(ui, service, "requests operations", "in-process")
+Rel(domain, data_access, "queries", $tags="against")
+Rel(data_access, database, "persists", "JPA / JDBC")
+Rel(web_client, api, "sends requests", "HTTP/JSON")
+
+SHOW_LEGEND()
+@enduml

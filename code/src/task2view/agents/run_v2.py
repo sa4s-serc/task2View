@@ -134,10 +134,16 @@ def run_v2(
             continue
         vp = catalog.viewpoint(view.viewpoint_id)
         if vp.id in ABSTRACTED and profile.spec.granularity != "fine":  # ADR-007: parts, not classes
+            view.max_elements = int(cfg["abstraction"]["max_parts"].get(view.detail_level, 9))  # a part is coarser than a class
             arch = abstract_view(card, aem, target=profile.target, title=view.title,
                                  granularity=profile.spec.granularity, arrows=vp.id != "decomposition")
+            if len(arch.parts) > view.max_elements and profile.spec.granularity != "coarse":
+                arch = abstract_view(card, aem, target=profile.target, title=view.title,  # one level coarser
+                                     granularity="coarse", arrows=vp.id != "decomposition")
+                log.append(f"{vid}: parts exceed the cap of {view.max_elements}; drawn by layer instead")
             if any(p.members for p in arch.parts):
-                arch = name_parts(arch, card, aem, runtime, goal=goal, purpose=f"phase5c:{vid}")
+                arch = name_parts(arch, card, aem, runtime, goal=goal, purpose=f"phase5c:{vid}",
+                                  max_parts=view.max_elements)
                 view = to_architecture_view(arch, view, vp, card)
                 render = render_abstracted(arch, view, card.name)
                 validation[vid] = validate_view(view, render, aem, card, catalog, coverage(view, questions, aem),

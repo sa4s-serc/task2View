@@ -1,6 +1,6 @@
 # ADR-007: Architectural views, not code diagrams
 
-- **Status:** accepted (2026-10-13); implementation in progress (step 1: abstraction)
+- **Status:** accepted and implemented (2026-10-13): steps 1–4 in the pipeline; first live trial in `experiments/adr7-trial/`
 - **Builds on:** ADR-006 (evidence model, viewpoint selection, validation)
 - **Changes:** ADR-006 D2 (component naming and grain), D3 (projection and the task-fit judge)
 - **Evidence:** the pilot (`experiments/pilot-2026-10/`), the CodeToDiagram corpus and studies, and the literature report `reports/Realistic architecture diagram generation.md` (research folder root)
@@ -121,6 +121,20 @@ flowchart TB
   - framework role catalogues must be maintained per stack;
   - the conversation needs its own evaluation.
 - The pilot results stay tied to `pilot-2026-10-frozen`; ADR-007 is evaluated on the same goals with saved evidence first (Phases 5c–8 need no new model calls), then on new goals and repositories.
+
+## Implementation notes (2026-10-13)
+- **Code:**
+  - `phase5/abstract.py`: scope, roles, parts, naming with checks, connector lifting, coarse grain;
+  - `knowledge/data/vb/element_roles.yaml`: role catalogue, evidence checked by strength;
+  - `phase7/abstracted.py` and `c4.py`: conversion and C4-PlantUML rendering;
+  - `phase1/needs.py`: view spec and clarifications;
+  - `phase8/readability.py`: readability and spec rules.
+
+  `run_v2` uses the abstraction step for structural viewpoints; `task2view run --interactive` asks the clarification questions.
+- **Size:** part-level views have their own limit (`pipeline.yaml` `abstraction.max_parts`: 7 / 9 / 9, proposed). Over it, a view is drawn by layer.
+- **Splits:** the naming step may split a part only into parts that each contain a non-helper class, and only within that limit.
+- **The LLM judge** is no longer called by the pipeline. `phase8/judge.py` and `scripts/judge_outputs.py` stay as post-hoc research tools.
+- **First live trial** (IS-seat-L1, Sonnet 5.5): 8 model calls (15 in the pilot); 7 parts and 7 arrows; 0 crossings; one dependency against the layering found; verdict pass with limitations.
 
 ## Implementation order
 1. Abstraction (D2), on saved pilot evidence: before/after views for 2–3 goals.

@@ -60,3 +60,21 @@ def test_c4_rendering_compiles(view, tmp_path):
         (tmp_path / "v.puml").write_text(source)
         proc = subprocess.run(["plantuml", "-checkonly", str(tmp_path / "v.puml")], capture_output=True, text=True)
         assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_naming_checks_names_and_splits(view, result):  # noqa: F811
+    from task2view.agents.runtime import AgentRuntime
+    from task2view.phase5.abstract import name_parts
+
+    svc = next(p for p in view.parts if p.role == "service")
+    members = [result.card.symbols[m].name for m in svc.members]
+    helper_only = [m for m in members if m.endswith(("Gateway", "DTO"))] or members[-1:]
+    reply = {"parts": [{"id": "domain", "name": "Order", "description": "x"},  # a class name for a multi-class part: rejected
+                       {"id": "api", "name": "Order API", "description": "receives payment requests"}],
+             "splits": [{"id": "service", "into": [{"name": "Payment flow", "members": [m for m in members if m not in helper_only]},
+                                                   {"name": "Data types", "members": helper_only}]}]}
+    named = name_parts(view.model_copy(deep=True), result.card, result.aem,
+                       AgentRuntime(generate=lambda p, model=None: reply), goal="g", max_parts=3)
+    assert next(p for p in named.parts if p.role == "domain").name == "Domain model"
+    assert next(p for p in named.parts if p.role == "api").name == "Order API"
+    assert sum(p.role == "service" for p in named.parts) == 1 and any("split" in n for n in named.notes)

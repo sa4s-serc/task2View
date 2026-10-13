@@ -196,7 +196,7 @@ def lift_connectors(view: ArchView, card: RepositoryCard, *, arrows: bool = True
     for (a, b), ev in sorted(lifted.items(), key=lambda x: -sum(x[1].values())):
         ra, rb = roles[a], roles[b]
         weight = sum(ev.values())
-        against = rb not in cat["allowed"].get(ra, [rb]) and ra != "web_client"
+        against = ra != rb and rb not in cat["allowed"].get(ra, [rb]) and ra != "web_client"
         implied = ra == "data_access" and rb == "domain"
         if weight < MIN_WEIGHT or (implied and not against):
             reason = "implied: storage returns domain objects" if implied else "weak" + (", against the layering" if against else "")
@@ -204,7 +204,7 @@ def lift_connectors(view: ArchView, card: RepositoryCard, *, arrows: bool = True
             continue
         view.connectors.append(Connector(
             source=a, target=b, weight=weight, against_layering=against,
-            label=cat["connectors"].get(f"{ra}>{rb}", "depends on"),
+            label=cat["connectors"].get(f"{ra}>{rb}", "uses" if ra == rb else "depends on"),
             protocol=_protocol(ra, rb, card), evidence=[f"{k} ({n})" for k, n in ev.most_common(5)]))
 
 
@@ -254,10 +254,21 @@ def _protocol(a: str, b: str, card: RepositoryCard) -> str:
 _NAME = re.compile(r"^[A-Za-z][\w&/' -]{1,39}$")
 
 
+def roles_of(card: RepositoryCard) -> dict[str, str]:
+    entry_kinds: dict[str, set[str]] = defaultdict(set)
+    for ep in card.entry_points:
+        entry_kinds[ep.symbol].add(ep.kind)
+    entity_ids = {e.symbol for e in card.entities if e.symbol}
+    return {sid: role_of(s, card, entry_kinds, entity_ids) for sid, s in card.symbols.items()
+            if not s.is_test and s.kind != "module"}
+
+
 def name_parts(view: ArchView, card: RepositoryCard, aem: EvidenceModel, runtime, *, goal: str,
-               purpose: str = "phase5c") -> ArchView:
+               purpose: str = "phase5c", max_parts: int = 99) -> ArchView:
     """One model call: architectural names, one-line descriptions, optional splits. Every reply is
-    checked; what fails keeps the code's default, and arrows are recomputed from the code."""
+    checked; what fails keeps the code's default, and arrows are recomputed from the code. A split
+    is kept only if each new part has a class that is not a helper (no parts made of data types
+    only) and the view stays within ``max_parts``."""
     from task2view.contracts.models import PipelineError
     from task2view.prompts import load_prompt
 
@@ -291,17 +302,22 @@ def name_parts(view: ArchView, card: RepositoryCard, aem: EvidenceModel, runtime
         desc = str(row.get("description") or "").strip()
         if desc and len(desc.split()) <= 12:
             p.description = desc
+    role = roles_of(card)
     for split in reply.get("splits") or []:
         p = by_id.get(str((split or {}).get("id")))
         groups = split.get("into") if isinstance(split, dict) else None
         if p is None or not isinstance(groups, list) or not 2 <= len(groups) <= 3:
             continue
+        if len(view.parts) - 1 + len(groups) > max_parts:
+            view.notes.append(f"split of {p.name} not applied: the view would exceed {max_parts} parts")
+            continue
         by_simple = {simple[m]: m for m in p.members if m in simple}
         assigned = [[by_simple.get(str(x)) for x in (g.get("members") or [])] for g in groups if isinstance(g, dict)]
         flat = [m for g in assigned for m in g]
         if None in flat or sorted(flat) != sorted(by_simple.values()) or len(assigned) != len(groups) \
-                or not all(good_name(g.get("name"), len(a)) for g, a in zip(groups, assigned)):
-            view.notes.append(f"split of {p.name} rejected: members must be partitioned exactly")
+                or not all(good_name(g.get("name"), len(a)) for g, a in zip(groups, assigned)) \
+                or not all(any(role.get(m) != "helper" for m in a) for a in assigned):
+            view.notes.append(f"split of {p.name} rejected: members must be partitioned exactly, each part with a non-helper class")
             continue
         at = view.parts.index(p)
         new = [Part(id=f"{p.id}-{k + 1}", name=g["name"].strip(), role=p.role, technology=p.technology, members=a,
