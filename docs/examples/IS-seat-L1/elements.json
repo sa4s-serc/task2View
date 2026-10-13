@@ -1,0 +1,31 @@
+{
+  "view_spec": {
+    "request": "I am a software developer. I need to modify the seat booking functionality and understand the main system components involved and how they interact.",
+    "concern": "where a change to seat booking belongs and what it touches",
+    "scope": "feature slice: seat booking",
+    "behaviour": "static (with the request flow as arrows)",
+    "granularity": "medium: roles and runtime parts, not classes",
+    "element_nature": ["clients", "API", "services", "domain", "data access", "database"],
+    "connector_nature": "request flow and data access, labelled with intent or protocol",
+    "visual_language": "boxes and arrows (C4-PlantUML), layers top to bottom",
+    "nesting": "elements inside the application container"
+  },
+  "elements": [
+    {"id": "web", "name": "Web client", "kind": "client", "technology": "HTML / JavaScript",
+     "files": ["JavaProject/src/main/resources/static/reservation.html", "JavaProject/src/main/resources/static/app.js"], "members": []},
+    {"id": "swing", "name": "Desktop booking wizard", "kind": "client", "technology": "Java Swing",
+     "members": ["boundary.Swing.DateAndRoomSelection", "boundary.Swing.TimeSlotSelection", "boundary.Swing.AreaSelection", "boundary.Swing.SeatSelection", "boundary.Swing.ReservationSummary", "boundary.Swing.ReservationConfirmed", "boundary.Swing.WizardState"]},
+    {"id": "api", "name": "Reservation REST API", "kind": "API", "technology": "Spring Boot REST",
+     "members": ["boundary.SpringBoot.ReservationController", "boundary.SpringBoot.StudyRoomController", "boundary.SpringBoot.RestExceptionHandler"]},
+    {"id": "booking", "name": "Booking service", "kind": "service", "technology": "Java",
+     "members": ["controller.LibraryFacade", "controller.ReservationManager", "controller.StudyRoomManager", "controller.strategy.AssignmentStrategy", "controller.strategy.FirstAvailableAssignment", "dto.ReservationRequestDTO", "dto.ReservationDTO", "dto.SeatDTO", "dto.AvailableTimeSlotDTO", "dto.AreaDetailDTO", "dto.RoomDetailDTO"]},
+    {"id": "notify", "name": "Notifications", "kind": "service", "technology": "Java, scheduled job, e-mail gateway",
+     "members": ["controller.NotificationManager", "controller.NotificationService", "boundary.NotificationServiceAdapter", "boundary.ExternalEmailGateway", "boundary.NotificationScheduler", "boundary.NotificationConfiguration"]},
+    {"id": "domain", "name": "Reservation domain model", "kind": "domain", "technology": "JPA entities, State pattern",
+     "members": ["entity.Reservation", "entity.Seat", "entity.Area", "entity.StudyRoom", "entity.TimeSlot", "entity.Student", "entity.User", "entity.StatusEnum", "entity.Observer", "entity.Subject", "entity.state.ReservationState", "entity.state.ActiveState", "entity.state.ConfirmedState", "entity.state.CancelledState", "entity.state.CompletedState", "entity.state.ExpiredState"]},
+    {"id": "store", "name": "Reservation storage", "kind": "data access", "technology": "registries + JPA/Hibernate",
+     "members": ["entity.ReservationRegistry", "entity.StudyRoomRegistry", "entity.UserRegistry", "database.PersistenceManager", "database.JpaUtil"]},
+    {"id": "db", "name": "MySQL database", "kind": "database", "technology": "MySQL (reservationsdb)",
+     "fact": "persistence.xml: persistence unit reservationsPU, jdbc:mysql://localhost:3306/reservationsdb", "members": []}
+  ]
+}

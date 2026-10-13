@@ -32,3 +32,4 @@ Limits (task caps, step budgets, repair rounds) are in `knowledge/data/vb/pipeli
 | [ADR-004](adr/ADR-004-filesystem-graph-and-config.md) | historical |
 | [ADR-005](adr/ADR-005-correspondence-and-published-grain.md) | phase order kept by ADR-006; rest superseded |
 | [ADR-006](adr/ADR-006-evidence-model-redesign.md) | accepted, implemented |
+| [ADR-007](adr/ADR-007-architectural-views.md) | proposed: view specification, abstraction step, diagram-tool rendering, three-question judging (worked example: [`examples/IS-seat-L1`](examples/IS-seat-L1/README.md)) |

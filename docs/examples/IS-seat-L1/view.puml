@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("coupling", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+
+title Seat booking: components involved and how they interact (Progetto-IS)
+
+Person(student, "Student", "books a study-room seat")
+
+System_Boundary(app, "Reservations application (Spring Boot + Swing)") {
+  Component(web, "Web client", "HTML / JavaScript", "booking pages (reservation.html)")
+  Component(swing, "Desktop booking wizard", "Java Swing", "date, room, slot, area, seat")
+  Component(api, "Reservation REST API", "Spring Boot REST", "/api/reservations, /api/rooms")
+  Component(booking, "Booking service", "Java", "booking rules, seat assignment, availability")
+  Component(notify, "Notifications", "Java, scheduled job", "confirmations and reminders by e-mail")
+  Component(domain, "Reservation domain model", "JPA entities", "Reservation, Seat, Area, TimeSlot; reservation states")
+  Component(store, "Reservation storage", "Registries + JPA/Hibernate", "loads and saves entities")
+}
+ComponentDb(db, "MySQL database", "MySQL", "reservationsdb")
+
+Rel(student, web, "books a seat", "browser")
+Rel(student, swing, "books a seat", "desktop app")
+Rel(web, api, "creates and cancels bookings", "HTTP/JSON")
+Rel(api, booking, "delegates booking requests", "in-process")
+Rel(swing, booking, "requests bookings and availability", "in-process")
+Rel(booking, domain, "creates and changes reservations")
+Rel(booking, store, "reads and saves reservations")
+Rel(booking, notify, "sends booking notifications")
+Rel(store, db, "persists", "JPA / JDBC")
+Rel(domain, store, "seat availability queries the registry", $tags="coupling")
+
+SHOW_LEGEND()
+@enduml
