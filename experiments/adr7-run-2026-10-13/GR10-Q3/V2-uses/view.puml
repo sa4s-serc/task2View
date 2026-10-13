@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Uses view — persistence layer
+
+System_Boundary(app, "progetto_ing_software_gr10-main-English") {
+  Component(ui, "Report handling screens", "Java Swing", "screens for creating reports, viewing received ones, updating status, adding notes\nReportCreationGUI, ReceivedReportsGUI, ReportStatusUpdateGUI, …")
+  Component(service, "Report and user services", "Java", "application logic for handling reports and users\nReportService, UserService", $tags="focus")
+  Component(domain, "Report data model", "JPA entities", "persisted reports, users, locations, statuses, state changes, notes and notifications\nReport, Notification, MunicipalOperator, …\nanswers: reports; internal notes; …")
+  Component(data_access, "Report storage access", "JPA / Hibernate", "provides JPA/Hibernate persistence access for the stored entities\nPersistenceService, …")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reports_db")
+
+Rel(service, domain, "creates and updates")
+Rel(service, data_access, "reads and saves")
+
+SHOW_LEGEND()
+@enduml

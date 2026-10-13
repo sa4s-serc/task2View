@@ -1,0 +1,435 @@
+{
+  "system": "progetto_ing_software_gr10-main-English",
+  "stakeholder": "devops",
+  "goal": "I am a DevOps engineer. I need to deploy and configure the system in a new execution environment. Before preparing the deployment, I need to understand which runtime environments and software artifacts are required, where the application and its data are executed and stored, and how the main runtime elements communicate with each other. I also need to identify the technologies and runtime dependencies involved in the communication between the application and the database.",
+  "views": [
+    {
+      "id": "V1-deployment",
+      "viewpoint_id": "deployment",
+      "viewpoint_name": "Deployment",
+      "vb_ref": "5.2 Deployment Style",
+      "model_kind": "uml-deployment",
+      "title": "Deployment view — progetto_ing_software_gr10-main-English",
+      "purpose": "Deployment (5.2 Deployment Style) answering deployment, build-packaging, data-storage",
+      "detail_level": "detailed",
+      "max_elements": 18,
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3"
+      ],
+      "overlays": [],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "node:mysql-server-127-0-0-1-3306",
+          "kind": "node",
+          "name": "MySQL Server 127.0.0.1:3306",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "hosts the reports_db database accessed over JDBC"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "datastore:reports-db",
+          "kind": "datastore",
+          "name": "reports_db",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "MySQL schema storing persisted entities"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "node:desktop-gui-client",
+          "kind": "node",
+          "name": "Desktop GUI Client",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "runs the Swing GUI with its own main entry point"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "execution_env:hibernate-jpa-persistence-unit-municipal-report-management-system",
+          "kind": "execution_env",
+          "name": "Hibernate JPA persistence unit Municipal_Report_Management_System",
+          "stereotype": null,
+          "parent": null,
+          "responsibilities": [
+            "Hibernate persistence provider, resource-local transactions"
+          ],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "artifact:municipal-report-management",
+          "kind": "artifact",
+          "name": "municipal-report-management.jar",
+          "stereotype": null,
+          "parent": "node:mysql-server-127-0-0-1-3306",
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:artifact-municipal-report-management:communicates:datastore-reports-db",
+          "kind": "communicates",
+          "source": "artifact:municipal-report-management",
+          "target": "datastore:reports-db",
+          "label": null,
+          "multiplicity": null,
+          "support": "inferred",
+          "protocol": "",
+          "against_layering": false
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "node:mysql-server-127-0-0-1-3306",
+          "name": "MySQL Server 127.0.0.1:3306",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "datastore:reports-db",
+          "name": "reports_db",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "node:desktop-gui-client",
+          "name": "Desktop GUI Client",
+          "files": [
+            "src/main/java/Boundary/HomePageGUI.java"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "execution_env:hibernate-jpa-persistence-unit-municipal-report-management-system",
+          "name": "Hibernate JPA persistence unit Municipal_Report_Management_System",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        },
+        {
+          "element": "artifact:municipal-report-management",
+          "name": "municipal-report-management.jar",
+          "files": [
+            "pom.xml"
+          ],
+          "symbols": []
+        }
+      ],
+      "limitations": [
+        "3 mark(s) removed after failing validation"
+      ],
+      "gaps": [],
+      "overflow": []
+    },
+    {
+      "id": "V2-uses",
+      "viewpoint_id": "uses",
+      "viewpoint_name": "Uses",
+      "vb_ref": "2.2 Uses Style",
+      "model_kind": "uml-package",
+      "title": "Uses view — progetto_ing_software_gr10-main-English",
+      "purpose": "Uses (2.2 Uses Style) answering dependencies",
+      "detail_level": "detailed",
+      "max_elements": 9,
+      "addresses": [
+        "AQ4"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "part:ui",
+          "kind": "component",
+          "name": "Report desktop screens",
+          "stereotype": "ui",
+          "parent": null,
+          "responsibilities": [
+            "Java Swing screens for creating, monitoring, updating and viewing reports and notes; ReportCreationGUI, ActivityMonitoringGUI, ReceivedReportsGUI, …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Boundary.ReportCreationGUI",
+            "Boundary.ActivityMonitoringGUI",
+            "Boundary.ReceivedReportsGUI",
+            "Boundary.ReportStatusUpdateGUI",
+            "Boundary.SubmittedReportsGUI",
+            "Boundary.InternalNoteGUI",
+            "Boundary.UserDashboardGUI"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java Swing"
+        },
+        {
+          "id": "part:service",
+          "kind": "component",
+          "name": "Report handling services",
+          "stereotype": "service",
+          "parent": null,
+          "responsibilities": [
+            "creates and retrieves reports, validates report data and delegates registration; ReportService, SystemServicesController, UserService, …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.ReportService",
+            "Control.SystemServicesController",
+            "Entity.UserService",
+            "Control.ReportCreationController"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java"
+        },
+        {
+          "id": "part:domain",
+          "kind": "component",
+          "name": "Report domain entities",
+          "stereotype": "domain",
+          "parent": null,
+          "responsibilities": [
+            "persisted entities in reports_db registered in the persistence unit; Report, User, Notification, …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.Report",
+            "Entity.User",
+            "Entity.Notification",
+            "Entity.MunicipalOperator",
+            "Entity.StatusUpdate",
+            "Entity.InternalNote",
+            "Entity.Citizen",
+            "Entity.ReportStatus",
+            "Entity.Location",
+            "Entity.Assigned",
+            "Entity.InProgress",
+            "Entity.Submitted",
+            "Entity.Resolved",
+            "Entity.Credentials"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "JPA entities"
+        },
+        {
+          "id": "part:data_access",
+          "kind": "component",
+          "name": "Report database access",
+          "stereotype": "data_access",
+          "parent": null,
+          "responsibilities": [
+            "creates the EntityManagerFactory and saves, updates and queries entities via JPA/Hibernate; PersistenceService, …; answers: runtime environments"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "JPA / Hibernate"
+        },
+        {
+          "id": "part:database",
+          "kind": "component",
+          "name": "MySQL database",
+          "stereotype": "database",
+          "parent": null,
+          "responsibilities": [
+            "reports_db"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "MySQL"
+        }
+      ],
+      "relations": [
+        {
+          "id": "conn:service:domain",
+          "kind": "uses",
+          "source": "part:service",
+          "target": "part:domain",
+          "label": "creates and updates",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "conn:service:data_access",
+          "kind": "uses",
+          "source": "part:service",
+          "target": "part:data_access",
+          "label": "reads and saves",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "conn:ui:service",
+          "kind": "uses",
+          "source": "part:ui",
+          "target": "part:service",
+          "label": "depends on",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "in-process",
+          "against_layering": false
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "part:ui",
+          "name": "Report desktop screens",
+          "files": [
+            "src/main/java/Boundary/ActivityMonitoringGUI.java",
+            "src/main/java/Boundary/InternalNoteGUI.java",
+            "src/main/java/Boundary/ReceivedReportsGUI.java",
+            "src/main/java/Boundary/ReportCreationGUI.java",
+            "src/main/java/Boundary/ReportStatusUpdateGUI.java",
+            "src/main/java/Boundary/SubmittedReportsGUI.java",
+            "src/main/java/Boundary/UserDashboardGUI.java"
+          ],
+          "symbols": [
+            "Boundary.ReportCreationGUI",
+            "Boundary.ActivityMonitoringGUI",
+            "Boundary.ReceivedReportsGUI",
+            "Boundary.ReportStatusUpdateGUI",
+            "Boundary.SubmittedReportsGUI",
+            "Boundary.InternalNoteGUI",
+            "Boundary.UserDashboardGUI"
+          ]
+        },
+        {
+          "element": "part:service",
+          "name": "Report handling services",
+          "files": [
+            "src/main/java/Control/ReportCreationController.java",
+            "src/main/java/Control/SystemServicesController.java",
+            "src/main/java/Entity/ReportService.java",
+            "src/main/java/Entity/UserService.java"
+          ],
+          "symbols": [
+            "Entity.ReportService",
+            "Control.SystemServicesController",
+            "Entity.UserService",
+            "Control.ReportCreationController"
+          ]
+        },
+        {
+          "element": "part:domain",
+          "name": "Report domain entities",
+          "files": [
+            "src/main/java/Entity/Assigned.java",
+            "src/main/java/Entity/Citizen.java",
+            "src/main/java/Entity/Credentials.java",
+            "src/main/java/Entity/InProgress.java",
+            "src/main/java/Entity/InternalNote.java",
+            "src/main/java/Entity/Location.java",
+            "src/main/java/Entity/MunicipalOperator.java",
+            "src/main/java/Entity/Notification.java",
+            "src/main/java/Entity/Report.java",
+            "src/main/java/Entity/ReportStatus.java",
+            "src/main/java/Entity/Resolved.java",
+            "src/main/java/Entity/StatusUpdate.java",
+            "src/main/java/Entity/Submitted.java",
+            "src/main/java/Entity/User.java"
+          ],
+          "symbols": [
+            "Entity.Report",
+            "Entity.User",
+            "Entity.Notification",
+            "Entity.MunicipalOperator",
+            "Entity.StatusUpdate",
+            "Entity.InternalNote",
+            "Entity.Citizen",
+            "Entity.ReportStatus",
+            "Entity.Location",
+            "Entity.Assigned",
+            "Entity.InProgress",
+            "Entity.Submitted",
+            "Entity.Resolved",
+            "Entity.Credentials"
+          ]
+        },
+        {
+          "element": "part:data_access",
+          "name": "Report database access",
+          "files": [
+            "src/main/java/Database/JpaUtil.java",
+            "src/main/java/Database/PersistenceService.java"
+          ],
+          "symbols": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ]
+        },
+        {
+          "element": "part:database",
+          "name": "MySQL database",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        }
+      ],
+      "limitations": [
+        "not drawn: Report database access -> MySQL database: not affected by a change to Report handling services",
+        "shared data types (not drawn, no arrows through them): ReportCategory",
+        "not drawn (start-up and configuration): UserRegistrationGUI"
+      ],
+      "gaps": [],
+      "overflow": []
+    }
+  ],
+  "correspondences": [],
+  "correspondence_gaps": [],
+  "declared_gaps": [],
+  "uncovered_needs": [],
+  "secondary_not_shown": []
+}

@@ -1,0 +1,327 @@
+{
+  "id": "V1-client-server",
+  "viewpoint_id": "client-server",
+  "viewpoint_name": "Client-Server",
+  "vb_ref": "4.3.1 Client-Server Style",
+  "model_kind": "uml-component",
+  "title": "Client-Server view — user registration functionality",
+  "purpose": "Client-Server (4.3.1 Client-Server Style) answering collaboration for user registration functionality",
+  "detail_level": "overview",
+  "max_elements": 7,
+  "addresses": [
+    "AQ1"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "part:web_client",
+      "kind": "component",
+      "name": "Web client",
+      "stereotype": "web_client",
+      "parent": null,
+      "responsibilities": [
+        "app.js"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "JavaProject/src/main/resources/static/app.js"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "HTML / JavaScript"
+    },
+    {
+      "id": "part:api",
+      "kind": "interface",
+      "name": "Registration REST API",
+      "stereotype": "api",
+      "parent": null,
+      "responsibilities": [
+        "exposes the /api/auth/register endpoint for creating user accounts; AuthenticationController, StudentController"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.boundary.SpringBoot.StudentController"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "Spring Boot REST"
+    },
+    {
+      "id": "part:ui",
+      "kind": "component",
+      "name": "Registration form and dashboards",
+      "stereotype": "ui",
+      "parent": null,
+      "responsibilities": [
+        "Swing form collecting registration details, plus student and librarian dashboards; Registration, StudentDashboard, LibrarianDashboard"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.boundary.Swing.StudentDashboard",
+        "it.unina.reservations.boundary.Swing.LibrarianDashboard"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "Java Swing"
+    },
+    {
+      "id": "part:service",
+      "kind": "component",
+      "name": "User registration service",
+      "stereotype": "service",
+      "parent": null,
+      "responsibilities": [
+        "validates registration data, checks uniqueness and creates users via the registry; LibraryFacade, UserManager, …"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.dto.StudyRoomCreationDTO",
+        "it.unina.reservations.dto.ReservationRequestDTO",
+        "it.unina.reservations.dto.StudyRoomDTO",
+        "it.unina.reservations.dto.RoomDetailDTO",
+        "it.unina.reservations.dto.AvailableTimeSlotDTO"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "Java"
+    },
+    {
+      "id": "part:domain",
+      "kind": "component",
+      "name": "Library user and reservation entities",
+      "stereotype": "domain",
+      "parent": null,
+      "responsibilities": [
+        "entities for users, students, librarians and reservations; Reservation, Student, User, …"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.User",
+        "it.unina.reservations.entity.Librarian"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "JPA entities"
+    },
+    {
+      "id": "part:data_access",
+      "kind": "component",
+      "name": "User and reservation storage",
+      "stereotype": "data_access",
+      "parent": null,
+      "responsibilities": [
+        "persists entities in transactions; registry saves and looks up users; PersistenceManager, UserRegistry, ReservationRegistry"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.entity.ReservationRegistry"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "JPA / Hibernate"
+    },
+    {
+      "id": "part:database",
+      "kind": "datastore",
+      "name": "MySQL database",
+      "stereotype": "database",
+      "parent": null,
+      "responsibilities": [
+        "reservationsdb"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "MySQL"
+    }
+  ],
+  "relations": [
+    {
+      "id": "conn:service:domain",
+      "kind": "uses",
+      "source": "part:service",
+      "target": "part:domain",
+      "label": "creates and updates",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "",
+      "against_layering": false
+    },
+    {
+      "id": "conn:service:data_access",
+      "kind": "uses",
+      "source": "part:service",
+      "target": "part:data_access",
+      "label": "reads and saves",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "",
+      "against_layering": false
+    },
+    {
+      "id": "conn:ui:service",
+      "kind": "uses",
+      "source": "part:ui",
+      "target": "part:service",
+      "label": "requests operations",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "in-process",
+      "against_layering": false
+    },
+    {
+      "id": "conn:api:service",
+      "kind": "uses",
+      "source": "part:api",
+      "target": "part:service",
+      "label": "delegates requests",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "in-process",
+      "against_layering": false
+    },
+    {
+      "id": "conn:data_access:database",
+      "kind": "uses",
+      "source": "part:data_access",
+      "target": "part:database",
+      "label": "persists",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "JPA / JDBC",
+      "against_layering": false
+    },
+    {
+      "id": "conn:web_client:api",
+      "kind": "uses",
+      "source": "part:web_client",
+      "target": "part:api",
+      "label": "sends requests",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "HTTP/JSON",
+      "against_layering": false
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "part:web_client",
+      "name": "Web client",
+      "files": [
+        "JavaProject/src/main/resources/static/app.js"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "part:api",
+      "name": "Registration REST API",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.boundary.SpringBoot.StudentController"
+      ]
+    },
+    {
+      "element": "part:ui",
+      "name": "Registration form and dashboards",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/LibrarianDashboard.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/StudentDashboard.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.boundary.Swing.StudentDashboard",
+        "it.unina.reservations.boundary.Swing.LibrarianDashboard"
+      ]
+    },
+    {
+      "element": "part:service",
+      "name": "User registration service",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/dto/AvailableTimeSlotDTO.java",
+        "JavaProject/src/main/java/it/unina/reservations/dto/ReservationRequestDTO.java",
+        "JavaProject/src/main/java/it/unina/reservations/dto/RoomDetailDTO.java",
+        "JavaProject/src/main/java/it/unina/reservations/dto/StudyRoomCreationDTO.java",
+        "JavaProject/src/main/java/it/unina/reservations/dto/StudyRoomDTO.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.dto.StudyRoomCreationDTO",
+        "it.unina.reservations.dto.ReservationRequestDTO",
+        "it.unina.reservations.dto.StudyRoomDTO",
+        "it.unina.reservations.dto.RoomDetailDTO",
+        "it.unina.reservations.dto.AvailableTimeSlotDTO"
+      ]
+    },
+    {
+      "element": "part:domain",
+      "name": "Library user and reservation entities",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/Librarian.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/User.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.User",
+        "it.unina.reservations.entity.Librarian"
+      ]
+    },
+    {
+      "element": "part:data_access",
+      "name": "User and reservation storage",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.entity.ReservationRegistry"
+      ]
+    },
+    {
+      "element": "part:database",
+      "name": "MySQL database",
+      "files": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    }
+  ],
+  "limitations": [
+    "not drawn: User and reservation storage -> Library user and reservation entities: 20 code dependencies (implied: storage returns domain objects)",
+    "not drawn: Library user and reservation entities -> User and reservation storage: 2 code dependencies (weak, against the layering)",
+    "shared data types (not drawn, no arrows through them): LibrarianFactory, StudentFactory, UserFactory, ReservationDTO, RoomMonitoringDTO, StatisticsDTO, UserDTO",
+    "split of User registration service not applied: the view would exceed 7 parts"
+  ],
+  "gaps": [],
+  "overflow": []
+}

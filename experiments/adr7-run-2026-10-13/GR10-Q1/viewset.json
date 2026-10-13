@@ -1,0 +1,685 @@
+{
+  "system": "progetto_ing_software_gr10-main-English",
+  "stakeholder": "architect",
+  "goal": "I am a software architect. I need to review the overall organization of the system before planning its future evolution. I want to understand the main architectural components, their responsibilities, how the system is decomposed into different layers or subsystems, and the main dependencies among them. I also need to identify how user-facing functionality, application logic, domain entities, and data persistence are separated and how these parts collaborate to provide the main system functionalities.",
+  "views": [
+    {
+      "id": "V1-decomposition",
+      "viewpoint_id": "decomposition",
+      "viewpoint_name": "Decomposition",
+      "vb_ref": "2.1 Decomposition Style",
+      "model_kind": "uml-package",
+      "title": "Decomposition view — progetto_ing_software_gr10-main-English",
+      "purpose": "Decomposition (2.1 Decomposition Style) answering decomposition, layering",
+      "detail_level": "detailed",
+      "max_elements": 9,
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3",
+        "AQ4",
+        "AQ5",
+        "AQ6",
+        "AQ7",
+        "AQ8"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "part:ui",
+          "kind": "component",
+          "name": "Report management desktop screens",
+          "stereotype": "ui",
+          "parent": null,
+          "responsibilities": [
+            "Swing screens for creating, reviewing, updating reports and monitoring activity; UserDashboardGUI, ReportCreationGUI, ActivityMonitoringGUI, …; answers: user-facing functionality"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Boundary.UserDashboardGUI",
+            "Boundary.ReportCreationGUI",
+            "Boundary.ActivityMonitoringGUI",
+            "Boundary.ReceivedReportsGUI",
+            "Boundary.ReportStatusUpdateGUI",
+            "Boundary.SubmittedReportsGUI",
+            "Boundary.InternalNoteGUI"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java Swing"
+        },
+        {
+          "id": "part:service-1",
+          "kind": "component",
+          "name": "Use case controllers",
+          "stereotype": "service",
+          "parent": null,
+          "responsibilities": [
+            "Facade and controllers delegating report creation and user registration, validating registration data; SystemServicesController, ReportCreationController, UserRegistrationController; answers: application logic; user-facing functionality; …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.SystemServicesController",
+            "Control.ReportCreationController",
+            "Control.UserRegistrationController"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java"
+        },
+        {
+          "id": "part:service-2",
+          "kind": "component",
+          "name": "Report and user services",
+          "stereotype": "service",
+          "parent": null,
+          "responsibilities": [
+            "creates reports, registers users, retrieves reports and credentials through persistence; ReportService, UserService; answers: domain entities; user-facing functionality; …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.ReportService",
+            "Entity.UserService"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java"
+        },
+        {
+          "id": "part:domain",
+          "kind": "component",
+          "name": "Municipal report entities",
+          "stereotype": "domain",
+          "parent": null,
+          "responsibilities": [
+            "JPA entities for reports, users, citizens, operators, notes, status updates and locations; Report, Notification, MunicipalOperator, …; answers: domain entities; data persistence"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.Report",
+            "Entity.Notification",
+            "Entity.MunicipalOperator",
+            "Entity.StatusUpdate",
+            "Entity.InternalNote",
+            "Entity.User",
+            "Entity.Citizen",
+            "Entity.ReportStatus",
+            "Entity.Location",
+            "Entity.Assigned",
+            "Entity.InProgress",
+            "Entity.Submitted",
+            "Entity.Resolved",
+            "Entity.Credentials"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "JPA entities"
+        },
+        {
+          "id": "part:data_access",
+          "kind": "component",
+          "name": "Report data storage",
+          "stereotype": "data_access",
+          "parent": null,
+          "responsibilities": [
+            "generic save, update and find operations over JPA with a shared EntityManagerFactory; PersistenceService, …; answers: data persistence; user-facing functionality; …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "JPA / Hibernate"
+        },
+        {
+          "id": "part:database",
+          "kind": "component",
+          "name": "MySQL database",
+          "stereotype": "database",
+          "parent": null,
+          "responsibilities": [
+            "reports_db"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "MySQL"
+        }
+      ],
+      "relations": [],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "part:ui",
+          "name": "Report management desktop screens",
+          "files": [
+            "src/main/java/Boundary/ActivityMonitoringGUI.java",
+            "src/main/java/Boundary/InternalNoteGUI.java",
+            "src/main/java/Boundary/ReceivedReportsGUI.java",
+            "src/main/java/Boundary/ReportCreationGUI.java",
+            "src/main/java/Boundary/ReportStatusUpdateGUI.java",
+            "src/main/java/Boundary/SubmittedReportsGUI.java",
+            "src/main/java/Boundary/UserDashboardGUI.java"
+          ],
+          "symbols": [
+            "Boundary.UserDashboardGUI",
+            "Boundary.ReportCreationGUI",
+            "Boundary.ActivityMonitoringGUI",
+            "Boundary.ReceivedReportsGUI",
+            "Boundary.ReportStatusUpdateGUI",
+            "Boundary.SubmittedReportsGUI",
+            "Boundary.InternalNoteGUI"
+          ]
+        },
+        {
+          "element": "part:service-1",
+          "name": "Use case controllers",
+          "files": [
+            "src/main/java/Control/ReportCreationController.java",
+            "src/main/java/Control/SystemServicesController.java",
+            "src/main/java/Control/UserRegistrationController.java"
+          ],
+          "symbols": [
+            "Control.SystemServicesController",
+            "Control.ReportCreationController",
+            "Control.UserRegistrationController"
+          ]
+        },
+        {
+          "element": "part:service-2",
+          "name": "Report and user services",
+          "files": [
+            "src/main/java/Entity/ReportService.java",
+            "src/main/java/Entity/UserService.java"
+          ],
+          "symbols": [
+            "Entity.ReportService",
+            "Entity.UserService"
+          ]
+        },
+        {
+          "element": "part:domain",
+          "name": "Municipal report entities",
+          "files": [
+            "src/main/java/Entity/Assigned.java",
+            "src/main/java/Entity/Citizen.java",
+            "src/main/java/Entity/Credentials.java",
+            "src/main/java/Entity/InProgress.java",
+            "src/main/java/Entity/InternalNote.java",
+            "src/main/java/Entity/Location.java",
+            "src/main/java/Entity/MunicipalOperator.java",
+            "src/main/java/Entity/Notification.java",
+            "src/main/java/Entity/Report.java",
+            "src/main/java/Entity/ReportStatus.java",
+            "src/main/java/Entity/Resolved.java",
+            "src/main/java/Entity/StatusUpdate.java",
+            "src/main/java/Entity/Submitted.java",
+            "src/main/java/Entity/User.java"
+          ],
+          "symbols": [
+            "Entity.Report",
+            "Entity.Notification",
+            "Entity.MunicipalOperator",
+            "Entity.StatusUpdate",
+            "Entity.InternalNote",
+            "Entity.User",
+            "Entity.Citizen",
+            "Entity.ReportStatus",
+            "Entity.Location",
+            "Entity.Assigned",
+            "Entity.InProgress",
+            "Entity.Submitted",
+            "Entity.Resolved",
+            "Entity.Credentials"
+          ]
+        },
+        {
+          "element": "part:data_access",
+          "name": "Report data storage",
+          "files": [
+            "src/main/java/Database/JpaUtil.java",
+            "src/main/java/Database/PersistenceService.java"
+          ],
+          "symbols": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ]
+        },
+        {
+          "element": "part:database",
+          "name": "MySQL database",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        }
+      ],
+      "limitations": [
+        "parts follow the request's subjects: user-facing functionality, application logic, domain entities, data persistence",
+        "shared data types (not drawn, no arrows through them): ReportCategory"
+      ],
+      "gaps": [],
+      "overflow": []
+    },
+    {
+      "id": "V2-cnc-generic",
+      "viewpoint_id": "cnc-generic",
+      "viewpoint_name": "Component-and-Connector",
+      "vb_ref": "Ch. 3 Component-and-Connector Views",
+      "model_kind": "uml-component",
+      "title": "Component-and-Connector view — progetto_ing_software_gr10-main-English",
+      "purpose": "Component-and-Connector (Ch. 3 Component-and-Connector Views) answering layering, dependencies, collaboration",
+      "detail_level": "detailed",
+      "max_elements": 9,
+      "addresses": [
+        "AQ9",
+        "AQ10",
+        "AQ11",
+        "AQ12",
+        "AQ13",
+        "AQ14"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "part:ui",
+          "kind": "component",
+          "name": "Report management desktop screens",
+          "stereotype": "ui",
+          "parent": null,
+          "responsibilities": [
+            "Swing screens for creating, reviewing, updating reports and monitoring activity; UserDashboardGUI, ReportCreationGUI, ActivityMonitoringGUI, …; answers: user-facing functionality"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Boundary.UserDashboardGUI",
+            "Boundary.ReportCreationGUI",
+            "Boundary.ActivityMonitoringGUI",
+            "Boundary.ReceivedReportsGUI",
+            "Boundary.ReportStatusUpdateGUI",
+            "Boundary.SubmittedReportsGUI",
+            "Boundary.InternalNoteGUI"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java Swing"
+        },
+        {
+          "id": "part:service-1",
+          "kind": "component",
+          "name": "Use case controllers",
+          "stereotype": "service",
+          "parent": null,
+          "responsibilities": [
+            "Facade and controllers delegating report creation and user registration, validating registration data; SystemServicesController, ReportCreationController, UserRegistrationController; answers: application logic; user-facing functionality; …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Control.SystemServicesController",
+            "Control.ReportCreationController",
+            "Control.UserRegistrationController"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java"
+        },
+        {
+          "id": "part:service-2",
+          "kind": "component",
+          "name": "Report and user services",
+          "stereotype": "service",
+          "parent": null,
+          "responsibilities": [
+            "creates reports, registers users, retrieves reports and credentials through persistence; ReportService, UserService; answers: domain entities; user-facing functionality; …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.ReportService",
+            "Entity.UserService"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java"
+        },
+        {
+          "id": "part:domain",
+          "kind": "component",
+          "name": "Municipal report entities",
+          "stereotype": "domain",
+          "parent": null,
+          "responsibilities": [
+            "JPA entities for reports, users, citizens, operators, notes, status updates and locations; Report, Notification, MunicipalOperator, …; answers: domain entities; data persistence"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.Report",
+            "Entity.Notification",
+            "Entity.MunicipalOperator",
+            "Entity.StatusUpdate",
+            "Entity.InternalNote",
+            "Entity.User",
+            "Entity.Citizen",
+            "Entity.ReportStatus",
+            "Entity.Location",
+            "Entity.Assigned",
+            "Entity.InProgress",
+            "Entity.Submitted",
+            "Entity.Resolved",
+            "Entity.Credentials"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "JPA entities"
+        },
+        {
+          "id": "part:data_access",
+          "kind": "component",
+          "name": "Report data storage",
+          "stereotype": "data_access",
+          "parent": null,
+          "responsibilities": [
+            "generic save, update and find operations over JPA with a shared EntityManagerFactory; PersistenceService, …; answers: data persistence; user-facing functionality; …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "JPA / Hibernate"
+        },
+        {
+          "id": "part:database",
+          "kind": "datastore",
+          "name": "MySQL database",
+          "stereotype": "database",
+          "parent": null,
+          "responsibilities": [
+            "reports_db"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "MySQL"
+        }
+      ],
+      "relations": [
+        {
+          "id": "conn:service-2:domain",
+          "kind": "uses",
+          "source": "part:service-2",
+          "target": "part:domain",
+          "label": "creates and updates",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "conn:service-2:data_access",
+          "kind": "uses",
+          "source": "part:service-2",
+          "target": "part:data_access",
+          "label": "reads and saves",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "conn:ui:service-1",
+          "kind": "uses",
+          "source": "part:ui",
+          "target": "part:service-1",
+          "label": "requests operations",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "in-process",
+          "against_layering": false
+        },
+        {
+          "id": "conn:service-1:service-2",
+          "kind": "uses",
+          "source": "part:service-1",
+          "target": "part:service-2",
+          "label": "uses",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "conn:data_access:database",
+          "kind": "uses",
+          "source": "part:data_access",
+          "target": "part:database",
+          "label": "persists",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "JPA / JDBC",
+          "against_layering": false
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "part:ui",
+          "name": "Report management desktop screens",
+          "files": [
+            "src/main/java/Boundary/ActivityMonitoringGUI.java",
+            "src/main/java/Boundary/InternalNoteGUI.java",
+            "src/main/java/Boundary/ReceivedReportsGUI.java",
+            "src/main/java/Boundary/ReportCreationGUI.java",
+            "src/main/java/Boundary/ReportStatusUpdateGUI.java",
+            "src/main/java/Boundary/SubmittedReportsGUI.java",
+            "src/main/java/Boundary/UserDashboardGUI.java"
+          ],
+          "symbols": [
+            "Boundary.UserDashboardGUI",
+            "Boundary.ReportCreationGUI",
+            "Boundary.ActivityMonitoringGUI",
+            "Boundary.ReceivedReportsGUI",
+            "Boundary.ReportStatusUpdateGUI",
+            "Boundary.SubmittedReportsGUI",
+            "Boundary.InternalNoteGUI"
+          ]
+        },
+        {
+          "element": "part:service-1",
+          "name": "Use case controllers",
+          "files": [
+            "src/main/java/Control/ReportCreationController.java",
+            "src/main/java/Control/SystemServicesController.java",
+            "src/main/java/Control/UserRegistrationController.java"
+          ],
+          "symbols": [
+            "Control.SystemServicesController",
+            "Control.ReportCreationController",
+            "Control.UserRegistrationController"
+          ]
+        },
+        {
+          "element": "part:service-2",
+          "name": "Report and user services",
+          "files": [
+            "src/main/java/Entity/ReportService.java",
+            "src/main/java/Entity/UserService.java"
+          ],
+          "symbols": [
+            "Entity.ReportService",
+            "Entity.UserService"
+          ]
+        },
+        {
+          "element": "part:domain",
+          "name": "Municipal report entities",
+          "files": [
+            "src/main/java/Entity/Assigned.java",
+            "src/main/java/Entity/Citizen.java",
+            "src/main/java/Entity/Credentials.java",
+            "src/main/java/Entity/InProgress.java",
+            "src/main/java/Entity/InternalNote.java",
+            "src/main/java/Entity/Location.java",
+            "src/main/java/Entity/MunicipalOperator.java",
+            "src/main/java/Entity/Notification.java",
+            "src/main/java/Entity/Report.java",
+            "src/main/java/Entity/ReportStatus.java",
+            "src/main/java/Entity/Resolved.java",
+            "src/main/java/Entity/StatusUpdate.java",
+            "src/main/java/Entity/Submitted.java",
+            "src/main/java/Entity/User.java"
+          ],
+          "symbols": [
+            "Entity.Report",
+            "Entity.Notification",
+            "Entity.MunicipalOperator",
+            "Entity.StatusUpdate",
+            "Entity.InternalNote",
+            "Entity.User",
+            "Entity.Citizen",
+            "Entity.ReportStatus",
+            "Entity.Location",
+            "Entity.Assigned",
+            "Entity.InProgress",
+            "Entity.Submitted",
+            "Entity.Resolved",
+            "Entity.Credentials"
+          ]
+        },
+        {
+          "element": "part:data_access",
+          "name": "Report data storage",
+          "files": [
+            "src/main/java/Database/JpaUtil.java",
+            "src/main/java/Database/PersistenceService.java"
+          ],
+          "symbols": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ]
+        },
+        {
+          "element": "part:database",
+          "name": "MySQL database",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        }
+      ],
+      "limitations": [
+        "parts follow the request's subjects: user-facing functionality, application logic, domain entities, data persistence",
+        "shared data types (not drawn, no arrows through them): ReportCategory"
+      ],
+      "gaps": [],
+      "overflow": []
+    }
+  ],
+  "correspondences": [
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:part:ui",
+        "V2-cnc-generic:part:ui"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:part:service-1",
+        "V2-cnc-generic:part:service-1"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:part:service-2",
+        "V2-cnc-generic:part:service-2"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:part:domain",
+        "V2-cnc-generic:part:domain"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:part:data_access",
+        "V2-cnc-generic:part:data_access"
+      ]
+    },
+    {
+      "rule": "same-element",
+      "elements": [
+        "V1-decomposition:part:database",
+        "V2-cnc-generic:part:database"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-decomposition:part:ui",
+        "V2-cnc-generic:part:ui"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-decomposition:part:service-1",
+        "V2-cnc-generic:part:service-1"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-decomposition:part:service-2",
+        "V2-cnc-generic:part:service-2"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-decomposition:part:domain",
+        "V2-cnc-generic:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-decomposition:part:data_access",
+        "V2-cnc-generic:part:data_access"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-decomposition:part:database",
+        "V2-cnc-generic:part:database"
+      ]
+    }
+  ],
+  "correspondence_gaps": [],
+  "declared_gaps": [],
+  "uncovered_needs": [],
+  "secondary_not_shown": []
+}

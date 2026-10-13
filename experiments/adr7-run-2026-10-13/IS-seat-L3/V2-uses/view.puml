@@ -1,0 +1,29 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Uses view — seat booking functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+  Component(ui, "Library booking desktop app", "Java Swing", "Swing screens for selecting rooms, areas, seats and time slots\nSeatSelection, ReservationSummary, WizardState, …")
+  Component(job, "Reservation reminder scheduler", "scheduled", "periodically triggers reservation end handling and reminders\nNotificationScheduler\nanswers: interacting with external services such as the notification service; managing and storing reservations; …")
+  Component(api, "Booking and availability REST API", "Spring Boot REST", "REST boundary for reservation create, cancel, check-in and room availability queries\nStudyRoomController, ReservationController, StudentController\nanswers: handling booking requests; checking seat availability; …")
+  Component(service_1, "Booking service", "Java", "applies seat assignment, handles cancel and check-in, manages rooms and availability\nLibraryFacade, ReservationManager, StudyRoomManager\nanswers: managing and storing reservations; handling booking requests; …", $tags="focus")
+  Component(service_2, "Notification service", "Java", "builds notification messages, sends reminders and delivers them to recipients\nNotificationManager, NotificationService\nanswers: interacting with external services such as the notification service; managing and storing reservations; …")
+  Component(domain, "Reservation domain model", "JPA entities", "reservations, seats, rooms and states; computes available seats per date and slot\nReservation, Student, Area, …\nanswers: checking seat availability; applying booking rules; …")
+  Component(data_access, "Reservation storage", "JPA / Hibernate", "saves, updates and queries reservations, rooms and users via EntityManager\nStudyRoomRegistry, ReservationRegistry, PersistenceManager, …\nanswers: managing and storing reservations; applying booking rules; …")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+Rel(service_1, domain, "creates and updates")
+Rel(service_1, data_access, "reads and saves")
+Rel(ui, service_1, "depends on", "in-process")
+Rel(api, service_1, "depends on", "in-process")
+Rel(service_1, service_2, "uses")
+Rel(domain, data_access, "queries", $tags="against")
+Rel(web_client, api, "depends on", "HTTP/JSON")
+
+SHOW_LEGEND()
+@enduml

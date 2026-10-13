@@ -1,0 +1,93 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-deployment",
+    "viewpoint_id": "deployment",
+    "question_ids": [
+      "AQ1",
+      "AQ2",
+      "AQ3"
+    ],
+    "need": "deployment",
+    "subject": "runtime environments",
+    "goal": "Collect evidence of the runtime nodes (desktop GUI clients and the MySQL server at 127.0.0.1:3306), how the GUI launches and connects to the database through Hibernate/JPA (persistence unit Municipal_Report_Management_System, reports_db), how the jar is built and packaged with Maven, and which entities are persisted in which store.",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Boundary.HomePageGUI",
+        "Boundary.UserLoginGUI",
+        "Boundary.UserRegistrationGUI",
+        "Control.SystemServicesController",
+        "Entity.Report"
+      ],
+      "paths": [
+        "src/main/java/Boundary/HomePageGUI.java",
+        "src/main/java/Boundary/UserLoginGUI.java",
+        "src/main/java/Boundary/UserRegistrationGUI.java"
+      ],
+      "classes": [
+        "deploy",
+        "config",
+        "build",
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "node",
+      "execution_env",
+      "artifact",
+      "datastore"
+    ],
+    "expect_relations": [
+      "deploys",
+      "communicates",
+      "contains"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "none",
+      "planning-agent"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ4"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect import and usage references showing which Boundary classes call Control, which Control classes call Entity services, and which Entity services call Database persistence classes, to map the uses dependencies between modules and components.",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Database.PersistenceService",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Boundary.UserDashboardGUI",
+        "Database.JpaUtil"
+      ],
+      "paths": [
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent"
+    ]
+  }
+]

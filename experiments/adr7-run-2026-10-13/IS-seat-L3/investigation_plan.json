@@ -1,0 +1,145 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ1",
+      "AQ5",
+      "AQ2",
+      "AQ6",
+      "AQ3",
+      "AQ7",
+      "AQ4",
+      "AQ8",
+      "AQ9",
+      "AQ10"
+    ],
+    "need": "decomposition",
+    "subject": "handling booking requests",
+    "goal": "Find how client boundaries (Swing GUI and REST controllers) send booking, seat availability and cancel/check-in requests through LibraryFacade to controllers, strategies and entities, how reservations are persisted via PersistenceManager to the MySQL database, and how NotificationScheduler sends reminders to the external notification service.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.boundary.NotificationScheduler",
+        "it.unina.reservations.entity.Reservation"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "request-reply",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "entry-point:http-route",
+      "graph-neighbour",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ11",
+      "AQ12"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect the import, field, constructor and method-call dependencies among the seat selection UI, REST controller, facade, reservation and study room managers, registries, DTOs, entities (Seat, Area, Reservation) and persistence manager, so that both the direct 'uses' relations and the reverse dependents of each part involved in seat booking can be listed.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.entity.Seat"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V3-sequence",
+    "viewpoint_id": "sequence",
+    "question_ids": [
+      "AQ13",
+      "AQ14",
+      "AQ15",
+      "AQ16",
+      "AQ17",
+      "AQ18"
+    ],
+    "need": "interaction-order",
+    "subject": null,
+    "goal": "Collect the ordered call chains from the reservation boundaries (REST controller, Swing wizard, notification scheduler) through LibraryFacade, ReservationManager, StudyRoomManager and the registries to persistence, including seat availability checks, booking rule validation, failure/exception branches, and notification sending.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.NotificationScheduler"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "test",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "actor",
+      "lifeline"
+    ],
+    "expect_relations": [
+      "message",
+      "return"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

@@ -1,0 +1,260 @@
+{
+  "title": "Client-Server view — user registration functionality",
+  "parts": [
+    {
+      "id": "web_client",
+      "name": "Web client",
+      "role": "web_client",
+      "technology": "HTML / JavaScript",
+      "description": "",
+      "examples": [
+        "app.js"
+      ],
+      "members": [],
+      "answers": [],
+      "files": [
+        "JavaProject/src/main/resources/static/app.js"
+      ]
+    },
+    {
+      "id": "api",
+      "name": "Registration REST endpoint",
+      "role": "api",
+      "technology": "Spring Boot REST",
+      "description": "exposes POST /api/auth/register, forwards to facade, maps validation errors to HTTP 400",
+      "examples": [
+        "AuthenticationController",
+        "RestExceptionHandler",
+        "StudentController"
+      ],
+      "members": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.boundary.SpringBoot.RestExceptionHandler",
+        "it.unina.reservations.boundary.SpringBoot.StudentController"
+      ],
+      "answers": [
+        "handle the registration request",
+        "invalid or already existing user data",
+        "verify the validity and uniqueness of the account"
+      ],
+      "files": []
+    },
+    {
+      "id": "ui",
+      "name": "Registration desktop app",
+      "role": "ui",
+      "technology": "Java Swing",
+      "description": "Swing screens for registration and student and librarian dashboards",
+      "examples": [
+        "Registration",
+        "StudentDashboard",
+        "LibrarianDashboard"
+      ],
+      "members": [
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.boundary.Swing.StudentDashboard",
+        "it.unina.reservations.boundary.Swing.LibrarianDashboard"
+      ],
+      "answers": [
+        "invalid or already existing user data"
+      ],
+      "files": []
+    },
+    {
+      "id": "service",
+      "name": "Registration validation service",
+      "role": "service",
+      "technology": "Java",
+      "description": "validates registration data and role, checks uniqueness, creates and registers users",
+      "examples": [
+        "LibraryFacade",
+        "UserManager"
+      ],
+      "members": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.dto.StudyRoomCreationDTO",
+        "it.unina.reservations.dto.ReservationRequestDTO",
+        "it.unina.reservations.dto.StudyRoomDTO",
+        "it.unina.reservations.dto.RoomDetailDTO",
+        "it.unina.reservations.dto.AvailableTimeSlotDTO"
+      ],
+      "answers": [
+        "invalid or already existing user data",
+        "handle the registration request",
+        "manage role-specific data such as the student ID or librarian identifier",
+        "validate the user's personal information and selected role",
+        "verify the validity and uniqueness of the account",
+        "persist the newly created user"
+      ],
+      "files": []
+    },
+    {
+      "id": "domain",
+      "name": "User and reservation entities",
+      "role": "domain",
+      "technology": "JPA entities",
+      "description": "JPA entities for users, students, librarians and reservations",
+      "examples": [
+        "Reservation",
+        "Student",
+        "User"
+      ],
+      "members": [
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.User",
+        "it.unina.reservations.entity.Librarian"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "data_access-1",
+      "name": "User persistence storage",
+      "role": "data_access",
+      "technology": "JPA / Hibernate",
+      "description": "persists entities in JPA transactions, rolling back and returning false on failure",
+      "examples": [
+        "PersistenceManager",
+        "ReservationRegistry"
+      ],
+      "members": [
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.entity.ReservationRegistry"
+      ],
+      "answers": [
+        "persist the newly created user",
+        "invalid or already existing user data",
+        "verify the validity and uniqueness of the account"
+      ],
+      "files": []
+    },
+    {
+      "id": "data_access-2",
+      "name": "User account lookup storage",
+      "role": "data_access",
+      "technology": "JPA / Hibernate",
+      "description": "",
+      "examples": [
+        "UserRegistry"
+      ],
+      "members": [
+        "it.unina.reservations.entity.UserRegistry"
+      ],
+      "answers": [
+        "invalid or already existing user data",
+        "verify the validity and uniqueness of the account",
+        "persist the newly created user"
+      ],
+      "files": []
+    },
+    {
+      "id": "database",
+      "name": "MySQL database",
+      "role": "database",
+      "technology": "MySQL",
+      "description": "",
+      "examples": [
+        "reservationsdb"
+      ],
+      "members": [],
+      "answers": [],
+      "files": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ]
+    }
+  ],
+  "connectors": [
+    {
+      "source": "service",
+      "target": "domain",
+      "label": "creates and updates",
+      "protocol": "",
+      "weight": 18,
+      "against_layering": false,
+      "evidence": [
+        "UserManager -> User (18)"
+      ]
+    },
+    {
+      "source": "service",
+      "target": "data_access-2",
+      "label": "reads and saves",
+      "protocol": "",
+      "weight": 9,
+      "against_layering": false,
+      "evidence": [
+        "UserManager -> UserRegistry (9)"
+      ]
+    },
+    {
+      "source": "ui",
+      "target": "service",
+      "label": "requests operations",
+      "protocol": "in-process",
+      "weight": 8,
+      "against_layering": false,
+      "evidence": [
+        "StudentDashboard -> LibraryFacade (4)",
+        "LibrarianDashboard -> LibraryFacade (3)",
+        "Registration -> LibraryFacade (1)"
+      ]
+    },
+    {
+      "source": "data_access-2",
+      "target": "data_access-1",
+      "label": "uses",
+      "protocol": "",
+      "weight": 8,
+      "against_layering": false,
+      "evidence": [
+        "UserRegistry -> PersistenceManager (8)"
+      ]
+    },
+    {
+      "source": "api",
+      "target": "service",
+      "label": "delegates requests",
+      "protocol": "in-process",
+      "weight": 4,
+      "against_layering": false,
+      "evidence": [
+        "AuthenticationController -> LibraryFacade (2)",
+        "StudentController -> LibraryFacade (2)"
+      ]
+    },
+    {
+      "source": "data_access-2",
+      "target": "database",
+      "label": "persists",
+      "protocol": "JPA / JDBC",
+      "weight": 3,
+      "against_layering": false,
+      "evidence": [
+        "persistence unit (deployment config) (3)"
+      ]
+    },
+    {
+      "source": "web_client",
+      "target": "api",
+      "label": "sends requests",
+      "protocol": "HTTP/JSON",
+      "weight": 3,
+      "against_layering": false,
+      "evidence": [
+        "web pages call /api routes (3)"
+      ]
+    }
+  ],
+  "omitted": [
+    "User persistence storage -> User and reservation entities: 13 code dependencies (implied: storage returns domain objects)",
+    "User account lookup storage -> User and reservation entities: 7 code dependencies (implied: storage returns domain objects)",
+    "User and reservation entities -> User persistence storage: 2 code dependencies (weak, against the layering)"
+  ],
+  "focus": [],
+  "notes": [
+    "parts follow the request's subjects: handle the registration request, validate the user's personal information and selected role, manage role-specific data such as the student ID or librarian identifier, verify the validity and uniqueness of the account, persist the newly created user, invalid or already existing user data",
+    "shared data types (not drawn, no arrows through them): LibrarianFactory, StudentFactory, UserFactory, ReservationDTO, RoomMonitoringDTO, StatisticsDTO, UserDTO"
+  ]
+}

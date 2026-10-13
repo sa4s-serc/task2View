@@ -1,0 +1,95 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-data-model",
+    "viewpoint_id": "data-model",
+    "question_ids": [
+      "AQ1",
+      "AQ2",
+      "AQ3",
+      "AQ4",
+      "AQ5",
+      "AQ6",
+      "AQ7",
+      "AQ8",
+      "AQ9"
+    ],
+    "need": "data-structure",
+    "subject": "users",
+    "goal": "Collect the entity class definitions (fields, id keys, JPA annotations, relationships such as ManyToOne/OneToMany/embedded, inheritance) and enums for users, credentials, reports, locations, categories, statuses, status updates, internal notes and notifications, plus the persistence unit configuration and how PersistenceService opens and uses the MySQL database.",
+    "seeds": {
+      "symbols": [
+        "Entity.Report",
+        "Database.PersistenceService",
+        "Entity.User",
+        "Entity.Notification",
+        "Entity.InternalNote",
+        "Entity.ReportCategory"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "schema",
+        "config"
+      ]
+    },
+    "expect_elements": [
+      "entity",
+      "enum"
+    ],
+    "expect_relations": [
+      "association",
+      "composition",
+      "generalization"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ10"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Find which classes in the Database persistence layer (PersistenceService, JpaUtil) depend on each other, on the JPA persistence unit configuration, and on the entity classes, and which Entity services and Control classes call into them.",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Control.SystemServicesController"
+      ],
+      "paths": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

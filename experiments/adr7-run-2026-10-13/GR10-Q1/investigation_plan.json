@@ -1,0 +1,103 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1",
+      "AQ5",
+      "AQ2",
+      "AQ6",
+      "AQ3",
+      "AQ7",
+      "AQ4",
+      "AQ8"
+    ],
+    "need": "decomposition",
+    "subject": "user-facing functionality",
+    "goal": "Collect evidence of the package structure (Boundary, Control, Entity, Database), each component's responsibilities, and which layer calls or imports which, including how GUI classes reach controllers, how controllers use entity services, and how services use PersistenceService and the JPA persistence unit.",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Database.PersistenceService",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Boundary.UserDashboardGUI",
+        "Entity.Report"
+      ],
+      "paths": [
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-cnc-generic",
+    "viewpoint_id": "cnc-generic",
+    "question_ids": [
+      "AQ9",
+      "AQ10",
+      "AQ11",
+      "AQ12",
+      "AQ13",
+      "AQ14"
+    ],
+    "need": "layering",
+    "subject": "user-facing functionality",
+    "goal": "Collect evidence of which Boundary, Control, Entity and Database classes import or call each other (layer dependency direction), how GUIs reach services through SystemServicesController, and how PersistenceService and the Hibernate persistence unit read and write the MySQL datastore for features like login and report handling.",
+    "seeds": {
+      "symbols": [
+        "Control.SystemServicesController",
+        "Database.PersistenceService",
+        "Entity.ReportService",
+        "Entity.UserService",
+        "Boundary.UserDashboardGUI",
+        "Control.UserLoginController"
+      ],
+      "paths": [
+        "pom.xml"
+      ],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "connector",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "attachment",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

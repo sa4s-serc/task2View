@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Uses view — seat booking functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+  Component(ui, "Seat booking wizard UI", "Java Swing", "Swing screens where users pick room, area, seat and confirm reservations\nWizardState, SeatSelection, AreaSelection, …")
+  Component(job, "Notification scheduler", "scheduled", "runs scheduled jobs that trigger notifications\nNotificationScheduler")
+  Component(api, "Reservation REST API", "Spring Boot REST", "REST entry point for creating, cancelling and checking in reservations\nReservationController, StudyRoomController, StudentController")
+  Component(service, "Booking rules service", "Java", "validates booking requests, assigns seats, and creates and saves reservations\nLibraryFacade, ReservationManager, NotificationManager")
+  Component(domain, "Reservation domain model", "JPA entities", "entities for students, rooms, areas, seats, time slots and reservation states\nStudent, Area, Seat, …", $tags="focus")
+  Component(data_access, "Reservation storage", "JPA / Hibernate", "saves and queries reservations, rooms, seats and students through JPA\nStudyRoomRegistry, ReservationRegistry, PersistenceManager, …")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+Rel(service, domain, "depends on")
+Rel(ui, service, "depends on", "in-process")
+Rel(api, service, "depends on", "in-process")
+Rel(domain, data_access, "queries", $tags="against")
+Rel(web_client, api, "depends on", "HTTP/JSON")
+
+SHOW_LEGEND()
+@enduml

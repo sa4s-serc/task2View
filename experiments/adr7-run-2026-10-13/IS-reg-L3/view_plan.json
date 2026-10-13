@@ -1,0 +1,96 @@
+{
+  "views": [
+    {
+      "viewpoint_id": "decomposition",
+      "family": "module",
+      "model_kind": "uml-package",
+      "needs": [
+        "decomposition"
+      ],
+      "subjects": [
+        "handle the registration request",
+        "validate the user's personal information and selected role",
+        "manage role-specific data such as the student ID or librarian identifier",
+        "verify the validity and uniqueness of the account",
+        "persist the newly created user"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": null,
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 15
+      },
+      "evidence_gap": null,
+      "rationale": "Decomposition (2.1 Decomposition Style) covers decomposition; combined with layered (V&B 6.6)"
+    },
+    {
+      "viewpoint_id": "client-server",
+      "family": "cnc",
+      "model_kind": "uml-component",
+      "needs": [
+        "collaboration",
+        "dependencies",
+        "interface-contract"
+      ],
+      "subjects": [
+        "handle the registration request",
+        "validate the user's personal information and selected role",
+        "manage role-specific data such as the student ID or librarian identifier",
+        "verify the validity and uniqueness of the account",
+        "persist the newly created user"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": "cnc-generic",
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 15
+      },
+      "evidence_gap": null,
+      "rationale": "Client-Server (4.3.1 Client-Server Style) covers collaboration, dependencies, interface-contract; specialised from cnc-generic because the repository shows rest-api; combined with layered (V&B 6.6)"
+    },
+    {
+      "viewpoint_id": "sequence",
+      "family": "behavior",
+      "model_kind": "uml-sequence",
+      "needs": [
+        "interaction-order"
+      ],
+      "subjects": [
+        "invalid or already existing user data"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "specialised_from": null,
+      "detail_level": "detailed",
+      "granularity": {
+        "max_elements": 12,
+        "fragments": [
+          "alt",
+          "opt",
+          "loop"
+        ]
+      },
+      "evidence_gap": null,
+      "rationale": "Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) covers interaction-order; combined with layered (V&B 6.6)"
+    }
+  ],
+  "needs": [
+    "decomposition",
+    "collaboration",
+    "interaction-order"
+  ],
+  "secondary_needs": [
+    "dependencies",
+    "interface-contract"
+  ],
+  "needs_from_role": false,
+  "uncovered_needs": [],
+  "secondary_not_shown": [],
+  "detail_level": "detailed",
+  "notes": []
+}

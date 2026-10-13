@@ -1,0 +1,142 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1",
+      "AQ2",
+      "AQ3",
+      "AQ4",
+      "AQ5"
+    ],
+    "need": "decomposition",
+    "subject": "handle the registration request",
+    "goal": "Find the components on the registration path from the /api/auth/register endpoint through the facade and user manager to the user registry and persistence layer, including where personal data and role validation, student ID or librarian identifier handling, email uniqueness checks, and saving the new user occur, and which packages contain them.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.boundary.SpringBoot.RestExceptionHandler"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "entry-point:http-route",
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ6",
+      "AQ7",
+      "AQ8",
+      "AQ9",
+      "AQ10",
+      "AQ11",
+      "AQ12"
+    ],
+    "need": "collaboration",
+    "subject": "handle the registration request",
+    "goal": "Collect the registration flow evidence: the /api/auth/register endpoint's request and response types and error handling, how it delegates through LibraryFacade to UserManager and UserRegistry, where role-specific data (student number, librarian code), validation and email uniqueness checks occur, and how PersistenceManager persists the new User, Student or Librarian.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.boundary.SpringBoot.RestExceptionHandler"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "request-reply",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "entry-point:http-route",
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V3-sequence",
+    "viewpoint_id": "sequence",
+    "question_ids": [
+      "AQ13"
+    ],
+    "need": "interaction-order",
+    "subject": "invalid or already existing user data",
+    "goal": "Collect the ordered call chain for user registration from the boundary (REST register endpoint and Swing Registration) through LibraryFacade, UserManager, UserFactory and UserRegistry, including the validation checks, duplicate-email detection, and the exceptions or error returns on the invalid-data and already-existing-user paths.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.controller.factory.UserFactory",
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "test",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "actor",
+      "lifeline"
+    ],
+    "expect_relations": [
+      "message",
+      "return"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

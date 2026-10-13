@@ -1,0 +1,29 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Decomposition view — seat booking functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Boundary(layer0, "Presentation") {
+    Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+    Component(ui, "Student and librarian screens", "Java Swing", "Swing screens and wizard steps where students pick seats and reserve\nSeatSelection, ReservationSummary, WizardState, …")
+    Component(api, "Reservation REST endpoints", "Spring Boot REST", "exposes endpoints to create, cancel and check in reservations\nReservationController, StudyRoomController, StudentController")
+  }
+  Boundary(layer1, "Application") {
+    Component(job, "Notification scheduler", "scheduled", "runs scheduled notification jobs for the library\nNotificationScheduler")
+    Component(service, "Seat reservation services", "Java", "checks overlaps, picks a seat, saves reservations and notifies observers\nLibraryFacade, ReservationManager, StudyRoomManager, …")
+  }
+  Boundary(layer2, "Domain") {
+    Component(domain, "Library reservation model", "JPA entities", "rooms, areas, seats, time slots and reservation states with availability\nStudent, StudyRoom, Area, …")
+  }
+  Boundary(layer3, "Data access") {
+    Component(data_access, "Reservation and room storage", "JPA / Hibernate", "saves and queries rooms, seats, time slots and reservations via JPA\nStudyRoomRegistry, ReservationRegistry, PersistenceManager, …")
+  }
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+
+SHOW_LEGEND()
+@enduml

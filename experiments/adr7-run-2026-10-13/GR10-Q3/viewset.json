@@ -1,0 +1,902 @@
+{
+  "system": "progetto_ing_software_gr10-main-English",
+  "stakeholder": "data-engineer",
+  "goal": "I am a database engineer. I need to modify the persistence layer to support future changes to the management of municipal reports. Before modifying the database, I need to understand the main data entities stored by the system, the relationships among them, and which information must be persisted throughout the lifecycle of a report. In particular, I need to understand how users, reports, locations, categories, states, state changes, internal notes, and notifications are related, and which parts of the application depend on this persisted information.",
+  "views": [
+    {
+      "id": "V1-data-model",
+      "viewpoint_id": "data-model",
+      "viewpoint_name": "Data Model",
+      "vb_ref": "2.6 Data Model",
+      "model_kind": "uml-class",
+      "title": "Data Model view — persistence layer",
+      "purpose": "Data Model (2.6 Data Model) answering data-structure, data-storage for persistence layer",
+      "detail_level": "detailed",
+      "max_elements": 15,
+      "addresses": [
+        "AQ1",
+        "AQ2",
+        "AQ3",
+        "AQ4",
+        "AQ5",
+        "AQ6",
+        "AQ7",
+        "AQ8",
+        "AQ9"
+      ],
+      "overlays": [],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "ent:Entity.InternalNote",
+          "kind": "entity",
+          "name": "InternalNote",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [
+            {
+              "name": "noteId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false
+            },
+            {
+              "name": "text",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "dateEntry",
+              "type": "Date",
+              "key": false,
+              "foreign_key": false
+            }
+          ],
+          "realized_by": [
+            "Entity.InternalNote"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "ent:Entity.Notification",
+          "kind": "entity",
+          "name": "Notification",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [
+            {
+              "name": "notificationId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false
+            },
+            {
+              "name": "sentDate",
+              "type": "Date",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "message",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "notifiedStatus",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            }
+          ],
+          "realized_by": [
+            "Entity.Notification"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "ent:Entity.Report",
+          "kind": "entity",
+          "name": "Report",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [
+            {
+              "name": "reportId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "description",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "category",
+              "type": "ReportCategory",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "location",
+              "type": "Location",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "dateReport",
+              "type": "Date",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "imageAttached",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "currentStatusName",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "citizenEditable",
+              "type": "boolean",
+              "key": false,
+              "foreign_key": false
+            }
+          ],
+          "realized_by": [
+            "Entity.Report"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "ent:Entity.Location",
+          "kind": "entity",
+          "name": "Location",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [
+            {
+              "name": "city",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "cap",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "street",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "streetNumber",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "municipalArea",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            }
+          ],
+          "realized_by": [
+            "Entity.Location"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "ent:Entity.User",
+          "kind": "entity",
+          "name": "User",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [
+            {
+              "name": "userId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "lastName",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "phoneNumber",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "credentials",
+              "type": "Credentials",
+              "key": false,
+              "foreign_key": false
+            }
+          ],
+          "realized_by": [
+            "Entity.User"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "ent:Entity.StatusUpdate",
+          "kind": "entity",
+          "name": "StatusUpdate",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [
+            {
+              "name": "updateId",
+              "type": "Long",
+              "key": true,
+              "foreign_key": false
+            },
+            {
+              "name": "updateDate",
+              "type": "Date",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "newStatus",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            }
+          ],
+          "realized_by": [
+            "Entity.StatusUpdate"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "ent:Entity.Credentials",
+          "kind": "entity",
+          "name": "Credentials",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [
+            {
+              "name": "email",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            },
+            {
+              "name": "password",
+              "type": "String",
+              "key": false,
+              "foreign_key": false
+            }
+          ],
+          "realized_by": [
+            "Entity.Credentials"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "ent:Entity.Citizen",
+          "kind": "entity",
+          "name": "Citizen",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "Entity.Citizen"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        },
+        {
+          "id": "ent:Entity.MunicipalOperator",
+          "kind": "entity",
+          "name": "MunicipalOperator",
+          "stereotype": "entity",
+          "parent": null,
+          "responsibilities": [],
+          "attributes": [],
+          "realized_by": [
+            "Entity.MunicipalOperator"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": ""
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel:ent-entity-internalnote:association:ent-entity-municipaloperator:operator",
+          "kind": "association",
+          "source": "ent:Entity.InternalNote",
+          "target": "ent:Entity.MunicipalOperator",
+          "label": "operator",
+          "multiplicity": "*..1",
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-internalnote:association:ent-entity-report:report",
+          "kind": "association",
+          "source": "ent:Entity.InternalNote",
+          "target": "ent:Entity.Report",
+          "label": "report",
+          "multiplicity": "*..1",
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-notification:association:ent-entity-citizen:destinatario",
+          "kind": "association",
+          "source": "ent:Entity.Notification",
+          "target": "ent:Entity.Citizen",
+          "label": "destinatario",
+          "multiplicity": "*..1",
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-notification:association:ent-entity-report:report",
+          "kind": "association",
+          "source": "ent:Entity.Notification",
+          "target": "ent:Entity.Report",
+          "label": "report",
+          "multiplicity": "*..1",
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-report:composition:ent-entity-location:location",
+          "kind": "composition",
+          "source": "ent:Entity.Report",
+          "target": "ent:Entity.Location",
+          "label": "location",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-report:association:ent-entity-citizen:citizenreporting",
+          "kind": "association",
+          "source": "ent:Entity.Report",
+          "target": "ent:Entity.Citizen",
+          "label": "citizenReporting",
+          "multiplicity": "*..1",
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-report:association:ent-entity-municipaloperator:operator",
+          "kind": "association",
+          "source": "ent:Entity.Report",
+          "target": "ent:Entity.MunicipalOperator",
+          "label": "operator",
+          "multiplicity": "*..1",
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-report:association:ent-entity-statusupdate:statusupdates",
+          "kind": "association",
+          "source": "ent:Entity.Report",
+          "target": "ent:Entity.StatusUpdate",
+          "label": "statusUpdates",
+          "multiplicity": "1..*",
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-statusupdate:association:ent-entity-municipaloperator:operator",
+          "kind": "association",
+          "source": "ent:Entity.StatusUpdate",
+          "target": "ent:Entity.MunicipalOperator",
+          "label": "operator",
+          "multiplicity": "*..1",
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:ent-entity-user:composition:ent-entity-credentials:credentials",
+          "kind": "composition",
+          "source": "ent:Entity.User",
+          "target": "ent:Entity.Credentials",
+          "label": "credentials",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:Entity.Citizen:generalization:Entity.User",
+          "kind": "generalization",
+          "source": "ent:Entity.Citizen",
+          "target": "ent:Entity.User",
+          "label": null,
+          "multiplicity": null,
+          "support": "inferred",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "rel:Entity.MunicipalOperator:generalization:Entity.User",
+          "kind": "generalization",
+          "source": "ent:Entity.MunicipalOperator",
+          "target": "ent:Entity.User",
+          "label": null,
+          "multiplicity": null,
+          "support": "inferred",
+          "protocol": "",
+          "against_layering": false
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "ent:Entity.InternalNote",
+          "name": "InternalNote",
+          "files": [
+            "src/main/java/Entity/InternalNote.java"
+          ],
+          "symbols": [
+            "Entity.InternalNote"
+          ]
+        },
+        {
+          "element": "ent:Entity.Notification",
+          "name": "Notification",
+          "files": [
+            "src/main/java/Entity/Notification.java"
+          ],
+          "symbols": [
+            "Entity.Notification"
+          ]
+        },
+        {
+          "element": "ent:Entity.Report",
+          "name": "Report",
+          "files": [
+            "src/main/java/Entity/Report.java"
+          ],
+          "symbols": [
+            "Entity.Report"
+          ]
+        },
+        {
+          "element": "ent:Entity.Location",
+          "name": "Location",
+          "files": [
+            "src/main/java/Entity/Location.java"
+          ],
+          "symbols": [
+            "Entity.Location"
+          ]
+        },
+        {
+          "element": "ent:Entity.User",
+          "name": "User",
+          "files": [
+            "src/main/java/Entity/User.java"
+          ],
+          "symbols": [
+            "Entity.User"
+          ]
+        },
+        {
+          "element": "ent:Entity.StatusUpdate",
+          "name": "StatusUpdate",
+          "files": [
+            "src/main/java/Entity/StatusUpdate.java"
+          ],
+          "symbols": [
+            "Entity.StatusUpdate"
+          ]
+        },
+        {
+          "element": "ent:Entity.Credentials",
+          "name": "Credentials",
+          "files": [
+            "src/main/java/Entity/Credentials.java"
+          ],
+          "symbols": [
+            "Entity.Credentials"
+          ]
+        },
+        {
+          "element": "ent:Entity.Citizen",
+          "name": "Citizen",
+          "files": [
+            "src/main/java/Entity/Citizen.java"
+          ],
+          "symbols": [
+            "Entity.Citizen"
+          ]
+        },
+        {
+          "element": "ent:Entity.MunicipalOperator",
+          "name": "MunicipalOperator",
+          "files": [
+            "src/main/java/Entity/MunicipalOperator.java"
+          ],
+          "symbols": [
+            "Entity.MunicipalOperator"
+          ]
+        }
+      ],
+      "limitations": [],
+      "gaps": [],
+      "overflow": []
+    },
+    {
+      "id": "V2-uses",
+      "viewpoint_id": "uses",
+      "viewpoint_name": "Uses",
+      "vb_ref": "2.2 Uses Style",
+      "model_kind": "uml-package",
+      "title": "Uses view — persistence layer",
+      "purpose": "Uses (2.2 Uses Style) answering dependencies for persistence layer",
+      "detail_level": "detailed",
+      "max_elements": 9,
+      "addresses": [
+        "AQ10"
+      ],
+      "overlays": [
+        "layered"
+      ],
+      "scenario": null,
+      "elements": [
+        {
+          "id": "part:ui",
+          "kind": "component",
+          "name": "Report handling screens",
+          "stereotype": "ui",
+          "parent": null,
+          "responsibilities": [
+            "screens for creating reports, viewing received ones, updating status, adding notes; ReportCreationGUI, ReceivedReportsGUI, ReportStatusUpdateGUI, …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Boundary.ReportCreationGUI",
+            "Boundary.ReceivedReportsGUI",
+            "Boundary.ReportStatusUpdateGUI",
+            "Boundary.InternalNoteGUI"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java Swing"
+        },
+        {
+          "id": "part:service",
+          "kind": "component",
+          "name": "Report and user services",
+          "stereotype": "service",
+          "parent": null,
+          "responsibilities": [
+            "application logic for handling reports and users; ReportService, UserService"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.ReportService",
+            "Entity.UserService"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "Java"
+        },
+        {
+          "id": "part:domain",
+          "kind": "component",
+          "name": "Report data model",
+          "stereotype": "domain",
+          "parent": null,
+          "responsibilities": [
+            "persisted reports, users, locations, statuses, state changes, notes and notifications; Report, Notification, MunicipalOperator, …; answers: reports; internal notes; …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Entity.Report",
+            "Entity.Notification",
+            "Entity.MunicipalOperator",
+            "Entity.StatusUpdate",
+            "Entity.InternalNote",
+            "Entity.User",
+            "Entity.Citizen",
+            "Entity.ReportStatus",
+            "Entity.Location",
+            "Entity.Assigned",
+            "Entity.Submitted",
+            "Entity.Credentials",
+            "Entity.InProgress",
+            "Entity.Resolved"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "JPA entities"
+        },
+        {
+          "id": "part:data_access",
+          "kind": "component",
+          "name": "Report storage access",
+          "stereotype": "data_access",
+          "parent": null,
+          "responsibilities": [
+            "provides JPA/Hibernate persistence access for the stored entities; PersistenceService, …"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "JPA / Hibernate"
+        },
+        {
+          "id": "part:database",
+          "kind": "component",
+          "name": "MySQL database",
+          "stereotype": "database",
+          "parent": null,
+          "responsibilities": [
+            "reports_db"
+          ],
+          "attributes": [],
+          "realized_by": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "support": "observed",
+          "group": false,
+          "technology": "MySQL"
+        }
+      ],
+      "relations": [
+        {
+          "id": "conn:service:domain",
+          "kind": "uses",
+          "source": "part:service",
+          "target": "part:domain",
+          "label": "creates and updates",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        },
+        {
+          "id": "conn:service:data_access",
+          "kind": "uses",
+          "source": "part:service",
+          "target": "part:data_access",
+          "label": "reads and saves",
+          "multiplicity": null,
+          "support": "observed",
+          "protocol": "",
+          "against_layering": false
+        }
+      ],
+      "interactions": [],
+      "fragments": [],
+      "traceability": [
+        {
+          "element": "part:ui",
+          "name": "Report handling screens",
+          "files": [
+            "src/main/java/Boundary/InternalNoteGUI.java",
+            "src/main/java/Boundary/ReceivedReportsGUI.java",
+            "src/main/java/Boundary/ReportCreationGUI.java",
+            "src/main/java/Boundary/ReportStatusUpdateGUI.java"
+          ],
+          "symbols": [
+            "Boundary.ReportCreationGUI",
+            "Boundary.ReceivedReportsGUI",
+            "Boundary.ReportStatusUpdateGUI",
+            "Boundary.InternalNoteGUI"
+          ]
+        },
+        {
+          "element": "part:service",
+          "name": "Report and user services",
+          "files": [
+            "src/main/java/Entity/ReportService.java",
+            "src/main/java/Entity/UserService.java"
+          ],
+          "symbols": [
+            "Entity.ReportService",
+            "Entity.UserService"
+          ]
+        },
+        {
+          "element": "part:domain",
+          "name": "Report data model",
+          "files": [
+            "src/main/java/Entity/Assigned.java",
+            "src/main/java/Entity/Citizen.java",
+            "src/main/java/Entity/Credentials.java",
+            "src/main/java/Entity/InProgress.java",
+            "src/main/java/Entity/InternalNote.java",
+            "src/main/java/Entity/Location.java",
+            "src/main/java/Entity/MunicipalOperator.java",
+            "src/main/java/Entity/Notification.java",
+            "src/main/java/Entity/Report.java",
+            "src/main/java/Entity/ReportStatus.java",
+            "src/main/java/Entity/Resolved.java",
+            "src/main/java/Entity/StatusUpdate.java",
+            "src/main/java/Entity/Submitted.java",
+            "src/main/java/Entity/User.java"
+          ],
+          "symbols": [
+            "Entity.Report",
+            "Entity.Notification",
+            "Entity.MunicipalOperator",
+            "Entity.StatusUpdate",
+            "Entity.InternalNote",
+            "Entity.User",
+            "Entity.Citizen",
+            "Entity.ReportStatus",
+            "Entity.Location",
+            "Entity.Assigned",
+            "Entity.Submitted",
+            "Entity.Credentials",
+            "Entity.InProgress",
+            "Entity.Resolved"
+          ]
+        },
+        {
+          "element": "part:data_access",
+          "name": "Report storage access",
+          "files": [
+            "src/main/java/Database/JpaUtil.java",
+            "src/main/java/Database/PersistenceService.java"
+          ],
+          "symbols": [
+            "Database.PersistenceService",
+            "Database.JpaUtil"
+          ]
+        },
+        {
+          "element": "part:database",
+          "name": "MySQL database",
+          "files": [
+            "src/main/resources/META-INF/persistence.xml"
+          ],
+          "symbols": []
+        }
+      ],
+      "limitations": [
+        "not drawn: Report storage access -> MySQL database: not affected by a change to Report and user services",
+        "shared data types (not drawn, no arrows through them): ReportCategory"
+      ],
+      "gaps": [],
+      "overflow": []
+    }
+  ],
+  "correspondences": [
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.InternalNote",
+        "V2-uses:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.Notification",
+        "V2-uses:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.Report",
+        "V2-uses:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.Location",
+        "V2-uses:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.User",
+        "V2-uses:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.StatusUpdate",
+        "V2-uses:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.Credentials",
+        "V2-uses:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.Citizen",
+        "V2-uses:part:domain"
+      ]
+    },
+    {
+      "rule": "member-of-part",
+      "elements": [
+        "V1-data-model:ent:Entity.MunicipalOperator",
+        "V2-uses:part:domain"
+      ]
+    }
+  ],
+  "correspondence_gaps": [],
+  "declared_gaps": [],
+  "uncovered_needs": [],
+  "secondary_not_shown": []
+}

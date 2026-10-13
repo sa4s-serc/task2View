@@ -1,0 +1,150 @@
+{
+  "title": "Uses view — persistence layer",
+  "parts": [
+    {
+      "id": "ui",
+      "name": "Report handling screens",
+      "role": "ui",
+      "technology": "Java Swing",
+      "description": "screens for creating reports, viewing received ones, updating status, adding notes",
+      "examples": [
+        "ReportCreationGUI",
+        "ReceivedReportsGUI",
+        "ReportStatusUpdateGUI"
+      ],
+      "members": [
+        "Boundary.ReportCreationGUI",
+        "Boundary.ReceivedReportsGUI",
+        "Boundary.ReportStatusUpdateGUI",
+        "Boundary.InternalNoteGUI"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "service",
+      "name": "Report and user services",
+      "role": "service",
+      "technology": "Java",
+      "description": "application logic for handling reports and users",
+      "examples": [
+        "ReportService",
+        "UserService"
+      ],
+      "members": [
+        "Entity.ReportService",
+        "Entity.UserService"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "domain",
+      "name": "Report data model",
+      "role": "domain",
+      "technology": "JPA entities",
+      "description": "persisted reports, users, locations, statuses, state changes, notes and notifications",
+      "examples": [
+        "Report",
+        "Notification",
+        "MunicipalOperator"
+      ],
+      "members": [
+        "Entity.Report",
+        "Entity.Notification",
+        "Entity.MunicipalOperator",
+        "Entity.StatusUpdate",
+        "Entity.InternalNote",
+        "Entity.User",
+        "Entity.Citizen",
+        "Entity.ReportStatus",
+        "Entity.Location",
+        "Entity.Assigned",
+        "Entity.Submitted",
+        "Entity.Credentials",
+        "Entity.InProgress",
+        "Entity.Resolved"
+      ],
+      "answers": [
+        "reports",
+        "internal notes",
+        "state changes",
+        "states",
+        "notifications",
+        "users",
+        "locations",
+        "categories"
+      ],
+      "files": []
+    },
+    {
+      "id": "data_access",
+      "name": "Report storage access",
+      "role": "data_access",
+      "technology": "JPA / Hibernate",
+      "description": "provides JPA/Hibernate persistence access for the stored entities",
+      "examples": [
+        "PersistenceService"
+      ],
+      "members": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ],
+      "answers": [],
+      "files": []
+    },
+    {
+      "id": "database",
+      "name": "MySQL database",
+      "role": "database",
+      "technology": "MySQL",
+      "description": "",
+      "examples": [
+        "reports_db"
+      ],
+      "members": [],
+      "answers": [],
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ]
+    }
+  ],
+  "connectors": [
+    {
+      "source": "service",
+      "target": "domain",
+      "label": "creates and updates",
+      "protocol": "",
+      "weight": 76,
+      "against_layering": false,
+      "evidence": [
+        "ReportService -> Report (44)",
+        "ReportService -> Notification (10)",
+        "UserService -> User (8)",
+        "ReportService -> StatusUpdate (6)",
+        "ReportService -> InternalNote (6)"
+      ]
+    },
+    {
+      "source": "service",
+      "target": "data_access",
+      "label": "reads and saves",
+      "protocol": "",
+      "weight": 28,
+      "against_layering": false,
+      "evidence": [
+        "ReportService -> PersistenceService (21)",
+        "UserService -> PersistenceService (7)"
+      ]
+    }
+  ],
+  "omitted": [
+    "Report storage access -> MySQL database: not affected by a change to Report and user services"
+  ],
+  "focus": [
+    "service"
+  ],
+  "notes": [
+    "shared data types (not drawn, no arrows through them): ReportCategory"
+  ]
+}

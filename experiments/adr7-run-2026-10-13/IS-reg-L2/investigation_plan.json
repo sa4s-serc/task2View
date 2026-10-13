@@ -1,0 +1,131 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "decomposition",
+    "subject": null,
+    "goal": "Collect evidence of which classes and packages take part in user registration (Swing and REST boundaries, facade, UserManager, factories, UserRegistry, User/Student entities, persistence), what each is responsible for, and which layer or package contains each.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.controller.factory.UserFactory",
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ2",
+      "AQ3"
+    ],
+    "need": "collaboration",
+    "subject": null,
+    "goal": "Collect evidence of how the Swing Registration form and the Spring AuthenticationController /api/auth/register endpoint invoke UserManager, UserFactory and UserRegistry to create and persist a user, including the operation signatures, UserDTO parameters, return values, and the validation errors or exceptions raised.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.controller.factory.UserFactory",
+        "it.unina.reservations.dto.UserDTO"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "request-reply",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V3-sequence",
+    "viewpoint_id": "sequence",
+    "question_ids": [
+      "AQ4"
+    ],
+    "need": "interaction-order",
+    "subject": null,
+    "goal": "Collect the ordered chain of calls for user registration from the Swing Registration form and the REST register endpoint through LibraryFacade, UserManager, UserFactory/StudentFactory, UserRegistry and persistence, including validation checks, duplicate-email or invalid-input failure paths, and exceptions returned to the caller.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+        "it.unina.reservations.controller.UserManager",
+        "it.unina.reservations.controller.factory.UserFactory",
+        "it.unina.reservations.entity.UserRegistry",
+        "it.unina.reservations.boundary.Swing.Registration",
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "test",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "actor",
+      "lifeline"
+    ],
+    "expect_relations": [
+      "message",
+      "return"
+    ],
+    "budget_steps": 16,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

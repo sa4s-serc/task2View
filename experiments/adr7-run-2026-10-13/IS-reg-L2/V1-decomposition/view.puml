@@ -1,0 +1,28 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Decomposition view — user registration functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Boundary(layer0, "Presentation") {
+    Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+    Component(ui, "Registration and booking screens", "Java Swing", "collects registration data, submits it and shows errors\nLogin, Registration, StudentDashboard, …")
+    Component(api, "Registration REST API", "Spring Boot REST", "exposes POST /api/auth/register and returns the created user as UserDTO\nAuthenticationController, ReservationController, StudentController")
+  }
+  Boundary(layer1, "Application") {
+    Component(service, "Registration and library services", "Java", "checks uniqueness, validates student ID, creates users via factory and stores them\nLibraryFacade, UserManager, …")
+  }
+  Boundary(layer2, "Domain") {
+    Component(domain, "User and reservation entities", "JPA entities", "persistent users with credentials and lock state, student identified by studentNumber\nStudent, User, Reservation, …")
+  }
+  Boundary(layer3, "Data access") {
+    Component(data_access, "User and reservation storage", "JPA / Hibernate", "looks up email and identifier uniqueness and persists users in transactions\nPersistenceManager, UserRegistry, ReservationRegistry")
+  }
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+
+SHOW_LEGEND()
+@enduml

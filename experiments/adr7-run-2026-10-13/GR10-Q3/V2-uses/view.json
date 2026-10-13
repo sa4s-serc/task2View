@@ -1,0 +1,241 @@
+{
+  "id": "V2-uses",
+  "viewpoint_id": "uses",
+  "viewpoint_name": "Uses",
+  "vb_ref": "2.2 Uses Style",
+  "model_kind": "uml-package",
+  "title": "Uses view — persistence layer",
+  "purpose": "Uses (2.2 Uses Style) answering dependencies for persistence layer",
+  "detail_level": "detailed",
+  "max_elements": 9,
+  "addresses": [
+    "AQ10"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "part:ui",
+      "kind": "component",
+      "name": "Report handling screens",
+      "stereotype": "ui",
+      "parent": null,
+      "responsibilities": [
+        "screens for creating reports, viewing received ones, updating status, adding notes; ReportCreationGUI, ReceivedReportsGUI, ReportStatusUpdateGUI, …"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Boundary.ReportCreationGUI",
+        "Boundary.ReceivedReportsGUI",
+        "Boundary.ReportStatusUpdateGUI",
+        "Boundary.InternalNoteGUI"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "Java Swing"
+    },
+    {
+      "id": "part:service",
+      "kind": "component",
+      "name": "Report and user services",
+      "stereotype": "service",
+      "parent": null,
+      "responsibilities": [
+        "application logic for handling reports and users; ReportService, UserService"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.ReportService",
+        "Entity.UserService"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "Java"
+    },
+    {
+      "id": "part:domain",
+      "kind": "component",
+      "name": "Report data model",
+      "stereotype": "domain",
+      "parent": null,
+      "responsibilities": [
+        "persisted reports, users, locations, statuses, state changes, notes and notifications; Report, Notification, MunicipalOperator, …; answers: reports; internal notes; …"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Entity.Report",
+        "Entity.Notification",
+        "Entity.MunicipalOperator",
+        "Entity.StatusUpdate",
+        "Entity.InternalNote",
+        "Entity.User",
+        "Entity.Citizen",
+        "Entity.ReportStatus",
+        "Entity.Location",
+        "Entity.Assigned",
+        "Entity.Submitted",
+        "Entity.Credentials",
+        "Entity.InProgress",
+        "Entity.Resolved"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "JPA entities"
+    },
+    {
+      "id": "part:data_access",
+      "kind": "component",
+      "name": "Report storage access",
+      "stereotype": "data_access",
+      "parent": null,
+      "responsibilities": [
+        "provides JPA/Hibernate persistence access for the stored entities; PersistenceService, …"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "JPA / Hibernate"
+    },
+    {
+      "id": "part:database",
+      "kind": "component",
+      "name": "MySQL database",
+      "stereotype": "database",
+      "parent": null,
+      "responsibilities": [
+        "reports_db"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "MySQL"
+    }
+  ],
+  "relations": [
+    {
+      "id": "conn:service:domain",
+      "kind": "uses",
+      "source": "part:service",
+      "target": "part:domain",
+      "label": "creates and updates",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "",
+      "against_layering": false
+    },
+    {
+      "id": "conn:service:data_access",
+      "kind": "uses",
+      "source": "part:service",
+      "target": "part:data_access",
+      "label": "reads and saves",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "",
+      "against_layering": false
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "part:ui",
+      "name": "Report handling screens",
+      "files": [
+        "src/main/java/Boundary/InternalNoteGUI.java",
+        "src/main/java/Boundary/ReceivedReportsGUI.java",
+        "src/main/java/Boundary/ReportCreationGUI.java",
+        "src/main/java/Boundary/ReportStatusUpdateGUI.java"
+      ],
+      "symbols": [
+        "Boundary.ReportCreationGUI",
+        "Boundary.ReceivedReportsGUI",
+        "Boundary.ReportStatusUpdateGUI",
+        "Boundary.InternalNoteGUI"
+      ]
+    },
+    {
+      "element": "part:service",
+      "name": "Report and user services",
+      "files": [
+        "src/main/java/Entity/ReportService.java",
+        "src/main/java/Entity/UserService.java"
+      ],
+      "symbols": [
+        "Entity.ReportService",
+        "Entity.UserService"
+      ]
+    },
+    {
+      "element": "part:domain",
+      "name": "Report data model",
+      "files": [
+        "src/main/java/Entity/Assigned.java",
+        "src/main/java/Entity/Citizen.java",
+        "src/main/java/Entity/Credentials.java",
+        "src/main/java/Entity/InProgress.java",
+        "src/main/java/Entity/InternalNote.java",
+        "src/main/java/Entity/Location.java",
+        "src/main/java/Entity/MunicipalOperator.java",
+        "src/main/java/Entity/Notification.java",
+        "src/main/java/Entity/Report.java",
+        "src/main/java/Entity/ReportStatus.java",
+        "src/main/java/Entity/Resolved.java",
+        "src/main/java/Entity/StatusUpdate.java",
+        "src/main/java/Entity/Submitted.java",
+        "src/main/java/Entity/User.java"
+      ],
+      "symbols": [
+        "Entity.Report",
+        "Entity.Notification",
+        "Entity.MunicipalOperator",
+        "Entity.StatusUpdate",
+        "Entity.InternalNote",
+        "Entity.User",
+        "Entity.Citizen",
+        "Entity.ReportStatus",
+        "Entity.Location",
+        "Entity.Assigned",
+        "Entity.Submitted",
+        "Entity.Credentials",
+        "Entity.InProgress",
+        "Entity.Resolved"
+      ]
+    },
+    {
+      "element": "part:data_access",
+      "name": "Report storage access",
+      "files": [
+        "src/main/java/Database/JpaUtil.java",
+        "src/main/java/Database/PersistenceService.java"
+      ],
+      "symbols": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ]
+    },
+    {
+      "element": "part:database",
+      "name": "MySQL database",
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    }
+  ],
+  "limitations": [
+    "not drawn: Report storage access -> MySQL database: not affected by a change to Report and user services",
+    "shared data types (not drawn, no arrows through them): ReportCategory"
+  ],
+  "gaps": [],
+  "overflow": []
+}

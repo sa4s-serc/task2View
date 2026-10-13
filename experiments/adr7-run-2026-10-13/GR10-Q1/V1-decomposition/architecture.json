@@ -1,0 +1,152 @@
+{
+  "title": "Decomposition view — progetto_ing_software_gr10-main-English",
+  "parts": [
+    {
+      "id": "ui",
+      "name": "Report management desktop screens",
+      "role": "ui",
+      "technology": "Java Swing",
+      "description": "Swing screens for creating, reviewing, updating reports and monitoring activity",
+      "examples": [
+        "UserDashboardGUI",
+        "ReportCreationGUI",
+        "ActivityMonitoringGUI"
+      ],
+      "members": [
+        "Boundary.UserDashboardGUI",
+        "Boundary.ReportCreationGUI",
+        "Boundary.ActivityMonitoringGUI",
+        "Boundary.ReceivedReportsGUI",
+        "Boundary.ReportStatusUpdateGUI",
+        "Boundary.SubmittedReportsGUI",
+        "Boundary.InternalNoteGUI"
+      ],
+      "answers": [
+        "user-facing functionality"
+      ],
+      "files": []
+    },
+    {
+      "id": "service-1",
+      "name": "Use case controllers",
+      "role": "service",
+      "technology": "Java",
+      "description": "Facade and controllers delegating report creation and user registration, validating registration data",
+      "examples": [
+        "SystemServicesController",
+        "ReportCreationController",
+        "UserRegistrationController"
+      ],
+      "members": [
+        "Control.SystemServicesController",
+        "Control.ReportCreationController",
+        "Control.UserRegistrationController"
+      ],
+      "answers": [
+        "application logic",
+        "user-facing functionality",
+        "domain entities",
+        "data persistence"
+      ],
+      "files": []
+    },
+    {
+      "id": "service-2",
+      "name": "Report and user services",
+      "role": "service",
+      "technology": "Java",
+      "description": "creates reports, registers users, retrieves reports and credentials through persistence",
+      "examples": [
+        "ReportService",
+        "UserService"
+      ],
+      "members": [
+        "Entity.ReportService",
+        "Entity.UserService"
+      ],
+      "answers": [
+        "domain entities",
+        "user-facing functionality",
+        "application logic",
+        "data persistence"
+      ],
+      "files": []
+    },
+    {
+      "id": "domain",
+      "name": "Municipal report entities",
+      "role": "domain",
+      "technology": "JPA entities",
+      "description": "JPA entities for reports, users, citizens, operators, notes, status updates and locations",
+      "examples": [
+        "Report",
+        "Notification",
+        "MunicipalOperator"
+      ],
+      "members": [
+        "Entity.Report",
+        "Entity.Notification",
+        "Entity.MunicipalOperator",
+        "Entity.StatusUpdate",
+        "Entity.InternalNote",
+        "Entity.User",
+        "Entity.Citizen",
+        "Entity.ReportStatus",
+        "Entity.Location",
+        "Entity.Assigned",
+        "Entity.InProgress",
+        "Entity.Submitted",
+        "Entity.Resolved",
+        "Entity.Credentials"
+      ],
+      "answers": [
+        "domain entities",
+        "data persistence"
+      ],
+      "files": []
+    },
+    {
+      "id": "data_access",
+      "name": "Report data storage",
+      "role": "data_access",
+      "technology": "JPA / Hibernate",
+      "description": "generic save, update and find operations over JPA with a shared EntityManagerFactory",
+      "examples": [
+        "PersistenceService"
+      ],
+      "members": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ],
+      "answers": [
+        "data persistence",
+        "user-facing functionality",
+        "application logic",
+        "domain entities"
+      ],
+      "files": []
+    },
+    {
+      "id": "database",
+      "name": "MySQL database",
+      "role": "database",
+      "technology": "MySQL",
+      "description": "",
+      "examples": [
+        "reports_db"
+      ],
+      "members": [],
+      "answers": [],
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ]
+    }
+  ],
+  "connectors": [],
+  "omitted": [],
+  "focus": [],
+  "notes": [
+    "parts follow the request's subjects: user-facing functionality, application logic, domain entities, data persistence",
+    "shared data types (not drawn, no arrows through them): ReportCategory"
+  ]
+}

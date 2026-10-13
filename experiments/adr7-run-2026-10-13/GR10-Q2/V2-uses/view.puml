@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Uses view — progetto_ing_software_gr10-main-English
+
+System_Boundary(app, "progetto_ing_software_gr10-main-English") {
+  Component(ui, "Report desktop screens", "Java Swing", "Java Swing screens for creating, monitoring, updating and viewing reports and notes\nReportCreationGUI, ActivityMonitoringGUI, ReceivedReportsGUI, …")
+  Component(service, "Report handling services", "Java", "creates and retrieves reports, validates report data and delegates registration\nReportService, SystemServicesController, UserService, …", $tags="focus")
+  Component(domain, "Report domain entities", "JPA entities", "persisted entities in reports_db registered in the persistence unit\nReport, User, Notification, …")
+  Component(data_access, "Report database access", "JPA / Hibernate", "creates the EntityManagerFactory and saves, updates and queries entities via JPA/Hibernate\nPersistenceService, …\nanswers: runtime environments")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reports_db")
+
+Rel(service, domain, "creates and updates")
+Rel(service, data_access, "reads and saves")
+Rel(ui, service, "depends on", "in-process")
+
+SHOW_LEGEND()
+@enduml
