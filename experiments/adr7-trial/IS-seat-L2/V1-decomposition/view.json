@@ -1,0 +1,317 @@
+{
+  "id": "V1-decomposition",
+  "viewpoint_id": "decomposition",
+  "viewpoint_name": "Decomposition",
+  "vb_ref": "2.1 Decomposition Style",
+  "model_kind": "uml-package",
+  "title": "Decomposition view — seat booking functionality",
+  "purpose": "Decomposition (2.1 Decomposition Style) answering decomposition for seat booking functionality",
+  "detail_level": "feature",
+  "max_elements": 9,
+  "addresses": [
+    "AQ1"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "part:web_client",
+      "kind": "component",
+      "name": "Web client",
+      "stereotype": "web_client",
+      "parent": null,
+      "responsibilities": [
+        "app.js"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "JavaProject/src/main/resources/static/app.js"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "HTML / JavaScript"
+    },
+    {
+      "id": "part:api",
+      "kind": "component",
+      "name": "Reservation REST endpoints",
+      "stereotype": "api",
+      "parent": null,
+      "responsibilities": [
+        "exposes reservation create, cancel and check-in endpoints, delegating to LibraryFacade; ReservationController, StudyRoomController, StudentController"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+        "it.unina.reservations.boundary.SpringBoot.StudentController"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "Spring Boot REST"
+    },
+    {
+      "id": "part:ui",
+      "kind": "component",
+      "name": "Seat booking wizard",
+      "stereotype": "ui",
+      "parent": null,
+      "responsibilities": [
+        "Swing screens for choosing room, seat and time, and confirming reservations; WizardState, SeatSelection, AreaSelection, …"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.Swing.WizardState",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.boundary.Swing.AreaSelection",
+        "it.unina.reservations.boundary.Swing.ReservationSummary",
+        "it.unina.reservations.boundary.Swing.WizardStyle",
+        "it.unina.reservations.boundary.Swing.DateAndRoomSelection",
+        "it.unina.reservations.boundary.Swing.StudentDashboard",
+        "it.unina.reservations.boundary.Swing.TimeSlotSelection",
+        "it.unina.reservations.boundary.Swing.CreateRoom",
+        "it.unina.reservations.boundary.Swing.LibrarianDashboard",
+        "it.unina.reservations.boundary.Swing.ReservationConfirmed",
+        "it.unina.reservations.boundary.Swing.ReservationCard",
+        "it.unina.reservations.boundary.Swing.RoomCard"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "Java Swing"
+    },
+    {
+      "id": "part:service",
+      "kind": "component",
+      "name": "Seat booking service",
+      "stereotype": "service",
+      "parent": null,
+      "responsibilities": [
+        "validates student, room, seat and slot, then creates and saves reservations; LibraryFacade, ReservationManager, StudyRoomManager"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "Java"
+    },
+    {
+      "id": "part:domain",
+      "kind": "component",
+      "name": "Reservation domain model",
+      "stereotype": "domain",
+      "parent": null,
+      "responsibilities": [
+        "entities for reservations, seats, rooms and students, with seat availability checks; Reservation, Area, Seat, …"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.Area",
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.StudyRoom",
+        "it.unina.reservations.entity.TimeSlot",
+        "it.unina.reservations.entity.User",
+        "it.unina.reservations.entity.state.ActiveState",
+        "it.unina.reservations.entity.state.ReservationState",
+        "it.unina.reservations.entity.state.ConfirmedState",
+        "it.unina.reservations.entity.state.CancelledState",
+        "it.unina.reservations.entity.state.CompletedState",
+        "it.unina.reservations.entity.state.ExpiredState",
+        "it.unina.reservations.entity.Librarian",
+        "it.unina.reservations.entity.Observer",
+        "it.unina.reservations.entity.Subject"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "JPA entities"
+    },
+    {
+      "id": "part:data_access",
+      "kind": "component",
+      "name": "Reservation storage",
+      "stereotype": "data_access",
+      "parent": null,
+      "responsibilities": [
+        "saves, updates and queries reservations and other entities through JPA transactions; StudyRoomRegistry, ReservationRegistry, PersistenceManager, …"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.StudyRoomRegistry",
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.entity.UserRegistry"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "JPA / Hibernate"
+    },
+    {
+      "id": "part:database",
+      "kind": "component",
+      "name": "MySQL database",
+      "stereotype": "database",
+      "parent": null,
+      "responsibilities": [
+        "reservationsdb"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": "MySQL"
+    }
+  ],
+  "relations": [],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "part:web_client",
+      "name": "Web client",
+      "files": [
+        "JavaProject/src/main/resources/static/app.js"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "part:api",
+      "name": "Reservation REST endpoints",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+        "it.unina.reservations.boundary.SpringBoot.StudentController"
+      ]
+    },
+    {
+      "element": "part:ui",
+      "name": "Seat booking wizard",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/AreaSelection.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/CreateRoom.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/DateAndRoomSelection.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/LibrarianDashboard.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationCard.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationConfirmed.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/RoomCard.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/SeatSelection.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/StudentDashboard.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/TimeSlotSelection.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/WizardState.java",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/WizardStyle.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.Swing.WizardState",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.boundary.Swing.AreaSelection",
+        "it.unina.reservations.boundary.Swing.ReservationSummary",
+        "it.unina.reservations.boundary.Swing.WizardStyle",
+        "it.unina.reservations.boundary.Swing.DateAndRoomSelection",
+        "it.unina.reservations.boundary.Swing.StudentDashboard",
+        "it.unina.reservations.boundary.Swing.TimeSlotSelection",
+        "it.unina.reservations.boundary.Swing.CreateRoom",
+        "it.unina.reservations.boundary.Swing.LibrarianDashboard",
+        "it.unina.reservations.boundary.Swing.ReservationConfirmed",
+        "it.unina.reservations.boundary.Swing.ReservationCard",
+        "it.unina.reservations.boundary.Swing.RoomCard"
+      ]
+    },
+    {
+      "element": "part:service",
+      "name": "Seat booking service",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager"
+      ]
+    },
+    {
+      "element": "part:domain",
+      "name": "Reservation domain model",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/Area.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Librarian.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Observer.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Student.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoom.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/Subject.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/TimeSlot.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/User.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/state/ActiveState.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/state/CancelledState.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/state/CompletedState.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/state/ConfirmedState.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/state/ExpiredState.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/state/ReservationState.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.Area",
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.entity.Student",
+        "it.unina.reservations.entity.StudyRoom",
+        "it.unina.reservations.entity.TimeSlot",
+        "it.unina.reservations.entity.User",
+        "it.unina.reservations.entity.state.ActiveState",
+        "it.unina.reservations.entity.state.ReservationState",
+        "it.unina.reservations.entity.state.ConfirmedState",
+        "it.unina.reservations.entity.state.CancelledState",
+        "it.unina.reservations.entity.state.CompletedState",
+        "it.unina.reservations.entity.state.ExpiredState",
+        "it.unina.reservations.entity.Librarian",
+        "it.unina.reservations.entity.Observer",
+        "it.unina.reservations.entity.Subject"
+      ]
+    },
+    {
+      "element": "part:data_access",
+      "name": "Reservation storage",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.StudyRoomRegistry",
+        "it.unina.reservations.entity.ReservationRegistry",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.entity.UserRegistry"
+      ]
+    },
+    {
+      "element": "part:database",
+      "name": "MySQL database",
+      "files": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    }
+  ],
+  "limitations": [
+    "shared data types (not drawn, no arrows through them): AssignmentStrategy, FirstAvailableAssignment, AreaDetailDTO, AvailableTimeSlotDTO, ReservationDTO, ReservationRequestDTO, RoomDetailDTO, RoomMonitoringDTO, SeatDTO, StatisticsDTO, StudyRoomCreationDTO, StudyRoomDTO, UserDTO"
+  ],
+  "gaps": [],
+  "overflow": []
+}

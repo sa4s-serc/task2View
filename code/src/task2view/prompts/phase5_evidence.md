@@ -66,13 +66,13 @@ Each turn, reply with exactly one JSON object: either one tool call or your fina
 UML models and binary files cannot be read; they are never evidence.
 
 ## Output: claims
-Every claim states one fact and has at least one citation:
+Every claim states one fact, says which question(s) it answers (`"answers": ["AQ2"]`, ids from the questions above), and has at least one citation:
 `{"file": "path", "symbol": "symbol id (optional)", "lines": [start, end], "excerpt": "text copied exactly from those lines"}`
 
 Claim shapes:
 ```json
 {"kind": "element", "element_kind": "component", "name": "OrderService", "symbol": "com.example.orders.OrderService",
- "responsibilities": ["validates that an order can be paid"],
+ "answers": ["AQ1"], "responsibilities": ["validates that an order can be paid"],
  "evidence": [{"file": "src/main/java/com/example/orders/OrderService.java", "lines": [41, 43],
                "excerpt": "if (order.getStatus() != OrderStatus.NEW) {"}],
  "confidence": 0.9}
@@ -93,7 +93,7 @@ For a person or role that uses the system, use `"element_kind": "actor"`. For a 
 ## Rules
 1. **Cite only what you have read.** Copy each excerpt exactly from lines you opened with `read`, and give those line numbers.
    *Why:* a citation whose excerpt is not in the cited lines is rejected.
-2. **Use the code's names.** `name`, `symbol`, `source` and `target` are class, module or symbol names as the code writes them. A responsibility is a short phrase in its own field, never part of a name.
+2. **Use the code's names.** `name`, `symbol`, `source` and `target` are classes or files as the code writes them, never packages or folders. A responsibility is a short phrase in its own field, never part of a name.
    *Why:* an element whose name is not a symbol in the repository is rejected (except non-code kinds such as actors, use cases, nodes, datastores and states), and names are what readers look up in the code.
 3. **One fact per claim.** Report several small claims rather than one large one.
 4. **Interactions:** number them with `order` in the sequence the code executes them, give the same `scenario` name to steps of the same scenario, and put the guard of an alternative or failure path in `condition`.
@@ -105,5 +105,5 @@ For a person or role that uses the system, use `"element_kind": "actor"`. For a 
 ## Check before answering with `final`
 - Each excerpt is copied exactly from the cited lines.
 - Each name is the code's own name.
-- Each claim answers one of the questions above.
+- Each claim answers one of the questions above, and `answers` names exactly the ones it answers.
 - For a functionality: its entry points, the parts it passes and its storage are claimed where the code shows them.

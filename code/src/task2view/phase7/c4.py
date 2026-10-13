@@ -14,24 +14,47 @@ def _q(text: str) -> str:
     return text.replace('"', "'")
 
 
+_LAYER_OF = {"web_client": "Presentation", "ui": "Presentation", "api": "Presentation", "presentation": "Presentation",
+             "job": "Application", "service": "Application", "integration": "Application", "application": "Application",
+             "domain": "Domain", "data_access": "Data access"}
+
+
 def _text(part) -> str:
-    """The box text: what the part does, then a few of its classes (the rest are in the view's JSON)."""
+    """The box text: what the part does, a few of its classes (the rest are in the view's JSON), and the
+    request's subjects it answers."""
     examples = ", ".join(part.examples) + (", …" if len(part.members) + len(part.files) > len(part.examples) else "")
-    return "\\n".join(x for x in (part.description, examples) if x)
+    answers = ("answers: " + "; ".join(part.answers[:2]) + ("; …" if len(part.answers) > 2 else "")) if part.answers else ""
+    return "\\n".join(x for x in (part.description, examples, answers) if x)
 
 
 def _alias(pid: str) -> str:
     return re.sub(r"\W", "_", pid)
 
 
-def render_c4(view: ArchView, system: str) -> str:
+def render_c4(view: ArchView, system: str, *, by_layer: bool = False) -> str:
+    """``by_layer``: group the parts in layer boundaries (decomposition views: containment, no arrows)."""
     lines = ["@startuml", "!include <C4/C4_Component>", "LAYOUT_TOP_DOWN()",
              'AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), '
              '$legendText="dependency against the layering (found in code)")',
+             'AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", '
+             '$legendText="the part being changed")',
              f"title {_q(view.title)}", "", f'System_Boundary(app, "{_q(system)}") {{']
     inside = sorted((p for p in view.parts if p.role != "database"), key=lambda p: _RANK.get(p.role, 9))
-    for p in inside:
-        lines.append(f'  Component({_alias(p.id)}, "{_q(p.name)}", "{_q(p.technology)}", "{_q(_text(p))}")')
+
+    def component(p, indent):
+        tag = ', $tags="focus"' if p.id in view.focus else ""
+        return f'{indent}Component({_alias(p.id)}, "{_q(p.name)}", "{_q(p.technology)}", "{_q(_text(p))}"{tag})'
+
+    if by_layer:
+        layers: dict[str, list] = {}
+        for p in inside:
+            layers.setdefault(_LAYER_OF.get(p.role, "Other"), []).append(p)
+        for k, (layer, parts) in enumerate(layers.items()):
+            lines.append(f'  Boundary(layer{k}, "{layer}") {{')
+            lines += [component(p, "    ") for p in parts]
+            lines.append("  }")
+    else:
+        lines += [component(p, "  ") for p in inside]
     lines.append("}")
     for p in view.parts:
         if p.role == "database":

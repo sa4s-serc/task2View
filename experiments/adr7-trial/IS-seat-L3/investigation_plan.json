@@ -1,0 +1,137 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-decomposition",
+    "viewpoint_id": "decomposition",
+    "question_ids": [
+      "AQ1",
+      "AQ2",
+      "AQ3",
+      "AQ4"
+    ],
+    "need": "decomposition",
+    "subject": "handling booking requests",
+    "goal": "Collect evidence of the packages and classes involved in booking requests, seat availability checks, booking rule application (strategy, factory, state) and reservation persistence, including each class's responsibility and which layer or package contains it.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.entity.Reservation",
+        "it.unina.reservations.entity.StudyRoomRegistry",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.boundary.SpringBoot.StudyRoomController"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "is-part-of"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "entry-point:http-route",
+      "graph-neighbour",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT2",
+    "view_id": "V2-client-server",
+    "viewpoint_id": "client-server",
+    "question_ids": [
+      "AQ5",
+      "AQ6",
+      "AQ7",
+      "AQ8",
+      "AQ9",
+      "AQ10"
+    ],
+    "need": "collaboration",
+    "subject": "handling booking requests",
+    "goal": "Collect evidence of how REST/Swing boundary classes call LibraryFacade and downstream controllers/strategies for booking, seat availability, and booking-rule validation, how reservations are persisted via PersistenceManager to the MySQL datastore, and how NotificationScheduler reaches the external notification service.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.boundary.SpringBoot.ReservationController",
+        "it.unina.reservations.boundary.SpringBoot.StudyRoomController",
+        "it.unina.reservations.database.PersistenceManager",
+        "it.unina.reservations.boundary.NotificationScheduler",
+        "it.unina.reservations.entity.Reservation"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "config",
+        "web"
+      ]
+    },
+    "expect_elements": [
+      "component",
+      "interface",
+      "datastore",
+      "external_system"
+    ],
+    "expect_relations": [
+      "request-reply",
+      "uses",
+      "reads",
+      "writes"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "entry-point:http-route",
+      "graph-neighbour",
+      "planning-agent",
+      "symbol-name"
+    ]
+  },
+  {
+    "id": "IT3",
+    "view_id": "V3-uses",
+    "viewpoint_id": "uses",
+    "question_ids": [
+      "AQ11",
+      "AQ12"
+    ],
+    "need": "dependencies",
+    "subject": null,
+    "goal": "Collect the import, field, constructor and method-call dependencies between the seat selection UI, REST controllers, LibraryFacade, ReservationManager, StudyRoomManager, registries, entities (Seat, Area, Reservation), DTOs and PersistenceManager, to show which parts use which and which parts would be affected if one of them changes.",
+    "seeds": {
+      "symbols": [
+        "it.unina.reservations.controller.ReservationManager",
+        "it.unina.reservations.controller.StudyRoomManager",
+        "it.unina.reservations.controller.LibraryFacade",
+        "it.unina.reservations.entity.Seat",
+        "it.unina.reservations.boundary.Swing.SeatSelection",
+        "it.unina.reservations.entity.ReservationRegistry"
+      ],
+      "paths": [],
+      "classes": [
+        "code",
+        "schema"
+      ]
+    },
+    "expect_elements": [
+      "module",
+      "component"
+    ],
+    "expect_relations": [
+      "uses"
+    ],
+    "budget_steps": 20,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

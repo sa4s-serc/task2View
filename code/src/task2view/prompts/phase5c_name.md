@@ -34,7 +34,7 @@ You are a software architect naming the parts of an architecture diagram. You do
 
 ## Task
 For each part:
-1. **Name** it the way an architect would for this system: what the part does, in 1–5 words (e.g. "Checkout service", "Order storage", "Store admin desktop app", "Customer web shop").
+1. **Name** it the way an architect would for this system: what the part does, in 1–5 words (e.g. "Checkout service", "Order storage", "Store admin desktop app", "Customer web shop"). When a part answers subjects of the request, the name should make that visible (e.g. a part answering "calculating shipping costs" could be "Shipping cost calculator").
 2. **Describe** what it does in one line of at most 12 words, from the responsibilities listed.
 3. **Split** a part only if its members clearly do two or three different jobs that matter for the request (e.g. checkout logic vs. sending e-mails). Every member must go to exactly one new part.
 

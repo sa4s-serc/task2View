@@ -29,7 +29,7 @@ from task2view.phase1.needs import NeedProfile, apply_clarifications, extract_ne
 from task2view.phase2.view_questions import derive_view_questions, view_id
 from task2view.phase3.selection import ViewPlan, select_views
 from task2view.phase4.investigate import pipeline_config, plan_investigation
-from task2view.phase5.abstract import abstract_view, name_parts
+from task2view.phase5.abstract import abstract_view, mark_answers, name_parts, shape_for_viewpoint
 from task2view.phase5.collect import collect_evidence
 from task2view.phase6.decide import ViewDecision, coverage, decide
 from task2view.phase7.abstracted import ABSTRACTED, render_abstracted, to_architecture_view
@@ -135,8 +135,14 @@ def run_v2(
         vp = catalog.viewpoint(view.viewpoint_id)
         if vp.id in ABSTRACTED and profile.spec.granularity != "fine":  # ADR-007: parts, not classes
             view.max_elements = int(cfg["abstraction"]["max_parts"].get(view.detail_level, 9))  # a part is coarser than a class
-            arch = abstract_view(card, aem, target=profile.target, title=view.title,
-                                 granularity=profile.spec.granularity, arrows=vp.id != "decomposition")
+            view_qs = [q for q in questions if q.view_id == vid]
+            subjects: dict[str, set[str]] = defaultdict(set)
+            if profile.detail_level == "detailed":  # a detailed request's enumerated subjects shape the parts
+                for q in view_qs:
+                    if q.subject:
+                        subjects[q.subject].add(q.id)
+            arch = abstract_view(card, aem, target=profile.target, title=view.title, granularity=profile.spec.granularity,
+                                 arrows=vp.id != "decomposition", subjects=subjects, max_parts=view.max_elements)
             if len(arch.parts) > view.max_elements and profile.spec.granularity != "coarse":
                 arch = abstract_view(card, aem, target=profile.target, title=view.title,  # one level coarser
                                      granularity="coarse", arrows=vp.id != "decomposition")
@@ -144,6 +150,8 @@ def run_v2(
             if any(p.members for p in arch.parts):
                 arch = name_parts(arch, card, aem, runtime, goal=goal, purpose=f"phase5c:{vid}",
                                   max_parts=view.max_elements)
+                mark_answers(arch, aem, subjects)
+                shape_for_viewpoint(arch, vp.id, aem, {q.id for q in view_qs if q.need in {"change-impact", "dependencies"}})
                 view = to_architecture_view(arch, view, vp, card)
                 render = render_abstracted(arch, view, card.name)
                 validation[vid] = validate_view(view, render, aem, card, catalog, coverage(view, questions, aem),
@@ -166,6 +174,7 @@ def run_v2(
         validation[vid] = result
         renders[vid] = [render] + [get_renderer(lang).render(view) for lang in languages[1:]]
 
+    _merge_identical(final_views, renders, validation, arch_views, log)
     viewset = ViewSet(
         system=card.name, stakeholder=profile.role, goal=goal, views=list(final_views.values()),
         correspondences=_correspondences(final_views), correspondence_gaps=_correspondence_gaps(final_views),
@@ -182,6 +191,27 @@ def run_v2(
     return RunV2Result(goal=goal, card=card, profile=profile, plan=plan, questions=questions, tasks=tasks, aem=aem,
                        decisions=decisions, viewset=viewset, renders=renders, validation=validation,
                        llm=llm_spec, arch_views=arch_views, usage=usage, log=log)
+
+
+def _merge_identical(final_views, renders, validation, arch_views, log) -> None:
+    """Two structural views with the same parts and the same arrows say the same thing: keep the first
+    and record that it also answers the other viewpoint's questions."""
+    seen: dict[tuple, str] = {}
+    for vid in list(final_views):
+        arch = arch_views.get(vid)
+        if arch is None:
+            continue
+        sig = (frozenset(p.name for p in arch.parts), frozenset((c.source, c.target) for c in arch.connectors),
+               final_views[vid].viewpoint_id == "decomposition")
+        if sig in seen:
+            kept = final_views[seen[sig]]
+            kept.limitations.append(f"also answers the {final_views[vid].viewpoint_name} questions ({vid} was identical and merged)")
+            kept.addresses += [q for q in final_views[vid].addresses if q not in kept.addresses]
+            log.append(f"{vid} merged into {seen[sig]}: same parts and arrows")
+            for d in (final_views, renders, validation, arch_views):
+                d.pop(vid, None)
+        else:
+            seen[sig] = vid
 
 
 def _correspondence_gaps(views: dict[str, ArchitectureView]) -> list[str]:

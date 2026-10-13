@@ -13,6 +13,7 @@ class Part(BaseModel):
     description: str = ""
     examples: list[str] = Field(default_factory=list)  # the most relevant member names, shown in the box
     members: list[str] = Field(default_factory=list)  # symbol ids: the verification handle
+    answers: list[str] = Field(default_factory=list)  # the request's subjects this part's classes answer
     files: list[str] = Field(default_factory=list)  # for parts without classes (web pages, deploy facts)
 
 
@@ -31,6 +32,7 @@ class ArchView(BaseModel):
     parts: list[Part] = Field(default_factory=list)
     connectors: list[Connector] = Field(default_factory=list)
     omitted: list[str] = Field(default_factory=list)  # relations not drawn, with the reason
+    focus: list[str] = Field(default_factory=list)  # uses views: the part(s) being changed
     notes: list[str] = Field(default_factory=list)
 
     def part(self, pid: str) -> Part:

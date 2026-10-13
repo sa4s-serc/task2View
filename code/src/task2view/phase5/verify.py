@@ -106,7 +106,9 @@ class ClaimVerifier:
             return None, "no citation checks out: " + ("; ".join(problems) or "no evidence given")
 
         claim = Claim(
-            id=claim_id, task=task_id, kind=kind, question_ids=question_ids,
+            id=claim_id, task=task_id, kind=kind,
+            # the questions this claim answers (of the task's); all of them when the agent did not say
+            question_ids=[q for q in _as_list(raw.get("answers")) if q in question_ids] or question_ids,
             element_kind=raw.get("element_kind"), name=raw.get("name"),
             responsibilities=[str(r).strip() for r in _as_list(raw.get("responsibilities")) if str(r).strip()],
             attributes=[a for a in _as_list(raw.get("attributes")) if isinstance(a, dict) and a.get("name")],

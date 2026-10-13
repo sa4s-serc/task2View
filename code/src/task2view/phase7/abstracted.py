@@ -44,4 +44,5 @@ def to_architecture_view(arch: ArchView, base: ArchitectureView, vp: Viewpoint, 
 
 
 def render_abstracted(arch: ArchView, view: ArchitectureView, system: str) -> RenderResult:
-    return RenderResult(language="plantuml", model_kind=view.model_kind, source=render_c4(arch, system), extension="puml")
+    source = render_c4(arch, system, by_layer=view.viewpoint_id == "decomposition")
+    return RenderResult(language="plantuml", model_kind=view.model_kind, source=source, extension="puml")

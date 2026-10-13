@@ -180,14 +180,23 @@ def default_spec(needs: list[NeedEvidence], target: str, level: str, catalog: Ca
     """The spec the request implies: a feature slice when it names a target; layers only for a
     whole-system overview; behaviour from the categories of its primary needs."""
     kinds = {catalog.needs[n.need].category for n in needs if n.salience == "primary"}
-    behaviour = "both" if "behavior" in kinds and kinds - {"behavior"} else "interaction" if kinds == {"behavior"} else "structure"
+    # asking how parts interact (or in which order, or the flow) is asking about behaviour as well
+    dynamic = any(_DYNAMIC.search(n.evidence) for n in needs if n.salience == "primary")
+    if "behavior" in kinds or dynamic:
+        behaviour = "both" if kinds - {"behavior"} else "interaction"
+    else:
+        behaviour = "structure"
     return ViewSpec(scope="feature" if target else "system",
                     granularity="coarse" if level == "overview" and not target else "medium", behaviour=behaviour)
 
 
+_DYNAMIC = re.compile(r"\binteract|\bin which order|\bsequence|\bflow\b|\bstep", re.I)
+
+
 def apply_clarifications(profile: NeedProfile, catalog: Catalog, ask=None) -> list[str]:
     """Answer each clarification (``ask(question, options, default)`` for a person; the default
-    otherwise) and update the spec. Returns one log line per clarification."""
+    otherwise) and update the spec. A default never takes away what the request states (a target, the
+    behaviour it asks about); only a person's answer can. Returns one log line per clarification."""
     log = []
     for c in profile.clarifications:
         answer = c.default
@@ -195,6 +204,11 @@ def apply_clarifications(profile: NeedProfile, catalog: Catalog, ask=None) -> li
             given = str(ask(c.question, SPEC_VALUES[c.field], c.default) or "").strip().lower()
             if given in SPEC_VALUES[c.field]:
                 answer = c.answer = given
+        current = getattr(profile.spec, c.field)
+        stated = (c.field == "scope" and current == "feature") or (c.field == "behaviour" and current != "structure")
+        if not c.answer and stated and answer != current and answer != "both":
+            log.append(f"clarification {c.field}: kept {current} (the request states it; default was {answer}) — {c.question}")
+            continue
         setattr(profile.spec, c.field, answer)
         log.append(f"clarification {c.field}: {answer}{'' if c.answer else ' (default)'} — {c.question}")
     if profile.spec.scope == "system":
@@ -203,8 +217,8 @@ def apply_clarifications(profile: NeedProfile, catalog: Catalog, ask=None) -> li
     if profile.spec.behaviour in {"interaction", "both"} and not any(n.need in behavioural and n.salience == "primary"
                                                                    for n in profile.needs):
         profile.needs.append(NeedEvidence(need="interaction-order", evidence="(clarification)", salience="primary"))
-    if profile.spec.behaviour == "structure":
-        for n in profile.needs:
+    if profile.spec.behaviour == "structure" and any(c.answer for c in profile.clarifications if c.field == "behaviour"):
+        for n in profile.needs:  # only a person's answer removes behaviour the request asked about
             if n.need in behavioural:
                 n.salience = "secondary"
     return log

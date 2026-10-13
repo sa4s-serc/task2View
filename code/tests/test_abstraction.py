@@ -78,3 +78,27 @@ def test_naming_checks_names_and_splits(view, result):  # noqa: F811
     assert next(p for p in named.parts if p.role == "domain").name == "Domain model"
     assert next(p for p in named.parts if p.role == "api").name == "Order API"
     assert sum(p.role == "service" for p in named.parts) == 1 and any("split" in n for n in named.notes)
+
+
+def test_interaction_wording_keeps_behaviour_and_defaults_cannot_remove_it():
+    from task2view.knowledge.catalog import load_catalog
+    from task2view.phase1.needs import validate_needs, apply_clarifications
+
+    cat = load_catalog()
+    goal = "I need to understand the main components and how they interact with each other."
+    raw = {"needs": [{"need": "collaboration", "evidence": "how they interact with each other", "salience": "primary"}],
+           "clarifications": [{"field": "behaviour", "question": "Order of calls too?", "default": "structure"}]}
+    profile = validate_needs(goal, raw, cat)
+    assert profile.spec.behaviour == "both"
+    log = apply_clarifications(profile, cat)
+    assert profile.spec.behaviour == "both" and "kept both" in log[0]
+    assert any(n.need == "interaction-order" and n.salience == "primary" for n in profile.needs)
+
+
+def test_uses_view_centres_on_the_part_being_changed(view, result):  # noqa: F811
+    from task2view.phase5.abstract import shape_for_viewpoint
+
+    v = view.model_copy(deep=True)
+    shape_for_viewpoint(v, "uses", result.aem, set())
+    assert v.focus and all(c.target in {p.id for p in v.parts} for c in v.connectors)
+    assert any(c.label == "depends on" for c in v.connectors) or not v.connectors

@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Decomposition view — seat booking functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Boundary(layer0, "Presentation") {
+    Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+    Component(ui, "Seat booking desktop screens", "Java Swing", "Swing screens for choosing room, area, seat and time slot\nWizardState, SeatSelection, AreaSelection, …")
+    Component(api, "Booking request API", "Spring Boot REST", "REST entry point for creating, cancelling and checking in reservations\nReservationController, StudyRoomController, StudentController\nanswers: handling booking requests")
+  }
+  Boundary(layer1, "Application") {
+    Component(job, "Reservation reminder scheduler", "scheduled", "periodically triggers reservation-end handling and reminders\nNotificationScheduler")
+    Component(service, "Application services", "Java", "LibraryFacade, ReservationManager, StudyRoomManager, …\nanswers: handling booking requests; applying booking rules; …")
+    Component(integration, "External email notification adapter", "adapters", "sends notifications to recipients through an external email gateway stub\nNotificationServiceAdapter, ExternalEmailGateway")
+  }
+  Boundary(layer2, "Domain") {
+    Component(domain, "Reservation and seat rules model", "JPA entities", "reservations with status states, seat availability and time-window enforcement\nReservation, Student, Area, …\nanswers: applying booking rules; managing and storing reservations; …")
+  }
+  Boundary(layer3, "Data access") {
+    Component(data_access, "Reservation and room storage", "JPA / Hibernate", "saves, updates and queries reservations, rooms, areas, seats and time slots\nStudyRoomRegistry, ReservationRegistry, PersistenceManager, …\nanswers: managing and storing reservations; checking seat availability")
+  }
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+
+SHOW_LEGEND()
+@enduml

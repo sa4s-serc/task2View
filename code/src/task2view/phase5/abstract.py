@@ -83,9 +83,12 @@ def _links(card: RepositoryCard) -> tuple[dict, dict]:
 
 
 def abstract_view(card: RepositoryCard, aem: EvidenceModel, *, target: str = "", title: str = "",
-                  granularity: str = "medium", arrows: bool = True) -> ArchView:
+                  granularity: str = "medium", arrows: bool = True, subjects: dict[str, set[str]] | None = None,
+                  max_parts: int = 99) -> ArchView:
     """``granularity``: "medium" (one part per role) or "coarse" (one part per layer).
-    ``arrows``: False for decomposition views, which show containment only."""
+    ``arrows``: False for decomposition views, which show containment only.
+    ``subjects``: the request's enumerated subjects with this view's question ids; with two or more,
+    parts are split along them where different classes answer them, within ``max_parts``."""
     cat = role_catalog()
     entry_kinds: dict[str, set[str]] = defaultdict(set)
     for ep in card.entry_points:
@@ -142,6 +145,9 @@ def abstract_view(card: RepositoryCard, aem: EvidenceModel, *, target: str = "",
     _fact_parts(view, card, tech)
     if granularity == "coarse":
         _coarsen(view)
+    elif subjects and len(subjects) >= 2:
+        _split_by_subjects(view, card, aem, subjects, role, max_parts)
+    mark_answers(view, aem, subjects or {})
     if shared:
         view.notes.append(f"shared data types (not drawn, no arrows through them): {', '.join(shared)}")
     bootstrap = sorted(prod[s].name for s in core if role[s] == "bootstrap")
@@ -149,6 +155,101 @@ def abstract_view(card: RepositoryCard, aem: EvidenceModel, *, target: str = "",
         view.notes.append(f"not drawn (start-up and configuration): {', '.join(bootstrap)}")
     lift_connectors(view, card, arrows=arrows)
     return view
+
+
+def _subject_counts(aem: EvidenceModel, subjects: dict[str, set[str]]) -> dict[str, Counter]:
+    """For each class, how many verified claims about it answer each subject's questions."""
+    counts: dict[str, Counter] = defaultdict(Counter)
+    for c in aem.claims.values():
+        hit = [s for s, ids in subjects.items() if set(c.question_ids) & ids]
+        for sym in {c.symbol, c.source, c.target} - {None}:
+            for s in hit:
+                counts[sym][s] += 1
+    return counts
+
+
+def _split_by_subjects(view: ArchView, card: RepositoryCard, aem: EvidenceModel, subjects: dict[str, set[str]],
+                       role: dict[str, str], max_parts: int) -> None:
+    """A detailed request lists what it wants to understand; give each subject its own part where the
+    evidence puts it in different classes (services first, then API, UI, integration, data access)."""
+    counts = _subject_counts(aem, subjects)
+    order = list(subjects)
+    for r in ("service", "api", "ui", "integration", "data_access"):
+        part = next((p for p in view.parts if p.id == r), None)
+        if part is None:
+            continue
+        groups: dict[str, list[str]] = defaultdict(list)
+        rest = []
+        for m in part.members:
+            if role.get(m) != "helper" and counts.get(m):
+                best = max(counts[m].items(), key=lambda kv: (kv[1], -order.index(kv[0])))[0]
+                groups[best].append(m)
+            else:
+                rest.append(m)
+        if len(groups) < 2 or len(view.parts) - 1 + len(groups) > max_parts:
+            continue
+        largest = max(groups, key=lambda s: len(groups[s]))
+        groups[largest] += rest  # helpers and unclaimed classes stay with the largest group
+        at = view.parts.index(part)
+        new = []
+        for k, s in enumerate(sorted(groups, key=order.index)):
+            words = s.split()
+            name = " ".join(words[:5])
+            ms = groups[s]
+            new.append(Part(id=f"{r}-{k + 1}", name=name[:1].upper() + name[1:], role=r, technology=part.technology,
+                            members=ms, examples=[card.symbols[m].name for m in ms if role.get(m) != "helper"][:3]))
+        view.parts[at:at + 1] = new
+        view.notes.append(f"{part.name} split along the request's subjects: {', '.join(sorted(groups, key=order.index))}")
+
+
+def mark_answers(view: ArchView, aem: EvidenceModel, subjects: dict[str, set[str]]) -> None:
+    counts = _subject_counts(aem, subjects) if subjects else {}
+    for p in view.parts:
+        hits = Counter()
+        for m in p.members:
+            hits.update(counts.get(m, {}))
+        p.answers = [s for s, _ in hits.most_common()]
+
+
+def shape_for_viewpoint(view: ArchView, viewpoint_id: str, aem: EvidenceModel, focus_questions: set[str]) -> None:
+    """Each viewpoint answers its own question from the same parts.
+    client-server: the path requests take, from where they enter to the database (plus flagged arrows).
+    uses: what is affected when the part being changed changes: that part, everything depending on it
+    (transitively), and what it uses directly. decomposition has no arrows (set by the caller)."""
+    roles = {p.id: p.role for p in view.parts}
+    entries = {p for p, r in roles.items() if r in {"web_client", "ui", "api", "job", "presentation"}}
+    if viewpoint_id in {"client-server", "multi-tier"} and entries:
+        reach, frontier = set(entries), set(entries)
+        while frontier:
+            frontier = {c.target for c in view.connectors if c.source in frontier} - reach
+            reach |= frontier
+        kept = [c for c in view.connectors if c.source in reach or c.against_layering]
+        view.omitted += [f"{view.part(c.source).name} -> {view.part(c.target).name}: not on a request path"
+                         for c in view.connectors if c not in kept]
+        view.connectors = kept
+    elif viewpoint_id == "uses":
+        claims = Counter()
+        for p in view.parts:
+            for m in p.members:
+                for c in aem.claims.values():
+                    if m in {c.symbol, c.source, c.target} and (not focus_questions or set(c.question_ids) & focus_questions):
+                        claims[p.id] += 1
+        focus = [p for p, _ in claims.most_common(1) if roles[p] not in {"database", "web_client"}]
+        if not focus:
+            return
+        view.focus = focus
+        dependents, frontier = set(focus), set(focus)
+        while frontier:
+            frontier = {c.source for c in view.connectors if c.target in frontier} - dependents
+            dependents |= frontier
+        kept = [c for c in view.connectors
+                if c.target in dependents or c.source in focus or c.against_layering]
+        view.omitted += [f"{view.part(c.source).name} -> {view.part(c.target).name}: not affected by a change to "
+                         f"{view.part(focus[0]).name}" for c in view.connectors if c not in kept]
+        view.connectors = kept
+        for c in view.connectors:
+            if c.target in dependents and not c.against_layering:
+                c.label = "depends on"
 
 
 _LAYERS = {"web_client": "presentation", "ui": "presentation", "api": "presentation", "job": "application",
@@ -279,7 +380,8 @@ def name_parts(view: ArchView, card: RepositoryCard, aem: EvidenceModel, runtime
     lines = []
     for p in nameable:
         resp = {r.text for m in p.members if m in aem.component_of for r in aem.elements[aem.component_of[m]].responsibilities}
-        lines.append(f"- id: {p.id} | role: {p.role} | current name: {p.name} | technology: {p.technology}\n"
+        lines.append(f"- id: {p.id} | role: {p.role} | current name: {p.name} | technology: {p.technology}"
+                     + (f" | answers the request's: {'; '.join(p.answers)}" if p.answers else "") + "\n"
                      f"  members: {', '.join(simple[m] for m in p.members if m in simple)}\n"
                      f"  responsibilities: {'; '.join(sorted(resp)[:6]) or 'none verified'}")
     try:
