@@ -44,18 +44,20 @@ class CallRecord(BaseModel):
     seconds: float = 0.0
     cost_usd: float | None = None
     reported: bool = True  # False when the provider returned no usage (e.g. scripted runs)
+    replayed: bool = False  # answered from the reply cache: the tokens are the original call's, not spent again
 
 
 class UsageLedger(BaseModel):
     calls: list[CallRecord] = Field(default_factory=list)
 
-    def record(self, purpose: str, model: str, usage: Usage | None, seconds: float) -> None:
+    def record(self, purpose: str, model: str, usage: Usage | None, seconds: float, *, replayed: bool = False) -> None:
         if usage is None:
-            self.calls.append(CallRecord(purpose=purpose, model=model, seconds=seconds, reported=False))
+            self.calls.append(CallRecord(purpose=purpose, model=model, seconds=seconds, reported=False, replayed=replayed))
             return
         self.calls.append(CallRecord(purpose=purpose, model=model, seconds=seconds, cost_usd=cost_usd(model, usage),
                                      input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
-                                     cache_read_tokens=usage.cache_read_tokens, cache_write_tokens=usage.cache_write_tokens))
+                                     cache_read_tokens=usage.cache_read_tokens, cache_write_tokens=usage.cache_write_tokens,
+                                     replayed=replayed))
 
     def extend(self, other: "UsageLedger") -> None:
         self.calls.extend(other.calls)
@@ -75,13 +77,15 @@ class UsageLedger(BaseModel):
                 "cost_complete": known,  # False: some calls had no usage or no price
             }
 
+        new = [r for r in self.calls if not r.replayed]  # what this run spent
         by_phase: dict[str, list[CallRecord]] = defaultdict(list)
         by_model: dict[str, list[CallRecord]] = defaultdict(list)
-        for r in self.calls:
+        for r in new:
             by_phase[r.purpose.split(":", 1)[0]].append(r)
             by_model[r.model].append(r)
         return {
-            "total": block(self.calls),
+            "total": block(new),
+            "replayed": block([r for r in self.calls if r.replayed]),  # earlier attempts' replies, reused at no cost
             "by_phase": {k: block(v) for k, v in sorted(by_phase.items())},
             "by_model": {k: block(v) for k, v in sorted(by_model.items())},
             "pricing_source": f"{pricing().get('source')} (read {pricing().get('read_on')})",

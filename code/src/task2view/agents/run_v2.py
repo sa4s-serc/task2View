@@ -179,7 +179,9 @@ def run_v2(
     ledger.extend(runtime.ledger)
     usage = ledger.summary() | {"calls": [c.model_dump() for c in ledger.calls]}
     total = usage["total"]
-    log.append(f"usage: {total['calls']} calls, {total['input_tokens']} input / {total['output_tokens']} output / "
+    replayed = usage["replayed"]["calls"]
+    log.append(f"usage: {total['calls']} new calls" + (f" (+{replayed} replayed from cache)" if replayed else "") +
+               f", {total['input_tokens']} input / {total['output_tokens']} output / "
                f"{total['cache_read_tokens']} cache-read tokens, ${total['cost_usd']:.4f}"
                + ("" if total["cost_complete"] else " (incomplete: some calls had no reported usage or no price)"))
     return RunV2Result(goal=goal, card=card, profile=profile, plan=plan, questions=questions, tasks=tasks, aem=aem,

@@ -93,7 +93,7 @@ def test_cached_replies_are_replayed_without_a_call(tmp_path):
     assert first.complete_json(["a", "b"], purpose="p") == {"ok": 1}
     again = AgentRuntime(generate=generate, cache_dir=tmp_path)
     assert again.complete_json(["a", "b"], purpose="p") == {"ok": 1} and len(calls) == 1
-    assert again.ledger.calls[0].purpose == "p (replayed)"
+    assert again.ledger.calls[0].replayed and again.ledger.summary()["total"]["calls"] == 0
 
 
 def test_goal_set_stops_on_a_limit_and_resumes_where_it_stopped(tmp_path, monkeypatch, capsys):

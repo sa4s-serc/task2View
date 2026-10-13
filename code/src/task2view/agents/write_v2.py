@@ -106,7 +106,11 @@ def _usage_section(usage: dict) -> list[str]:
              f"Total: {total['calls']} calls, {total['input_tokens']:,} input + {total['cache_read_tokens']:,} cache-read + "
              f"{total['cache_write_tokens']:,} cache-write + {total['output_tokens']:,} output tokens, "
              f"{total['seconds']} s, **${total['cost_usd']:.4f}**"
-             + ("" if total["cost_complete"] else " (incomplete: some calls had no reported usage or no price)"), "",
+             + ("" if total["cost_complete"] else " (incomplete: some calls had no reported usage or no price)"), ""]
+    if usage.get("replayed", {}).get("calls"):
+        lines += [f"Also reused {usage['replayed']['calls']} replies saved by an earlier attempt of this run "
+                  f"(not spent again; originally ${usage['replayed']['cost_usd']:.4f}).", ""]
+    lines += [
              "| Phase | Calls | Input | Output | Seconds | Cost (USD) |", "|---|---|---|---|---|---|"]
     for phase, b in usage["by_phase"].items():
         lines.append(f"| {phase} | {b['calls']} | {b['input_tokens'] + b['cache_read_tokens'] + b['cache_write_tokens']:,} | "

@@ -41,7 +41,7 @@ class AgentRuntime:
         if cached is not None and cached.exists():
             saved = json.loads(cached.read_text(encoding="utf-8"))
             usage = Usage(**saved["usage"]) if saved.get("usage") else None  # the original call's tokens
-            self.ledger.record(f"{purpose or 'unlabelled'} (replayed)", self.spec, usage, saved.get("seconds", 0.0))
+            self.ledger.record(purpose or "unlabelled", self.spec, usage, saved.get("seconds", 0.0), replayed=True)
             return saved["reply"]
         start = time.monotonic()
         usage = None
