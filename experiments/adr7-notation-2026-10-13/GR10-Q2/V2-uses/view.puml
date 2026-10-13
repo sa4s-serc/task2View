@@ -1,0 +1,21 @@
+@startuml
+title Uses view — progetto_ing_software_gr10-main-English
+top to bottom direction
+skinparam componentStyle uml2
+skinparam shadowing false
+
+package "progetto_ing_software_gr10-main-English" {
+  component "Report desktop screens\n----\nJava Swing screens for creating, monitoring, updating and viewing reports and notes\nReportCreationGUI, ActivityMonitoringGUI, ReceivedReportsGUI, …" as p_ui <<ui>>
+  component "Report handling services\n----\ncreates and retrieves reports, validates report data and delegates registration\nReportService, SystemServicesController, UserService, …" as p_service <<service>> #FAC775
+  component "Report domain entities\n----\npersisted entities in reports_db registered in the persistence unit\nReport, User, Notification, …" as p_domain <<domain>>
+  component "Report database access\n----\ncreates the EntityManagerFactory and saves, updates and queries entities via JPA/Hibernate\nPersistenceService, …\nanswers: runtime environments" as p_data_access <<data_access>>
+}
+database "MySQL database\n<size:10>MySQL</size>" as p_database
+p_service ..> p_domain : <<use>>
+p_service ..> p_data_access : <<use>>
+p_ui ..> p_service : <<use>>
+legend right
+dashed arrow <<use>> = the source needs the target to be correct (V&B uses relation)
+<back:#FAC775>highlighted</back> = the part being changed
+endlegend
+@enduml

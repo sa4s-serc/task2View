@@ -134,6 +134,13 @@ flowchart TB
 - **Size:** part-level views have their own limit (`pipeline.yaml` `abstraction.max_parts`: 7 / 9 / 9, proposed). Over it, a view is drawn by layer.
 - **Splits:** the naming step may split a part only into parts that each contain a non-helper class, and only within that limit.
 - **The LLM judge** is no longer called by the pipeline. `phase8/judge.py` and `scripts/judge_outputs.py` stay as post-hoc research tools.
+- **Notation per view (D1/D3, added 2026-10-13):** the parts and arrows are shared by every view of a request, but each structural view is drawn in its own notation (`knowledge/data/vb/notations.yaml`, `phase7/arch_notations.py`):
+  - technical readers get the notation V&B documents for the viewpoint: decomposition and layered as UML packages in layer rows, uses as UML «use» dependencies with the changed part highlighted, C&C styles as C4 components;
+  - overview readers get plain boxes and arrows. A role is an overview reader when its V&B Table 9.1 row asks for no detail in any view of the software's own structure (project manager, customer, end user); roles outside the table state it (`roles.yaml`);
+  - the view spec's `notation` (auto, uml, c4, boxes) lets the person ask for a family;
+  - Phase 8 checks that the view is drawn in the chosen notation, and the title and legend in that notation.
+
+  Sequence, data-model, deployment and use-case views keep their UML notation.
 - **First live trial** (IS-seat-L1, Sonnet 5.5): 8 model calls (15 in the pilot); 7 parts and 7 arrows; 0 crossings; one dependency against the layering found; verdict pass with limitations.
 
 ## Implementation order

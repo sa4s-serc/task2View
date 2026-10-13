@@ -1,0 +1,27 @@
+@startuml
+title Uses view — seat booking functionality
+top to bottom direction
+skinparam componentStyle uml2
+skinparam shadowing false
+
+package "Progetto-IS-main-English" {
+  component "Web client\n----\napp.js" as p_web_client <<web_client>>
+  component "Seat booking wizard UI\n----\nSwing screens where users pick room, area, seat and confirm reservations\nWizardState, SeatSelection, AreaSelection, …" as p_ui <<ui>>
+  component "Notification scheduler\n----\nruns scheduled jobs that trigger notifications\nNotificationScheduler" as p_job <<job>>
+  component "Reservation REST API\n----\nREST entry point for creating, cancelling and checking in reservations\nReservationController, StudyRoomController, StudentController" as p_api <<api>>
+  component "Booking rules service\n----\nvalidates booking requests, assigns seats, and creates and saves reservations\nLibraryFacade, ReservationManager, NotificationManager" as p_service <<service>>
+  component "Reservation domain model\n----\nentities for students, rooms, areas, seats, time slots and reservation states\nStudent, Area, Seat, …" as p_domain <<domain>> #FAC775
+  component "Reservation storage\n----\nsaves and queries reservations, rooms, seats and students through JPA\nStudyRoomRegistry, ReservationRegistry, PersistenceManager, …" as p_data_access <<data_access>>
+}
+database "MySQL database\n<size:10>MySQL</size>" as p_database
+p_service ..> p_domain : <<use>>
+p_ui ..> p_service : <<use>>
+p_api ..> p_service : <<use>>
+p_domain .[#A32D2D].> p_data_access : <<use>>
+p_web_client ..> p_api : <<use>>
+legend right
+dashed arrow <<use>> = the source needs the target to be correct (V&B uses relation)
+<back:#FAC775>highlighted</back> = the part being changed
+<color:#A32D2D>red arrow</color> = dependency against the layering
+endlegend
+@enduml

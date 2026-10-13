@@ -1,0 +1,37 @@
+digraph view {
+  rankdir=TB; newrank=true; labelloc=t; fontname=Helvetica; fontsize=16; nodesep=0.3; ranksep=0.35;
+  label=<<b>Decomposition view — seat booking functionality</b>>;
+  node [shape=tab, style=filled, fillcolor="#F1EFE8", color="#444441", fontname=Helvetica, fontsize=11];
+  edge [color="#444441", style=dashed, fontname=Helvetica, fontsize=10];
+  subgraph cluster_system { label=<<b>Progetto-IS-main-English</b>>; style=rounded; color="#444441";
+    subgraph cluster_layer0 { label=<<i>«layer»</i> Presentation>; style="dashed"; color="#888780";
+      p_web_client [label=<<b>Web client</b><font point-size="10"><br/>app.js</font>>];
+      p_ui [label=<<b>Student and librarian screens</b><br/><font point-size="9">Swing screens and wizard steps where students pick seats and reserve</font><font point-size="10"><br/>SeatSelection<br/>ReservationSummary<br/>WizardState<br/><i>… 9 more</i></font>>];
+      p_api [label=<<b>Reservation REST endpoints</b><br/><font point-size="9">exposes endpoints to create, cancel and check in reservations</font><font point-size="10"><br/>ReservationController<br/>StudyRoomController<br/>StudentController</font>>];
+    }
+    subgraph cluster_layer1 { label=<<i>«layer»</i> Application>; style="dashed"; color="#888780";
+      p_job [label=<<b>Notification scheduler</b><br/><font point-size="9">runs scheduled notification jobs for the library</font><font point-size="10"><br/>NotificationScheduler</font>>];
+      p_service [label=<<b>Seat reservation services</b><br/><font point-size="9">checks overlaps, picks a seat, saves reservations and notifies observers</font><font point-size="10"><br/>LibraryFacade<br/>ReservationManager<br/>StudyRoomManager<br/><i>… 1 more</i></font>>];
+    }
+    subgraph cluster_layer2 { label=<<i>«layer»</i> Domain>; style="dashed"; color="#888780";
+      p_domain [label=<<b>Library reservation model</b><br/><font point-size="9">rooms, areas, seats, time slots and reservation states with availability</font><font point-size="10"><br/>Student<br/>StudyRoom<br/>Area<br/><i>… 13 more</i></font>>];
+    }
+    subgraph cluster_layer3 { label=<<i>«layer»</i> Data access>; style="dashed"; color="#888780";
+      p_data_access [label=<<b>Reservation and room storage</b><br/><font point-size="9">saves and queries rooms, seats, time slots and reservations via JPA</font><font point-size="10"><br/>StudyRoomRegistry<br/>ReservationRegistry<br/>PersistenceManager<br/><i>… 2 more</i></font>>];
+    }
+  }
+  p_database [shape=cylinder, label=<<b>MySQL database</b><br/>MySQL>];
+  p_web_client -> p_job [style=invis];
+  p_ui -> p_job [style=invis];
+  p_api -> p_job [style=invis];
+  p_job -> p_domain [style=invis];
+  p_service -> p_domain [style=invis];
+  p_domain -> p_data_access [style=invis];
+  { rank=same; p_web_client p_ui p_api }
+  { rank=same; p_job p_service }
+  { rank=same; p_domain }
+  { rank=same; p_data_access }
+  subgraph cluster_legend { label="Legend"; fontsize=10; style=dashed; color="#B4B2A9";
+    lg_layer [shape=plaintext, label="dashed frame = layer", fontsize=9];
+    lg_pkg [label="part (UML package) with its main classes", fontsize=9]; }
+}

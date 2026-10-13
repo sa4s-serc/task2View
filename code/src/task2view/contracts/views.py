@@ -120,3 +120,4 @@ class RenderResult(BaseModel):
     extension: str
     approximated: bool = False  # the language has no native construct for this model kind
     note: str = ""
+    notation: str = ""  # ADR-007: the notation chosen for the view (notations.yaml), for structural views

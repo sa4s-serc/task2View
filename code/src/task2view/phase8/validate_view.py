@@ -3,8 +3,9 @@
 The three judging questions: "true to the code?" and "readable?" are checked here by rules;
 "right view?" is for people (the stakeholder confirms the spec; the expert rates in studies).
 
-1 notation       the diagram source compiles (local tool when available) and the
-                 model kind is the viewpoint's
+1 notation       the diagram source compiles (local tool when available), the
+                 model kind is the viewpoint's, and a structural view is drawn in the
+                 notation chosen for its viewpoint and reader (notations.yaml)
 2 constraints    the viewpoint's named constraints (phase8/constraints.py)
 3 faithfulness   every mark is an AEM entry (or a projection group / fold of AEM
                  entries) with at least inferred support, keeps its AEM name, and
@@ -132,23 +133,29 @@ def validate_view(
     compile_enabled: bool = True,
     arch=None,
     spec=None,
+    expected_notation: str | None = None,
 ) -> ViewValidation:
-    """``arch`` and ``spec``: the abstraction-step view and the view spec, for the readability checks."""
+    """``arch`` and ``spec``: the abstraction-step view and the view spec, for the readability checks;
+    ``expected_notation``: the notation chosen for a structural view."""
     vp = catalog.viewpoint(view.viewpoint_id)
     notation = compile_check(render, enabled=compile_enabled)
     notation.update({"language": render.language, "approximated": render.approximated,
                      "model_kind_matches": view.model_kind == vp.model_kind})
+    if expected_notation:
+        notation.update({"chosen": expected_notation, "drawn": render.notation,
+                         "notation_matches": render.notation == expected_notation})
     constraints = check_constraints(view, vp, aem, card, catalog.constraints)
     faith = _faithfulness(view, aem, card)
     cov = [c.model_dump() for c in coverage]
     coverage_errors = []
-    readable, metrics = check_readability(arch, render.source, viewpoint_id=vp.id, spec=spec) if arch is not None else ([], {})
+    readable, metrics = check_readability(arch, render.source, viewpoint_id=vp.id, spec=spec,
+                                          notation=render.notation or "c4-component") if arch is not None else ([], {})
     if coverage and len(view.content_elements()) >= 2 and view.model_kind not in {"table", "uml-state"} \
             and vp.id not in {"decomposition", "use-case"} and not view.relations and not view.interactions:
         coverage_errors.append({"severity": "error", "message": "the view has questions to answer but draws no relation"})
 
     errors = [f for f in constraints + faith + coverage_errors + readable if f["severity"] == "error"]
-    if notation["status"] == "fail" or not notation["model_kind_matches"]:
+    if notation["status"] == "fail" or not notation["model_kind_matches"] or not notation.get("notation_matches", True):
         errors.append({"severity": "error", "message": "notation layer failed"})
     warnings = [f for f in constraints + readable if f["severity"] == "warning"]
     limited = bool(view.gaps or view.limitations or warnings or any(c.status != "supported" for c in coverage))

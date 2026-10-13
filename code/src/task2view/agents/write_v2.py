@@ -67,7 +67,7 @@ def _readme(result: RunV2Result) -> str:
         f"- Role: {p.role or p.role_label or 'unknown'}; target: {p.target or 'whole system'}; detail level: {p.detail_level}",
         f"- Needs (primary): {', '.join(plan.needs) or 'none'}; secondary: {', '.join(plan.secondary_needs) or 'none'}",
         f"- Generator model: {result.llm}",
-        f"- View spec: {p.spec.scope} scope, {p.spec.granularity} granularity, {p.spec.behaviour}"
+        f"- View spec: {p.spec.scope} scope, {p.spec.granularity} granularity, {p.spec.behaviour}, notation {p.spec.notation}"
         + "".join(f"; asked: {c.question} → {c.answer or c.default + ' (default)'}" for c in p.clarifications),
         f"- Repository signals: {', '.join(sorted(result.card.signals))}", "",
         "## Views", "",
@@ -76,7 +76,7 @@ def _readme(result: RunV2Result) -> str:
     for view in result.viewset.views:
         d, v = result.decisions[view.id], result.validation[view.id]
         lines.append(f"| {view.id} | {view.viewpoint_name} ({view.vb_ref}) | {d.decision} | {v.verdict} | "
-                     f"{len(view.content_elements())} | {v.notation.get('language')}"
+                     f"{len(view.content_elements())} | {v.notation.get('chosen') or v.notation.get('language')}"
                      f"{' (approximated)' if v.notation.get('approximated') else ''} |")
     lines += ["", "## Rationale", ""]
     lines += [f"- {pv.viewpoint_id}: {pv.rationale}" for pv in plan.views]

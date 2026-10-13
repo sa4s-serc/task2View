@@ -1,0 +1,35 @@
+digraph view {
+  rankdir=TB; newrank=true; labelloc=t; fontname=Helvetica; fontsize=16; nodesep=0.3; ranksep=0.35;
+  label=<<b>Decomposition view — user registration functionality</b>>;
+  node [shape=tab, style=filled, fillcolor="#F1EFE8", color="#444441", fontname=Helvetica, fontsize=11];
+  edge [color="#444441", style=dashed, fontname=Helvetica, fontsize=10];
+  subgraph cluster_system { label=<<b>Progetto-IS-main-English</b>>; style=rounded; color="#444441";
+    subgraph cluster_layer0 { label=<<i>«layer»</i> Presentation>; style="dashed"; color="#888780";
+      p_web_client [label=<<b>Web client</b><font point-size="10"><br/>app.js</font>>];
+      p_ui [label=<<b>Registration and booking screens</b><br/><font point-size="9">collects registration data, submits it and shows errors</font><font point-size="10"><br/>Login<br/>Registration<br/>StudentDashboard<br/><i>… 4 more</i></font>>];
+      p_api [label=<<b>Registration REST API</b><br/><font point-size="9">exposes POST /api/auth/register and returns the created user as UserDTO</font><font point-size="10"><br/>AuthenticationController<br/>ReservationController<br/>StudentController</font>>];
+    }
+    subgraph cluster_layer1 { label=<<i>«layer»</i> Application>; style="dashed"; color="#888780";
+      p_service [label=<<b>Registration and library services</b><br/><font point-size="9">checks uniqueness, validates student ID, creates users via factory and stores them</font><font point-size="10"><br/>LibraryFacade<br/>UserManager<br/><i>… 4 more</i></font>>];
+    }
+    subgraph cluster_layer2 { label=<<i>«layer»</i> Domain>; style="dashed"; color="#888780";
+      p_domain [label=<<b>User and reservation entities</b><br/><font point-size="9">persistent users with credentials and lock state, student identified by studentNumber</font><font point-size="10"><br/>Student<br/>User<br/>Reservation<br/><i>… 11 more</i></font>>];
+    }
+    subgraph cluster_layer3 { label=<<i>«layer»</i> Data access>; style="dashed"; color="#888780";
+      p_data_access [label=<<b>User and reservation storage</b><br/><font point-size="9">looks up email and identifier uniqueness and persists users in transactions</font><font point-size="10"><br/>PersistenceManager<br/>UserRegistry<br/>ReservationRegistry</font>>];
+    }
+  }
+  p_database [shape=cylinder, label=<<b>MySQL database</b><br/>MySQL>];
+  p_web_client -> p_service [style=invis];
+  p_ui -> p_service [style=invis];
+  p_api -> p_service [style=invis];
+  p_service -> p_domain [style=invis];
+  p_domain -> p_data_access [style=invis];
+  { rank=same; p_web_client p_ui p_api }
+  { rank=same; p_service }
+  { rank=same; p_domain }
+  { rank=same; p_data_access }
+  subgraph cluster_legend { label="Legend"; fontsize=10; style=dashed; color="#B4B2A9";
+    lg_layer [shape=plaintext, label="dashed frame = layer", fontsize=9];
+    lg_pkg [label="part (UML package) with its main classes", fontsize=9]; }
+}

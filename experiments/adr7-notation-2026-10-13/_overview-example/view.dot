@@ -1,0 +1,25 @@
+digraph view {
+  rankdir=TB; labelloc=t; fontname=Helvetica; fontsize=16;
+  label=<<b>Client-Server view — user registration functionality</b>>;
+  node [shape=box, style="rounded,filled", fillcolor="#E6F1FB", color="#185FA5", fontname=Helvetica, fontsize=12, margin="0.2,0.1"];
+  edge [color="#444441", fontname=Helvetica, fontsize=10];
+  subgraph cluster_system { label=<Progetto-IS-main-English>; style="rounded,dashed"; color="#888780";
+    p_web_client [label=<<b>Web client</b>>];
+    p_ui [label=<<b>Registration form and dashboards</b><br/><font point-size="10">Swing form collecting registration details, plus student and librarian dashboards</font>>];
+    p_api [label=<<b>Registration REST API</b><br/><font point-size="10">exposes the /api/auth/register endpoint for creating user accounts</font>>];
+    p_service [label=<<b>User registration service</b><br/><font point-size="10">validates registration data, checks uniqueness and creates users via the registry</font>>];
+    p_domain [label=<<b>Library user and reservation entities</b><br/><font point-size="10">entities for users, students, librarians and reservations</font>>];
+    p_data_access [label=<<b>User and reservation storage</b><br/><font point-size="10">persists entities in transactions; registry saves and looks up users</font>>];
+  }
+  p_database [shape=cylinder, label=<<b>MySQL database</b>>, fillcolor="#F1EFE8"];
+  p_service -> p_domain [label=<creates and updates>];
+  p_service -> p_data_access [label=<reads and saves>];
+  p_ui -> p_service [label=<requests operations>];
+  p_api -> p_service [label=<delegates requests>];
+  p_data_access -> p_database [label=<persists>];
+  p_web_client -> p_api [label=<sends requests>];
+  subgraph cluster_legend { label="Legend"; fontsize=10; style=dashed; color="#B4B2A9";
+    lg_box [label="part of the system", fontsize=9];
+    lg_db [shape=cylinder, label="stored data", fontsize=9, fillcolor="#F1EFE8"];
+    lg_box -> lg_db [label="uses", fontsize=9]; }
+}

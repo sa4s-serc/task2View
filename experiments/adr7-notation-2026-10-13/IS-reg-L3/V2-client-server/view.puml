@@ -1,0 +1,28 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Client-Server view — user registration functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+  Component(ui, "Registration desktop app", "Java Swing", "Swing screens for registration and student and librarian dashboards\nRegistration, StudentDashboard, LibrarianDashboard\nanswers: invalid or already existing user data")
+  Component(api, "Registration REST endpoint", "Spring Boot REST", "exposes POST /api/auth/register, forwards to facade, maps validation errors to HTTP 400\nAuthenticationController, RestExceptionHandler, StudentController\nanswers: handle the registration request; invalid or already existing user data; …")
+  Component(service, "Registration validation service", "Java", "validates registration data and role, checks uniqueness, creates and registers users\nLibraryFacade, UserManager, …\nanswers: invalid or already existing user data; handle the registration request; …")
+  Component(domain, "User and reservation entities", "JPA entities", "JPA entities for users, students, librarians and reservations\nReservation, Student, User, …")
+  Component(data_access_1, "User persistence storage", "JPA / Hibernate", "persists entities in JPA transactions, rolling back and returning false on failure\nPersistenceManager, ReservationRegistry\nanswers: persist the newly created user; invalid or already existing user data; …")
+  Component(data_access_2, "User account lookup storage", "JPA / Hibernate", "UserRegistry\nanswers: invalid or already existing user data; verify the validity and uniqueness of the account; …")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+Rel(service, domain, "creates and updates")
+Rel(service, data_access_2, "reads and saves")
+Rel(ui, service, "requests operations", "in-process")
+Rel(data_access_2, data_access_1, "uses")
+Rel(api, service, "delegates requests", "in-process")
+Rel(data_access_2, database, "persists", "JPA / JDBC")
+Rel(web_client, api, "sends requests", "HTTP/JSON")
+
+SHOW_LEGEND()
+@enduml

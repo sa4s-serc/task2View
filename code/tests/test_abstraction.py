@@ -106,3 +106,44 @@ def test_uses_view_centres_on_the_part_being_changed(view, result):  # noqa: F81
     shape_for_viewpoint(v, "uses", result.aem, set())
     assert v.focus and all(c.target in {p.id for p in v.parts} for c in v.connectors)
     assert any(c.label == "depends on" for c in v.connectors) or not v.connectors
+
+
+@pytest.mark.parametrize("vp,audience,pref,expected", [
+    ("decomposition", "technical", "auto", "uml-package"),
+    ("uses", "technical", "auto", "uml-dependency"),
+    ("client-server", "technical", "auto", "c4-component"),
+    ("client-server", "overview", "auto", "boxes"),
+    ("uses", "overview", "auto", "boxes"),
+    ("client-server", "technical", "uml", "uml-dependency"),  # the person's preference wins
+    ("decomposition", "overview", "c4", "c4-component"),
+])
+def test_notation_follows_viewpoint_and_reader(vp, audience, pref, expected):
+    from task2view.phase7.arch_notations import choose_notation
+
+    assert choose_notation(vp, audience, pref) == expected
+
+
+def test_audience_is_derived_from_table_9_1():
+    from task2view.knowledge.catalog import load_catalog
+
+    roles = load_catalog().roles
+    assert roles["developer"].audience == "technical" and roles["devops"].audience == "technical"
+    assert roles["project-manager"].audience == "overview" and roles["customer"].audience == "overview"
+
+
+@pytest.mark.parametrize("notation", ["uml-package", "uml-dependency", "c4-component", "boxes"])
+def test_each_notation_compiles_and_has_title_and_legend(view, notation, tmp_path):
+    from task2view.phase7.arch_notations import has_title_and_legend, language_of, render_arch
+
+    v = view.model_copy(deep=True)
+    v.focus = [v.parts[0].id]
+    v.connectors[0].against_layering = True  # the red arrow must compile too
+    source = render_arch(v, "java_shop", notation)
+    assert has_title_and_legend(source, notation)
+    tool = "dot" if language_of(notation) == "graphviz" else "plantuml"
+    if shutil.which(tool):
+        path = tmp_path / ("v.dot" if tool == "dot" else "v.puml")
+        path.write_text(source)
+        cmd = ["dot", "-Tsvg", "-o", "/dev/null", str(path)] if tool == "dot" else ["plantuml", "-checkonly", str(path)]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        assert proc.returncode == 0, proc.stdout + proc.stderr

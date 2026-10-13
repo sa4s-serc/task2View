@@ -33,6 +33,7 @@ from task2view.phase5.abstract import abstract_view, lift_connectors, mark_answe
 from task2view.phase5.collect import collect_evidence
 from task2view.phase6.decide import ViewDecision, coverage, decide
 from task2view.phase7.abstracted import ABSTRACTED, render_abstracted, to_architecture_view, with_abstraction_coverage
+from task2view.phase7.arch_notations import choose_notation
 from task2view.phase7.notations import get_renderer
 from task2view.phase7.project import SCENARIO_KINDS, project_view
 from task2view.phase8.validate_view import ViewValidation, validate_view
@@ -147,12 +148,15 @@ def run_v2(
                 lift_connectors(arch, card, arrows=vp.id != "decomposition")
                 shape_for_viewpoint(arch, vp.id, aem, {q.id for q in view_qs if q.need in {"change-impact", "dependencies"}})
                 view = to_architecture_view(arch, view, vp, card)
-                render = render_abstracted(arch, view, card.name)
+                role = catalog.roles.get(profile.role or "")
+                notation = choose_notation(vp.id, role.audience if role else "technical", profile.spec.notation)
+                render = render_abstracted(arch, view, card.name, notation)
                 validation[vid] = validate_view(view, render, aem, card, catalog, coverage(view, questions, aem),
-                                                compile_enabled=compile_enabled, arch=arch, spec=profile.spec)
+                                                compile_enabled=compile_enabled, arch=arch, spec=profile.spec,
+                                                expected_notation=notation)
                 final_views[vid], arch_views[vid] = view, arch
                 renders[vid] = [render] + [get_renderer(lang).render(view) for lang in languages[1:]]
-                log.append(f"{vid}: {len(arch.parts)} parts, {len(arch.connectors)} arrows (abstraction)")
+                log.append(f"{vid}: {len(arch.parts)} parts, {len(arch.connectors)} arrows (abstraction), drawn as {notation}")
                 continue
         excluded: set[str] = set()
         for attempt in range(retries + 1):

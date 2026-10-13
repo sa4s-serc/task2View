@@ -1,0 +1,33 @@
+digraph view {
+  rankdir=TB; newrank=true; labelloc=t; fontname=Helvetica; fontsize=16; nodesep=0.3; ranksep=0.35;
+  label=<<b>Decomposition view — progetto_ing_software_gr10-main-English</b>>;
+  node [shape=tab, style=filled, fillcolor="#F1EFE8", color="#444441", fontname=Helvetica, fontsize=11];
+  edge [color="#444441", style=dashed, fontname=Helvetica, fontsize=10];
+  subgraph cluster_system { label=<<b>progetto_ing_software_gr10-main-English</b>>; style=rounded; color="#444441";
+    subgraph cluster_layer0 { label=<<i>«layer»</i> Presentation>; style="dashed"; color="#888780";
+      p_ui [label=<<b>Report management desktop screens</b><br/><font point-size="9">Swing screens for creating, reviewing, updating reports and monitoring activity</font><font point-size="10"><br/>UserDashboardGUI<br/>ReportCreationGUI<br/>ActivityMonitoringGUI<br/><i>… 4 more</i></font>>];
+    }
+    subgraph cluster_layer1 { label=<<i>«layer»</i> Application>; style="dashed"; color="#888780";
+      p_service_1 [label=<<b>Use case controllers</b><br/><font point-size="9">Facade and controllers delegating report creation and user registration, validating registration data</font><font point-size="10"><br/>SystemServicesController<br/>ReportCreationController<br/>UserRegistrationController</font>>];
+      p_service_2 [label=<<b>Report and user services</b><br/><font point-size="9">creates reports, registers users, retrieves reports and credentials through persistence</font><font point-size="10"><br/>ReportService<br/>UserService</font>>];
+    }
+    subgraph cluster_layer2 { label=<<i>«layer»</i> Domain>; style="dashed"; color="#888780";
+      p_domain [label=<<b>Municipal report entities</b><br/><font point-size="9">JPA entities for reports, users, citizens, operators, notes, status updates and locations</font><font point-size="10"><br/>Report<br/>Notification<br/>MunicipalOperator<br/><i>… 11 more</i></font>>];
+    }
+    subgraph cluster_layer3 { label=<<i>«layer»</i> Data access>; style="dashed"; color="#888780";
+      p_data_access [label=<<b>Report data storage</b><br/><font point-size="9">generic save, update and find operations over JPA with a shared EntityManagerFactory</font><font point-size="10"><br/>PersistenceService<br/><i>… 1 more</i></font>>];
+    }
+  }
+  p_database [shape=cylinder, label=<<b>MySQL database</b><br/>MySQL>];
+  p_ui -> p_service_1 [style=invis];
+  p_service_1 -> p_domain [style=invis];
+  p_service_2 -> p_domain [style=invis];
+  p_domain -> p_data_access [style=invis];
+  { rank=same; p_ui }
+  { rank=same; p_service_1 p_service_2 }
+  { rank=same; p_domain }
+  { rank=same; p_data_access }
+  subgraph cluster_legend { label="Legend"; fontsize=10; style=dashed; color="#B4B2A9";
+    lg_layer [shape=plaintext, label="dashed frame = layer", fontsize=9];
+    lg_pkg [label="part (UML package) with its main classes", fontsize=9]; }
+}

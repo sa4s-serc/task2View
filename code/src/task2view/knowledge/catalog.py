@@ -64,6 +64,7 @@ class Role(BaseModel):
     aliases: list[str]
     priors: dict[str, float]  # derived from V&B Table 9.1, or the extension priors
     prior_source: str
+    audience: str = "technical"  # technical | overview: who reads the views (picks the notation, ADR-007 D1)
 
 
 class Catalog(BaseModel):
@@ -111,6 +112,15 @@ def _read(name: str, folder: str | None = "vb") -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
+def _audience(row: dict, roles_doc: dict, table: dict) -> str:
+    """technical when V&B Table 9.1 wants detail for this role in a view of the software's own structure;
+    overview otherwise (roles outside the table state it)."""
+    if row.get("vb_row") is None:
+        return row.get("audience", "technical")
+    cells = table["rows"][row["vb_row"]]
+    return "technical" if any(cells.get(c) == "d" for c in roles_doc["technical_columns"]) else "overview"
+
+
 def _role_priors(row: dict, roles_doc: dict, viewpoints: dict[str, Viewpoint], table: dict) -> tuple[dict[str, float], str]:
     """Prior per need = highest Table 9.1 detail weight over the columns whose viewpoint frames it."""
     if row.get("vb_row") is None:
@@ -154,7 +164,7 @@ def load_catalog() -> Catalog:
     for rid, row in roles_doc["roles"].items():
         priors, source = _role_priors(row, roles_doc, viewpoints, table)
         roles[rid] = Role(id=rid, label=row["label"], vb_row=row.get("vb_row"), aliases=row["aliases"],
-                          priors=priors, prior_source=source)
+                          priors=priors, prior_source=source, audience=_audience(row, roles_doc, table))
     catalog = Catalog(
         needs=needs,
         quality_attributes=list(needs_doc.get("quality_attributes") or []),

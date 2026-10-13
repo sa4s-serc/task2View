@@ -1,0 +1,51 @@
+@startuml
+title Sequence view — user registration functionality
+participant "User" as e_cmp_it_unina_reservations_entity_User_88291b <<domain>>
+participant "Registration" as e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 <<presentation>>
+participant "LibraryFacade" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 <<application>>
+participant "UserManager" as e_cmp_it_unina_reservations_controller_UserManager_95503d <<application>>
+participant "UserRegistry" as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 <<domain>>
+participant "StudentFactory" as e_cmp_it_unina_reservations_controller_factory_StudentFactory_165e84 <<application>>
+participant "PersistenceManager" as e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 <<persistence>>
+participant "Login" as e_cmp_it_unina_reservations_boundary_Swing_Login_3f75a6 <<presentation>>
+e_cmp_it_unina_reservations_entity_User_88291b -> e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 : 1. click registerButton / register()
+alt any field is blank
+e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 -> e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 : 2. showError('Complete all fields')
+end
+alt all fields filled
+e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 3. register(role, name, surname, email, password, identifier)
+end
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 4. register(role, name, surname, email, password, identifier)
+alt throws IllegalArgumentException if role/name/password invalid
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 5. validate(role, name, password)
+end
+alt role is Student / otherwise; throws IllegalArgumentException on invalid format
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 6. validateStudent(...) or validateLibrarian(...)
+end
+alt throws IllegalArgumentException 'Email is already associated with an account.' if exists
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 7. institutionalEmailExists(email)
+end
+alt throws IllegalArgumentException 'Identifier is already in use.' if found
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 8. findStudentByStudentNumber(identifier) / findLibrarianByCode(identifier)
+end
+alt role is Student (else LibrarianFactory)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_factory_StudentFactory_165e84 : 9. createUser(name, surname, email, password, identifier)
+end
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 10. registerUser(newUser)
+e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 -> e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 11. save(newUser)
+alt persist/commit throws RuntimeException
+e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 12. return false (rollback on RuntimeException)
+end
+alt registerUser returns false
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 13. throws RuntimeException 'Server error: the user could not be saved'
+end
+alt save succeeded
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 14. return UserDTO via toDTO(newUser)
+end
+alt register throws RuntimeException
+e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 -> e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 : 15. showError(ex.getMessage())
+end
+alt registration succeeded
+e_cmp_it_unina_reservations_boundary_Swing_Registration_58c494 -> e_cmp_it_unina_reservations_boundary_Swing_Login_3f75a6 : 16. openLogin() after success dialog
+end
+@enduml

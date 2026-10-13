@@ -1,0 +1,20 @@
+@startuml
+title Uses view — persistence layer
+top to bottom direction
+skinparam componentStyle uml2
+skinparam shadowing false
+
+package "progetto_ing_software_gr10-main-English" {
+  component "Report handling screens\n----\nscreens for creating reports, viewing received ones, updating status, adding notes\nReportCreationGUI, ReceivedReportsGUI, ReportStatusUpdateGUI, …" as p_ui <<ui>>
+  component "Report and user services\n----\napplication logic for handling reports and users\nReportService, UserService" as p_service <<service>> #FAC775
+  component "Report data model\n----\npersisted reports, users, locations, statuses, state changes, notes and notifications\nReport, Notification, MunicipalOperator, …\nanswers: reports; internal notes; …" as p_domain <<domain>>
+  component "Report storage access\n----\nprovides JPA/Hibernate persistence access for the stored entities\nPersistenceService, …" as p_data_access <<data_access>>
+}
+database "MySQL database\n<size:10>MySQL</size>" as p_database
+p_service ..> p_domain : <<use>>
+p_service ..> p_data_access : <<use>>
+legend right
+dashed arrow <<use>> = the source needs the target to be correct (V&B uses relation)
+<back:#FAC775>highlighted</back> = the part being changed
+endlegend
+@enduml

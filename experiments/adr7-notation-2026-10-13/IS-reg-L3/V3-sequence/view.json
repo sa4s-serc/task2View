@@ -1,0 +1,417 @@
+{
+  "id": "V3-sequence",
+  "viewpoint_id": "sequence",
+  "viewpoint_name": "Sequence",
+  "vb_ref": "8.3.1 Notations for Capturing Traces (sequence diagrams)",
+  "model_kind": "uml-sequence",
+  "title": "Sequence view — user registration functionality",
+  "purpose": "Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) answering interaction-order for user registration functionality",
+  "detail_level": "detailed",
+  "max_elements": 12,
+  "addresses": [
+    "AQ13"
+  ],
+  "overlays": [
+    "layered"
+  ],
+  "scenario": "register user",
+  "elements": [
+    {
+      "id": "cmp:it.unina.reservations.controller.UserManager",
+      "kind": "lifeline",
+      "name": "UserManager",
+      "stereotype": "application",
+      "parent": null,
+      "responsibilities": [
+        "orchestrates registration",
+        "validates role, name, password",
+        "validates student/librarian identifier",
+        "checks email and identifier uniqueness",
+        "validates role is Student or Librarian and password length",
+        "validates student number format and librarian code",
+        "validates registration data and role",
+        "creates the user through a factory and registers it"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.UserManager"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+      "kind": "lifeline",
+      "name": "AuthenticationController",
+      "stereotype": "presentation",
+      "parent": null,
+      "responsibilities": [
+        "exposes POST /api/auth/register and forwards the request to the facade",
+        "exposes POST /api/auth/register",
+        "maps request parameters role, name, surname, email, password, identifier and returns a UserDTO"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "kind": "lifeline",
+      "name": "LibraryFacade",
+      "stereotype": "application",
+      "parent": null,
+      "responsibilities": [
+        "facade that delegates registration to UserManager",
+        "single entry point that forwards register to UserManager"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.LibraryFacade"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "cmp:it.unina.reservations.entity.UserRegistry",
+      "kind": "lifeline",
+      "name": "UserRegistry",
+      "stereotype": "domain",
+      "parent": null,
+      "responsibilities": [
+        "looks up users by email, student number, librarian code",
+        "saves new users via PersistenceManager",
+        "looks up users, students and librarians by email, student number or code"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.entity.UserRegistry"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "cmp:it.unina.reservations.database.PersistenceManager",
+      "kind": "lifeline",
+      "name": "PersistenceManager",
+      "stereotype": "persistence",
+      "parent": null,
+      "responsibilities": [
+        "persists entities in a JPA transaction and runs field queries",
+        "persists entities in a JPA transaction, returns false and rolls back on failure"
+      ],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.database.PersistenceManager"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "cmp:it.unina.reservations.controller.factory.UserFactory",
+      "kind": "lifeline",
+      "name": "UserFactory",
+      "stereotype": "application",
+      "parent": null,
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [
+        "it.unina.reservations.controller.factory.UserFactory"
+      ],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    }
+  ],
+  "relations": [],
+  "interactions": [
+    {
+      "order": 1,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.UserManager",
+      "message": "validate(role, name, password)",
+      "kind": "call",
+      "fragment": "scn:register-user:alt1"
+    },
+    {
+      "order": 2,
+      "source": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+      "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "message": "register(role, name, surname, email, password, identifier)",
+      "kind": "call",
+      "fragment": null
+    },
+    {
+      "order": 3,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.UserManager",
+      "message": "validateStudent / validateLibrarian",
+      "kind": "call",
+      "fragment": "scn:register-user:alt2"
+    },
+    {
+      "order": 4,
+      "source": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "target": "cmp:it.unina.reservations.controller.UserManager",
+      "message": "register(role, name, surname, email, password, identifier)",
+      "kind": "call",
+      "fragment": null
+    },
+    {
+      "order": 5,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.UserManager",
+      "message": "validate(role, name, password)",
+      "kind": "call",
+      "fragment": null
+    },
+    {
+      "order": 6,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "message": "throws IllegalArgumentException (invalid role, name or password length)",
+      "kind": "call",
+      "fragment": "scn:register-user:alt3"
+    },
+    {
+      "order": 7,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.UserManager",
+      "message": "validateStudent(name, surname, email, identifier)",
+      "kind": "call",
+      "fragment": "scn:register-user:alt4"
+    },
+    {
+      "order": 8,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.UserManager",
+      "message": "validateLibrarian(name, surname, email, identifier)",
+      "kind": "call",
+      "fragment": "scn:register-user:alt5"
+    },
+    {
+      "order": 9,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "message": "throws IllegalArgumentException (invalid student ID format)",
+      "kind": "call",
+      "fragment": "scn:register-user:alt6"
+    },
+    {
+      "order": 10,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.entity.UserRegistry",
+      "message": "institutionalEmailExists(email)",
+      "kind": "call",
+      "fragment": null
+    },
+    {
+      "order": 11,
+      "source": "cmp:it.unina.reservations.entity.UserRegistry",
+      "target": "cmp:it.unina.reservations.database.PersistenceManager",
+      "message": "findFirstByFields(User.class, institutionalEmail)",
+      "kind": "call",
+      "fragment": null
+    },
+    {
+      "order": 12,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "message": "throws IllegalArgumentException(\"Email is already associated with an account.\")",
+      "kind": "call",
+      "fragment": "scn:register-user:alt7"
+    },
+    {
+      "order": 13,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.entity.UserRegistry",
+      "message": "findStudentByStudentNumber(identifier) / findLibrarianByCode(identifier)",
+      "kind": "call",
+      "fragment": "scn:register-user:alt8"
+    },
+    {
+      "order": 14,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "message": "throws IllegalArgumentException(\"Identifier is already in use.\")",
+      "kind": "call",
+      "fragment": "scn:register-user:alt9"
+    },
+    {
+      "order": 15,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.factory.UserFactory",
+      "message": "createUser(name, surname, email, password, identifier)",
+      "kind": "call",
+      "fragment": "scn:register-user:alt10"
+    },
+    {
+      "order": 16,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.entity.UserRegistry",
+      "message": "registerUser(newUser)",
+      "kind": "call",
+      "fragment": null
+    },
+    {
+      "order": 17,
+      "source": "cmp:it.unina.reservations.entity.UserRegistry",
+      "target": "cmp:it.unina.reservations.database.PersistenceManager",
+      "message": "save(newUser)",
+      "kind": "call",
+      "fragment": null
+    },
+    {
+      "order": 18,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "message": "throws RuntimeException(\"Server error: the user could not be saved. Please try again.\")",
+      "kind": "call",
+      "fragment": "scn:register-user:alt11"
+    },
+    {
+      "order": 19,
+      "source": "cmp:it.unina.reservations.controller.UserManager",
+      "target": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "message": "return UserDTO",
+      "kind": "call",
+      "fragment": "scn:register-user:alt12"
+    }
+  ],
+  "fragments": [
+    {
+      "id": "scn:register-user:alt1",
+      "kind": "alt",
+      "guard": "always before role-specific checks"
+    },
+    {
+      "id": "scn:register-user:alt2",
+      "kind": "alt",
+      "guard": "role is Student, else Librarian"
+    },
+    {
+      "id": "scn:register-user:alt3",
+      "kind": "alt",
+      "guard": "role invalid, name empty, or password shorter than 8 or longer than 32"
+    },
+    {
+      "id": "scn:register-user:alt4",
+      "kind": "alt",
+      "guard": "role is Student"
+    },
+    {
+      "id": "scn:register-user:alt5",
+      "kind": "alt",
+      "guard": "role is not Student"
+    },
+    {
+      "id": "scn:register-user:alt6",
+      "kind": "alt",
+      "guard": "studentNumber does not match [A-Z]\\d{8}"
+    },
+    {
+      "id": "scn:register-user:alt7",
+      "kind": "alt",
+      "guard": "institutionalEmailExists(email) is true"
+    },
+    {
+      "id": "scn:register-user:alt8",
+      "kind": "alt",
+      "guard": "email not yet registered"
+    },
+    {
+      "id": "scn:register-user:alt9",
+      "kind": "alt",
+      "guard": "identifier already used by an existing student or librarian"
+    },
+    {
+      "id": "scn:register-user:alt10",
+      "kind": "alt",
+      "guard": "validation passed and no duplicates"
+    },
+    {
+      "id": "scn:register-user:alt11",
+      "kind": "alt",
+      "guard": "registerUser returns false"
+    },
+    {
+      "id": "scn:register-user:alt12",
+      "kind": "alt",
+      "guard": "user saved successfully"
+    }
+  ],
+  "traceability": [
+    {
+      "element": "cmp:it.unina.reservations.controller.UserManager",
+      "name": "UserManager",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.UserManager"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+      "name": "AuthenticationController",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.boundary.SpringBoot.AuthenticationController"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.controller.LibraryFacade",
+      "name": "LibraryFacade",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.LibraryFacade"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.entity.UserRegistry",
+      "name": "UserRegistry",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.entity.UserRegistry"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.database.PersistenceManager",
+      "name": "PersistenceManager",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.database.PersistenceManager"
+      ]
+    },
+    {
+      "element": "cmp:it.unina.reservations.controller.factory.UserFactory",
+      "name": "UserFactory",
+      "files": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java"
+      ],
+      "symbols": [
+        "it.unina.reservations.controller.factory.UserFactory"
+      ]
+    }
+  ],
+  "limitations": [
+    "one scenario per view; also recovered: register user (Swing)"
+  ],
+  "gaps": [],
+  "overflow": []
+}

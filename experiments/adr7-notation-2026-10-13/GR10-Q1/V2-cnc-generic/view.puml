@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Component-and-Connector view — progetto_ing_software_gr10-main-English
+
+System_Boundary(app, "progetto_ing_software_gr10-main-English") {
+  Component(ui, "Report management desktop screens", "Java Swing", "Swing screens for creating, reviewing, updating reports and monitoring activity\nUserDashboardGUI, ReportCreationGUI, ActivityMonitoringGUI, …\nanswers: user-facing functionality")
+  Component(service_1, "Use case controllers", "Java", "Facade and controllers delegating report creation and user registration, validating registration data\nSystemServicesController, ReportCreationController, UserRegistrationController\nanswers: application logic; user-facing functionality; …")
+  Component(service_2, "Report and user services", "Java", "creates reports, registers users, retrieves reports and credentials through persistence\nReportService, UserService\nanswers: domain entities; user-facing functionality; …")
+  Component(domain, "Municipal report entities", "JPA entities", "JPA entities for reports, users, citizens, operators, notes, status updates and locations\nReport, Notification, MunicipalOperator, …\nanswers: domain entities; data persistence")
+  Component(data_access, "Report data storage", "JPA / Hibernate", "generic save, update and find operations over JPA with a shared EntityManagerFactory\nPersistenceService, …\nanswers: data persistence; user-facing functionality; …")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reports_db")
+
+Rel(service_2, domain, "creates and updates")
+Rel(service_2, data_access, "reads and saves")
+Rel(ui, service_1, "requests operations", "in-process")
+Rel(service_1, service_2, "uses")
+Rel(data_access, database, "persists", "JPA / JDBC")
+
+SHOW_LEGEND()
+@enduml

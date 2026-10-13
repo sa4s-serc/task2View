@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+AddRelTag("against", $textColor="#A32D2D", $lineColor="#A32D2D", $lineStyle=DashedLine(), $legendText="dependency against the layering (found in code)")
+AddElementTag("focus", $bgColor="#FAC775", $fontColor="#412402", $borderColor="#854F0B", $legendText="the part being changed")
+title Client-Server view — user registration functionality
+
+System_Boundary(app, "Progetto-IS-main-English") {
+  Component(web_client, "Web client", "HTML / JavaScript", "app.js")
+  Component(ui, "Registration form and dashboards", "Java Swing", "Swing form collecting registration details, plus student and librarian dashboards\nRegistration, StudentDashboard, LibrarianDashboard")
+  Component(api, "Registration REST API", "Spring Boot REST", "exposes the /api/auth/register endpoint for creating user accounts\nAuthenticationController, StudentController")
+  Component(service, "User registration service", "Java", "validates registration data, checks uniqueness and creates users via the registry\nLibraryFacade, UserManager, …")
+  Component(domain, "Library user and reservation entities", "JPA entities", "entities for users, students, librarians and reservations\nReservation, Student, User, …")
+  Component(data_access, "User and reservation storage", "JPA / Hibernate", "persists entities in transactions; registry saves and looks up users\nPersistenceManager, UserRegistry, ReservationRegistry")
+}
+ComponentDb(database, "MySQL database", "MySQL", "reservationsdb")
+
+Rel(service, domain, "creates and updates")
+Rel(service, data_access, "reads and saves")
+Rel(ui, service, "requests operations", "in-process")
+Rel(api, service, "delegates requests", "in-process")
+Rel(data_access, database, "persists", "JPA / JDBC")
+Rel(web_client, api, "sends requests", "HTTP/JSON")
+
+SHOW_LEGEND()
+@enduml
