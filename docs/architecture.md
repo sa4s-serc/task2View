@@ -2,9 +2,9 @@
 
 ## Current pipeline (ADR-006, `task2view run`, default engine `v2`)
 
-![Task2View pipeline (ADR-006)](diagrams/pipeline-v2.svg)
+![Task2View pipeline (ADR-006, revised by ADR-007)](diagrams/pipeline-v2.svg)
 
-Source: [`diagrams/pipeline-v2.dot`](diagrams/pipeline-v2.dot). Blue = language-model call, beige = deterministic code, green = the shared Architecture Evidence Model.
+Source: [`diagrams/pipeline-v2.dot`](diagrams/pipeline-v2.dot). Blue = language-model call, beige = deterministic code, pink = code plus one naming call (ADR-007 abstraction), green = the shared Architecture Evidence Model. Interactive version with details per step: https://sa4s-serc.github.io/task2View/comparison/#pipeline
 
 Orchestrator: `code/src/task2view/agents/run_v2.py`. Design: [`redesign/01`](redesign/01-knowledge-model.md), [`02`](redesign/02-evidence-and-architecture-model.md), [`03`](redesign/03-views-reconciliation-validation.md); decision: [ADR-006](adr/ADR-006-evidence-model-redesign.md).
 
