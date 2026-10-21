@@ -1,0 +1,1096 @@
+{
+  "elements": {
+    "cmp:Database": {
+      "id": "cmp:Database",
+      "kind": "component",
+      "name": "Database",
+      "realized_by": [
+        "Database.PersistenceService",
+        "Database.JpaUtil"
+      ],
+      "layer": "persistence",
+      "responsibilities": [],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [],
+      "named_by": "package"
+    },
+    "artifact:municipal-report-management": {
+      "id": "artifact:municipal-report-management",
+      "kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "tool": "maven",
+        "file": "pom.xml"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "artifact:mysql-connector-j": {
+      "id": "artifact:mysql-connector-j",
+      "kind": "artifact",
+      "name": "mysql-connector-j",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "JDBC driver packaged as a dependency",
+          "claims": [
+            "C2"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C2"
+      ],
+      "named_by": "model"
+    },
+    "artifact:hibernate-core": {
+      "id": "artifact:hibernate-core",
+      "kind": "artifact",
+      "name": "hibernate-core",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "Hibernate ORM JPA implementation dependency",
+          "claims": [
+            "C3"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C3"
+      ],
+      "named_by": "model"
+    },
+    "execution_env:municipal-report-management-system": {
+      "id": "execution_env:municipal-report-management-system",
+      "kind": "execution_env",
+      "name": "Municipal_Report_Management_System",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "Hibernate/JPA persistence unit, resource-local transactions",
+          "claims": [
+            "C4"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C4"
+      ],
+      "named_by": "model"
+    },
+    "node:java-gui-client-jvm": {
+      "id": "node:java-gui-client-jvm",
+      "kind": "node",
+      "name": "Java GUI client JVM",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "runs the desktop client and creates the JPA EntityManagerFactory in-process",
+          "claims": [
+            "C5"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C5"
+      ],
+      "named_by": "model"
+    },
+    "datastore:reports-db": {
+      "id": "datastore:reports-db",
+      "kind": "datastore",
+      "name": "reports_db",
+      "realized_by": [],
+      "layer": null,
+      "responsibilities": [
+        {
+          "text": "MySQL database at 127.0.0.1:3306",
+          "claims": [
+            "C6"
+          ]
+        }
+      ],
+      "attributes": [],
+      "details": {},
+      "support": "observed",
+      "claims": [
+        "C6"
+      ],
+      "named_by": "model"
+    },
+    "ent:Entity.Citizen": {
+      "id": "ent:Entity.Citizen",
+      "kind": "entity",
+      "name": "Citizen",
+      "realized_by": [
+        "Entity.Citizen"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Citizen.java"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.Credentials": {
+      "id": "ent:Entity.Credentials",
+      "kind": "entity",
+      "name": "Credentials",
+      "realized_by": [
+        "Entity.Credentials"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "email",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Credentials.java"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.InternalNote": {
+      "id": "ent:Entity.InternalNote",
+      "kind": "entity",
+      "name": "InternalNote",
+      "realized_by": [
+        "Entity.InternalNote"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "noteId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "text",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "dateEntry",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/InternalNote.java",
+        "table": "internal_notes"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.Location": {
+      "id": "ent:Entity.Location",
+      "kind": "entity",
+      "name": "Location",
+      "realized_by": [
+        "Entity.Location"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "city",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "cap",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "street",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "streetNumber",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "municipalArea",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Location.java"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.MunicipalOperator": {
+      "id": "ent:Entity.MunicipalOperator",
+      "kind": "entity",
+      "name": "MunicipalOperator",
+      "realized_by": [
+        "Entity.MunicipalOperator"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/MunicipalOperator.java"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.Notification": {
+      "id": "ent:Entity.Notification",
+      "kind": "entity",
+      "name": "Notification",
+      "realized_by": [
+        "Entity.Notification"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "notificationId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "sentDate",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "notifiedStatus",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Notification.java",
+        "table": "notifications"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.Report": {
+      "id": "ent:Entity.Report",
+      "kind": "entity",
+      "name": "Report",
+      "realized_by": [
+        "Entity.Report"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "reportId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "category",
+          "type": "ReportCategory",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "location",
+          "type": "Location",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "dateReport",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "imageAttached",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "currentStatusName",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "citizenEditable",
+          "type": "boolean",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/Report.java",
+        "table": "reports"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.StatusUpdate": {
+      "id": "ent:Entity.StatusUpdate",
+      "kind": "entity",
+      "name": "StatusUpdate",
+      "realized_by": [
+        "Entity.StatusUpdate"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "updateId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "updateDate",
+          "type": "Date",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "newStatus",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/StatusUpdate.java",
+        "table": "status_updates"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "ent:Entity.User": {
+      "id": "ent:Entity.User",
+      "kind": "entity",
+      "name": "User",
+      "realized_by": [
+        "Entity.User"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [
+        {
+          "name": "userId",
+          "type": "Long",
+          "key": true,
+          "foreign_key": false
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "phoneNumber",
+          "type": "String",
+          "key": false,
+          "foreign_key": false
+        },
+        {
+          "name": "credentials",
+          "type": "Credentials",
+          "key": false,
+          "foreign_key": false
+        }
+      ],
+      "details": {
+        "source": "orm",
+        "file": "src/main/java/Entity/User.java",
+        "table": "users"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "fact"
+    },
+    "state:reportstatus:assigned": {
+      "id": "state:reportstatus:assigned",
+      "kind": "state",
+      "name": "Assigned",
+      "realized_by": [
+        "Entity.Assigned"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "machine": "ReportStatus"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "state:reportstatus:inprogress": {
+      "id": "state:reportstatus:inprogress",
+      "kind": "state",
+      "name": "InProgress",
+      "realized_by": [
+        "Entity.InProgress"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "machine": "ReportStatus"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "state:reportstatus:resolved": {
+      "id": "state:reportstatus:resolved",
+      "kind": "state",
+      "name": "Resolved",
+      "realized_by": [
+        "Entity.Resolved"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "machine": "ReportStatus"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    },
+    "state:reportstatus:submitted": {
+      "id": "state:reportstatus:submitted",
+      "kind": "state",
+      "name": "Submitted",
+      "realized_by": [
+        "Entity.Submitted"
+      ],
+      "layer": null,
+      "responsibilities": [],
+      "attributes": [],
+      "details": {
+        "machine": "ReportStatus"
+      },
+      "support": "observed",
+      "claims": [],
+      "named_by": "symbol"
+    }
+  },
+  "relations": {
+    "rel:ent-entity-internalnote:association:ent-entity-municipaloperator:operator": {
+      "id": "rel:ent-entity-internalnote:association:ent-entity-municipaloperator:operator",
+      "kind": "association",
+      "source": "ent:Entity.InternalNote",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.InternalNote.operator -many-to-one-> Entity.MunicipalOperator"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-internalnote:association:ent-entity-report:report": {
+      "id": "rel:ent-entity-internalnote:association:ent-entity-report:report",
+      "kind": "association",
+      "source": "ent:Entity.InternalNote",
+      "target": "ent:Entity.Report",
+      "label": "report",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.InternalNote.report -many-to-one-> Entity.Report"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-notification:association:ent-entity-citizen:destinatario": {
+      "id": "rel:ent-entity-notification:association:ent-entity-citizen:destinatario",
+      "kind": "association",
+      "source": "ent:Entity.Notification",
+      "target": "ent:Entity.Citizen",
+      "label": "destinatario",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.Notification.destinatario -many-to-one-> Entity.Citizen"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-notification:association:ent-entity-report:report": {
+      "id": "rel:ent-entity-notification:association:ent-entity-report:report",
+      "kind": "association",
+      "source": "ent:Entity.Notification",
+      "target": "ent:Entity.Report",
+      "label": "report",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.Notification.report -many-to-one-> Entity.Report"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-report:composition:ent-entity-location:location": {
+      "id": "rel:ent-entity-report:composition:ent-entity-location:location",
+      "kind": "composition",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.Location",
+      "label": "location",
+      "multiplicity": null,
+      "member_edges": [
+        "Entity.Report.location -embedded-> Entity.Location"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-report:association:ent-entity-citizen:citizenreporting": {
+      "id": "rel:ent-entity-report:association:ent-entity-citizen:citizenreporting",
+      "kind": "association",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.Citizen",
+      "label": "citizenReporting",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.Report.citizenReporting -many-to-one-> Entity.Citizen"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-report:association:ent-entity-municipaloperator:operator": {
+      "id": "rel:ent-entity-report:association:ent-entity-municipaloperator:operator",
+      "kind": "association",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.Report.operator -many-to-one-> Entity.MunicipalOperator"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-report:association:ent-entity-statusupdate:statusupdates": {
+      "id": "rel:ent-entity-report:association:ent-entity-statusupdate:statusupdates",
+      "kind": "association",
+      "source": "ent:Entity.Report",
+      "target": "ent:Entity.StatusUpdate",
+      "label": "statusUpdates",
+      "multiplicity": "1..*",
+      "member_edges": [
+        "Entity.Report.statusUpdates -one-to-many-> Entity.StatusUpdate"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-statusupdate:association:ent-entity-municipaloperator:operator": {
+      "id": "rel:ent-entity-statusupdate:association:ent-entity-municipaloperator:operator",
+      "kind": "association",
+      "source": "ent:Entity.StatusUpdate",
+      "target": "ent:Entity.MunicipalOperator",
+      "label": "operator",
+      "multiplicity": "*..1",
+      "member_edges": [
+        "Entity.StatusUpdate.operator -many-to-one-> Entity.MunicipalOperator"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:ent-entity-user:composition:ent-entity-credentials:credentials": {
+      "id": "rel:ent-entity-user:composition:ent-entity-credentials:credentials",
+      "kind": "composition",
+      "source": "ent:Entity.User",
+      "target": "ent:Entity.Credentials",
+      "label": "credentials",
+      "multiplicity": null,
+      "member_edges": [
+        "Entity.User.credentials -embedded-> Entity.Credentials"
+      ],
+      "claims": [],
+      "support": "observed"
+    },
+    "rel:artifact-municipal-report-management:deploys:execution-env-municipal-report-management-system": {
+      "id": "rel:artifact-municipal-report-management:deploys:execution-env-municipal-report-management-system",
+      "kind": "deploys",
+      "source": "artifact:municipal-report-management",
+      "target": "execution_env:municipal-report-management-system",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [],
+      "support": "inferred"
+    },
+    "rel:artifact-municipal-report-management:communicates:datastore-reports-db": {
+      "id": "rel:artifact-municipal-report-management:communicates:datastore-reports-db",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management",
+      "target": "datastore:reports-db",
+      "label": null,
+      "multiplicity": null,
+      "member_edges": [],
+      "claims": [],
+      "support": "inferred"
+    }
+  },
+  "scenarios": {},
+  "claims": {
+    "C1": {
+      "id": "C1",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "municipal-report-management",
+      "symbol": null,
+      "responsibilities": [
+        "maven jar artifact of the client application"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            9,
+            10
+          ],
+          "excerpt": "<artifactId>municipal-report-management</artifactId>\n    <version>1.0-SNAPSHOT</version>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.8,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C2": {
+      "id": "C2",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "mysql-connector-j",
+      "symbol": null,
+      "responsibilities": [
+        "JDBC driver packaged as a dependency"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            41,
+            45
+          ],
+          "excerpt": "<dependency>\n            <groupId>com.mysql</groupId>\n            <artifactId>mysql-connector-j</artifactId>\n            <version>9.4.0</version>\n        </dependency>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C3": {
+      "id": "C3",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "artifact",
+      "name": "hibernate-core",
+      "symbol": null,
+      "responsibilities": [
+        "Hibernate ORM JPA implementation dependency"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "pom.xml",
+          "symbol": null,
+          "lines": [
+            48,
+            52
+          ],
+          "excerpt": "<dependency>\n            <groupId>org.hibernate.orm</groupId>\n            <artifactId>hibernate-core</artifactId>\n            <version>6.6.50.Final</version>\n        </dependency>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C4": {
+      "id": "C4",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "execution_env",
+      "name": "Municipal_Report_Management_System",
+      "symbol": null,
+      "responsibilities": [
+        "Hibernate/JPA persistence unit, resource-local transactions"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            10,
+            12
+          ],
+          "excerpt": "<persistence-unit name=\"Municipal_Report_Management_System\" transaction-type=\"RESOURCE_LOCAL\">\n\n        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.9,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C5": {
+      "id": "C5",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "node",
+      "name": "Java GUI client JVM",
+      "symbol": null,
+      "responsibilities": [
+        "runs the desktop client and creates the JPA EntityManagerFactory in-process"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/JpaUtil.java",
+          "symbol": "Database.JpaUtil",
+          "lines": [
+            17,
+            17
+          ],
+          "excerpt": "this.emf = Persistence.createEntityManagerFactory(\"Municipal_Report_Management_System\");"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C6": {
+      "id": "C6",
+      "task": "IT1",
+      "kind": "element",
+      "element_kind": "datastore",
+      "name": "reports_db",
+      "symbol": null,
+      "responsibilities": [
+        "MySQL database at 127.0.0.1:3306"
+      ],
+      "attributes": [],
+      "source": null,
+      "target": null,
+      "relation": null,
+      "label": null,
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/resources/META-INF/persistence.xml",
+          "symbol": null,
+          "lines": [
+            26,
+            27
+          ],
+          "excerpt": "<property name=\"jakarta.persistence.jdbc.url\"\n                        value=\"jdbc:mysql://127.0.0.1:3306/reports_db\"/>"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.95,
+      "question_ids": [
+        "AQ1"
+      ]
+    },
+    "C7": {
+      "id": "C7",
+      "task": "IT1",
+      "kind": "relation",
+      "element_kind": null,
+      "name": null,
+      "symbol": null,
+      "responsibilities": [],
+      "attributes": [],
+      "source": "Database.PersistenceService",
+      "target": "Database.JpaUtil",
+      "relation": "communicates",
+      "label": "obtains EntityManager for persist/merge/query",
+      "order": null,
+      "scenario": null,
+      "condition": null,
+      "evidence": [
+        {
+          "file": "src/main/java/Database/PersistenceService.java",
+          "symbol": "Database.PersistenceService",
+          "lines": [
+            17,
+            19
+          ],
+          "excerpt": "public PersistenceService() {\n\t\tthis.jpaUtil = JpaUtil.getInstance();\n\t}"
+        }
+      ],
+      "support": "observed",
+      "confidence": 0.7,
+      "question_ids": [
+        "AQ1"
+      ]
+    }
+  },
+  "rejected_claims": [
+    {
+      "task": "IT1",
+      "claim": {
+        "kind": "relation",
+        "source": "Java GUI client JVM",
+        "target": "Municipal_Report_Management_System",
+        "relation": "contains",
+        "label": "JpaUtil creates EntityManagerFactory",
+        "evidence": [
+          {
+            "file": "src/main/java/Database/JpaUtil.java",
+            "symbol": "Database.JpaUtil",
+            "lines": [
+              17,
+              17
+            ],
+            "excerpt": "this.emf = Persistence.createEntityManagerFactory(\"Municipal_Report_Management_System\");"
+          }
+        ],
+        "confidence": 0.8
+      },
+      "reason": "relation endpoint not in the repository: 'Java GUI client JVM' -> 'Municipal_Report_Management_System'"
+    },
+    {
+      "task": "IT1",
+      "claim": {
+        "kind": "relation",
+        "source": "Java GUI client JVM",
+        "target": "reports_db",
+        "relation": "communicates",
+        "label": "JDBC via Hibernate (com.mysql.cj.jdbc.Driver)",
+        "evidence": [
+          {
+            "file": "src/main/resources/META-INF/persistence.xml",
+            "lines": [
+              23,
+              27
+            ],
+            "excerpt": "<property name=\"jakarta.persistence.jdbc.driver\"\n                        value=\"com.mysql.cj.jdbc.Driver\"/>\n\n            <property name=\"jakarta.persistence.jdbc.url\"\n                        value=\"jdbc:mysql://127.0.0.1:3306/reports_db\"/>"
+          }
+        ],
+        "confidence": 0.9
+      },
+      "reason": "relation endpoint not in the repository: 'Java GUI client JVM' -> 'reports_db'"
+    },
+    {
+      "task": "IT1",
+      "claim": {
+        "kind": "relation",
+        "source": "municipal-report-management",
+        "target": "Java GUI client JVM",
+        "relation": "deploys",
+        "label": "jar run on client JVM",
+        "evidence": [
+          {
+            "file": "pom.xml",
+            "lines": [
+              9,
+              10
+            ],
+            "excerpt": "<artifactId>municipal-report-management</artifactId>\n    <version>1.0-SNAPSHOT</version>"
+          }
+        ],
+        "confidence": 0.5
+      },
+      "reason": "relation endpoint not in the repository: 'municipal-report-management' -> 'Java GUI client JVM'"
+    },
+    {
+      "task": "IT1",
+      "claim": {
+        "kind": "relation",
+        "source": "municipal-report-management",
+        "target": "mysql-connector-j",
+        "relation": "contains",
+        "label": "dependency",
+        "evidence": [
+          {
+            "file": "pom.xml",
+            "lines": [
+              41,
+              45
+            ],
+            "excerpt": "<dependency>\n            <groupId>com.mysql</groupId>\n            <artifactId>mysql-connector-j</artifactId>\n            <version>9.4.0</version>\n        </dependency>"
+          }
+        ],
+        "confidence": 0.7
+      },
+      "reason": "relation endpoint not in the repository: 'municipal-report-management' -> 'mysql-connector-j'"
+    },
+    {
+      "task": "IT1",
+      "claim": {
+        "kind": "relation",
+        "source": "municipal-report-management",
+        "target": "hibernate-core",
+        "relation": "contains",
+        "label": "dependency",
+        "evidence": [
+          {
+            "file": "pom.xml",
+            "lines": [
+              48,
+              52
+            ],
+            "excerpt": "<dependency>\n            <groupId>org.hibernate.orm</groupId>\n            <artifactId>hibernate-core</artifactId>\n            <version>6.6.50.Final</version>\n        </dependency>"
+          }
+        ],
+        "confidence": 0.7
+      },
+      "reason": "relation endpoint not in the repository: 'municipal-report-management' -> 'hibernate-core'"
+    }
+  ],
+  "component_of": {
+    "Database.PersistenceService": "cmp:Database",
+    "Database.JpaUtil": "cmp:Database"
+  },
+  "correspondences": [],
+  "reflexion": {},
+  "notes": [
+    "IT1: 12 claims, read 4 files; read 2, search 1"
+  ]
+}

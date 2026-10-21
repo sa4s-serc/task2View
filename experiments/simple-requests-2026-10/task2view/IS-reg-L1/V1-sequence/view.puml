@@ -1,0 +1,23 @@
+@startuml
+mainframe sd Sequence view — user registration functionality
+skinparam shadowing false
+participant "AuthenticationController" as e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92
+participant "LibraryFacade" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3
+participant "UserManager" as e_cmp_it_unina_reservations_controller_UserManager_95503d
+participant "UserRegistry" as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0
+participant "PersistenceManager" as e_cmp_it_unina_reservations_database_PersistenceManager_4432c4
+e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92 -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 1. register(role, name, surname, email, password, identifier)
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 2. register(role, name, surname, email, password, identifier)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 3. validate(role, name, password); throws IllegalArgumentException if invalid
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_UserManager_95503d : 4. validateStudent / validateLibrarian
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 5. institutionalEmailExists(email)
+e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 -> e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 6. findFirstByFields(User.class, institutionalEmail)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 7. IllegalArgumentException('Email is already associated with an account.')
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 8. findStudentByStudentNumber(identifier) / findLibrarianByCode(identifier)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 9. IllegalArgumentException('Identifier is already in use.')
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 11. registerUser(newUser)
+e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 -> e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 12. save(newUser)
+e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 13. persist in transaction; returns true on commit, false after rollback
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 14. RuntimeException('Server error: the user could not be saved. Please try again.')
+e_cmp_it_unina_reservations_controller_UserManager_95503d -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 15. return UserDTO (toDTO(newUser))
+@enduml

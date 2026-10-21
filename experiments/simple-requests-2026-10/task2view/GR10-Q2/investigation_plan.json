@@ -1,0 +1,51 @@
+[
+  {
+    "id": "IT1",
+    "view_id": "V1-deployment",
+    "viewpoint_id": "deployment",
+    "question_ids": [
+      "AQ1"
+    ],
+    "need": "deployment",
+    "subject": null,
+    "goal": "Collect evidence of the runtime nodes and environments (Java desktop GUI client JVM, Hibernate/JPA persistence unit, MySQL database at 127.0.0.1:3306/reports_db), the deployable artifact (maven jar and its dependencies), and how the GUI client communicates with the database via JDBC/Hibernate.",
+    "seeds": {
+      "symbols": [
+        "Database.PersistenceService",
+        "Control.SystemServicesController",
+        "Boundary.HomePageGUI",
+        "Boundary.UserLoginGUI",
+        "Boundary.UserRegistrationGUI",
+        "Boundary.UserDashboardGUI"
+      ],
+      "paths": [
+        "pom.xml",
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "classes": [
+        "deploy",
+        "config",
+        "build",
+        "code"
+      ]
+    },
+    "expect_elements": [
+      "node",
+      "execution_env",
+      "artifact",
+      "datastore"
+    ],
+    "expect_relations": [
+      "deploys",
+      "communicates",
+      "contains"
+    ],
+    "budget_steps": 12,
+    "suggested_by": [
+      "graph-neighbour",
+      "method-name",
+      "planning-agent",
+      "symbol-name"
+    ]
+  }
+]

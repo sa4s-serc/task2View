@@ -1,0 +1,35 @@
+@startuml
+mainframe pkg Decomposition view — progetto_ing_software_gr10-main-English
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+
+package "Domain" as layer0 <<layer>> {
+  package "Report and user model" as p_domain {
+    class "Domain model" as p_domain_0
+    note "and 13 more" as p_domain_note
+  }
+}
+package "Data access" as layer1 <<layer>> {
+  package "Report storage" as p_data_access {
+    class "Data access" as p_data_access_0
+    note "and 1 more" as p_data_access_note
+  }
+}
+package "Presentation" as layer2 <<layer>> {
+  package "Citizen report screens" as p_presentation {
+    class "User interface" as p_presentation_0
+    note "and 6 more" as p_presentation_note
+  }
+}
+package "Application" as layer3 <<layer>> {
+  package "Report and user services" as p_application {
+    class "Application services" as p_application_0
+    note "and 3 more" as p_application_note
+  }
+}
+p_domain_0 -[hidden]-> p_data_access_0
+p_data_access_0 -[hidden]-> p_presentation_0
+p_presentation_0 -[hidden]-> p_application_0
+@enduml
