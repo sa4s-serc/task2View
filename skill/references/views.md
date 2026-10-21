@@ -1,6 +1,8 @@
 # Phases 6–8 — Decisions, views and validation
 
-The pipeline does this in `phase6/decide.py`, `phase7/project.py`, `phase7/notations/` and `phase8/`.
+The pipeline does this in `phase6/decide.py`, `phase7/project.py`, `phase7/uml_arch.py`, `phase7/notations/plantuml.py` and `phase8/`.
+
+**Every view is a UML 2.5.1 diagram (ADR-008).** The diagram types, the symbols and paths each allows, the Standard Profile stereotypes and the frame headings are in [`../knowledge/uml-2.5.1.yaml`](../knowledge/uml-2.5.1.yaml), with the clause of the UML specification for each rule. Use only those.
 
 ## Abstraction (ADR-007)
 For structural views at medium or coarse granularity:
@@ -9,7 +11,12 @@ For structural views at medium or coarse granularity:
 3. **Parts:** one per role (coarse: one per layer: presentation, application, domain, data access). Helpers join the one part that uses them; a data type used by several parts is listed, not drawn. Facts add the database (from the JDBC URL) and the web client (pages that call `/api`).
 4. **Names:** name each part as an architect would (1–5 words, the system's own words, never a class name unless it has one class) with a one-line description; split a part into 2–3 only if its members do different jobs. Every member stays listed.
 5. **Arrows:** one per pair of parts, only where their members have code dependencies; label with the intent for the pair of roles (e.g. "delegates requests", "reads and saves", "persists") and the protocol (HTTP/JSON, in-process, JPA / JDBC). Mark arrows the layering does not allow; list weak (< 3 dependencies) or implied ones instead of drawing them. Decomposition views draw no arrows.
-6. **Draw** C4-PlantUML: `Component` per part inside a `System_Boundary`, `ComponentDb` for the database, `Rel` with label and protocol, a dashed red tag for arrows against the layering, `SHOW_LEGEND()`.
+6. **Draw in UML** (PlantUML), with a frame whose heading names the diagram kind (`mainframe pkg …`, `mainframe cmp …`; UML Annex A):
+   - **decomposition, layered:** a UML package diagram. Each layer is `package "Layer" <<layer>>`, each part a `package` inside it with its main classes as `class` symbols (`hide circle`, `hide empty members`); the other members as a comment (`note "and 9 more"`). No arrows in decomposition views; layered views add `..> : <<use>>` dependencies. A database is not a module: leave it out.
+   - **uses:** a package diagram, parts as packages with their main classes, `..> : <<use>>` between parts (UML 7.7.4: a usage is a dependency with «use»); the part being changed gets a comment `note "the part being changed"`.
+   - **client-server and other C&C:** a UML component diagram. Each part is a `component` (UML 11.6.4) whose body lists what it does and, under `..realizations..`, its main classes; the database is a `component <<database>>`; arrows are dependencies `..>` labelled with the intent and the protocol in braces, e.g. `: delegates requests {HTTP/JSON}` (UML 11.6.5, Fig. 11.39).
+   - **against the layering:** add the constraint `{against the layering}` to the arrow (a red colour may be added).
+   - stereotypes only from the Standard Profile (`<<Entity>>` on the domain-model part), the notation keywords (`<<use>>`, `<<include>>`, `<<deploy>>`, …) or the Task2View profile (`<<layer>>`, `<<tier>>`, `<<database>>`, `<<external>>`). No C4 macros, no `database`/`cloud`/`queue`/`rectangle` shapes outside a use-case subject.
 
 ## Phase 7 projection
 A view is drawn from the evidence model only:
@@ -26,22 +33,27 @@ A view is drawn from the evidence model only:
 | state machine | One machine (states of the most relevant enum or state hierarchy) and transitions from claims; with no transitions, add the limitation "transitions were not evidenced". |
 | use case | A system group named after the repository, actors outside it, use cases inside it, associations / include / extend. |
 | deployment, install, data stores | Nodes, environments, artifacts and datastores, with artifacts nested in their node (that nesting replaces the deploys edge); communicates relations. |
-| tables (interfaces, decisions, requirements, work assignment, implementation) | One row per element of the table's own kinds (interfaces, decision records, requirements, …); implementation lists components with their files. No such element: report the gap, do not fall back to components. |
+
+Viewpoints documented only as tables (interfaces, decisions, requirements, work assignment, implementation) are not UML diagram types and are not selected (ADR-008).
 
 Every view lists, in `traceability`, each element's files and symbols.
 
-### Notation (PlantUML, the default)
-| Mark | PlantUML |
+### UML in PlantUML (the only notation; ADR-008)
+Start every diagram with `mainframe <kind> <title>`, the kind from UML Annex A: `pkg`, `cmp`, `class`, `dep`, `sd`, `act`, `stm`, `uc`.
+
+| Mark | PlantUML (UML clause) |
 |---|---|
-| layer, module or system group | `package "Name" as <alias> <<layer>> { … }` (`rectangle` for the system) |
-| component with responsibilities | `component "Name\n--\n- responsibility" as <alias> <<layer>>` |
-| entity | `class "Name" as <alias> <<entity>> { id : Long {PK} … }` |
-| datastore / artifact / node | `database` / `artifact` / `node` |
-| actor / use case | `actor` / `usecase` |
-| relations | `-->` uses; `..>` allowed-to-use and include/extend (`: <<include>>`); `--|>` is-a / generalization; `*--` composition; `A "*" --> "1" B : label` association |
-| sequence | `participant` / `actor`; `A -> B : 1. message`; `alt guard` … `end` |
-| activity | swimlanes `|Name|` declared before `start`, `:action;`, `if (guard) then (yes)` … `endif` |
-| state | `state`, `[*] --> S`, `S1 --> S2 : label` |
+| layer or module group | `package "Name" as <alias> <<layer>> { … }` (12.2.4); the system in a context view: `component "Name" <<Subsystem>>` |
+| component with responsibilities | `component "Name\n--\n- responsibility" as <alias>` (11.6.4); stereotype only if UML allows it (see the knowledge file) |
+| entity | `class "Name" as <alias> { id : Long {id} … }` (11.4.4, 9.5.4) |
+| datastore | component view: `component "Name" <<database>>`; deployment view: `node "Name" <<executionEnvironment>>` (19.4.4). Never the `database` cylinder |
+| artifact / node | `artifact` (19.3.4) / `node` (19.2.4) |
+| actor / use case | `actor` / `usecase`, inside `rectangle "System" { … }` for the subject (18.1.4) |
+| relations | `..>` dependency (7.7.4), `..> : <<use>>` usage, `<<include>>`/`<<extend>>`/`<<deploy>>` on dependencies; `--|>` generalization; `..|>` realization; `*--` composition; `A "*" --> "1" B : label` association; `--` communication path between nodes |
+| sequence | `participant` / `actor` lifelines (17.3.4); `A -> B : 1. message` synchronous, `A --> B` reply (17.4.4); `alt guard` … `end` (17.6.4) |
+| communication | `object` lifelines with `A -- B : 1: message >` on the link (17.9.1) |
+| activity | swimlanes `|Name|` declared before `start`, `:action;`, `if (guard) then (yes)` … `endif` (15.2–15.6) |
+| state | `state`, `[*] --> S`, `S1 --> S2 : label` (14.2.4) |
 
 Use one stable alias per element (the pipeline uses `e_` + the id with non-alphanumerics replaced by `_`, plus a short hash when characters were replaced). Responsibilities never go on edges.
 
@@ -62,7 +74,7 @@ Then decide, checking these rules in order:
 4. Otherwise → `confirm`.
 
 ## Phase 8 validation
-1. **Notation:** the source is well formed in its language (compile it if you can), and the model kind matches the viewpoint.
+1. **Notation:** the source compiles (if you can), the model kind matches the viewpoint, and it is UML 2.5.1 for its diagram type: only the symbols and paths [`../knowledge/uml-2.5.1.yaml`](../knowledge/uml-2.5.1.yaml) lists for it (a non-UML shape such as the `database` cylinder or a C4 macro is an error; a UML symbol of another diagram type is a warning), stereotypes from the Standard Profile, keywords or the Task2View profile, and a frame heading naming the kind.
 2. **Constraints:** every constraint the viewpoint lists in `viewpoints.yaml`. Severities and rules are in catalogs.md; `error` fails the view, `warning` is reported.
 3. **Faithfulness:**
    - every element is in the evidence model (or is a group or fold of evidence-model elements) and is not weakly supported; a **part** lists member classes or files that all exist, and no class belongs to two parts;

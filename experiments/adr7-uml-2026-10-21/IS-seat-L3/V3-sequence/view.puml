@@ -1,0 +1,54 @@
+@startuml
+mainframe sd Sequence view — seat booking functionality
+skinparam shadowing false
+participant "ReservationController" as e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_9a6804
+participant "LibraryFacade" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3
+participant "ReservationManager" as e_cmp_it_unina_reservations_controller_ReservationManager_4b8655
+participant "UserRegistry" as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0
+participant "StudyRoomRegistry" as e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b
+participant "Student" as e_cmp_it_unina_reservations_entity_Student_135a6e
+participant "Area" as e_cmp_it_unina_reservations_entity_Area_f48c8f
+participant "Seat" as e_cmp_it_unina_reservations_entity_Seat_9ad090
+participant "ReservationRegistry" as e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9
+participant "FirstAvailableAssignment" as e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1
+participant "PersistenceManager" as e_cmp_it_unina_reservations_database_PersistenceManager_4432c4
+participant "NotificationManager" as e_cmp_it_unina_reservations_controller_NotificationManager_02be8e
+alt POST /api/reservations/create
+e_cmp_it_unina_reservations_boundary_SpringBoot_ReservationController_9a6804 -> e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 1. makeReservation(ReservationRequestDTO)
+end
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 -> e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 : 2. makeReservation(request)
+alt student missing -> IllegalArgumentException('Student not found.')
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 3. findStudentById(studentId)
+end
+alt room null, inactive or closed on date -> IllegalArgumentException
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 4. findRoomById(roomId)
+end
+alt area missing or not in room -> IllegalArgumentException
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 5. findAreaById(areaId)
+end
+alt seatId != 0; seat missing or not in selected area -> IllegalArgumentException
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 6. findSeatById(seatId)
+end
+alt inside synchronized block; true -> IllegalArgumentException (duplicate booking)
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_Student_135a6e : 7. hasActiveOrConfirmedReservationForDateAndSlot(date, label)
+end
+alt empty list -> IllegalArgumentException('No seats are available in the selected area')
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_Area_f48c8f : 8. getAvailableSeats(date, timeSlot)
+end
+alt seatId > 0 and seat not available -> IllegalStateException('The selected seat is no longer available')
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_Seat_9ad090 : 9. isAvailable(date, timeSlot)
+end
+alt false -> RuntimeException (save failed)
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 : 10. saveReservation(reservation)
+end
+alt seatId == 0 uses automatic assignment strategy
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_controller_strategy_FirstAvailableAssignment_efccc1 : 11. default AssignmentStrategy installed
+end
+e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 -> e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 12. save(reservation)
+alt after successful save
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_controller_NotificationManager_02be8e : 13. attach observer / notifyObservers()
+end
+alt reservation has a student
+e_cmp_it_unina_reservations_controller_NotificationManager_02be8e -> e_cmp_it_unina_reservations_controller_NotificationManager_02be8e : 14. update -> sendNotification(recipients, message)
+end
+@enduml

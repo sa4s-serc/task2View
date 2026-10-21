@@ -1,0 +1,80 @@
+@startuml
+mainframe cmp Client-Server view — seat booking functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+skinparam componentStyle uml2
+
+package "Progetto-IS-main-English" as system {
+  component p_web_client [
+  Web client
+  ..realizations..
+  app.js
+  ]
+  component p_ui [
+  Library booking desktop app
+  --
+  Swing screens for selecting rooms, areas, seats and time slots
+  ..realizations..
+  SeatSelection, ReservationSummary, WizardState, … 9 more
+  ]
+  component p_job [
+  Reservation reminder scheduler
+  --
+  periodically triggers reservation end handling and reminders
+  ..realizations..
+  NotificationScheduler
+  ]
+  component p_api [
+  Booking and availability REST API
+  --
+  REST boundary for reservation create, cancel, check-in and room availability queries
+  ..realizations..
+  StudyRoomController, ReservationController, StudentController
+  ]
+  component p_service_1 [
+  Booking service
+  --
+  applies seat assignment, handles cancel and check-in, manages rooms and availability
+  ..realizations..
+  LibraryFacade, ReservationManager, StudyRoomManager
+  ]
+  component p_service_2 [
+  Notification service
+  --
+  builds notification messages, sends reminders and delivers them to recipients
+  ..realizations..
+  NotificationManager, NotificationService
+  ]
+  component p_domain <<Entity>> [
+  Reservation domain model
+  --
+  reservations, seats, rooms and states; computes available seats per date and slot
+  ..realizations..
+  Reservation, Student, Area, … 13 more
+  ]
+  component p_data_access [
+  Reservation storage
+  --
+  saves, updates and queries reservations, rooms and users via EntityManager
+  ..realizations..
+  StudyRoomRegistry, ReservationRegistry, PersistenceManager, … 1 more
+  ]
+}
+component p_database <<database>> [
+MySQL database
+..realizations..
+reservationsdb
+]
+p_service_1 ..> p_domain : creates and updates
+p_service_1 ..> p_data_access : reads and saves
+p_service_2 ..> p_domain : creates and updates
+p_ui ..> p_service_1 : requests operations {in-process}
+p_api ..> p_service_1 : delegates requests {in-process}
+p_service_1 ..> p_service_2 : uses
+p_domain .[#A32D2D].> p_data_access : queries {against the layering}
+p_service_2 ..> p_data_access : reads and saves
+p_data_access ..> p_database : persists {JPA / JDBC}
+p_web_client ..> p_api : sends requests {HTTP/JSON}
+@enduml

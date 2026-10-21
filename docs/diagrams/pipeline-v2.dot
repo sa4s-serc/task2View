@@ -1,7 +1,7 @@
 // Task2View pipeline (ADR-006, revised by ADR-007). Render: dot -Tsvg pipeline-v2.dot -o pipeline-v2.svg
 digraph task2view {
   graph [rankdir=TB, fontname="Helvetica", fontsize=11, nodesep=0.35, ranksep=0.45, labelloc=t,
-         label="Task2View pipeline (ADR-006 + ADR-007): request + repository -> checked architectural views\n"];
+         label="Task2View pipeline (ADR-006, ADR-007, ADR-008): request + repository -> checked architectural views\n"];
   node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#555555"];
   edge  [fontname="Helvetica", fontsize=9, color="#555555"];
 
@@ -10,8 +10,8 @@ digraph task2view {
 
   subgraph cluster_understand {
     label="A. Understand the request  (what must be shown?)"; style="rounded,dashed"; color="#7a7a7a"; fontsize=10;
-    p1 [label="Phase 1  Interpret  [LLM]\nneeds (primary / secondary), subjects, target, role\nevery item quoted from the request\nview spec: scope, granularity, behaviour, notation; <= 3 clarifications", fillcolor="#e8f0fe"];
-    p3 [label="Phase 3  Select viewpoints  [rules]\nsmallest set of V&B viewpoints covering the primary needs (max 3)\n+ C&C style and layer overlay from repository signals", fillcolor="#fff4e5"];
+    p1 [label="Phase 1  Interpret  [LLM]\nneeds (primary / secondary), subjects, target, role\nevery item quoted from the request\nview spec: scope, granularity, behaviour; <= 3 clarifications", fillcolor="#e8f0fe"];
+    p3 [label="Phase 3  Select viewpoints  [rules]\nsmallest set of V&B viewpoints covering the primary needs (max 3),\nonly viewpoints drawn as a UML diagram type\n+ C&C style and layer overlay from repository signals", fillcolor="#fff4e5"];
     p2 [label="Phase 2  Questions  [rules]\none question per view and subject", fillcolor="#fff4e5"];
   }
 
@@ -28,11 +28,11 @@ digraph task2view {
     label="C. Build, draw and check the views"; style="rounded,dashed"; color="#7a7a7a"; fontsize=10;
     p6 [label="Phase 6  Decide per view  [rules]\nconfirm / simplify / request evidence / gap / drop", fillcolor="#fff4e5"];
     pa [label="Abstraction  [rules + 1 naming call]  (ADR-007)\nclasses grouped into parts by architectural role;\narrows lifted from code dependencies, against-layering flagged;\none set of parts per request; names checked by code", fillcolor="#fbeaf0"];
-    p7 [label="Phase 7  Draw  [rules]\nnotation per viewpoint and reader (notations.yaml):\nUML packages / UML <<use>> / C4 / plain boxes;\nsequence, data, deployment, use case in UML", fillcolor="#fff4e5"];
-    p8 [label="Phase 8  Check  [rules, no LLM judge]\ntrue to the code? readable? matches the spec?\n(notation, constraints, faithfulness, coverage)", fillcolor="#fff4e5"];
+    p7 [label="Phase 7  Draw  [rules]  (ADR-008)\nevery view a UML 2.5.1 diagram (PlantUML):\npackage, component, class, deployment, sequence,\nuse case, activity, state machine; Annex A frame", fillcolor="#fff4e5"];
+    p8 [label="Phase 8  Check  [rules, no LLM judge]\nUML 2.5.1 conformance (symbols, paths, stereotypes, frame);\ntrue to the code? readable? matches the spec?", fillcolor="#fff4e5"];
   }
 
-  out [label="Output\n1-3 views (PlantUML / Graphviz), architecture.json,\ntraceability, validation report, usage and cost", shape=note, fillcolor="#f2f2f2"];
+  out [label="Output\n1-3 UML views (PlantUML), architecture.json,\ntraceability, validation report, usage and cost", shape=note, fillcolor="#f2f2f2"];
   legend [shape=plaintext, label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
     <tr><td bgcolor="#e8f0fe">language model call</td><td bgcolor="#fff4e5">deterministic code</td><td bgcolor="#fbeaf0">code + one naming call</td><td bgcolor="#e6f4ea">shared model</td></tr></table>>];
 

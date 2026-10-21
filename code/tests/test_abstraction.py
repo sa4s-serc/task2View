@@ -1,4 +1,4 @@
-"""ADR-007 step 3: abstraction of verified evidence into named parts, and their C4 rendering (no model call)."""
+"""ADR-007 step 3: abstraction of verified evidence into named parts; ADR-008: their UML rendering (no model call)."""
 
 import shutil
 import subprocess
@@ -7,7 +7,7 @@ import pytest
 
 from task2view.contracts.card import Symbol
 from task2view.phase5.abstract import abstract_view, role_of
-from task2view.phase7.c4 import readability, render_c4
+from task2view.phase7.uml_arch import readability, render_arch
 
 from .test_run_v2 import result  # noqa: F401  (scripted end-to-end run on the java_shop fixture)
 
@@ -53,13 +53,28 @@ def test_connectors_are_lifted_from_code_and_follow_the_layers(view):
     assert readability(view)["method_names_on_arrows"] == 0
 
 
-def test_c4_rendering_compiles(view, tmp_path):
-    source = render_c4(view, system="java_shop")
-    assert source.startswith("@startuml") and "Rel(api, service, " in source
+def _compiles(source, tmp_path):
     if shutil.which("plantuml"):
         (tmp_path / "v.puml").write_text(source)
         proc = subprocess.run(["plantuml", "-checkonly", str(tmp_path / "v.puml")], capture_output=True, text=True)
         assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+@pytest.mark.parametrize("viewpoint,frame", [("client-server", "cmp"), ("decomposition", "pkg"), ("uses", "pkg")])
+def test_uml_rendering_compiles_with_a_frame(view, tmp_path, viewpoint, frame):
+    v = view.model_copy(deep=True)
+    v.focus = [v.parts[0].id]
+    v.connectors[0].against_layering = True  # the constraint and colour must compile too
+    source = render_arch(v, "java_shop", viewpoint)
+    assert source.startswith("@startuml") and f"mainframe {frame} " in source
+    assert "!include" not in source and "Rel(" not in source  # no C4 macros
+    if viewpoint == "decomposition":
+        assert ".>" not in source  # containment, no dependencies
+    elif viewpoint == "uses":
+        assert "<<use>>" in source
+    else:
+        assert "p_api .> p_service" in source.replace("..>", ".>") or "p_api ..> p_service" in source
+    _compiles(source, tmp_path)
 
 
 def test_naming_checks_names_and_splits(view, result):  # noqa: F811
@@ -106,44 +121,3 @@ def test_uses_view_centres_on_the_part_being_changed(view, result):  # noqa: F81
     shape_for_viewpoint(v, "uses", result.aem, set())
     assert v.focus and all(c.target in {p.id for p in v.parts} for c in v.connectors)
     assert any(c.label == "depends on" for c in v.connectors) or not v.connectors
-
-
-@pytest.mark.parametrize("vp,audience,pref,expected", [
-    ("decomposition", "technical", "auto", "uml-package"),
-    ("uses", "technical", "auto", "uml-dependency"),
-    ("client-server", "technical", "auto", "c4-component"),
-    ("client-server", "overview", "auto", "boxes"),
-    ("uses", "overview", "auto", "boxes"),
-    ("client-server", "technical", "uml", "uml-dependency"),  # the person's preference wins
-    ("decomposition", "overview", "c4", "c4-component"),
-])
-def test_notation_follows_viewpoint_and_reader(vp, audience, pref, expected):
-    from task2view.phase7.arch_notations import choose_notation
-
-    assert choose_notation(vp, audience, pref) == expected
-
-
-def test_audience_is_derived_from_table_9_1():
-    from task2view.knowledge.catalog import load_catalog
-
-    roles = load_catalog().roles
-    assert roles["developer"].audience == "technical" and roles["devops"].audience == "technical"
-    assert roles["project-manager"].audience == "overview" and roles["customer"].audience == "overview"
-
-
-@pytest.mark.parametrize("notation", ["uml-package", "uml-dependency", "c4-component", "boxes"])
-def test_each_notation_compiles_and_has_title_and_legend(view, notation, tmp_path):
-    from task2view.phase7.arch_notations import has_title_and_legend, language_of, render_arch
-
-    v = view.model_copy(deep=True)
-    v.focus = [v.parts[0].id]
-    v.connectors[0].against_layering = True  # the red arrow must compile too
-    source = render_arch(v, "java_shop", notation)
-    assert has_title_and_legend(source, notation)
-    tool = "dot" if language_of(notation) == "graphviz" else "plantuml"
-    if shutil.which(tool):
-        path = tmp_path / ("v.dot" if tool == "dot" else "v.puml")
-        path.write_text(source)
-        cmd = ["dot", "-Tsvg", "-o", "/dev/null", str(path)] if tool == "dot" else ["plantuml", "-checkonly", str(path)]
-        proc = subprocess.run(cmd, capture_output=True, text=True)
-        assert proc.returncode == 0, proc.stdout + proc.stderr

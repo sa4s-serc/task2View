@@ -3,7 +3,9 @@
 Design: docs/redesign/01-knowledge-model.md §6.
 
 1. Applicable viewpoints: generic ones, plus style viewpoints whose
-   ``applies_when`` signal is present in the repository facts.
+   ``applies_when`` signal is present in the repository facts; in both cases only
+   viewpoints drawn as a UML 2.5.1 diagram type (ADR-008), so table-only
+   viewpoints (decisions, work assignment, ...) are never selected.
 2. Choose the smallest set (cap ``max_views``) that covers the most PRIMARY
    needs. Secondary needs never add a view: among equally small sets, the one
    that also covers more secondary needs wins, and the rest are reported as not
@@ -25,7 +27,7 @@ from itertools import combinations
 
 from pydantic import BaseModel, Field
 
-from task2view.knowledge.catalog import Catalog, Viewpoint
+from task2view.knowledge.catalog import Catalog, Viewpoint, uml_diagram_type
 
 MAX_VIEWS = 3
 
@@ -75,6 +77,9 @@ class ViewPlan(BaseModel):
 
 
 def applicable(vp: Viewpoint, facts: RepoFacts) -> bool:
+    """ADR-008: only viewpoints drawable as one of the UML 2.5.1 diagram types (Annex A) are candidates."""
+    if uml_diagram_type(vp.model_kind) is None:
+        return False
     return vp.generic or any(sig in facts.signals for sig in vp.applies_when)
 
 

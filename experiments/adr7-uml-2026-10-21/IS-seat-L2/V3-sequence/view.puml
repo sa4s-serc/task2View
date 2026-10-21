@@ -1,0 +1,35 @@
+@startuml
+mainframe sd Sequence view — seat booking functionality
+skinparam shadowing false
+participant "LibraryFacade" as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3
+participant "ReservationManager" as e_cmp_it_unina_reservations_controller_ReservationManager_4b8655
+participant "StudyRoomRegistry" as e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b
+participant "Student" as e_cmp_it_unina_reservations_entity_Student_135a6e
+participant "Area" as e_cmp_it_unina_reservations_entity_Area_f48c8f
+participant "ReservationRegistry" as e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9
+participant "PersistenceManager" as e_cmp_it_unina_reservations_database_PersistenceManager_4432c4
+participant "NotificationManager" as e_cmp_it_unina_reservations_controller_NotificationManager_02be8e
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 -> e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 : 1. makeReservation(request)
+alt roomId is not null and >= 1; otherwise IllegalArgumentException (room not found, inactive or closed on date)
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 2. findRoomById(roomId)
+end
+alt areaId not null and >= 1; if area is null or not in the room, IllegalArgumentException 'The area is not in the selected room'
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 3. findAreaById(areaId)
+end
+alt seatId != 0; if seat is null, IllegalArgumentException 'Invalid seat identifier.'
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_StudyRoomRegistry_8f507b : 4. findSeatById(seatId)
+end
+alt duplicate booking: student already has active or confirmed reservation for date and slot -> IllegalArgumentException
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_Student_135a6e : 5. hasActiveOrConfirmedReservationForDateAndSlot(date, label)
+end
+alt no seats available -> IllegalArgumentException 'No seats are available in the selected area'
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_Area_f48c8f : 6. getAvailableSeats(date, timeSlot)
+end
+alt save returns false -> RuntimeException 'Server error: the reservation could not be saved'
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 : 7. saveReservation(reservation)
+end
+e_cmp_it_unina_reservations_entity_ReservationRegistry_9680a9 -> e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 8. save(reservation)
+alt reservation saved successfully
+e_cmp_it_unina_reservations_controller_ReservationManager_4b8655 -> e_cmp_it_unina_reservations_controller_NotificationManager_02be8e : 9. attach and notifyObservers
+end
+@enduml

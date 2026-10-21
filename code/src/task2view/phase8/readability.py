@@ -6,7 +6,7 @@ calibrate beyond the pilot):
 - edge crossings in the laid-out graph (Graphviz, same engine family as PlantUML) above max(1, 10% of
   the arrows) (warning);
 - box text: description of at most 12 words (warning);
-- title and legend present, in the view's notation (warning);
+- a UML diagram frame whose heading names the diagram kind (UML 2.5.1 Annex A) (warning);
 - spec conformance: coarse views have at most 6 parts; medium and coarse views do not show single
   classes as parts; feature views include where requests enter; decomposition views have no arrows,
   other views have at least one when they show two or more parts.
@@ -19,7 +19,6 @@ import shutil
 import subprocess
 
 from task2view.contracts.architecture import ArchView
-from task2view.phase7.arch_notations import has_title_and_legend
 
 _METHOD = re.compile(r"\b[a-z]+[A-Z]\w*\(|\bget[A-Z]|\bset[A-Z]|\bfind[A-Z]|\bgetInstance\b")
 _ENTRY_ROLES = {"ui", "api", "web_client", "job", "presentation"}
@@ -57,7 +56,7 @@ def _intersect(p, q, r, s) -> bool:
     return d1 * d2 < 0 and d3 * d4 < 0
 
 
-def check(view: ArchView, source: str, *, viewpoint_id: str, spec, notation: str = "c4-component") -> tuple[list[dict], dict]:
+def check(view: ArchView, source: str, *, viewpoint_id: str, spec) -> tuple[list[dict], dict]:
     findings, n_arrows = [], len(view.connectors)
     for c in view.connectors:
         if _METHOD.search(c.label):
@@ -71,8 +70,9 @@ def check(view: ArchView, source: str, *, viewpoint_id: str, spec, notation: str
         if len(p.description.split()) > 12:
             findings.append({"check": "box text", "severity": "warning", "mark": p.id,
                              "message": f"{p.name}: description longer than 12 words"})
-    if not has_title_and_legend(source, notation):
-        findings.append({"check": "title and legend", "severity": "warning", "mark": "view", "message": "missing title or legend"})
+    if "mainframe " not in source:
+        findings.append({"check": "frame heading", "severity": "warning", "mark": "view",
+                         "message": "no UML diagram frame with a heading (UML 2.5.1 Annex A)"})
     # spec conformance
     if spec.granularity == "coarse" and len(view.parts) > 6:
         findings.append({"check": "spec: granularity", "severity": "warning", "mark": "view",

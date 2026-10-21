@@ -1,7 +1,6 @@
 """ADR-007: structural views come from the abstraction step (phase5/abstract.py), not from class-level
 projection. This module turns an ArchView into the common view format, so Phase 6, Phase 8, the run
-package and the other notations handle it like any other view; the main diagram is in the notation chosen
-for the viewpoint and reader (phase7/arch_notations.py)."""
+package handle it like any other view; the diagram is UML (phase7/uml_arch.py, ADR-008)."""
 
 from __future__ import annotations
 
@@ -9,8 +8,7 @@ from task2view.contracts.architecture import ArchView
 from task2view.contracts.card import RepositoryCard
 from task2view.contracts.views import ArchitectureView, RenderResult, TraceRow, ViewElement, ViewRelation
 from task2view.knowledge.catalog import Viewpoint
-from task2view.phase7.arch_notations import language_of, render_arch
-from task2view.phase7.c4 import _text
+from task2view.phase7.uml_arch import _text, render_arch
 
 # Viewpoints drawn as parts and connectors. Style views with their own element kinds (pipes and
 # filters, publish-subscribe, peer-to-peer, aspects, concurrency) and the context view keep projection.
@@ -58,7 +56,6 @@ def to_architecture_view(arch: ArchView, base: ArchitectureView, vp: Viewpoint, 
     return view
 
 
-def render_abstracted(arch: ArchView, view: ArchitectureView, system: str, notation: str = "c4-component") -> RenderResult:
-    language = language_of(notation)
-    return RenderResult(language=language, model_kind=view.model_kind, source=render_arch(arch, system, notation),
-                        extension="dot" if language == "graphviz" else "puml", notation=notation)
+def render_abstracted(arch: ArchView, view: ArchitectureView, system: str) -> RenderResult:
+    return RenderResult(language="plantuml", model_kind=view.model_kind, extension="puml",
+                        source=render_arch(arch, system, view.viewpoint_id))

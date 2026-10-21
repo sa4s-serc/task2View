@@ -102,10 +102,10 @@ def test_style_viewpoint_not_selected_without_its_signal():
     assert plan.views == [] and plan.uncovered_needs == ["lifecycle"]
 
 
-def test_missing_evidence_is_selected_and_reported_as_gap():
+def test_viewpoints_without_a_uml_diagram_are_never_selected():
+    # ADR-008: work assignment is documented as a table, which is not a UML diagram type
     plan = select_views(SelectionInput(needs=["ownership"]), CATALOG, _facts("gr10"))
-    assert plan.views[0].viewpoint_id == "work-assignment"
-    assert "ownership" in plan.views[0].evidence_gap
+    assert not plan.views and "ownership" in plan.uncovered_needs
 
 
 def test_role_prior_fills_in_when_goal_states_no_need():

@@ -7,7 +7,7 @@ Phase 2  questions per selected view (deterministic)
 Phase 4  investigation plan (deterministic suggestions, optional planning agent)
 Phase 5  evidence agents with tools -> verified claims -> Architecture Evidence Model
 Phase 6  per-view decisions; request_evidence loops back to 4-5 (bounded)
-Phase 7  deterministic projection + rendering in the requested notations
+Phase 7  deterministic projection + rendering in UML (PlantUML; ADR-008)
 Phase 8  five-layer validation; failed marks are removed and the view re-projected (bounded)
 """
 
@@ -33,7 +33,6 @@ from task2view.phase5.abstract import abstract_view, lift_connectors, mark_answe
 from task2view.phase5.collect import collect_evidence
 from task2view.phase6.decide import ViewDecision, coverage, decide
 from task2view.phase7.abstracted import ABSTRACTED, render_abstracted, to_architecture_view, with_abstraction_coverage
-from task2view.phase7.arch_notations import choose_notation
 from task2view.phase7.notations import get_renderer
 from task2view.phase7.project import SCENARIO_KINDS, project_view
 from task2view.phase8.validate_view import ViewValidation, validate_view
@@ -64,7 +63,6 @@ def run_v2(
     *,
     llm: str | None = None,
     max_views: int = 3,
-    languages: list[str] | None = None,
     compile_enabled: bool = True,
     evidence_mode: str = "agent",
     cache_dir: str | Path | None = None,
@@ -75,7 +73,6 @@ def run_v2(
     it the defaults are used (non-interactive runs and experiments)."""
     catalog = load_catalog()
     cfg = pipeline_config()
-    languages = languages or ["plantuml"]
     runtime = AgentRuntime(generate=generate, model=llm, cache_dir=cache_dir)
     llm_spec = runtime.spec
     log: list[str] = [f"generator: {llm_spec}", f"evidence: {evidence_mode}"]
@@ -148,19 +145,16 @@ def run_v2(
                 lift_connectors(arch, card, arrows=vp.id != "decomposition")
                 shape_for_viewpoint(arch, vp.id, aem, {q.id for q in view_qs if q.need in {"change-impact", "dependencies"}})
                 view = to_architecture_view(arch, view, vp, card)
-                role = catalog.roles.get(profile.role or "")
-                notation = choose_notation(vp.id, role.audience if role else "technical", profile.spec.notation)
-                render = render_abstracted(arch, view, card.name, notation)
+                render = render_abstracted(arch, view, card.name)
                 validation[vid] = validate_view(view, render, aem, card, catalog, coverage(view, questions, aem),
-                                                compile_enabled=compile_enabled, arch=arch, spec=profile.spec,
-                                                expected_notation=notation)
+                                                compile_enabled=compile_enabled, arch=arch, spec=profile.spec)
                 final_views[vid], arch_views[vid] = view, arch
-                renders[vid] = [render] + [get_renderer(lang).render(view) for lang in languages[1:]]
-                log.append(f"{vid}: {len(arch.parts)} parts, {len(arch.connectors)} arrows (abstraction), drawn as {notation}")
+                renders[vid] = [render]
+                log.append(f"{vid}: {len(arch.parts)} parts, {len(arch.connectors)} arrows (abstraction)")
                 continue
         excluded: set[str] = set()
         for attempt in range(retries + 1):
-            render = get_renderer(languages[0]).render(view)
+            render = get_renderer("plantuml").render(view)
             result = validate_view(view, render, aem, card, catalog, decisions[vid].coverage, compile_enabled=compile_enabled)
             if result.verdict != "fail" or not result.repair_marks or attempt == retries:
                 break
@@ -170,7 +164,7 @@ def run_v2(
                                 fold=vid in folded, exclude=excluded)
         final_views[vid] = view
         validation[vid] = result
-        renders[vid] = [render] + [get_renderer(lang).render(view) for lang in languages[1:]]
+        renders[vid] = [render]
 
     _merge_identical(final_views, renders, validation, arch_views, log)
     viewset = ViewSet(

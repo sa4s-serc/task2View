@@ -1,0 +1,63 @@
+@startuml
+mainframe cmp Client-Server view — user registration functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+skinparam componentStyle uml2
+
+package "Progetto-IS-main-English" as system {
+  component p_web_client [
+  Web client
+  ..realizations..
+  app.js
+  ]
+  component p_ui [
+  Registration and booking screens
+  --
+  collects registration data, submits it and shows errors
+  ..realizations..
+  Login, Registration, StudentDashboard, … 4 more
+  ]
+  component p_api [
+  Registration REST API
+  --
+  exposes POST /api/auth/register and returns the created user as UserDTO
+  ..realizations..
+  AuthenticationController, ReservationController, StudentController
+  ]
+  component p_service [
+  Registration and library services
+  --
+  checks uniqueness, validates student ID, creates users via factory and stores them
+  ..realizations..
+  LibraryFacade, UserManager, … 4 more
+  ]
+  component p_domain <<Entity>> [
+  User and reservation entities
+  --
+  persistent users with credentials and lock state, student identified by studentNumber
+  ..realizations..
+  Student, User, Reservation, … 11 more
+  ]
+  component p_data_access [
+  User and reservation storage
+  --
+  looks up email and identifier uniqueness and persists users in transactions
+  ..realizations..
+  PersistenceManager, UserRegistry, ReservationRegistry
+  ]
+}
+component p_database <<database>> [
+MySQL database
+..realizations..
+reservationsdb
+]
+p_service ..> p_domain : creates and updates
+p_ui ..> p_service : requests operations {in-process}
+p_service ..> p_data_access : reads and saves
+p_api ..> p_service : delegates requests {in-process}
+p_domain .[#A32D2D].> p_data_access : queries {against the layering}
+p_data_access ..> p_database : persists {JPA / JDBC}
+p_web_client ..> p_api : sends requests {HTTP/JSON}
+@enduml

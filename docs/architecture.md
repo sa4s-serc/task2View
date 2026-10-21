@@ -2,7 +2,7 @@
 
 ## Current pipeline (ADR-006, `task2view run`, default engine `v2`)
 
-![Task2View pipeline (ADR-006, revised by ADR-007)](diagrams/pipeline-v2.svg)
+![Task2View pipeline (ADR-006, revised by ADR-007 and ADR-008)](diagrams/pipeline-v2.svg)
 
 Source: [`diagrams/pipeline-v2.dot`](diagrams/pipeline-v2.dot). Blue = language-model call, beige = deterministic code, pink = code plus one naming call (ADR-007 abstraction), green = the shared Architecture Evidence Model. Interactive version with details per step: https://sa4s-serc.github.io/task2View/comparison/#pipeline
 
@@ -12,13 +12,13 @@ Orchestrator: `code/src/task2view/agents/run_v2.py`. Design: [`redesign/01`](red
 |---|---|---|---|---|
 | 0 Repository card | `phase0/card.py`, `languages/`, `resolve.py`, `facts.py` | Typed files; tree-sitter symbols (Java, Python, JS/TS); directed code-only dependency graph; entry points, entities, deploy/build units, layers; repository signals with evidence | no | `repository_card.json/.txt` |
 | 1 Interpretation | `phase1/needs.py` | Needs (the concern-level questions; primary/secondary), subjects, target, role; view spec (scope, granularity, behaviour) with up to 3 clarification questions (defaults unless `--interactive`); every item verified against the goal text; detail level computed | yes | `stakeholder_profile.json` |
-| 3 Viewpoint selection | `phase3/selection.py`, `knowledge/catalog.py` | Covering over 30 Views-and-Beyond viewpoints, cap 3; style viewpoints only when the card shows the style; layered overlay; declared gaps | no | `view_plan.json` |
+| 3 Viewpoint selection | `phase3/selection.py`, `knowledge/catalog.py` | Covering over the Views-and-Beyond viewpoints that are drawn as a UML diagram type (ADR-008), cap 3; style viewpoints only when the card shows the style; layered overlay; declared gaps | no | `view_plan.json` |
 | 2 Questions | `phase2/view_questions.py` | One question per (need, subject) for each selected view: the need refined at the viewpoint's grain | no | `architectural_questions.json` |
 | 4 Investigation | `phase4/investigate.py` | Tasks per view and subject; starting points from identifiers, entry points, graph neighbours (with origin); optional planning agent restricted to the card | optional | `investigation_plan.json` |
 | 5 Evidence | `phase5/agent.py`, `card_tools.py`, `verify.py`, `consolidate.py`, `collect.py` | Tool-using agents (older results elided, prompt prefix cached; or `--evidence retrieval`, one call over seed code, as baseline) produce cited claims; every citation checked (file, lines, excerpt, symbol) and support decided; consolidation into the Architecture Evidence Model (package components for overview goals, class anchors otherwise; relations marked convergence / divergence / absence) | yes | `evidence_model.json` |
 | 6 Reconciliation | `phase6/decide.py` | Coverage per question; rule-based decision per view (confirm, simplify, request_evidence, gap, drop); bounded evidence rounds | no | `reconciliation.json` |
-| 7 Views | `phase5/abstract.py`, `phase7/abstracted.py`, `c4.py`, `project.py`, `notations/` | Structural views: named parts with their classes, arrows lifted from code, C4-PlantUML (ADR-007); other views: deterministic projection to View format v2 (nesting, stereotypes, responsibilities, attributes, ordered interactions, traceability); 9 notations x 10 model kinds | no | `viewset.json`, `V*/view.*` |
-| 8 Validation | `phase8/validate_view.py`, `constraints.py`, `judge.py` | Notation compiles; viewpoint constraints; faithfulness to the AEM; coverage; behavioural/structural correspondence; readability and view-spec rules (ADR-007); no LLM judge; bounded repair | judge only | `validation_report.json` |
+| 7 Views | `phase5/abstract.py`, `phase7/abstracted.py`, `uml_arch.py`, `uml_rules.py`, `project.py`, `notations/plantuml.py` | Structural views: named parts with their classes, arrows lifted from code (ADR-007), drawn as UML package or component diagrams; other views: deterministic projection to View format v2 (nesting, stereotypes, responsibilities, attributes, ordered interactions, traceability). Every view is UML 2.5.1 in PlantUML, with the Annex A frame heading (ADR-008) | no | `viewset.json`, `V*/view.puml` |
+| 8 Validation | `phase8/validate_view.py`, `uml_check.py`, `constraints.py`, `readability.py` | Diagram compiles and is UML 2.5.1 for its diagram type (symbols, paths, stereotypes, frame; ADR-008); viewpoint constraints; faithfulness to the AEM; coverage; behavioural/structural correspondence; readability and view-spec rules (ADR-007); no LLM judge; bounded repair | judge only | `validation_report.json` |
 
 Limits (task caps, step budgets, repair rounds) are in `knowledge/data/vb/pipeline.yaml`. The pre-ADR-006 pipeline was removed (git history before `befee66`); its decisions are recorded in ADR-001 to ADR-005.
 

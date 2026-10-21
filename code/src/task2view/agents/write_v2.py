@@ -37,12 +37,8 @@ def write_run_v2(result: RunV2Result, out: str | Path) -> Path:
         _dump(vdir / "view.json", view)
         if view.id in result.arch_views:  # ADR-007: parts with their member classes, arrows with their code evidence
             _dump(vdir / "architecture.json", result.arch_views[view.id])
-        for render in result.renders.get(view.id, []):
-            name = f"view.{render.language}.{render.extension}" if render.language != "plantuml" else f"view.{render.extension}"
-            (vdir / name).write_text(render.source, encoding="utf-8")
-        notes = {r.language: r.note for r in result.renders.get(view.id, []) if r.note}
-        if notes:  # what a notation could not draw
-            _dump(vdir / "render_notes.json", notes)
+        for render in result.renders.get(view.id, [])[:1]:  # ADR-008: one UML diagram per view
+            (vdir / f"view.{render.extension}").write_text(render.source, encoding="utf-8")
     (out / "traceability.md").write_text(_traceability(result), encoding="utf-8")
     (out / "README.md").write_text(_readme(result), encoding="utf-8")
     (out / "run.log").write_text("\n".join(result.log) + "\n", encoding="utf-8")
@@ -67,7 +63,7 @@ def _readme(result: RunV2Result) -> str:
         f"- Role: {p.role or p.role_label or 'unknown'}; target: {p.target or 'whole system'}; detail level: {p.detail_level}",
         f"- Needs (primary): {', '.join(plan.needs) or 'none'}; secondary: {', '.join(plan.secondary_needs) or 'none'}",
         f"- Generator model: {result.llm}",
-        f"- View spec: {p.spec.scope} scope, {p.spec.granularity} granularity, {p.spec.behaviour}, notation {p.spec.notation}"
+        f"- View spec: {p.spec.scope} scope, {p.spec.granularity} granularity, {p.spec.behaviour}"
         + "".join(f"; asked: {c.question} → {c.answer or c.default + ' (default)'}" for c in p.clarifications),
         f"- Repository signals: {', '.join(sorted(result.card.signals))}", "",
         "## Views", "",
@@ -76,7 +72,7 @@ def _readme(result: RunV2Result) -> str:
     for view in result.viewset.views:
         d, v = result.decisions[view.id], result.validation[view.id]
         lines.append(f"| {view.id} | {view.viewpoint_name} ({view.vb_ref}) | {d.decision} | {v.verdict} | "
-                     f"{len(view.content_elements())} | {v.notation.get('chosen') or v.notation.get('language')}"
+                     f"{len(view.content_elements())} | {v.notation.get('uml_diagram') or view.model_kind}"
                      f"{' (approximated)' if v.notation.get('approximated') else ''} |")
     lines += ["", "## Rationale", ""]
     lines += [f"- {pv.viewpoint_id}: {pv.rationale}" for pv in plan.views]

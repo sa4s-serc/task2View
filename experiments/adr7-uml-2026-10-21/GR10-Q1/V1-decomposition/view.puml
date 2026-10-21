@@ -1,0 +1,81 @@
+@startuml
+mainframe pkg Decomposition view — progetto_ing_software_gr10-main-English
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+
+package "Presentation" as layer0 <<layer>> {
+  package "Report management desktop screens" as p_ui {
+    class "UserDashboardGUI" as p_ui_0
+    class "ReportCreationGUI" as p_ui_1
+    class "ActivityMonitoringGUI" as p_ui_2
+    note "and 4 more" as p_ui_note
+    p_ui_0 -[hidden]right- p_ui_1
+    p_ui_1 -[hidden]right- p_ui_2
+  }
+}
+package "Application" as layer1 <<layer>> {
+  package "Use case controllers" as p_service_1 {
+    class "SystemServicesController" as p_service_1_0
+    class "ReportCreationController" as p_service_1_1
+    class "UserRegistrationController" as p_service_1_2
+    p_service_1_0 -[hidden]right- p_service_1_1
+    p_service_1_1 -[hidden]right- p_service_1_2
+  }
+  package "Report and user services" as p_service_2 {
+    class "ReportService" as p_service_2_0
+    class "UserService" as p_service_2_1
+    p_service_2_0 -[hidden]right- p_service_2_1
+  }
+}
+package "Domain" as layer2 <<layer>> {
+  package "Municipal report entities" as p_domain {
+    class "Report" as p_domain_0
+    class "Notification" as p_domain_1
+    class "MunicipalOperator" as p_domain_2
+    note "and 11 more" as p_domain_note
+    p_domain_0 -[hidden]right- p_domain_1
+    p_domain_1 -[hidden]right- p_domain_2
+  }
+}
+package "Data access" as layer3 <<layer>> {
+  package "Report data storage" as p_data_access {
+    class "PersistenceService" as p_data_access_0
+    note "and 1 more" as p_data_access_note
+  }
+}
+p_ui_0 -[hidden]-> p_service_1_0
+p_ui_0 -[hidden]-> p_service_1_1
+p_ui_0 -[hidden]-> p_service_1_2
+p_ui_0 -[hidden]-> p_service_2_0
+p_ui_0 -[hidden]-> p_service_2_1
+p_ui_1 -[hidden]-> p_service_1_0
+p_ui_1 -[hidden]-> p_service_1_1
+p_ui_1 -[hidden]-> p_service_1_2
+p_ui_1 -[hidden]-> p_service_2_0
+p_ui_1 -[hidden]-> p_service_2_1
+p_ui_2 -[hidden]-> p_service_1_0
+p_ui_2 -[hidden]-> p_service_1_1
+p_ui_2 -[hidden]-> p_service_1_2
+p_ui_2 -[hidden]-> p_service_2_0
+p_ui_2 -[hidden]-> p_service_2_1
+p_service_1_0 -[hidden]-> p_domain_0
+p_service_1_0 -[hidden]-> p_domain_1
+p_service_1_0 -[hidden]-> p_domain_2
+p_service_1_1 -[hidden]-> p_domain_0
+p_service_1_1 -[hidden]-> p_domain_1
+p_service_1_1 -[hidden]-> p_domain_2
+p_service_1_2 -[hidden]-> p_domain_0
+p_service_1_2 -[hidden]-> p_domain_1
+p_service_1_2 -[hidden]-> p_domain_2
+p_service_2_0 -[hidden]-> p_domain_0
+p_service_2_0 -[hidden]-> p_domain_1
+p_service_2_0 -[hidden]-> p_domain_2
+p_service_2_1 -[hidden]-> p_domain_0
+p_service_2_1 -[hidden]-> p_domain_1
+p_service_2_1 -[hidden]-> p_domain_2
+p_domain_0 -[hidden]-> p_data_access_0
+p_domain_1 -[hidden]-> p_data_access_0
+p_domain_2 -[hidden]-> p_data_access_0
+@enduml

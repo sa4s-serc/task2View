@@ -1,4 +1,4 @@
-"""Notation renderers for View format v2. Every module in this package is imported, which registers its renderer."""
+"""Diagram renderers for View format v2 (ADR-008: PlantUML UML only). Every module in this package is imported, which registers its renderer."""
 
 import importlib
 import pkgutil

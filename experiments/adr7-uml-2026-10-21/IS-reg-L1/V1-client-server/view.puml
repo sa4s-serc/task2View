@@ -1,0 +1,62 @@
+@startuml
+mainframe cmp Client-Server view — user registration functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+skinparam componentStyle uml2
+
+package "Progetto-IS-main-English" as system {
+  component p_web_client [
+  Web client
+  ..realizations..
+  app.js
+  ]
+  component p_ui [
+  Registration form and dashboards
+  --
+  Swing form collecting registration details, plus student and librarian dashboards
+  ..realizations..
+  Registration, StudentDashboard, LibrarianDashboard
+  ]
+  component p_api [
+  Registration REST API
+  --
+  exposes the /api/auth/register endpoint for creating user accounts
+  ..realizations..
+  AuthenticationController, StudentController
+  ]
+  component p_service [
+  User registration service
+  --
+  validates registration data, checks uniqueness and creates users via the registry
+  ..realizations..
+  LibraryFacade, UserManager, … 5 more
+  ]
+  component p_domain <<Entity>> [
+  Library user and reservation entities
+  --
+  entities for users, students, librarians and reservations
+  ..realizations..
+  Reservation, Student, User, … 1 more
+  ]
+  component p_data_access [
+  User and reservation storage
+  --
+  persists entities in transactions; registry saves and looks up users
+  ..realizations..
+  PersistenceManager, UserRegistry, ReservationRegistry
+  ]
+}
+component p_database <<database>> [
+MySQL database
+..realizations..
+reservationsdb
+]
+p_service ..> p_domain : creates and updates
+p_service ..> p_data_access : reads and saves
+p_ui ..> p_service : requests operations {in-process}
+p_api ..> p_service : delegates requests {in-process}
+p_data_access ..> p_database : persists {JPA / JDBC}
+p_web_client ..> p_api : sends requests {HTTP/JSON}
+@enduml

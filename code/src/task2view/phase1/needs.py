@@ -33,13 +33,11 @@ SPEC_VALUES = {"scope": ("system", "feature"), "granularity": ("coarse", "medium
 
 class ViewSpec(BaseModel):
     """ADR-007 D1: how the views should be drawn. scope: whole system or one feature; granularity: layers
-    (coarse), the main parts (medium) or classes (fine); behaviour: parts, order of calls, or both;
-    notation: auto (each viewpoint's notation for the reader, knowledge/data/vb/notations.yaml) or a
-    family the person asked for."""
+    (coarse), the main parts (medium) or classes (fine); behaviour: parts, order of calls, or both.
+    Every view is drawn in UML (ADR-008)."""
     scope: Literal["system", "feature"] = "system"
     granularity: Literal["coarse", "medium", "fine"] = "medium"
     behaviour: Literal["structure", "interaction", "both"] = "structure"
-    notation: Literal["auto", "uml", "c4", "boxes"] = "auto"
 
 
 class Clarification(BaseModel):

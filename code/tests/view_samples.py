@@ -106,13 +106,6 @@ def deployment_view() -> ArchitectureView:
     ])
 
 
-def table_view() -> ArchitectureView:
-    return _view("table", "decisions", elements=[
-        ViewElement(id="decision_record:adr-001", kind="decision_record", name="Use PostgreSQL",
-                    responsibilities=["relational store for orders"]),
-    ], traceability=[TraceRow(element="decision_record:adr-001", name="Use PostgreSQL", files=["docs/adr/adr-001.md"])])
-
-
 SAMPLES = {
     "uml-component": component_view,
     "uml-package": package_view,
@@ -123,5 +116,4 @@ SAMPLES = {
     "uml-state": state_view,
     "uml-usecase": usecase_view,
     "uml-deployment": deployment_view,
-    "table": table_view,
 }

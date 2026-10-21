@@ -1,6 +1,6 @@
 """Render diagram sources to images.
 
-Local compilers first (plantuml, dot, mmdc). A Kroki server is used only when its
+Local PlantUML first (ADR-008: every view is UML). A Kroki server is used only when its
 URL is given explicitly, because diagram sources describe the analysed code and
 should not leave the machine by default.
 """
@@ -15,9 +15,7 @@ import urllib.request
 from pathlib import Path
 
 FORMATS = ("svg", "png", "pdf")
-_KROKI_TYPE = {"plantuml": "plantuml", "c4plantuml": "c4plantuml", "mermaid": "mermaid", "d2": "d2",
-               "graphviz": "graphviz", "structurizr": "structurizr", "nomnoml": "nomnoml",
-               "excalidraw": "excalidraw", "bpmn": "bpmn"}
+_KROKI_TYPE = {"plantuml": "plantuml"}  # ADR-008: every view is UML in PlantUML
 
 
 def parse_formats(text: str | None) -> list[str]:
@@ -37,19 +35,11 @@ def notation_of(path: Path) -> str:
 def _local(notation: str, source: str, fmt: str) -> bytes | None:
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
-        if notation in {"plantuml", "c4plantuml"} and shutil.which("plantuml"):
+        if notation == "plantuml" and shutil.which("plantuml"):
             src = tmp_dir / "in.puml"
             src.write_text(source, encoding="utf-8")
             subprocess.run(["plantuml", f"-t{fmt}", "-o", str(tmp_dir), str(src)], check=True, capture_output=True)
             out = tmp_dir / f"in.{fmt}"
-            return out.read_bytes() if out.exists() else None
-        if notation == "graphviz" and shutil.which("dot"):
-            return subprocess.run(["dot", f"-T{fmt}"], input=source.encode("utf-8"), check=True,
-                                  capture_output=True).stdout
-        if notation == "mermaid" and shutil.which("mmdc"):
-            src, out = tmp_dir / "in.mmd", tmp_dir / f"out.{fmt}"
-            src.write_text(source, encoding="utf-8")
-            subprocess.run(["mmdc", "-i", str(src), "-o", str(out), "-q"], check=True, capture_output=True)
             return out.read_bytes() if out.exists() else None
     return None
 

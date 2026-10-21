@@ -1,6 +1,6 @@
 # ADR-007: Architectural views, not code diagrams
 
-- **Status:** accepted and implemented (2026-10-13): steps 1–4 in the pipeline; first live trial in `experiments/adr7-trial/`
+- **Status:** accepted and implemented (2026-10-13): steps 1–4 in the pipeline; first live trial in `experiments/adr7-trial/`. Drawing changed by ADR-008 (UML 2.5.1 instead of C4-PlantUML).
 - **Builds on:** ADR-006 (evidence model, viewpoint selection, validation)
 - **Changes:** ADR-006 D2 (component naming and grain), D3 (projection and the task-fit judge)
 - **Evidence:** the pilot (`experiments/pilot-2026-10/`), the CodeToDiagram corpus and studies, and the literature report `reports/Realistic architecture diagram generation.md` (research folder root)
@@ -134,7 +134,8 @@ flowchart TB
 - **Size:** part-level views have their own limit (`pipeline.yaml` `abstraction.max_parts`: 7 / 9 / 9, proposed). Over it, a view is drawn by layer.
 - **Splits:** the naming step may split a part only into parts that each contain a non-helper class, and only within that limit.
 - **The LLM judge** is no longer called by the pipeline. `phase8/judge.py` and `scripts/judge_outputs.py` stay as post-hoc research tools.
-- **Notation per view (D1/D3, added 2026-10-13):** the parts and arrows are shared by every view of a request, but each structural view is drawn in its own notation (`knowledge/data/vb/notations.yaml`, `phase7/arch_notations.py`):
+- **Superseded by ADR-008 (2026-10-21): every view is UML 2.5.1; the C4 rendering and the per-view notation below were removed.**
+- ~~Notation per view (D1/D3, added 2026-10-13):~~ the parts and arrows are shared by every view of a request, but each structural view is drawn in its own notation (`knowledge/data/vb/notations.yaml`, `phase7/arch_notations.py`):
   - technical readers get the notation V&B documents for the viewpoint: decomposition and layered as UML packages in layer rows, uses as UML «use» dependencies with the changed part highlighted, C&C styles as C4 components;
   - overview readers get plain boxes and arrows. A role is an overview reader when its V&B Table 9.1 row asks for no detail in any view of the software's own structure (project manager, customer, end user); roles outside the table state it (`roles.yaml`);
   - the view spec's `notation` (auto, uml, c4, boxes) lets the person ask for a family;

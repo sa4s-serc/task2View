@@ -64,7 +64,6 @@ class Role(BaseModel):
     aliases: list[str]
     priors: dict[str, float]  # derived from V&B Table 9.1, or the extension priors
     prior_source: str
-    audience: str = "technical"  # technical | overview: who reads the views (picks the notation, ADR-007 D1)
 
 
 class Catalog(BaseModel):
@@ -112,15 +111,6 @@ def _read(name: str, folder: str | None = "vb") -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
-def _audience(row: dict, roles_doc: dict, table: dict) -> str:
-    """technical when V&B Table 9.1 wants detail for this role in a view of the software's own structure;
-    overview otherwise (roles outside the table state it)."""
-    if row.get("vb_row") is None:
-        return row.get("audience", "technical")
-    cells = table["rows"][row["vb_row"]]
-    return "technical" if any(cells.get(c) == "d" for c in roles_doc["technical_columns"]) else "overview"
-
-
 def _role_priors(row: dict, roles_doc: dict, viewpoints: dict[str, Viewpoint], table: dict) -> tuple[dict[str, float], str]:
     """Prior per need = highest Table 9.1 detail weight over the columns whose viewpoint frames it."""
     if row.get("vb_row") is None:
@@ -164,7 +154,7 @@ def load_catalog() -> Catalog:
     for rid, row in roles_doc["roles"].items():
         priors, source = _role_priors(row, roles_doc, viewpoints, table)
         roles[rid] = Role(id=rid, label=row["label"], vb_row=row.get("vb_row"), aliases=row["aliases"],
-                          priors=priors, prior_source=source, audience=_audience(row, roles_doc, table))
+                          priors=priors, prior_source=source)
     catalog = Catalog(
         needs=needs,
         quality_attributes=list(needs_doc.get("quality_attributes") or []),
@@ -215,3 +205,15 @@ def _validate(cat: Catalog) -> None:
             errors.append(f"need {need!r} is framed by no viewpoint")
     if errors:
         raise PipelineError("viewpoint catalog is inconsistent:\n  " + "\n  ".join(errors))
+
+
+@lru_cache(maxsize=1)
+def load_uml() -> dict:
+    """UML 2.5.1 knowledge (knowledge/data/uml/uml-2.5.1.yaml, ADR-008): diagram types, their symbols and
+    paths, the Standard Profile stereotypes and the Task2View profile."""
+    return _read("uml-2.5.1.yaml", "uml")
+
+
+def uml_diagram_type(model_kind: str) -> str | None:
+    """The UML diagram type a view's model kind is drawn as; None when it is not drawable in UML."""
+    return load_uml()["model_kinds"].get(model_kind)

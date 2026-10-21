@@ -42,10 +42,10 @@ task2view run \
   --code /path/to/repo \
   --goal "I am a tester. I need to design integration tests for user registration and understand the components involved and how they interact." \
   --out runs/demo \
-  --llm anthropic:claude-sonnet-4-5 \
-  --judge-llm <another provider:model> \
-  --notations plantuml,mermaid
+  --llm claude-code:claude-sonnet-5-5
 ```
+
+Every view is a UML 2.5.1 diagram written in PlantUML (ADR-008); the diagram types and their rules are in `code/src/task2view/knowledge/data/uml/uml-2.5.1.yaml`.
 
 The pipeline is ADR-006 (stages below). The earlier single-view pipeline was removed; it is in git history before commit `befee66`.
 
@@ -54,7 +54,7 @@ Inspect individual stages without running the whole pipeline:
 ```bash
 task2view card --code /path/to/repo                                   # Phase 0 repository card
 task2view select-views --goal "..." --code /path/to/repo --llm ...    # Phase 1 + viewpoint selection
-task2view plugins                                                     # notations and LLM providers
+task2view plugins                                                     # UML diagram types and LLM providers
 task2view compile --run-dir runs/demo --formats svg,png               # images (local compilers; --kroki-url to allow remote)
 ```
 
@@ -63,7 +63,8 @@ Goal sets (any repositories; the pilot set is `code/tests/fixtures/pilot_goals.y
 ```bash
 cd code
 .venv/bin/python scripts/eval_view_selection.py --goals goals.yaml --llm ... --runs 3   # Phase 1 + selection only
-.venv/bin/python scripts/run_goal_set.py --goals goals.yaml --out runs/eval --llm ... --judge-llm ...   # full runs
+.venv/bin/python scripts/run_goal_set.py --goals goals.yaml --out runs/eval --llm ...   # full runs
+.venv/bin/python scripts/check_uml.py <dir with .puml files>                                    # UML 2.5.1 check of any diagrams
 ```
 
 ## What the pipeline does
@@ -78,8 +79,9 @@ repo ──► 0 repository card: typed files, symbols, dependency graph, facts,
          4 investigation tasks with suggested starting points (optional planning agent)
          5 evidence agents with repository tools ─► verified claims ─► Architecture Evidence Model
          6 per-view decision: confirm / simplify / request evidence / gap / drop (rules)
-         7 deterministic projection to View format v2, rendered in 9 notations
-         8 validation: notation, viewpoint constraints, faithfulness, coverage, task-fit judge (soft)
+         5c abstraction: classes into named parts, arrows lifted from code (structural views; one naming call)
+         7 deterministic drawing in UML 2.5.1 (PlantUML), the diagram type of the viewpoint
+         8 checks by rules: UML conformance, viewpoint constraints, faithfulness, coverage, readability (no LLM judge)
 ```
 
 Every element in a view traces to code symbols and verified claims (`traceability.md`). Run-time limits: `code/src/task2view/knowledge/data/vb/pipeline.yaml`. Knowledge (needs, viewpoints, roles, corpus rules): `code/src/task2view/knowledge/data/vb/`.
@@ -96,7 +98,7 @@ Every element in a view traces to code symbols and verified claims (`traceabilit
 | `evidence_model.json` | Verified claims, rejected claims with reasons, elements, relations, scenarios |
 | `reconciliation.json` | Coverage per question and the decision per view |
 | `viewset.json`, `V*/view.json` | The views (format v2) and correspondences |
-| `V*/view.puml` (+ other notations) | Diagram sources; images when `--skip-render` is not set |
+| `V*/view.puml` | The UML diagram (PlantUML); images with `--images svg,png` |
 | `validation_report.json` | Five-layer validation per view |
 | `traceability.md`, `README.md`, `run.log` | Element → files/symbols; run summary; models used |
 

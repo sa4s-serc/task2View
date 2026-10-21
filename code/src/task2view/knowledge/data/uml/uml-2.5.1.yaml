@@ -1,0 +1,233 @@
+# UML 2.5.1 knowledge for Task2View (ADR-008): the diagram types views may use, and for each one the
+# symbols and paths the specification allows, with the clause that defines them.
+#
+# Source: OMG Unified Modeling Language, version 2.5.1 (formal/17-12-05), https://www.omg.org/spec/UML/2.5.1/PDF
+# Page numbers are the printed page numbers of that document. This file summarises the notation rules in
+# our own words and cites them; it does not copy the specification. Fetch the PDF itself with
+# code/scripts/fetch_uml_spec.py (it is not stored in the repository).
+#
+# How it is used:
+#   - Phase 3 only selects viewpoints whose model kind is one of the diagram types below (Annex A: views are
+#     constrained to the predefined UML diagram types).
+#   - Phase 7 draws every view as PlantUML in the diagram type's notation, with the Annex A frame heading.
+#   - Phase 8 (phase8/uml_check.py) checks each drawing against its diagram type: every symbol and path must be
+#     one this type allows, stereotypes must come from the Standard Profile or the Task2View profile below,
+#     and the frame heading must name the diagram kind.
+#   - The Task2View skill copies this file, so the skill agent follows the same rules.
+
+source:
+  title: OMG Unified Modeling Language (OMG UML), Version 2.5.1
+  document: formal/17-12-05 (December 2017)
+  url: https://www.omg.org/spec/UML/2.5.1/PDF
+  taxonomy: "Annex A, Figure A.5 (p. 685): structure diagrams and behavior diagrams"
+
+# Annex A (p. 684): the heading of a diagram frame is [<kind>]<name>; these are the kinds and their short forms.
+frame_kinds:
+  activity: act
+  class: class
+  component: cmp
+  deployment: dep
+  interaction: sd
+  package: pkg
+  state machine: stm
+  use case: uc
+
+# Annex A (p. 685): the fourteen diagram types and the clause that defines their constructs.
+diagram_types:
+  class:
+    category: structure
+    clause: "11 Structured Classifiers (11.4 Classes, p. 194); 9 Classification"
+    frame: class
+    primary: [class]
+    symbols: [class, interface, enumeration, datatype, package, comment]
+    paths: [association, aggregation, composition, generalization, realization, dependency, usage, comment-link]
+    rules:
+      - "A class is a rectangle with the name compartment and optional attribute and operation compartments (11.4.4)."
+      - "Attributes are written name : Type [multiplicity] (9.5.4); keys and constraints go in braces, e.g. {id}."
+      - "Generalization is a solid line with a hollow triangle at the general end (9.2.4)."
+      - "Composition has a filled diamond at the whole; aggregation a hollow diamond (11.5.4)."
+  component:
+    category: structure
+    clause: "11.6 Components (notation 11.6.4, p. 210)"
+    frame: cmp
+    primary: [component]
+    symbols: [component, interface, port, class, package, comment]
+    paths: [dependency, usage, assembly, realization, association, comment-link]
+    rules:
+      - "A component is a classifier rectangle with the keyword «component» or the component icon (11.6.4)."
+      - "The classifiers that realize a component may be listed in an optional 'realizations' compartment (11.6.4)."
+      - "An overview diagram shows components related by dependencies; no arrow means no dependency (11.6.5, Fig. 11.39)."
+      - "A dependency is a dashed arrow from client to supplier, optionally labelled with a keyword and a name (7.7.4)."
+      - "A usage is a dependency with the keyword «use» (7.7.4)."
+      - "Wiring between components uses provided (ball) and required (socket) interfaces or ports (11.6.3, 10.4.4)."
+  composite-structure:
+    category: structure
+    clause: "11.2 Structured Classifiers (notation 11.2.4, p. 185)"
+    frame: class
+    primary: [part]
+    symbols: [class, component, part, port, collaboration, comment]
+    paths: [connector, dependency, comment-link]
+    rules: ["Parts are rectangles inside the classifier; connectors are solid lines between parts or ports (11.2.4)."]
+  deployment:
+    category: structure
+    clause: "19 Deployments (19.2 Deployments p. 653, 19.3 Artifacts p. 656, 19.4 Nodes p. 657)"
+    frame: dep
+    primary: [node]
+    symbols: [node, device, execution-environment, artifact, component, comment]
+    paths: [communication-path, deployment, manifestation, dependency, comment-link]
+    rules:
+      - "A node is drawn as a cube in perspective (19.2.4); «device» and «executionEnvironment» are node keywords (19.4.4)."
+      - "An artifact is a rectangle with the keyword «artifact» (19.3.4)."
+      - "A deployment is a dependency labelled «deploy» from artifact to node, or the artifact drawn inside the node (19.2.4)."
+      - "A manifestation is a dependency labelled «manifest» from artifact to the element it manifests (19.3.4)."
+      - "A communication path is a solid line between nodes (19.4.4)."
+  object:
+    category: structure
+    clause: "9.8 Instances (notation 9.8.4, p. 128)"
+    frame: class
+    primary: [instance]
+    symbols: [instance, comment]
+    paths: [link, comment-link]
+    rules: ["An instance is a rectangle whose name is underlined: name : Classifier (9.8.4)."]
+  package:
+    category: structure
+    clause: "12.2 Packages (notation 12.2.4, p. 248)"
+    frame: pkg
+    primary: [package]
+    symbols: [package, class, interface, component, comment]
+    paths: [dependency, usage, package-import, package-merge, containment, comment-link]
+    rules:
+      - "A package is a folder: a large rectangle with a tab; when its members are shown inside, its name goes in the tab (12.2.4)."
+      - "Packages may be nested; a member belongs to exactly one package (12.2.3)."
+      - "Dependencies between packages are dashed arrows (7.7.4); «use» marks a usage."
+  profile:
+    category: structure
+    clause: "12.3 Profiles (notation 12.3.4, p. 262)"
+    frame: pkg
+    primary: [profile]
+    symbols: [profile, stereotype, metaclass, comment]
+    paths: [extension, generalization, comment-link]
+    rules: ["Not used for architecture views."]
+  activity:
+    category: behavior
+    clause: "15 Activities (15.2 p. 373, 15.3 Control Nodes p. 387, 15.6 Activity Groups p. 405)"
+    frame: act
+    primary: [action]
+    symbols: [action, initial, final, decision, merge, fork, join, object-node, partition, comment]
+    paths: [control-flow, object-flow, comment-link]
+    rules:
+      - "Actions are round-cornered rectangles; flows are solid arrows (15.2.4)."
+      - "A decision is a diamond with a guard [condition] on each outgoing flow (15.3.4)."
+      - "Partitions (swimlanes) group the actions a participant performs (15.6.4)."
+  use-case:
+    category: behavior
+    clause: "18.1 Use Cases (p. 639)"
+    frame: uc
+    primary: [use-case]
+    symbols: [use-case, actor, subject, comment]
+    paths: [association, include, extend, generalization, comment-link]
+    rules:
+      - "A use case is an ellipse with its name; the subject (the system) is a rectangle around its use cases (18.1.4)."
+      - "An actor is a stick figure outside the subject, associated with use cases by solid lines (18.1.4)."
+      - "Include and extend are dashed arrows labelled «include» and «extend» (18.1.4)."
+  state-machine:
+    category: behavior
+    clause: "14.2 Behavior StateMachines (notation 14.2.4, p. 319)"
+    frame: stm
+    primary: [state]
+    symbols: [state, initial, final, choice, comment]
+    paths: [transition, comment-link]
+    rules: ["States are round-cornered rectangles; transitions are solid arrows labelled trigger [guard] / effect (14.2.4)."]
+  sequence:
+    category: interaction
+    clause: "17.8 Sequence Diagrams (p. 595); 17.3 Lifelines, 17.4 Messages, 17.6 Fragments"
+    frame: sd
+    primary: [lifeline]
+    symbols: [lifeline, actor, combined-fragment, comment]
+    paths: [synchronous-message, asynchronous-message, reply-message, create-message, comment-link]
+    rules:
+      - "A lifeline is a rectangle with a dashed line below; its name is name : Type (17.3.4)."
+      - "A synchronous call has a filled arrowhead; a reply is a dashed line with an open arrowhead (17.4.4)."
+      - "Combined fragments are rectangles with an operator: alt, opt, loop, par, break, critical, … (17.6.4)."
+  communication:
+    category: interaction
+    clause: "17.9 Communication Diagrams (p. 599)"
+    frame: sd
+    primary: [lifeline]
+    symbols: [lifeline, actor, comment]
+    paths: [link, comment-link]
+    rules: ["Lifelines are rectangles joined by links; messages are numbered arrows written next to the links (17.9.1)."]
+  interaction-overview:
+    category: interaction
+    clause: "17.10 Interaction Overview Diagrams"
+    frame: sd
+    primary: [interaction-use]
+    symbols: [interaction-use, initial, final, decision, comment]
+    paths: [control-flow, comment-link]
+    rules: ["Not used for architecture views yet."]
+  timing:
+    category: interaction
+    clause: "17.11 Timing Diagrams"
+    frame: sd
+    primary: [lifeline]
+    symbols: [lifeline, comment]
+    paths: [message, comment-link]
+    rules: ["Not used for architecture views yet."]
+
+# View-format model kinds (phase7) -> UML diagram type. A viewpoint whose model kind is not here (e.g. a
+# table) is not drawable in UML and is not selected.
+model_kinds:
+  uml-class: class
+  uml-component: component
+  uml-package: package
+  uml-deployment: deployment
+  uml-sequence: sequence
+  uml-communication: communication
+  uml-activity: activity
+  uml-state: state-machine
+  uml-usecase: use-case
+
+# Table 22.1 (Standard Profile, p. 679): stereotypes a view may use, and what they apply to.
+standard_stereotypes:
+  Auxiliary: Class
+  Call: Usage
+  Create: [BehavioralFeature, Usage]
+  Derive: Abstraction
+  Destroy: BehavioralFeature
+  Document: Artifact
+  Entity: Component
+  Executable: Artifact
+  File: Artifact
+  Focus: Class
+  Framework: Package
+  Implement: Component
+  ImplementationClass: Class
+  Instantiate: Usage
+  Library: Artifact
+  Metaclass: Class
+  ModelLibrary: Package
+  Process: Component
+  Realization: Classifier
+  Refine: Abstraction
+  Responsibility: Usage
+  Script: Artifact
+  Send: Usage
+  Service: Component
+  Source: Artifact
+  Specification: Classifier
+  Subsystem: Component
+  Trace: Abstraction
+  Type: Class
+  Utility: Class
+
+# Keywords the notation clauses define (not stereotypes): allowed wherever their element is.
+keywords: [use, component, artifact, device, executionEnvironment, deploy, manifest, include, extend, interface,
+           enumeration, dataType, import, access, merge, abstraction]
+
+# A small profile (12.3) for what Views & Beyond styles need and UML has no keyword for. A stereotype outside
+# the Standard Profile, the keywords and this profile is reported by Phase 8.
+task2view_profile:
+  layer: Package          # V&B layered style: a package that is one layer
+  tier: [Package, Node]   # V&B tiers style: a package or node that is one tier
+  external: Component     # a system outside the one being documented
+  database: Component     # a data store as a component (data stores in deployment views are nodes)

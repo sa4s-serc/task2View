@@ -1,11 +1,8 @@
-"""Notation renderers for View format v2 (ADR-006 D3: every language renders every model kind).
+"""Diagram renderers for View format v2. ADR-008: every view is UML 2.5.1, drawn with PlantUML
+(phase7/notations/plantuml.py); the other notations of ADR-006 D3 were removed.
 
-A renderer turns an ArchitectureView into diagram source. Where a language has a
-native construct for the view's model kind it uses it; otherwise it uses a
-documented approximation and sets ``approximated`` so the validation report
-says which notation a reader is looking at.
-
-Support matrix: docs/redesign/03-views-reconciliation-validation.md §9.
+A renderer turns an ArchitectureView into diagram source. ``approximated`` is set where PlantUML has no
+native construct for the view's UML diagram type (communication diagrams).
 """
 
 from __future__ import annotations
@@ -17,21 +14,12 @@ from collections import defaultdict
 from task2view.contracts.views import ArchitectureView, Interaction, RenderResult, ViewElement
 
 MODEL_KINDS = ("uml-component", "uml-package", "uml-class", "uml-sequence", "uml-communication", "uml-activity",
-               "uml-state", "uml-usecase", "uml-deployment", "table")
+               "uml-state", "uml-usecase", "uml-deployment")  # ADR-008: UML diagram types only
 
 # Native constructs per language (design 03 §9; N in the matrix). Everything else is approximated.
-NATIVE: dict[str, set[str]] = {
-    "plantuml": {"uml-component", "uml-package", "uml-class", "uml-sequence", "uml-activity", "uml-state",
-                 "uml-usecase", "uml-deployment"},
-    "c4plantuml": {"uml-component", "uml-package", "uml-class", "uml-sequence", "uml-communication", "uml-activity",
-                   "uml-state", "uml-usecase", "uml-deployment"},
-    "mermaid": {"uml-sequence", "uml-activity", "uml-state", "uml-class"},
-    "d2": {"uml-component", "uml-package", "uml-sequence", "uml-class", "uml-deployment"},
-    "structurizr": {"uml-component", "uml-package", "uml-communication", "uml-deployment"},
-    "graphviz": set(),
-    "nomnoml": {"uml-package", "uml-class", "uml-usecase"},
-    "excalidraw": set(),
-    "bpmn": {"uml-activity"},
+NATIVE: dict[str, set[str]] = {  # ADR-008: UML only, drawn with PlantUML; a table is not a UML diagram
+    "plantuml": {"uml-component", "uml-package", "uml-class", "uml-sequence", "uml-activity",
+                 "uml-state", "uml-usecase", "uml-deployment"},
 }
 
 _RENDERERS: dict[str, "Renderer"] = {}
@@ -140,10 +128,3 @@ def multiplicity(rel) -> tuple[str, str]:
     return "", rel.multiplicity
 
 
-def table_rows(view: ArchitectureView) -> list[list[str]]:
-    rows = [["Element", "Kind", "Responsibilities / details", "Files"]]
-    trace = {t.element: t for t in view.traceability}
-    for e in view.content_elements():
-        t = trace.get(e.id)
-        rows.append([e.name, e.kind, "; ".join(e.responsibilities) or "", ", ".join(t.files) if t else ""])
-    return rows

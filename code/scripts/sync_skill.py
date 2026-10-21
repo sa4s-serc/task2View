@@ -3,7 +3,7 @@
 Copies the catalog YAML the pipeline loads into skill/knowledge/ and generates
 skill/references/catalogs.md (viewpoints, needs, roles with their derived priors,
 signals, constraints) from the same loader the pipeline uses. Run after any
-change to knowledge/data/vb/; tests/test_skill_sync.py fails if the skill is stale.
+change to knowledge/data/vb/ or knowledge/data/uml/; tests/test_skill_sync.py fails if the skill is stale.
 
     .venv/bin/python scripts/sync_skill.py
 """
@@ -17,8 +17,9 @@ from task2view.knowledge.catalog import Catalog, load_catalog
 
 CODE = Path(__file__).resolve().parents[1]
 SKILL = CODE.parent / "skill"
-SOURCE = CODE / "src" / "task2view" / "knowledge" / "data" / "vb"
-COPIED = ["needs.yaml", "viewpoints.yaml", "roles.yaml", "corpus.yaml", "pipeline.yaml", "element_roles.yaml"]
+SOURCE = CODE / "src" / "task2view" / "knowledge" / "data"
+COPIED = ["vb/needs.yaml", "vb/viewpoints.yaml", "vb/roles.yaml", "vb/corpus.yaml", "vb/pipeline.yaml",
+          "vb/element_roles.yaml", "uml/uml-2.5.1.yaml"]  # copied flat into skill/knowledge/
 GOAL_SETS = {"pilot-2026-09": CODE / "tests" / "fixtures" / "pilot_goals.yaml"}
 SYSTEM_PATHS = {"progetto-is": "data/Progetto-IS-main-English", "gr10": "data/progetto_ing_software_gr10-main-English"}
 
@@ -89,7 +90,7 @@ def sync(skill: Path = SKILL) -> list[str]:
     changed = []
     (skill / "knowledge").mkdir(parents=True, exist_ok=True)
     for name in COPIED:
-        src, dst = SOURCE / name, skill / "knowledge" / name
+        src, dst = SOURCE / name, skill / "knowledge" / Path(name).name
         if not dst.exists() or dst.read_bytes() != src.read_bytes():
             shutil.copyfile(src, dst)
             changed.append(str(dst))

@@ -1,0 +1,70 @@
+@startuml
+mainframe cmp Client-Server view — seat booking functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+skinparam componentStyle uml2
+
+package "Progetto-IS-main-English" as system {
+  component p_web_client [
+  Web client
+  ..realizations..
+  app.js
+  ]
+  component p_ui [
+  Student and librarian screens
+  --
+  Swing screens and wizard steps where students pick seats and reserve
+  ..realizations..
+  SeatSelection, ReservationSummary, WizardState, … 9 more
+  ]
+  component p_job [
+  Notification scheduler
+  --
+  runs scheduled notification jobs for the library
+  ..realizations..
+  NotificationScheduler
+  ]
+  component p_api [
+  Reservation REST endpoints
+  --
+  exposes endpoints to create, cancel and check in reservations
+  ..realizations..
+  ReservationController, StudyRoomController, StudentController
+  ]
+  component p_service [
+  Seat reservation services
+  --
+  checks overlaps, picks a seat, saves reservations and notifies observers
+  ..realizations..
+  LibraryFacade, ReservationManager, StudyRoomManager, … 1 more
+  ]
+  component p_domain <<Entity>> [
+  Library reservation model
+  --
+  rooms, areas, seats, time slots and reservation states with availability
+  ..realizations..
+  Student, StudyRoom, Area, … 13 more
+  ]
+  component p_data_access [
+  Reservation and room storage
+  --
+  saves and queries rooms, seats, time slots and reservations via JPA
+  ..realizations..
+  StudyRoomRegistry, ReservationRegistry, PersistenceManager, … 2 more
+  ]
+}
+component p_database <<database>> [
+MySQL database
+..realizations..
+reservationsdb
+]
+p_service ..> p_domain : creates and updates
+p_service ..> p_data_access : reads and saves
+p_ui ..> p_service : requests operations {in-process}
+p_api ..> p_service : delegates requests {in-process}
+p_domain .[#A32D2D].> p_data_access : queries {against the layering}
+p_data_access ..> p_database : persists {JPA / JDBC}
+p_web_client ..> p_api : sends requests {HTTP/JSON}
+@enduml

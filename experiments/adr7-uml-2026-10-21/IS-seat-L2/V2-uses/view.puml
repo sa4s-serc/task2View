@@ -1,0 +1,57 @@
+@startuml
+mainframe pkg Uses view — seat booking functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+
+package "Web client" as p_web_client {
+  class "app.js" as p_web_client_0
+}
+package "Seat booking wizard UI" as p_ui {
+  class "WizardState" as p_ui_0
+  class "SeatSelection" as p_ui_1
+  class "AreaSelection" as p_ui_2
+  note "and 12 more" as p_ui_note
+  p_ui_0 -[hidden]right- p_ui_1
+  p_ui_1 -[hidden]right- p_ui_2
+}
+package "Notification scheduler" as p_job {
+  class "NotificationScheduler" as p_job_0
+}
+package "Reservation REST API" as p_api {
+  class "ReservationController" as p_api_0
+  class "StudyRoomController" as p_api_1
+  class "StudentController" as p_api_2
+  p_api_0 -[hidden]right- p_api_1
+  p_api_1 -[hidden]right- p_api_2
+}
+package "Booking rules service" as p_service {
+  class "LibraryFacade" as p_service_0
+  class "ReservationManager" as p_service_1
+  class "NotificationManager" as p_service_2
+  p_service_0 -[hidden]right- p_service_1
+  p_service_1 -[hidden]right- p_service_2
+}
+package "Reservation domain model" as p_domain {
+  class "Student" as p_domain_0
+  class "Area" as p_domain_1
+  class "Seat" as p_domain_2
+  note "and 13 more / the part being changed" as p_domain_note
+  p_domain_0 -[hidden]right- p_domain_1
+  p_domain_1 -[hidden]right- p_domain_2
+}
+package "Reservation storage" as p_data_access {
+  class "StudyRoomRegistry" as p_data_access_0
+  class "ReservationRegistry" as p_data_access_1
+  class "PersistenceManager" as p_data_access_2
+  note "and 2 more" as p_data_access_note
+  p_data_access_0 -[hidden]right- p_data_access_1
+  p_data_access_1 -[hidden]right- p_data_access_2
+}
+p_service ..> p_domain : <<use>>
+p_ui ..> p_service : <<use>>
+p_api ..> p_service : <<use>>
+p_domain .[#A32D2D].> p_data_access : <<use>> {against the layering}
+p_web_client ..> p_api : <<use>>
+@enduml

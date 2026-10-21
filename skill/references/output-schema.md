@@ -14,8 +14,6 @@ Write these files under `--out`, with exactly these names and fields. They are t
   run.log                      (pipeline only: one line per phase decision)
   V1-<viewpoint id>/view.json  V1-<viewpoint id>/view.puml   (one folder per view)
   V1-<viewpoint id>/architecture.json                       (structural views: parts with member classes, arrows with code evidence)
-  V1-<viewpoint id>/view.<notation>.<ext>                   (each further notation asked for)
-  V1-<viewpoint id>/render_notes.json                       (only when a notation could not draw something)
 ```
 
 ## repository_card.json
@@ -119,7 +117,8 @@ Write these files under `--out`, with exactly these names and fields. They are t
 ## validation_report.json
 ```json
 {"V1-client-server": {"view_id": "V1-client-server", "verdict": "pass_with_limitations",
-  "notation": {"status": "pass", "language": "plantuml", "approximated": false, "model_kind_matches": true},
+  "notation": {"status": "pass", "language": "plantuml", "approximated": false, "model_kind_matches": true,
+               "uml_diagram": "component", "uml": []},
   "constraints": [{"constraint": "component_has_responsibility", "severity": "warning", "mark": "cmp:…", "message": "… shows no responsibility"}],
   "faithfulness": [], "coverage": [{"question": "AQ1", "status": "supported", "claims": ["C1"], "note": ""}],
   "readability": [{"check": "crossings", "severity": "warning", "mark": "view", "message": "3 crossing arrows in the layered layout"}],
@@ -141,7 +140,7 @@ The pipeline records every model call (purpose, model, tokens, seconds, cost) an
 
 `README.md` has these parts:
 - goal, role, target, detail level, primary and secondary needs, and the model you are;
-- a table of views (viewpoint, decision, verdict, element count, notation);
+- a table of views (viewpoint, decision, verdict, element count, UML diagram type);
 - the rationale per view;
 - limitations and declared gaps;
 - evidence counts (verified and rejected claims, elements, relations, scenarios).

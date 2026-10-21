@@ -1,0 +1,36 @@
+@startuml
+mainframe pkg Uses view — persistence layer
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+
+package "Report handling screens" as p_ui {
+  class "ReportCreationGUI" as p_ui_0
+  class "ReceivedReportsGUI" as p_ui_1
+  class "ReportStatusUpdateGUI" as p_ui_2
+  note "and 1 more" as p_ui_note
+  p_ui_0 -[hidden]right- p_ui_1
+  p_ui_1 -[hidden]right- p_ui_2
+}
+package "Report and user services" as p_service {
+  class "ReportService" as p_service_0
+  class "UserService" as p_service_1
+  note "the part being changed" as p_service_note
+  p_service_0 -[hidden]right- p_service_1
+}
+package "Report data model" as p_domain {
+  class "Report" as p_domain_0
+  class "Notification" as p_domain_1
+  class "MunicipalOperator" as p_domain_2
+  note "and 11 more" as p_domain_note
+  p_domain_0 -[hidden]right- p_domain_1
+  p_domain_1 -[hidden]right- p_domain_2
+}
+package "Report storage access" as p_data_access {
+  class "PersistenceService" as p_data_access_0
+  note "and 1 more" as p_data_access_note
+}
+p_service ..> p_domain : <<use>>
+p_service ..> p_data_access : <<use>>
+@enduml

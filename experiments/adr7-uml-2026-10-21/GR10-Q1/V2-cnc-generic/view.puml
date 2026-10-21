@@ -1,0 +1,56 @@
+@startuml
+mainframe cmp Component-and-Connector view — progetto_ing_software_gr10-main-English
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+skinparam componentStyle uml2
+
+package "progetto_ing_software_gr10-main-English" as system {
+  component p_ui [
+  Report management desktop screens
+  --
+  Swing screens for creating, reviewing, updating reports and monitoring activity
+  ..realizations..
+  UserDashboardGUI, ReportCreationGUI, ActivityMonitoringGUI, … 4 more
+  ]
+  component p_service_1 [
+  Use case controllers
+  --
+  Facade and controllers delegating report creation and user registration, validating registration data
+  ..realizations..
+  SystemServicesController, ReportCreationController, UserRegistrationController
+  ]
+  component p_service_2 [
+  Report and user services
+  --
+  creates reports, registers users, retrieves reports and credentials through persistence
+  ..realizations..
+  ReportService, UserService
+  ]
+  component p_domain <<Entity>> [
+  Municipal report entities
+  --
+  JPA entities for reports, users, citizens, operators, notes, status updates and locations
+  ..realizations..
+  Report, Notification, MunicipalOperator, … 11 more
+  ]
+  component p_data_access [
+  Report data storage
+  --
+  generic save, update and find operations over JPA with a shared EntityManagerFactory
+  ..realizations..
+  PersistenceService, … 1 more
+  ]
+}
+component p_database <<database>> [
+MySQL database
+..realizations..
+reports_db
+]
+p_service_2 ..> p_domain : creates and updates
+p_service_2 ..> p_data_access : reads and saves
+p_ui ..> p_service_1 : requests operations {in-process}
+p_service_1 ..> p_service_2 : uses
+p_data_access ..> p_database : persists {JPA / JDBC}
+@enduml

@@ -1,0 +1,69 @@
+@startuml
+mainframe class Data Model view — persistence layer
+skinparam shadowing false
+allowmixing
+hide empty members
+hide circle
+top to bottom direction
+class "InternalNote" as e_ent_Entity_InternalNote_ae9919 {
+  noteId : Long {id}
+  text : String
+  dateEntry : Date
+}
+class "Notification" as e_ent_Entity_Notification_125632 {
+  notificationId : Long {id}
+  sentDate : Date
+  message : String
+  notifiedStatus : String
+}
+class "Report" as e_ent_Entity_Report_f89c33 {
+  reportId : Long {id}
+  title : String
+  description : String
+  category : ReportCategory
+  location : Location
+  dateReport : Date
+  imageAttached : String
+  currentStatusName : String
+  citizenEditable : boolean
+}
+class "Location" as e_ent_Entity_Location_4f6b2f {
+  city : String
+  cap : String
+  street : String
+  streetNumber : String
+  municipalArea : String
+}
+class "User" as e_ent_Entity_User_bfacdf {
+  userId : Long {id}
+  name : String
+  lastName : String
+  phoneNumber : String
+  credentials : Credentials
+}
+class "StatusUpdate" as e_ent_Entity_StatusUpdate_f2bb65 {
+  updateId : Long {id}
+  updateDate : Date
+  newStatus : String
+}
+class "Credentials" as e_ent_Entity_Credentials_db1929 {
+  email : String
+  password : String
+}
+class "Citizen" as e_ent_Entity_Citizen_ab98da {
+}
+class "MunicipalOperator" as e_ent_Entity_MunicipalOperator_312d21 {
+}
+e_ent_Entity_InternalNote_ae9919 "*" --> "1" e_ent_Entity_MunicipalOperator_312d21 : operator
+e_ent_Entity_InternalNote_ae9919 "*" --> "1" e_ent_Entity_Report_f89c33 : report
+e_ent_Entity_Notification_125632 "*" --> "1" e_ent_Entity_Citizen_ab98da : destinatario
+e_ent_Entity_Notification_125632 "*" --> "1" e_ent_Entity_Report_f89c33 : report
+e_ent_Entity_Report_f89c33 *-- e_ent_Entity_Location_4f6b2f : location
+e_ent_Entity_Report_f89c33 "*" --> "1" e_ent_Entity_Citizen_ab98da : citizenReporting
+e_ent_Entity_Report_f89c33 "*" --> "1" e_ent_Entity_MunicipalOperator_312d21 : operator
+e_ent_Entity_Report_f89c33 "1" --> "*" e_ent_Entity_StatusUpdate_f2bb65 : statusUpdates
+e_ent_Entity_StatusUpdate_f2bb65 "*" --> "1" e_ent_Entity_MunicipalOperator_312d21 : operator
+e_ent_Entity_User_bfacdf *-- e_ent_Entity_Credentials_db1929 : credentials
+e_ent_Entity_Citizen_ab98da --|> e_ent_Entity_User_bfacdf
+e_ent_Entity_MunicipalOperator_312d21 --|> e_ent_Entity_User_bfacdf
+@enduml

@@ -1,7 +1,7 @@
 """ADR-007 step 1 check: build the architectural view of a saved Task2View run, without new evidence.
 
 Reads the run's repository card, evidence model and stakeholder profile, applies the abstraction
-step, renders C4-PlantUML (and a PNG when plantuml is installed) and writes the view as JSON with
+step, renders a UML component diagram (and a PNG when plantuml is installed) and writes the view as JSON with
 its readability counts. No model call.
 
     .venv/bin/python scripts/abstract_saved_run.py --run ../experiments/pilot-2026-10/outputs/task2view/IS-seat-L1 \
@@ -19,7 +19,7 @@ from pathlib import Path
 from task2view.contracts.aem import EvidenceModel
 from task2view.contracts.card import RepositoryCard
 from task2view.phase5.abstract import abstract_view
-from task2view.phase7.c4 import readability, render_c4
+from task2view.phase7.uml_arch import readability, render_arch
 
 
 def main() -> int:
@@ -34,7 +34,7 @@ def main() -> int:
     view = abstract_view(card, aem, target=target,
                          title=f"{target[:1].upper() + target[1:] if target else 'System'}: parts involved and how they interact")
     args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / "view.puml").write_text(render_c4(view, system=card.name), encoding="utf-8")
+    (args.out / "view.puml").write_text(render_arch(view, card.name, "client-server"), encoding="utf-8")
     counts = readability(view)
     (args.out / "view.json").write_text(json.dumps({"view": view.model_dump(), "readability": counts}, indent=2))
     if shutil.which("plantuml"):

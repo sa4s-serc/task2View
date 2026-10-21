@@ -18,19 +18,18 @@ def test_parse_formats():
 
 def test_notation_from_run_writer_file_names():
     assert notation_of(Path("V1-x/view.puml")) == "plantuml"
-    assert notation_of(Path("V1-x/view.mermaid.mmd")) == "mermaid"
-    assert notation_of(Path("V1-x/view.c4plantuml.puml")) == "c4plantuml"
 
 
 def test_no_remote_rendering_without_kroki_url(tmp_path, monkeypatch):
     (tmp_path / "V1-a").mkdir()
-    (tmp_path / "V1-a" / "view.d2.d2").write_text("a -> b")
+    (tmp_path / "V1-a" / "view.puml").write_text("@startuml\ncomponent A\n@enduml\n")
     called = []
+    monkeypatch.setattr(compile_mod, "_local", lambda *a: None)  # as if PlantUML were not installed
     monkeypatch.setattr(compile_mod, "_kroki", lambda *a: called.append(a) or b"<svg/>")
     report = compile_run_dir(tmp_path, formats=["svg"])
     assert report["status"] == "fail" and not called and "kroki-url" in report["errors"][0]
     report = compile_run_dir(tmp_path, formats=["svg"], kroki_url="https://kroki.example")
-    assert report["status"] == "ok" and report["files"] == [{"file": "V1-a/view.d2.svg", "backend": "kroki"}]
+    assert report["status"] == "ok" and report["files"] == [{"file": "V1-a/view.svg", "backend": "kroki"}]
 
 
 @pytest.mark.skipif(shutil.which("plantuml") is None, reason="plantuml not installed")

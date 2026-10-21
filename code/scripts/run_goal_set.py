@@ -12,7 +12,7 @@ Goal-set format (same as scripts/eval_view_selection.py):
       <name>: /path/to/repo
 
     .venv/bin/python scripts/run_goal_set.py --goals goals.yaml --out runs/my-eval \\
-        --llm anthropic:claude-sonnet-5-5 --notations plantuml,mermaid
+        --llm anthropic:claude-sonnet-5-5
 
 Writes <out>/<run-id>/ (run id = case id, or <case>@<k> with --repeat; see agents/write_v2.py) and <out>/summary.jsonl. Each
 line records the generator model, so results from different models
@@ -45,7 +45,6 @@ def main() -> int:
     parser.add_argument("--goals", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--llm")
-    parser.add_argument("--notations", default="plantuml")
     parser.add_argument("--max-views", type=int, default=3)
     parser.add_argument("--evidence", choices=["agent", "retrieval"], default="agent", help="retrieval = baseline B1")
     parser.add_argument("--only", help="Comma-separated case ids")
@@ -77,8 +76,7 @@ def main() -> int:
             if not code:
                 raise ValueError(f"no repository path for {case_id} (set `code:` or a `systems:` entry)")
             result = run_v2(case["goal"], code, llm=args.llm, max_views=args.max_views,
-                            evidence_mode=args.evidence, cache_dir=cache,
-                            languages=[n.strip() for n in args.notations.split(",") if n.strip()])
+                            evidence_mode=args.evidence, cache_dir=cache)
             write_run_v2(result, out / run_id)
             got = [v.viewpoint_id for v in result.viewset.views]
             want = (case.get("expect") or {}).get("views")

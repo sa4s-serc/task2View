@@ -18,8 +18,8 @@ def _sync_module():
 def test_knowledge_copies_are_identical():
     sync = _sync_module()
     for name in sync.COPIED:
-        assert (SKILL / "knowledge" / name).read_bytes() == (sync.SOURCE / name).read_bytes(), \
-            f"skill/knowledge/{name} is stale: run scripts/sync_skill.py"
+        assert (SKILL / "knowledge" / Path(name).name).read_bytes() == (sync.SOURCE / name).read_bytes(), \
+            f"skill/knowledge/{Path(name).name} is stale: run scripts/sync_skill.py"
 
 
 def test_generated_references_are_current():

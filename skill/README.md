@@ -8,7 +8,7 @@ This folder teaches one coding agent (Codex, Cursor, Claude Code, …) to carry 
 | `references/catalogs.md` | Needs, viewpoints, roles with priors, signals, constraints. **Generated** |
 | `references/selection.md` | The deterministic viewpoint selection, step by step |
 | `references/evidence.md` | Claims, citation checks, and how the evidence model is built |
-| `references/views.md` | Projection rules, notation, Phase 6 decisions, Phase 8 checks |
+| `references/views.md` | Projection rules, UML drawing rules, Phase 6 decisions, Phase 8 checks |
 | `references/output-schema.md` | Every output file and its fields |
 | `references/goal-sets.md` | Goal texts used in experiments (no expected answers). **Generated** |
 | `knowledge/*.yaml` | Copies of the pipeline's catalog files. **Generated** |
@@ -52,7 +52,6 @@ Use the task2view skill.
 --goal "<goal text, verbatim from references/goal-sets.md>"
 --out ./task2view-out/<run-id>
 --run-id <run-id>
---notation plantuml
 ```
 
 ## Compare with the pipeline

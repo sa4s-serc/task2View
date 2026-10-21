@@ -22,7 +22,6 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--llm", help="provider:model for every phase (default: TASK2VIEW_LLM, else gemini)")
     run.add_argument("--interactive", action="store_true",
                      help="Ask the request's clarification questions (scope, granularity, behaviour) in the terminal")
-    run.add_argument("--notations", default="plantuml", help="Comma-separated notations to write for every view")
     run.add_argument("--max-views", type=int, default=3)
     run.add_argument("--evidence", choices=["agent", "retrieval"], default="agent",
                      help="Phase 5: tool-loop agents, or one call over retrieved seed code (baseline)")
@@ -41,7 +40,7 @@ def build_parser() -> argparse.ArgumentParser:
     select.add_argument("--llm")
     select.add_argument("--max-views", type=int, default=3)
 
-    sub.add_parser("plugins", help="List notations and LLM providers")
+    sub.add_parser("plugins", help="List the UML diagram types and LLM providers")
 
     compile_cmd = sub.add_parser("compile", help="Render the diagram sources of a run directory to images")
     compile_cmd.add_argument("--run-dir", required=True)
@@ -55,9 +54,8 @@ def _run(args) -> dict:
     from task2view.agents.write_v2 import write_run_v2
     from task2view.phase7.compile import compile_run_dir, parse_formats
 
-    notations = [n.strip() for n in args.notations.split(",") if n.strip()]
     result = run_v2(args.goal, args.code, llm=args.llm, max_views=args.max_views, ask=_ask if args.interactive else None,
-                    languages=notations, compile_enabled=not args.no_compile_check, evidence_mode=args.evidence)
+                    compile_enabled=not args.no_compile_check, evidence_mode=args.evidence)
     out = write_run_v2(result, args.out)
     images = compile_run_dir(out, formats=parse_formats(args.images), kroki_url=args.kroki_url) if args.images else None
     return {
@@ -118,9 +116,9 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(_select(args), indent=2))
         elif args.command == "plugins":
             from task2view.llm import providers
-            from task2view.phase7.notations import renderers
+            from task2view.knowledge.catalog import load_uml
 
-            print(json.dumps({"notations": sorted(renderers()),
+            print(json.dumps({"diagrams": "UML 2.5.1 (PlantUML): " + ", ".join(sorted(load_uml()["model_kinds"].values())),
                               "llm_providers": [f"{n}:{m or '<model>'}" for n, m in providers().items()]}, indent=2))
         elif args.command == "compile":
             from task2view.phase7.compile import compile_run_dir, parse_formats

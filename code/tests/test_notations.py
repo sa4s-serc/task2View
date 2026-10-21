@@ -1,4 +1,4 @@
-"""Every registered notation renders every model kind (ADR-006 D3), and compiles where a local tool exists."""
+"""ADR-008: PlantUML is the only renderer; it draws every UML model kind with a frame heading and compiles."""
 
 import shutil
 import subprocess
@@ -46,3 +46,10 @@ def test_plantuml_output_compiles(model_kind, tmp_path):
     src.write_text(get_renderer("plantuml").render(SAMPLES[model_kind]()).source)
     proc = subprocess.run(["plantuml", "-checkonly", str(src)], capture_output=True, text=True, timeout=120)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+@pytest.mark.parametrize("model_kind", MODEL_KINDS)
+def test_every_view_has_a_uml_frame_and_no_non_uml_shapes(model_kind):
+    source = get_renderer("plantuml").render(SAMPLES[model_kind]()).source
+    assert source.splitlines()[1].startswith("mainframe ")
+    assert not any(line.strip().startswith(("database ", "cloud ", "rectangle \"Legend", "title ")) for line in source.splitlines())

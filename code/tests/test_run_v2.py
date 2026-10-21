@@ -41,7 +41,7 @@ def scripted(prompt, model=None):
 
 @pytest.fixture(scope="module")
 def result():
-    return run_v2(GOAL, str(SHOP), generate=scripted, languages=["plantuml", "plantuml"])
+    return run_v2(GOAL, str(SHOP), generate=scripted)
 
 
 def test_selects_component_and_sequence_views(result):
@@ -57,7 +57,7 @@ def test_component_view_shows_named_parts_with_their_classes(result):
     assert any(r.source == "part:api" and r.target == "part:service" and r.protocol == "in-process" for r in view.relations)
     row = next(t for t in view.traceability if t.element == "part:service")
     assert "src/main/java/com/shop/service/OrderService.java" in row.files
-    assert result.renders["V1-client-server"][0].source.startswith("@startuml\n!include <C4/C4_Component>")
+    assert result.renders["V1-client-server"][0].source.startswith("@startuml\nmainframe cmp ")  # UML component diagram (ADR-008)
     assert result.arch_views["V1-client-server"].parts
 
 
@@ -146,9 +146,9 @@ def test_cli_run_v2_writes_package(tmp_path, capsys):
 
     out = tmp_path / "cli-run"
     code = main(["run", "--code", str(SHOP), "--goal", GOAL, "--out", str(out), "--llm", "scripted-run",
-                 "--notations", "plantuml,mermaid", "--no-compile-check"])
+                 "--no-compile-check"])
     summary = json.loads(capsys.readouterr().out)
     assert code == 0
     assert [v["viewpoint"] for v in summary["views"]] == ["client-server", "sequence"]
     assert summary["generator"] == "scripted-run:m" and "judge" not in summary
-    assert (out / "V2-sequence" / "view.mermaid.mmd").exists()
+    assert (out / "V2-sequence" / "view.puml").exists() and not list(out.glob("*/view.*.*"))  # UML only

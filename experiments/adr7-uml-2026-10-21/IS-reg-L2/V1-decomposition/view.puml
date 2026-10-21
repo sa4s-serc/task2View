@@ -1,0 +1,84 @@
+@startuml
+mainframe pkg Decomposition view — user registration functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+
+package "Presentation" as layer0 <<layer>> {
+  package "Web client" as p_web_client {
+    class "app.js" as p_web_client_0
+  }
+  package "Registration and booking screens" as p_ui {
+    class "Login" as p_ui_0
+    class "Registration" as p_ui_1
+    class "StudentDashboard" as p_ui_2
+    note "and 4 more" as p_ui_note
+    p_ui_0 -[hidden]right- p_ui_1
+    p_ui_1 -[hidden]right- p_ui_2
+  }
+  package "Registration REST API" as p_api {
+    class "AuthenticationController" as p_api_0
+    class "ReservationController" as p_api_1
+    class "StudentController" as p_api_2
+    p_api_0 -[hidden]right- p_api_1
+    p_api_1 -[hidden]right- p_api_2
+  }
+}
+package "Application" as layer1 <<layer>> {
+  package "Registration and library services" as p_service {
+    class "LibraryFacade" as p_service_0
+    class "UserManager" as p_service_1
+    note "and 4 more" as p_service_note
+    p_service_0 -[hidden]right- p_service_1
+  }
+}
+package "Domain" as layer2 <<layer>> {
+  package "User and reservation entities" as p_domain {
+    class "Student" as p_domain_0
+    class "User" as p_domain_1
+    class "Reservation" as p_domain_2
+    note "and 11 more" as p_domain_note
+    p_domain_0 -[hidden]right- p_domain_1
+    p_domain_1 -[hidden]right- p_domain_2
+  }
+}
+package "Data access" as layer3 <<layer>> {
+  package "User and reservation storage" as p_data_access {
+    class "PersistenceManager" as p_data_access_0
+    class "UserRegistry" as p_data_access_1
+    class "ReservationRegistry" as p_data_access_2
+    p_data_access_0 -[hidden]right- p_data_access_1
+    p_data_access_1 -[hidden]right- p_data_access_2
+  }
+}
+p_web_client_0 -[hidden]-> p_service_0
+p_web_client_0 -[hidden]-> p_service_1
+p_ui_0 -[hidden]-> p_service_0
+p_ui_0 -[hidden]-> p_service_1
+p_ui_1 -[hidden]-> p_service_0
+p_ui_1 -[hidden]-> p_service_1
+p_ui_2 -[hidden]-> p_service_0
+p_ui_2 -[hidden]-> p_service_1
+p_api_0 -[hidden]-> p_service_0
+p_api_0 -[hidden]-> p_service_1
+p_api_1 -[hidden]-> p_service_0
+p_api_1 -[hidden]-> p_service_1
+p_api_2 -[hidden]-> p_service_0
+p_api_2 -[hidden]-> p_service_1
+p_service_0 -[hidden]-> p_domain_0
+p_service_0 -[hidden]-> p_domain_1
+p_service_0 -[hidden]-> p_domain_2
+p_service_1 -[hidden]-> p_domain_0
+p_service_1 -[hidden]-> p_domain_1
+p_service_1 -[hidden]-> p_domain_2
+p_domain_0 -[hidden]-> p_data_access_0
+p_domain_0 -[hidden]-> p_data_access_1
+p_domain_0 -[hidden]-> p_data_access_2
+p_domain_1 -[hidden]-> p_data_access_0
+p_domain_1 -[hidden]-> p_data_access_1
+p_domain_1 -[hidden]-> p_data_access_2
+p_domain_2 -[hidden]-> p_data_access_0
+p_domain_2 -[hidden]-> p_data_access_1
+p_domain_2 -[hidden]-> p_data_access_2
+@enduml

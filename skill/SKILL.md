@@ -7,7 +7,7 @@ description: Produce stakeholder- and task-specific architecture views (ISO/IEC/
 
 You are **one agent** carrying out the Task2View method by hand: the same phases, rules and output files as the Task2View pipeline (ADR-006). In experiments this is the "agent + skill" condition, compared file by file with the pipeline and with a plain agent.
 
-**Inputs:** `--code` (repository path), `--goal` (the stakeholder's request, verbatim), `--out` (output folder), optional `--run-id`, optional `--notation` (default `plantuml`). If `--code`, `--goal` or `--out` is missing, ask once, then proceed.
+**Inputs:** `--code` (repository path), `--goal` (the stakeholder's request, verbatim), `--out` (output folder), optional `--run-id`. Every view is drawn in UML 2.5.1 with PlantUML (ADR-008); there is no other notation. If `--code`, `--goal` or `--out` is missing, ask once, then proceed.
 
 ## Hard rules
 - **Do not run the pipeline.** Do not run `task2view`, `python -m task2view`, or anything under a `Task2View/` folder. Do not read Task2View run folders.
@@ -108,13 +108,13 @@ Write `reconciliation.json`.
 - **Behaviour views:** ordered messages with `alt` blocks.
 - **Cap the elements** at the view's `max_elements`; list the rest under `overflow`.
 
-Then write the diagram in the requested notation.
+Then write the diagram in UML (PlantUML), following "UML in PlantUML" in [references/views.md](references/views.md#uml-in-plantuml-the-only-notation-adr-008) and the diagram types in [knowledge/uml-2.5.1.yaml](knowledge/uml-2.5.1.yaml).
 
-Write `V*/view.json`, `V*/view.puml` (C4-PlantUML for structural views), `V*/architecture.json` (parts with members, arrows with their code evidence) and `viewset.json` with correspondences: the same element in several views, and each class to the part it belongs to.
+Write `V*/view.json`, `V*/view.puml` (a UML diagram for every view), `V*/architecture.json` (parts with members, arrows with their code evidence) and `viewset.json` with correspondences: the same element in several views, and each class to the part it belongs to.
 
 ### Phase 8 — Validation
 Check each view against the layers in [references/views.md](references/views.md#phase-8-validation):
-1. notation;
+1. notation: compiles, and is UML 2.5.1 for its diagram type;
 2. the viewpoint's constraints;
 3. faithfulness: true to the code;
 4. coverage;
