@@ -311,7 +311,10 @@ def _coarsen(view: ArchView) -> None:
         into.members += p.members
         into.files += p.files
         into.technology = ", ".join(t for t in dict.fromkeys([*into.technology.split(", "), p.technology]) if t)
-        into.examples.append(p.name)
+        into.examples += p.examples  # class names, not the merged parts' role labels
+    for part in merged.values():
+        if part.role in _LAYERS.values():
+            part.examples = list(dict.fromkeys(part.examples))[:3]
     view.parts = sorted(merged.values(), key=lambda p: cat["rank"].get(p.role, 9))
 
 

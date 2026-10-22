@@ -8,6 +8,11 @@ citations checks out:
   lines, give or take a small slack,
 - a cited or claimed symbol exists in the repository card.
 
+A relation's ends must each be a symbol in the repository card or a non-code element (actor, use case,
+node, artifact, datastore, …) whose own element claim was verified earlier in the run (``register``):
+relations between such elements, e.g. an actor and a use case, have no code symbol at either end. Next to a
+non-code end, a name that is also a class (actor "Citizen", entity class Citizen) means the non-code element.
+
 Support is then decided here, not by the agent:
 - observed:   a code citation shows it: an element is cited in the file that declares
               it; a relation is backed by a graph edge in its direction, or the
@@ -89,6 +94,19 @@ class ClaimVerifier:
         self.min_confidence = min_confidence
         self._cache: dict[str, list[str]] = {}
         self.edges: set[tuple[str, str]] = {(e.source, e.target) for e in card.edges if e.kind in _RELATION_EDGE_KINDS}
+        self.non_code: dict[str, str] = {}  # normalised name -> name of a verified non-code element
+
+    def register(self, claim: Claim) -> None:
+        """Remember a verified non-code element, so relations may end at it."""
+        if claim.kind == "element" and claim.symbol is None and (claim.element_kind or "") in _NON_CODE_KINDS and claim.name:
+            self.non_code[_norm(claim.name).lower()] = claim.name.strip()
+
+    def _end(self, ref: str | None, files: set[str]) -> str | None:
+        """A relation end: a repository symbol, else a verified non-code element (by name)."""
+        sid = self.index.resolve(ref, files)
+        if sid is not None or not ref:
+            return sid
+        return self.non_code.get(_norm(str(ref)).lower())
 
     def verify(self, raw: dict, *, claim_id: str, task_id: str, question_ids: list[str]) -> tuple[Claim | None, str]:
         kind = raw.get("kind")
@@ -119,12 +137,21 @@ class ClaimVerifier:
         )
         if kind == "element":
             files = {r.file for r in refs}
-            claim.symbol = self.index.resolve(raw.get("symbol"), files) or self.index.resolve(raw.get("name"), files)
+            non_code = (claim.element_kind or "") in _NON_CODE_KINDS
+            # a non-code element (an actor "Customer") is not the class that shares its name
+            claim.symbol = self.index.resolve(raw.get("symbol"), files) or (
+                None if non_code else self.index.resolve(raw.get("name"), files))
             if claim.symbol is None and (claim.element_kind or "") not in _NON_CODE_KINDS:
                 return None, f"element {raw.get('name')!r} is not a symbol in the repository"
         if kind in {"relation", "interaction"}:
             files = {r.file for r in refs}
-            src, tgt = self.index.resolve(claim.source, files), self.index.resolve(claim.target, files)
+            src, tgt = self._end(claim.source, files), self._end(claim.target, files)
+            # an actor named like a class (actor "Citizen", entity class Citizen): next to a non-code end
+            # (a use case, a node), the name means the non-code element
+            for end, other in (("source", tgt), ("target", src)):
+                name = self.non_code.get(_norm(str(getattr(claim, end) or "")).lower())
+                if name and other in self.non_code.values():
+                    src, tgt = (name, tgt) if end == "source" else (src, name)
             if tgt is None or (src is None and kind == "relation"):
                 return None, f"{kind} endpoint not in the repository: {claim.source!r} -> {claim.target!r}"
             claim.source, claim.target = src or claim.source, tgt

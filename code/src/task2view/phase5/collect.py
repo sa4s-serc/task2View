@@ -37,6 +37,8 @@ def collect_evidence(
     claims: list[Claim] = list(previous.claims.values()) if previous else []
     rejected: list[dict] = list(previous.rejected_claims) if previous else []
     notes: list[str] = list(previous.notes) if previous else []
+    for c in claims:  # non-code elements verified in earlier rounds
+        verifier.register(c)
     for task in tasks:
         try:
             vp_name = catalog.viewpoint(task.viewpoint_id).name
@@ -53,13 +55,15 @@ def collect_evidence(
             continue
         used = ", ".join(f"{k} {v}" for k, v in sorted(calls.items())) or "no tools"
         notes.append(f"{task.id}: {len(raw_claims)} claims, read {len(opened)} files; {used}")
-        for raw in raw_claims:
+        # elements first, so a relation can end at a non-code element (actor, use case, node) claimed in the same task
+        for raw in sorted(raw_claims, key=lambda r: r.get("kind") != "element"):
             claim, reason = verifier.verify(raw, claim_id=f"C{len(claims) + 1}", task_id=task.id,
                                             question_ids=task.question_ids)
             if claim is None:
                 rejected.append({"task": task.id, "claim": raw, "reason": reason})
             else:
                 claims.append(claim)
+                verifier.register(claim)
     model = build_evidence_model(claims, card, cfg["consolidation"], grain=grain)
     model.rejected_claims = rejected
     model.notes = notes

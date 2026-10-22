@@ -177,3 +177,21 @@ def test_verifier_rejects_line_out_of_range():
                               "evidence": [{"file": SVC, "lines": [999, 999], "excerpt": "x"}]},
                              claim_id="C1", task_id="T", question_ids=[])
     assert claim is None and "does not exist" in reason
+
+
+def test_relations_may_end_at_verified_non_code_elements():
+    # an actor and a use case have no code symbol; their relation is checked against their own verified claims
+    card = build_card(SHOP)
+    v = ClaimVerifier(card)
+    cite = [{"file": SVC, "lines": [10, 10], "excerpt": "public Order pay(Long id) {"}]
+    relation = {"kind": "relation", "source": "Customer", "target": "Pay order", "relation": "association", "evidence": cite}
+    assert v.verify(relation, claim_id="C0", task_id="T", question_ids=[])[0] is None  # nothing verified yet
+    for name, kind in (("Customer", "actor"), ("Pay order", "use_case")):
+        claim, _ = v.verify({"kind": "element", "element_kind": kind, "name": name, "evidence": cite},
+                            claim_id=name, task_id="T", question_ids=[])
+        v.register(claim)
+    claim, reason = v.verify(relation, claim_id="C3", task_id="T", question_ids=[])
+    assert claim is not None, reason
+    assert (claim.source, claim.target) == ("Customer", "Pay order")  # the actor, though a Customer class exists
+    unknown = dict(relation, target="Refund order")  # an end nobody verified is still rejected
+    assert v.verify(unknown, claim_id="C4", task_id="T", question_ids=[])[0] is None

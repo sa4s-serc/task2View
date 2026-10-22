@@ -20,7 +20,8 @@ import re
 
 from task2view.contracts.architecture import ArchView
 
-_RANK = {"web_client": 0, "ui": 0, "api": 1, "job": 1, "service": 2, "integration": 3, "domain": 3, "data_access": 4}
+_RANK = {"web_client": 0, "ui": 0, "presentation": 0, "api": 1, "job": 1, "service": 2, "application": 2,
+         "integration": 3, "domain": 3, "data_access": 4}  # coarse parts carry the layer as their role
 _LAYER_OF = {"web_client": "Presentation", "ui": "Presentation", "api": "Presentation", "presentation": "Presentation",
              "job": "Application", "service": "Application", "integration": "Application", "application": "Application",
              "domain": "Domain", "data_access": "Data access"}
