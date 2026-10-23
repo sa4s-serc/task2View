@@ -47,7 +47,6 @@ class Viewpoint(BaseModel):
     combine_with: list[str] = Field(default_factory=list)
     granularity: dict[str, dict] = Field(default_factory=dict)
     evidence_classes: list[str] = Field(default_factory=list)
-    constraints: list[str] = Field(default_factory=list)
 
     @property
     def generic(self) -> bool:
@@ -70,7 +69,6 @@ class Catalog(BaseModel):
     needs: dict[str, Need]
     quality_attributes: list[str]
     signals: dict[str, str]
-    constraints: dict[str, dict]  # name -> {severity, description}
     viewpoints: dict[str, Viewpoint]  # in catalog order
     roles: dict[str, Role]
     cnc_style_priority: list[str]
@@ -159,7 +157,6 @@ def load_catalog() -> Catalog:
         needs=needs,
         quality_attributes=list(needs_doc.get("quality_attributes") or []),
         signals=dict(vp_doc["signals"]),
-        constraints=dict(vp_doc["constraints"]),
         viewpoints=viewpoints,
         roles=roles,
         cnc_style_priority=list(vp_doc.get("cnc_style_priority") or []),
@@ -178,9 +175,6 @@ def _validate(cat: Catalog) -> None:
         for sig in vp.applies_when + vp.evidence:
             if sig not in cat.signals:
                 errors.append(f"{vp.id}: unknown signal {sig!r}")
-        for con in vp.constraints:
-            if con not in cat.constraints:
-                errors.append(f"{vp.id}: unknown constraint {con!r}")
         for other in vp.combine_with + ([vp.style_of] if vp.style_of else []):
             if other not in cat.viewpoints:
                 errors.append(f"{vp.id}: unknown viewpoint {other!r}")

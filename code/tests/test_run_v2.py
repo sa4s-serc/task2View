@@ -1,4 +1,4 @@
-"""ADR-006 end to end on the synthetic java_shop repository with a scripted model (no network)."""
+"""One request, one view, end to end on the synthetic java_shop repository with a scripted model (no network)."""
 
 import json
 from pathlib import Path
@@ -44,8 +44,9 @@ def result():
     return run_v2(GOAL, str(SHOP), generate=scripted)
 
 
-def test_selects_component_and_sequence_views(result):
-    assert [v.viewpoint_id for v in result.viewset.views] == ["client-server", "sequence"]
+def test_one_view_per_request(result):
+    assert [v.viewpoint_id for v in result.viewset.views] == ["client-server"]
+    assert "interaction-order" in result.plan.uncovered_needs  # the structure is drawn; the rest is reported
     assert result.viewset.stakeholder == "developer"
 
 
@@ -62,18 +63,15 @@ def test_component_view_shows_named_parts_with_their_classes(result):
 
 
 def test_sequence_view_orders_messages_with_alternative(result):
-    seq = result.viewset.views[1]
+    seq = project_view("V-seq", _planned("sequence"), result.questions, result.aem, result.card, CATALOG, target="order payment")
     assert [i.message for i in seq.interactions] == ["pay(id)", "findById(id)", "charge(order)"]
     assert seq.fragments and seq.fragments[0].guard == "order status is NEW"
 
 
-def test_validation_layers_without_a_judge(result):
+def test_view_compiles_and_is_true_to_the_code(result):
     for vid, report in result.validation.items():
-        assert report.verdict in {"pass", "pass_with_limitations"}, (vid, report.constraints, report.faithfulness,
-                                                                     report.readability)
+        assert report.verdict in {"pass", "pass_with_limitations"}, (vid, report.faithfulness)
         assert report.notation["model_kind_matches"]
-    assert result.validation["V1-client-server"].metrics["parts"] >= 4
-    assert result.decisions["V1-client-server"].coverage
 
 
 def test_rejected_claims_never_reach_a_view(result):
@@ -82,15 +80,10 @@ def test_rejected_claims_never_reach_a_view(result):
     assert len(result.aem.rejected_claims) >= 3
 
 
-def test_correspondence_ties_shared_elements(result):
-    assert any(any(ref.endswith("cmp:com.shop.service.OrderService") for ref in c.elements)
-               for c in result.viewset.correspondences)
-
-
 def test_run_package_written(result, tmp_path):
     out = write_run_v2(result, tmp_path / "run")
     for name in ("repository_card.json", "stakeholder_profile.json", "view_plan.json", "architectural_questions.json",
-                 "investigation_plan.json", "evidence_model.json", "reconciliation.json", "viewset.json",
+                 "investigation_plan.json", "evidence_model.json", "viewset.json",
                  "validation_report.json", "traceability.md", "README.md", "run.log"):
         assert (out / name).exists(), name
     assert (out / "V1-client-server" / "view.puml").read_text().startswith("@startuml")
@@ -121,17 +114,6 @@ def test_fact_based_views_from_card_only(result):
     assert any("transitions were not evidenced" in l for l in states.limitations)
 
 
-def test_fold_and_exclude(result):
-    card, aem = result.card, result.aem
-    folded = project_view("V-f", _planned("client-server", ["layered"]), [], aem, card, CATALOG, fold=True)
-    assert all(e.id.startswith("fold:") for e in folded.content_elements())
-    assert any("OrderService" in r for e in folded.elements for r in e.responsibilities)
-    excluded = project_view("V-x", _planned("client-server", ["layered"]), [], aem, card, CATALOG,
-                            exclude={"cmp:com.shop.service.OrderService"})
-    assert all(e.name != "OrderService" for e in excluded.elements)
-    assert all("OrderService" not in r.source for r in excluded.relations)
-
-
 def test_cli_run_v2_writes_package(tmp_path, capsys):
     from task2view.cli import main
     from task2view.llm.base import LLMClient
@@ -149,6 +131,6 @@ def test_cli_run_v2_writes_package(tmp_path, capsys):
                  "--no-compile-check"])
     summary = json.loads(capsys.readouterr().out)
     assert code == 0
-    assert [v["viewpoint"] for v in summary["views"]] == ["client-server", "sequence"]
+    assert [v["viewpoint"] for v in summary["views"]] == ["client-server"]
     assert summary["generator"] == "scripted-run:m" and "judge" not in summary
-    assert (out / "V2-sequence" / "view.puml").exists() and not list(out.glob("*/view.*.*"))  # UML only
+    assert (out / "V1-client-server" / "view.puml").exists() and not list(out.glob("*/view.*.*"))  # UML only

@@ -22,7 +22,6 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--llm", help="provider:model for every phase (default: TASK2VIEW_LLM, else gemini)")
     run.add_argument("--interactive", action="store_true",
                      help="Ask the request's clarification questions (scope, granularity, behaviour) in the terminal")
-    run.add_argument("--max-views", type=int, default=3)
     run.add_argument("--evidence", choices=["agent", "retrieval"], default="agent",
                      help="Phase 5: tool-loop agents, or one call over retrieved seed code (baseline)")
     run.add_argument("--no-compile-check", action="store_true", help="Skip compiling diagrams in Phase 8 layer 1")
@@ -38,7 +37,6 @@ def build_parser() -> argparse.ArgumentParser:
     select.add_argument("--code", help="Repository: add the signals the Phase 0 card computes")
     select.add_argument("--signals", default="", help="Extra comma-separated repository signals")
     select.add_argument("--llm")
-    select.add_argument("--max-views", type=int, default=3)
 
     sub.add_parser("plugins", help="List the UML diagram types and LLM providers")
 
@@ -54,18 +52,17 @@ def _run(args) -> dict:
     from task2view.agents.write_v2 import write_run_v2
     from task2view.phase7.compile import compile_run_dir, parse_formats
 
-    result = run_v2(args.goal, args.code, llm=args.llm, max_views=args.max_views, ask=_ask if args.interactive else None,
+    result = run_v2(args.goal, args.code, llm=args.llm, ask=_ask if args.interactive else None,
                     compile_enabled=not args.no_compile_check, evidence_mode=args.evidence)
     out = write_run_v2(result, args.out)
     images = compile_run_dir(out, formats=parse_formats(args.images), kroki_url=args.kroki_url) if args.images else None
     return {
         "out": str(out.resolve()),
         "generator": result.llm,
-        "views": [{"id": v.id, "viewpoint": v.viewpoint_id, "decision": result.decisions[v.id].decision,
+        "views": [{"id": v.id, "viewpoint": v.viewpoint_id,
                    "verdict": result.validation[v.id].verdict, "elements": len(v.content_elements())}
                   for v in result.viewset.views],
         "uncovered_needs": result.viewset.uncovered_needs,
-        "declared_gaps": result.viewset.declared_gaps,
         "claims": len(result.aem.claims),
         "rejected_claims": len(result.aem.rejected_claims),
         "usage": result.usage.get("total", {}),
@@ -82,7 +79,7 @@ def _select(args) -> dict:
     from task2view.agents.runtime import AgentRuntime
     from task2view.knowledge.catalog import load_catalog
     from task2view.phase1.needs import extract_needs
-    from task2view.phase3.selection import RepoFacts, select_views_for_spec
+    from task2view.phase3.selection import RepoFacts, select_one_view
 
     catalog = load_catalog()
     signals = {s.strip() for s in args.signals.split(",") if s.strip()}
@@ -96,9 +93,8 @@ def _select(args) -> dict:
     profile = extract_needs(args.goal, AgentRuntime(model=args.llm), catalog=catalog)
     from task2view.phase7.abstracted import with_abstraction_coverage
 
-    plan = select_views_for_spec(profile.selection_input(), catalog, RepoFacts(signals=signals), max_views=args.max_views,
-                                 behaviour=profile.spec.behaviour,
-                                 compact_catalog=with_abstraction_coverage(catalog, profile.spec.granularity))
+    plan = select_one_view(profile.selection_input(), catalog, RepoFacts(signals=signals), behaviour=profile.spec.behaviour,
+                           compact_catalog=with_abstraction_coverage(catalog, profile.spec.granularity))
     return {"profile": profile.model_dump(), "plan": plan.model_dump()}
 
 

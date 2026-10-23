@@ -1,5 +1,5 @@
 """Changes made after the 2026-10 literature check: grounding strength, agent context, component grain,
-reflexion, correspondence, the per-theme judge and the retrieval baseline. Scripted models only."""
+reflexion and the retrieval baseline. Scripted models only."""
 
 import json
 
@@ -13,7 +13,6 @@ from task2view.phase5.agent import run_evidence_task
 from task2view.phase5.card_tools import CardTools
 from task2view.phase5.collect import collect_evidence
 from task2view.phase5.verify import ClaimVerifier
-from task2view.phase8.judge import THEMES, judge_view
 
 from .test_evidence_model import CATALOG, GOAL, GOOD_CLAIMS, SVC, _scripted_agent, setup  # noqa: F401
 from .test_run_v2 import SHOP, scripted
@@ -127,36 +126,6 @@ def test_reflexion_separates_agreement_omission_and_claim_only(result):
     assert claimed.claims and claimed.member_edges
     assert all(not result.aem.relations[r].claims for r in rx.get("divergence", []))
 
-
-def test_sequence_participants_correspond_to_the_component_view(result):
-    assert result.viewset.correspondence_gaps == []
-
-
-# ------------------------------------------- judge (post-hoc research tool, not in the pipeline)
-
-def test_judge_reports_unusable_replies_without_failing(result):
-    view = result.viewset.views[0]
-    replies = iter([{"score": 9}] + [{"reason": "r", "score": 3}] * (len(THEMES) - 1))
-    report = judge_view(view, result.questions, GOAL, "src", "plantuml",
-                        AgentRuntime(generate=lambda p, model=None: next(replies)), judge_spec="a:x", generator_spec="b:y")
-    assert report.status == "partial" and report.independent is True
-    assert json.dumps(report.scores) and len(report.scores) == len(THEMES) - 1
-
-
-def test_small_overflow_keeps_detail_unless_whole_system(result):
-    from task2view.phase6.decide import decide
-    planned = result.plan.views[0]
-    view = result.viewset.views[0].model_copy(deep=True)
-    view.gaps, view.max_elements = [], 6
-
-    def decision(overflow, whole_system):
-        view.overflow = [f"cmp:x{i}" for i in range(overflow)]
-        return decide(view, planned, result.questions, result.aem, evidence_rounds_left=0,
-                      whole_system=whole_system).decision
-
-    assert decision(1, whole_system=False) == "confirm"
-    assert decision(1, whole_system=True) == "simplify"
-    assert decision(7, whole_system=False) == "simplify"
 
 
 def test_read_several_files_in_one_step(card):

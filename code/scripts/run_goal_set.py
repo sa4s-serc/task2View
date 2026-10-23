@@ -45,7 +45,6 @@ def main() -> int:
     parser.add_argument("--goals", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--llm")
-    parser.add_argument("--max-views", type=int, default=3)
     parser.add_argument("--evidence", choices=["agent", "retrieval"], default="agent", help="retrieval = baseline B1")
     parser.add_argument("--only", help="Comma-separated case ids")
     parser.add_argument("--repeat", type=int, default=1, help="Runs per case; with more than 1, run ids are <case>@<k>")
@@ -75,14 +74,13 @@ def main() -> int:
         try:
             if not code:
                 raise ValueError(f"no repository path for {case_id} (set `code:` or a `systems:` entry)")
-            result = run_v2(case["goal"], code, llm=args.llm, max_views=args.max_views,
+            result = run_v2(case["goal"], code, llm=args.llm,
                             evidence_mode=args.evidence, cache_dir=cache)
             write_run_v2(result, out / run_id)
             got = [v.viewpoint_id for v in result.viewset.views]
             want = (case.get("expect") or {}).get("views")
             row.update(views=got, expected=want, match=None if want is None else got == want,
                        verdicts={vid: v.verdict for vid, v in result.validation.items()},
-                       readability={vid: v.metrics for vid, v in result.validation.items()},
                        claims=len(result.aem.claims), rejected=len(result.aem.rejected_claims),
                        usage=result.usage.get("total", {}))
         except UsageLimitReached as exc:  # stop (or wait) and resume this same run later from the cache

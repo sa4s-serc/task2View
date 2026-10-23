@@ -37,26 +37,6 @@ signals:
   requirement-docs: requirement or use-case documents
   tests: automated tests
 
-# Named, machine-checkable constraints (phase8/constraints.py). severity: error fails the view;
-# warning is reported and lowers nothing on its own.
-constraints:
-  element_kind_allowed: {severity: error, description: "every element kind is one this viewpoint allows"}
-  relation_kind_allowed: {severity: error, description: "every relation kind is one this viewpoint allows"}
-  max_elements: {severity: error, description: "element count within the detail-level cap"}
-  no_package_or_directory_element: {severity: error, description: "no element is named after a source package or directory"}
-  component_has_responsibility: {severity: warning, description: "every component or module shows at least one responsibility"}
-  nesting_well_formed: {severity: error, description: "every parent exists and has a kind that may contain the child"}
-  lifeline_is_component_or_actor: {severity: error, description: "sequence lifelines are components or actors, never packages or classes dumps"}
-  messages_ordered: {severity: error, description: "interactions carry a total order"}
-  message_backed_by_call_evidence: {severity: error, description: "every message has call evidence in the AEM"}
-  association_not_fk_field: {severity: error, description: "no association is drawn for a foreign-key field; it is an attribute"}
-  entity_has_attributes: {severity: warning, description: "every entity shows its persisted attributes"}
-  one_system_box: {severity: error, description: "exactly one system element, named after the product"}
-  actor_outside_boundary: {severity: error, description: "actors are outside the system boundary"}
-  node_contains_artifact: {severity: error, description: "every artifact is allocated to a node or environment"}
-  relation_has_evidence: {severity: error, description: "every relation is backed by AEM evidence"}
-  no_isolated_element: {severity: warning, description: "every element takes part in at least one relation (except groups)"}
-
 # evidence_classes: corpus file classes (corpus.yaml) Phases 4-5 search for this family.
 families:
   module:     {evidence_classes: [code, schema],
@@ -85,7 +65,6 @@ viewpoints:
     relation_kinds: [is-part-of]
     model_kind: uml-package
     combine_with: [layered]
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, no_package_or_directory_element, component_has_responsibility, nesting_well_formed]
 
   - id: uses
     name: Uses
@@ -99,7 +78,6 @@ viewpoints:
     relation_kinds: [uses]
     model_kind: uml-package
     combine_with: [layered]
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, no_package_or_directory_element, relation_has_evidence]
 
   - id: generalization
     name: Generalization
@@ -113,7 +91,6 @@ viewpoints:
     relation_kinds: [is-a, implements]
     model_kind: uml-class
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: layered
     name: Layered
@@ -127,7 +104,6 @@ viewpoints:
     relation_kinds: [allowed-to-use, is-part-of]
     model_kind: uml-package
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, nesting_well_formed]
 
   - id: aspects
     name: Aspects
@@ -141,7 +117,6 @@ viewpoints:
     relation_kinds: [crosscuts]
     model_kind: uml-package
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: data-model
     evidence_classes: [code, schema, config]
@@ -156,7 +131,6 @@ viewpoints:
     relation_kinds: [association, composition, generalization]
     model_kind: uml-class
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, association_not_fk_field, entity_has_attributes, relation_has_evidence]
 
   # ------------------------------------------------------- component-and-connector views (Ch. 3-4)
   - id: cnc-generic
@@ -171,7 +145,6 @@ viewpoints:
     relation_kinds: [attachment, uses, reads, writes]
     model_kind: uml-component
     combine_with: [layered]
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, no_package_or_directory_element, component_has_responsibility, relation_has_evidence, no_isolated_element]
 
   - id: pipe-and-filter
     name: Pipe-and-Filter
@@ -186,7 +159,6 @@ viewpoints:
     relation_kinds: [attachment]
     model_kind: uml-component
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: client-server
     name: Client-Server
@@ -201,7 +173,6 @@ viewpoints:
     relation_kinds: [request-reply, uses, reads, writes]
     model_kind: uml-component
     combine_with: [layered]
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, no_package_or_directory_element, component_has_responsibility, relation_has_evidence, no_isolated_element]
 
   - id: peer-to-peer
     name: Peer-to-Peer
@@ -216,7 +187,6 @@ viewpoints:
     relation_kinds: [call-return]
     model_kind: uml-component
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: soa
     name: Service-Oriented Architecture
@@ -231,7 +201,6 @@ viewpoints:
     relation_kinds: [request-reply, uses]
     model_kind: uml-component
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: publish-subscribe
     name: Publish-Subscribe
@@ -246,7 +215,6 @@ viewpoints:
     relation_kinds: [publishes, subscribes]
     model_kind: uml-component
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: shared-data
     name: Shared-Data
@@ -261,7 +229,6 @@ viewpoints:
     relation_kinds: [reads, writes]
     model_kind: uml-component
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: tiers
     name: Tiers
@@ -275,7 +242,6 @@ viewpoints:
     relation_kinds: [allowed-to-communicate, is-part-of]
     model_kind: uml-component
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, nesting_well_formed]
 
   - id: communicating-processes
     name: Communicating Processes
@@ -289,7 +255,6 @@ viewpoints:
     relation_kinds: [synchronizes, communicates]
     model_kind: uml-component
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   # ---------------------------------------------------------------- allocation views (Ch. 5)
   - id: deployment
@@ -304,7 +269,6 @@ viewpoints:
     relation_kinds: [deploys, communicates, contains]
     model_kind: uml-deployment
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, node_contains_artifact, nesting_well_formed]
 
   - id: install
     name: Install
@@ -318,7 +282,6 @@ viewpoints:
     relation_kinds: [contains, installs]
     model_kind: uml-deployment
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, nesting_well_formed]
 
   - id: implementation
     name: Implementation
@@ -332,7 +295,6 @@ viewpoints:
     relation_kinds: [allocated-to, contains]
     model_kind: table
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, nesting_well_formed]
 
   - id: data-stores
     evidence_classes: [config, schema, deploy, code]
@@ -347,7 +309,6 @@ viewpoints:
     relation_kinds: [allocated-to]
     model_kind: uml-deployment
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   - id: work-assignment
     evidence_classes: [docs, build]
@@ -362,7 +323,6 @@ viewpoints:
     relation_kinds: [assigned-to]
     model_kind: table
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed]
 
   # ---------------------------------------------------------------- behaviour (Ch. 8)
   - id: use-case
@@ -378,7 +338,6 @@ viewpoints:
     relation_kinds: [association, include, extend, generalization]
     model_kind: uml-usecase
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, actor_outside_boundary, one_system_box]
 
   - id: sequence
     name: Sequence
@@ -398,7 +357,6 @@ viewpoints:
       overview: {max_elements: 5, fragments: []}
       feature: {max_elements: 8, fragments: [alt]}
       detailed: {max_elements: 12, fragments: [alt, opt, loop]}
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, lifeline_is_component_or_actor, messages_ordered, message_backed_by_call_evidence, no_package_or_directory_element]
 
   - id: communication
     name: Communication
@@ -413,7 +371,6 @@ viewpoints:
     scope: scenario
     model_kind: uml-communication
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, messages_ordered, message_backed_by_call_evidence]
 
   - id: activity
     name: Activity
@@ -428,7 +385,6 @@ viewpoints:
     scope: scenario
     model_kind: uml-activity
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements]
 
   - id: state-machine
     name: State Machine
@@ -442,7 +398,6 @@ viewpoints:
     relation_kinds: [transition]
     model_kind: uml-state
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, relation_has_evidence]
 
   # --------------------------------------------- beyond the basics / beyond views (Ch. 6, 7, 10)
   - id: context
@@ -458,7 +413,6 @@ viewpoints:
     relation_kinds: [uses]
     model_kind: uml-component
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed, max_elements, one_system_box, actor_outside_boundary]
 
   - id: interfaces
     evidence_classes: [code, config, web]
@@ -473,7 +427,6 @@ viewpoints:
     relation_kinds: [provides, requires]
     model_kind: table
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed]
 
   - id: variation-points
     name: Variation Points
@@ -487,7 +440,6 @@ viewpoints:
     relation_kinds: [binds]
     model_kind: table
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed]
 
   - id: decisions
     evidence_classes: [docs]
@@ -502,7 +454,6 @@ viewpoints:
     relation_kinds: [affects]
     model_kind: table
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed]
 
   - id: requirements-mapping
     evidence_classes: [docs, code]
@@ -517,7 +468,6 @@ viewpoints:
     relation_kinds: [traces-to]
     model_kind: table
     combine_with: []
-    constraints: [element_kind_allowed, relation_kind_allowed]
 
 # When a selected cnc-generic view can be specialised, the first applicable
 # style in this order replaces it (decided from repository evidence, never from

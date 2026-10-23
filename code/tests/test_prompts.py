@@ -11,7 +11,7 @@ IDS = prompt_ids()
 
 
 def test_every_model_call_has_a_prompt_file():
-    assert IDS == ["phase1_interpret", "phase4_investigate", "phase5_evidence", "phase5c_name", "phase8_judge"]
+    assert IDS == ["phase1_interpret", "phase4_investigate", "phase5_evidence", "phase5c_name"]
 
 
 @pytest.mark.parametrize("prompt_id", IDS)

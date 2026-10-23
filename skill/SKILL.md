@@ -58,7 +58,7 @@ Check: every evidence string, subject and target appears word for word in the go
 Write `stakeholder_profile.json`.
 
 ### Phase 3 — Viewpoint selection (deterministic)
-Follow [references/selection.md](references/selection.md) exactly: choose the smallest set of applicable viewpoints (cap 3) that covers every **primary** need. Then:
+Follow [references/selection.md](references/selection.md) exactly: choose the **one** applicable viewpoint that best covers the **primary** need. Then:
 - specialise a C&C view to the repository's style;
 - add the layered overlay when the repository is layered;
 - record evidence gaps;
@@ -96,11 +96,6 @@ Then build the **evidence model** (also in evidence.md):
 
 Write `evidence_model.json`.
 
-### Phase 6 — Reconciliation
-For each view and each of its questions, decide `supported`, `partial` or `unsupported`. Then decide the view by the rules in [references/views.md](references/views.md#phase-6-decisions): `confirm`, `simplify`, `request_evidence` (at most 2 more rounds of Phase 4–5 for the unsupported questions), `gap` or `drop`.
-
-Write `reconciliation.json`.
-
 ### Phase 7 — Views
 **Structural views** (decomposition, uses, layered, C&C, client-server, multi-tier, shared data, SOA) are drawn as **parts**, not classes: follow "Abstraction" in [references/views.md](references/views.md#abstraction-adr-007). Other views use the projection rules for their viewpoint family in the same file:
 - **Never invent an element.** Parts get architectural names, but every part lists its member classes.
@@ -110,21 +105,12 @@ Write `reconciliation.json`.
 
 Then write the diagram in UML (PlantUML), following "UML in PlantUML" in [references/views.md](references/views.md#uml-in-plantuml-the-only-notation-adr-008) and the diagram types in [knowledge/uml-2.5.1.yaml](knowledge/uml-2.5.1.yaml).
 
-Write `V*/view.json`, `V*/view.puml` (a UML diagram for every view), `V*/architecture.json` (parts with members, arrows with their code evidence) and `viewset.json` with correspondences: the same element in several views, and each class to the part it belongs to.
+Write `V*/view.json`, `V*/view.puml` (a UML diagram for every view), `V*/architecture.json` (parts with members, arrows with their code evidence) and `viewset.json`.
 
-### Phase 8 — Validation
-Check each view against the layers in [references/views.md](references/views.md#phase-8-validation):
-1. notation: compiles, and is UML 2.5.1 for its diagram type;
-2. the viewpoint's constraints;
-3. faithfulness: true to the code;
-4. coverage;
-5. readability and the view spec.
+### Phase 8 — Checks
+Check the view by the two rules in [references/views.md](references/views.md#phase-8-checks): the diagram compiles, and every mark is backed by verified code. No model judges the view; whether it is the right view is for the person.
 
-No model judges the view: "true to the code" and "readable" are rule checks; "right view" is for the person.
-
-On a failure, remove the offending marks, redraw (at most 2 times), and record what you removed.
-
-Write `validation_report.json`, `traceability.md` (element → files and symbols), and `README.md` (goal, role, needs, views with decision and verdict, rationale, limitations and gaps, evidence counts).
+Write `validation_report.json`, `traceability.md` (element → files and symbols), and `README.md` (goal, role, needs, the view with its verdict, rationale, limitations and needs not covered, evidence counts).
 
 ## When you finish
 Print an 8-line summary:

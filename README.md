@@ -74,14 +74,13 @@ Stage by stage: [`docs/architecture.md`](docs/architecture.md). Orchestrator: `c
 ```
 goal ──► 1 needs, subjects, target (LLM, verified against the goal)
 repo ──► 0 repository card: typed files, symbols, dependency graph, facts, signals (tree-sitter, no LLM)
-         3 viewpoint selection: covering over 30 Views-and-Beyond viewpoints, cap 3 (no LLM)
+         3 viewpoint selection: the one Views-and-Beyond viewpoint that best covers the needs (no LLM)
          2 questions per selected view (no LLM)
          4 investigation tasks with suggested starting points (optional planning agent)
          5 evidence agents with repository tools ─► verified claims ─► Architecture Evidence Model
-         6 per-view decision: confirm / simplify / request evidence / gap / drop (rules)
          5c abstraction: classes into named parts, arrows lifted from code (structural views; one naming call)
          7 deterministic drawing in UML 2.5.1 (PlantUML), the diagram type of the viewpoint
-         8 checks by rules: UML conformance, viewpoint constraints, faithfulness, coverage, readability (no LLM judge)
+         8 checks by rules: the diagram compiles; every mark is backed by verified code (no LLM judge)
 ```
 
 Every element in a view traces to code symbols and verified claims (`traceability.md`). Run-time limits: `code/src/task2view/knowledge/data/vb/pipeline.yaml`. Knowledge (needs, viewpoints, roles, corpus rules): `code/src/task2view/knowledge/data/vb/`.

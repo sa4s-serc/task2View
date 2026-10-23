@@ -1,6 +1,6 @@
 # Phases 6–8 — Decisions, views and validation
 
-The pipeline does this in `phase6/decide.py`, `phase7/project.py`, `phase7/uml_arch.py`, `phase7/notations/plantuml.py` and `phase8/`.
+The pipeline does this in `phase7/project.py`, `phase7/uml_arch.py`, `phase7/notations/plantuml.py` and `phase8/`.
 
 **Every view is a UML 2.5.1 diagram (ADR-008).** The diagram types, the symbols and paths each allows, the Standard Profile stereotypes and the frame headings are in [`../knowledge/uml-2.5.1.yaml`](../knowledge/uml-2.5.1.yaml), with the clause of the UML specification for each rule. Use only those.
 
@@ -57,37 +57,12 @@ Start every diagram with `mainframe <kind> <title>`, the kind from UML Annex A: 
 
 Use one stable alias per element (the pipeline uses `e_` + the id with non-alphanumerics replaced by `_`, plus a short hash when characters were replaced). Responsibilities never go on edges.
 
-## Phase 6 decisions
-For each question of the view:
-- `supported`: a claim answering it is drawn in the view.
-- `partial`: claims exist but none is drawn, or the view is built from repository facts only.
-- `unsupported`: no evidence.
-
-Then decide, checking these rules in order:
-1. The view draws nothing:
-   - the viewpoint's evidence is absent from the repository (planned evidence gap) → `gap`;
-   - else, if a round remains → `request_evidence` for all of the view's questions (at most 2 extra rounds of Phase 4–5);
-   - else, if projection reported why it is empty → `gap`;
-   - else → `drop`.
-2. A component or package view overflows its cap, and either the goal has no target (a whole-system overview) or the selection is more than twice the cap → `simplify`: one element per layer, or per package when there are no layers, listing its components; relations between groups are labelled "<n> dependencies".
-3. The view has an evidence gap → `gap` (keep the view, report the gap).
-4. Otherwise → `confirm`.
-
-## Phase 8 validation
-1. **Notation:** the source compiles (if you can), the model kind matches the viewpoint, and it is UML 2.5.1 for its diagram type: only the symbols and paths [`../knowledge/uml-2.5.1.yaml`](../knowledge/uml-2.5.1.yaml) lists for it (a non-UML shape such as the `database` cylinder or a C4 macro is an error; a UML symbol of another diagram type is a warning), stereotypes from the Standard Profile, keywords or the Task2View profile, and a frame heading naming the kind.
-2. **Constraints:** every constraint the viewpoint lists in `viewpoints.yaml`. Severities and rules are in catalogs.md; `error` fails the view, `warning` is reported.
-3. **Faithfulness:**
-   - every element is in the evidence model (or is a group or fold of evidence-model elements) and is not weakly supported; a **part** lists member classes or files that all exist, and no class belongs to two parts;
+## Phase 8 checks
+1. **Compiles:** the PlantUML source compiles (if you can), and the model kind matches the viewpoint.
+2. **True to the code:**
+   - every element is in the evidence model (or is a part of evidence-model elements) and is not weakly supported; a **part** lists member classes or files that all exist, and no class belongs to two parts;
    - names are unchanged;
    - no element is drawn twice, and no symbol is drawn by two elements (states of one enum share its symbol and are exempt);
    - every interaction is a step of a recovered scenario.
-4. **Coverage:** the Phase 6 table. A view with questions and at least two elements must draw at least one relation or interaction (except decomposition and use-case views, which show containment).
-5. **Readability and spec** (structural views): no method names on arrows (error); at most max(1, 10% of the arrows) crossings when laid out top-down (warning); descriptions of at most 12 words (warning); a title and a legend (warning); coarse views at most 6 parts; no single class shown as a part at medium or coarse granularity; a feature view shows where requests enter; decomposition views have no arrows. No model judges the view.
-6. **Correspondence:** list in `viewset.json` `correspondence_gaps` every component of a sequence, communication or activity view that no structural view of the set draws.
 
-**Verdict:**
-- `fail` on any error in layers 1–4;
-- `pass_with_limitations` when there are gaps, limitations, warnings or non-supported questions;
-- `pass` otherwise.
-
-On `fail`, remove the offending marks (`repair_marks`) and redraw, at most 2 times.
+**Verdict:** `fail` on any error; `pass_with_limitations` when the view lists gaps or limitations; `pass` otherwise.

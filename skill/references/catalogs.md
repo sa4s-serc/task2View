@@ -116,27 +116,6 @@ A prior is used only when the goal states no need (take all needs at the role's 
 | `requirement-docs` | requirement or use-case documents |
 | `tests` | automated tests |
 
-## Constraints checked on every view
-
-| constraint | severity | rule |
-|---|---|---|
-| `element_kind_allowed` | error | every element kind is one this viewpoint allows |
-| `relation_kind_allowed` | error | every relation kind is one this viewpoint allows |
-| `max_elements` | error | element count within the detail-level cap |
-| `no_package_or_directory_element` | error | no element is named after a source package or directory |
-| `component_has_responsibility` | warning | every component or module shows at least one responsibility |
-| `nesting_well_formed` | error | every parent exists and has a kind that may contain the child |
-| `lifeline_is_component_or_actor` | error | sequence lifelines are components or actors, never packages or classes dumps |
-| `messages_ordered` | error | interactions carry a total order |
-| `message_backed_by_call_evidence` | error | every message has call evidence in the AEM |
-| `association_not_fk_field` | error | no association is drawn for a foreign-key field; it is an attribute |
-| `entity_has_attributes` | warning | every entity shows its persisted attributes |
-| `one_system_box` | error | exactly one system element, named after the product |
-| `actor_outside_boundary` | error | actors are outside the system boundary |
-| `node_contains_artifact` | error | every artifact is allocated to a node or environment |
-| `relation_has_evidence` | error | every relation is backed by AEM evidence |
-| `no_isolated_element` | warning | every element takes part in at least one relation (except groups) |
-
 ## Detail level
 
 - `detailed`: the goal enumerates at least 2 subjects.

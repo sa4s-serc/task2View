@@ -7,7 +7,7 @@ Write these files under `--out`, with exactly these names and fields. They are t
   repository_card.txt          repository_card.json
   stakeholder_profile.json     view_plan.json
   architectural_questions.json investigation_plan.json
-  evidence_model.json          reconciliation.json
+  evidence_model.json
   viewset.json                 validation_report.json
   traceability.md              README.md
   usage.json                   (tokens and cost; agents: what your tool reports, else omit)
@@ -85,12 +85,6 @@ Write these files under `--out`, with exactly these names and fields. They are t
  "notes": ["IT1: 6 claims, read 3 files; read 3, search 2, symbol 1"]}
 ```
 
-## reconciliation.json
-```json
-{"V1-client-server": {"view_id": "V1-client-server", "decision": "confirm", "reason": "all assigned questions have evidence in the view",
-                      "coverage": [{"question": "AQ1", "status": "supported", "claims": ["C1", "C2"], "note": ""}], "unsupported_questions": []}}
-```
-
 ## V*/view.json (one per view; viewset.json holds all of them)
 ```json
 {"id": "V1-client-server", "viewpoint_id": "client-server", "viewpoint_name": "Client-Server", "vb_ref": "4.3.1 Client-Server Style",
@@ -110,20 +104,14 @@ Write these files under `--out`, with exactly these names and fields. They are t
 `viewset.json`:
 ```json
 {"system": "repo-name", "stakeholder": "tester", "goal": "<verbatim>", "views": [ … ],
- "correspondences": [{"rule": "same-element", "elements": ["V1-client-server:cmp:…", "V2-sequence:cmp:…"]}],
- "correspondence_gaps": [], "declared_gaps": [], "uncovered_needs": [], "secondary_not_shown": []}
+ "uncovered_needs": [], "secondary_not_shown": []}
 ```
 
 ## validation_report.json
 ```json
 {"V1-client-server": {"view_id": "V1-client-server", "verdict": "pass_with_limitations",
-  "notation": {"status": "pass", "language": "plantuml", "approximated": false, "model_kind_matches": true,
-               "uml_diagram": "component", "uml": []},
-  "constraints": [{"constraint": "component_has_responsibility", "severity": "warning", "mark": "cmp:…", "message": "… shows no responsibility"}],
-  "faithfulness": [], "coverage": [{"question": "AQ1", "status": "supported", "claims": ["C1"], "note": ""}],
-  "readability": [{"check": "crossings", "severity": "warning", "mark": "view", "message": "3 crossing arrows in the layered layout"}],
-  "metrics": {"parts": 7, "arrows": 7, "crossings": 3, "against_layering": 1, "omitted_relations": 1, "classes_behind_parts": 39},
-  "errors": 0, "warnings": 1, "repair_marks": []}}
+  "notation": {"status": "pass", "language": "plantuml", "model_kind_matches": true},
+  "faithfulness": [], "errors": 0}}
 ```
 
 ## usage.json

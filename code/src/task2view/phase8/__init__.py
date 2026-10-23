@@ -1,1 +1,1 @@
-"""Phase 8: view validation and the task-fit judge."""
+"""Phase 8: two rule checks per view (compiles; true to the code)."""

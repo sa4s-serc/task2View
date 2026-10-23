@@ -10,7 +10,6 @@ These are every prompt the pipeline sends to a language model (ADR-006). Everyth
 | `phase1_interpret.md` | 1 | `phase1/needs.py` | Say what the stakeholder needs to see, in a fixed vocabulary | `validate_needs`: every need, subject and target must be quoted from the goal |
 | `phase4_investigate.md` | 4 | `phase4/investigate.py` | Pick where in the repository to start looking | Only symbols and paths that exist in the repository card are kept |
 | `phase5_evidence.md` | 5 | `phase5/agent.py` | Read the code with tools and return cited claims | `phase5/verify.py`: file, lines, quoted code and symbol are checked mechanically |
-| `phase8_judge.md` | 8 | `phase8/judge.py` | Score one rubric theme of a view (one call per theme) | Nothing: the score is reported only, until validated against blind human ratings |
 
 All prompts share one structure:
 1. **Role** — who the model is in this step.

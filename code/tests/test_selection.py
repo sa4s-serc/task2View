@@ -207,7 +207,8 @@ def test_select_views_cli_with_fake_provider(capsys):
     code = main(["select-views", "--goal", case["goal"], "--llm", "pilot-fixture", "--signals", signals])
     out = json.loads(capsys.readouterr().out)
     assert code == 0
-    assert [v["viewpoint_id"] for v in out["plan"]["views"]] == ["data-model", "uses"]
+    assert [v["viewpoint_id"] for v in out["plan"]["views"]] == ["data-model"]  # one view per request
+    assert "change-impact" in out["plan"]["uncovered_needs"] or out["plan"]["uncovered_needs"]
     assert main(["select-views", "--goal", "x", "--signals", "not-a-signal"]) == 2
 
 

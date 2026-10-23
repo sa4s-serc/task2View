@@ -27,7 +27,6 @@ def write_run_v2(result: RunV2Result, out: str | Path) -> Path:
     _dump(out / "architectural_questions.json", result.questions)
     _dump(out / "investigation_plan.json", result.tasks)
     _dump(out / "evidence_model.json", result.aem)
-    _dump(out / "reconciliation.json", {vid: d.model_dump(mode="json") for vid, d in result.decisions.items()})
     _dump(out / "viewset.json", result.viewset)
     _dump(out / "validation_report.json", {vid: v.model_dump(mode="json") for vid, v in result.validation.items()})
     _dump(out / "usage.json", result.usage)
@@ -67,22 +66,20 @@ def _readme(result: RunV2Result) -> str:
         + "".join(f"; asked: {c.question} → {c.answer or c.default + ' (default)'}" for c in p.clarifications),
         f"- Repository signals: {', '.join(sorted(result.card.signals))}", "",
         "## Views", "",
-        "| View | Viewpoint | Decision | Verdict | Elements | Notation |", "|---|---|---|---|---|---|",
+        "| View | Viewpoint | Verdict | Elements | UML diagram |", "|---|---|---|---|---|",
     ]
     for view in result.viewset.views:
-        d, v = result.decisions[view.id], result.validation[view.id]
-        lines.append(f"| {view.id} | {view.viewpoint_name} ({view.vb_ref}) | {d.decision} | {v.verdict} | "
-                     f"{len(view.content_elements())} | {v.notation.get('uml_diagram') or view.model_kind}"
-                     f"{' (approximated)' if v.notation.get('approximated') else ''} |")
+        v = result.validation[view.id]
+        lines.append(f"| {view.id} | {view.viewpoint_name} ({view.vb_ref}) | {v.verdict} | "
+                     f"{len(view.content_elements())} | {view.model_kind} |")
     lines += ["", "## Rationale", ""]
     lines += [f"- {pv.viewpoint_id}: {pv.rationale}" for pv in plan.views]
-    gaps = result.viewset.declared_gaps + [f"need not covered: {n}" for n in plan.uncovered_needs] + \
+    gaps = [f"need not covered: {n}" for n in plan.uncovered_needs] + \
         [f"secondary need not shown: {n}" for n in plan.secondary_not_shown]
     lines += ["", "## Limitations and declared gaps", ""]
     lines += [f"- {g}" for g in gaps] or ["- none"]
     for view in result.viewset.views:
         lines += [f"- {view.id}: {lim}" for lim in view.limitations + view.gaps]
-    lines += [f"- correspondence: {g}" for g in result.viewset.correspondence_gaps]
     rx = {k: len(result.aem.reflexion.get(k, [])) for k in ("convergence", "divergence", "absence")}
     lines += ["", "## Evidence", "",
               f"- {len(result.aem.claims)} verified claims, {len(result.aem.rejected_claims)} rejected; "

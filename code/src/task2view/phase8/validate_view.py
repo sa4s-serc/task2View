@@ -1,24 +1,11 @@
-"""Phase 8 — validation of a view (ADR-006 D3, revised by ADR-007 D4).
+"""Phase 8 — two checks per view, by rules (no model judges a view):
 
-The three judging questions: "true to the code?" and "readable?" are checked here by rules;
-"right view?" is for people (the stakeholder confirms the spec; the expert rates in studies).
+1 compiles       the PlantUML source compiles (when plantuml is installed) and the model kind is the viewpoint's
+2 true to code   every mark is an evidence-model entry (or a part of entries) with at least inferred
+                 support, keeps its name and appears once; a part lists member classes that exist in the code;
+                 every message is a recovered interaction
 
-1 notation       the diagram source compiles (local tool when available), the
-                 model kind is the viewpoint's, and the drawing is UML 2.5.1 for its
-                 diagram type: symbols, paths, stereotypes, frame (phase8/uml_check.py)
-2 constraints    the viewpoint's named constraints (phase8/constraints.py)
-3 faithfulness   every mark is an AEM entry (or a projection group / fold of AEM
-                 entries) with at least inferred support, keeps its AEM name, and
-                 appears once; a part (ADR-007) lists members that exist in the code
-4 coverage       every assigned question is covered (Phase 6 table); a view with
-                 questions draws at least one relation or interaction (not decomposition
-                 or use-case views, which show containment)
-5 readability    for abstracted views: labels, crossings, box text, title and legend, and
-                 conformance to the view spec (phase8/readability.py)
-
-Verdict: fail on any error; pass_with_limitations when gaps, limitations, partial
-coverage or warnings remain; else pass. `repair_marks` lists the element/relation ids
-whose removal would clear the layer 2-3 errors. No LLM judges the view.
+Verdict: fail on any error; pass_with_limitations when the view declares gaps or limitations; else pass.
 """
 
 from __future__ import annotations
@@ -26,9 +13,8 @@ from __future__ import annotations
 import shutil
 import subprocess
 import tempfile
-from pathlib import Path
-
 from collections import Counter
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -36,28 +22,16 @@ from task2view.contracts.aem import EvidenceModel
 from task2view.contracts.card import RepositoryCard
 from task2view.contracts.views import ArchitectureView, RenderResult
 from task2view.knowledge.catalog import Catalog
-from task2view.phase6.decide import QuestionCoverage
-from task2view.phase8.constraints import check_constraints
-from task2view.phase8.readability import check as check_readability
-from task2view.phase8.uml_check import check_uml
 
-_COMPILERS = {
-    "plantuml": (["plantuml", "-checkonly"], ".puml"),
-}
+_COMPILERS = {"plantuml": (["plantuml", "-checkonly"], ".puml")}
 
 
 class ViewValidation(BaseModel):
     view_id: str
     verdict: str
     notation: dict = Field(default_factory=dict)
-    constraints: list[dict] = Field(default_factory=list)
     faithfulness: list[dict] = Field(default_factory=list)
-    coverage: list[dict] = Field(default_factory=list)
-    readability: list[dict] = Field(default_factory=list)  # ADR-007: readable? and matches its spec?
-    metrics: dict = Field(default_factory=dict)
     errors: int = 0
-    warnings: int = 0
-    repair_marks: list[str] = Field(default_factory=list)
 
 
 def compile_check(render: RenderResult, *, enabled: bool = True) -> dict:
@@ -84,11 +58,6 @@ def _faithfulness(view: ArchitectureView, aem: EvidenceModel, card: RepositoryCa
     for dup in sorted(i for i, n in Counter(e.id for e in view.elements).items() if n > 1):
         out.append({"mark": dup, "severity": "error", "message": "element drawn more than once"})
     for e in view.content_elements():
-        if e.id.startswith("fold:"):
-            missing = [m for m in e.realized_by if m not in aem.elements]
-            if missing:
-                out.append({"mark": e.id, "severity": "error", "message": f"folded element lists unknown members {missing}"})
-            continue
         if e.id.startswith("part:"):  # ADR-007 part: true to the code when every member exists
             missing = [m for m in e.realized_by if m not in card.symbols and m not in files]
             if missing or not e.realized_by:
@@ -121,43 +90,14 @@ def _faithfulness(view: ArchitectureView, aem: EvidenceModel, card: RepositoryCa
     return out
 
 
-def validate_view(
-    view: ArchitectureView,
-    render: RenderResult,
-    aem: EvidenceModel,
-    card: RepositoryCard,
-    catalog: Catalog,
-    coverage: list[QuestionCoverage],
-    *,
-    compile_enabled: bool = True,
-    arch=None,
-    spec=None,
-) -> ViewValidation:
-    """``arch`` and ``spec``: the abstraction-step view and the view spec, for the readability checks."""
+def validate_view(view: ArchitectureView, render: RenderResult, aem: EvidenceModel, card: RepositoryCard,
+                  catalog: Catalog, *, compile_enabled: bool = True) -> ViewValidation:
     vp = catalog.viewpoint(view.viewpoint_id)
     notation = compile_check(render, enabled=compile_enabled)
-    notation.update({"language": render.language, "approximated": render.approximated,
-                     "model_kind_matches": view.model_kind == vp.model_kind})
-    uml_findings, uml_metrics = check_uml(render.source, view.model_kind)  # ADR-008: UML 2.5.1 conformance
-    notation.update({"uml_diagram": uml_metrics["uml_diagram"], "uml": uml_findings})
-    constraints = check_constraints(view, vp, aem, card, catalog.constraints)
+    notation.update({"language": render.language, "model_kind_matches": view.model_kind == vp.model_kind})
     faith = _faithfulness(view, aem, card)
-    cov = [c.model_dump() for c in coverage]
-    coverage_errors = []
-    readable, metrics = check_readability(arch, render.source, viewpoint_id=vp.id, spec=spec) if arch is not None else ([], {})
-    if coverage and len(view.content_elements()) >= 2 and view.model_kind not in {"table", "uml-state"} \
-            and vp.id not in {"decomposition", "use-case"} and not view.relations and not view.interactions:
-        coverage_errors.append({"severity": "error", "message": "the view has questions to answer but draws no relation"})
-
-    errors = [f for f in constraints + faith + coverage_errors + readable + uml_findings if f["severity"] == "error"]
+    errors = [f for f in faith if f["severity"] == "error"]
     if notation["status"] == "fail" or not notation["model_kind_matches"]:
-        errors.append({"severity": "error", "message": "notation layer failed"})
-    warnings = [f for f in constraints + readable + uml_findings if f["severity"] == "warning"]
-    limited = bool(view.gaps or view.limitations or warnings or any(c.status != "supported" for c in coverage))
-    verdict = "fail" if errors else "pass_with_limitations" if limited else "pass"
-    repair = sorted({f["mark"] for f in constraints + faith if f["severity"] == "error" and f["mark"] != view.id})
-    return ViewValidation(
-        view_id=view.id, verdict=verdict, notation=notation, constraints=constraints, faithfulness=faith,
-        coverage=cov + coverage_errors, readability=readable, metrics=metrics,
-        errors=len(errors), warnings=len(warnings), repair_marks=repair,
-    )
+        errors.append({"severity": "error", "message": "the diagram does not compile or is not the viewpoint's kind"})
+    verdict = "fail" if errors else "pass_with_limitations" if view.gaps or view.limitations else "pass"
+    return ViewValidation(view_id=view.id, verdict=verdict, notation=notation, faithfulness=faith, errors=len(errors))

@@ -2,7 +2,7 @@
 
 Copies the catalog YAML the pipeline loads into skill/knowledge/ and generates
 skill/references/catalogs.md (viewpoints, needs, roles with their derived priors,
-signals, constraints) from the same loader the pipeline uses. Run after any
+signals) from the same loader the pipeline uses. Run after any
 change to knowledge/data/vb/ or knowledge/data/uml/; tests/test_skill_sync.py fails if the skill is stale.
 
     .venv/bin/python scripts/sync_skill.py
@@ -56,8 +56,6 @@ def catalogs_markdown(cat: Catalog) -> str:
 
     out += ["", "## Repository signals", "", "| signal | meaning |", "|---|---|"]
     out += [f"| `{k}` | {v} |" for k, v in cat.signals.items()]
-    out += ["", "## Constraints checked on every view", "", "| constraint | severity | rule |", "|---|---|---|"]
-    out += [f"| `{k}` | {v['severity']} | {v['description']} |" for k, v in cat.constraints.items()]
     out += ["", "## Detail level", "",
             f"- `detailed`: the goal enumerates at least {cat.detail_rule['detailed_min_subjects']} subjects.",
             f"- `feature`: at least {cat.detail_rule['feature_min_needs']} primary needs, or exactly one subject.",

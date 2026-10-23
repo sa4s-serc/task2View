@@ -5,7 +5,7 @@ subjects, maps them to the kinds the viewpoint allows, and adds structure the
 viewpoint calls for (layer nesting for the layered overlay, the system boundary
 for use cases, nodes around artifacts). It never invents, renames or merges an
 element. When the selection exceeds the detail-level cap, the rest is listed in
-`overflow` for Phase 6 to decide on.
+`overflow` (listed as a limitation).
 """
 
 from __future__ import annotations
@@ -35,11 +35,8 @@ def project_view(
     catalog: Catalog,
     *,
     target: str = "",
-    fold: bool = False,
-    exclude: set[str] | None = None,
 ) -> ArchitectureView:
-    """Project one view. ``fold`` (Phase 6 simplify) groups components by layer or package;
-    ``exclude`` (Phase 8 repair) leaves out marks that failed validation."""
+    """Project one view."""
     vp = catalog.viewpoint(planned.viewpoint_id)
     qids = [q.id for q in questions if q.view_id == view_id]
     cap = int(planned.granularity.get("max_elements") or 10)
@@ -64,16 +61,8 @@ def project_view(
         _deployment(view, vp, aem)
     elif "entity" in vp.element_kinds:
         _data_model(view, aem, card, focus)
-    elif vp.model_kind == "table":
-        _table(view, vp, aem)
     else:
-        _structure(view, vp, aem, qids, focus, fold=fold)
-    if exclude:
-        view.elements = [e for e in view.elements if e.id not in exclude]
-        ids = {e.id for e in view.elements}
-        view.relations = [r for r in view.relations if r.id not in exclude and r.source in ids and r.target in ids]
-        view.interactions = [i for i in view.interactions if i.source in ids and i.target in ids]
-        view.limitations.append(f"{len(exclude)} mark(s) removed after failing validation")
+        _structure(view, vp, aem, qids, focus)
     _traceability(view, aem, card)
     return view
 
@@ -151,8 +140,7 @@ def _element(el: ArchElement, kind: str, *, stereotype: str | None = None) -> Vi
 
 # --------------------------------------------------------- structural views
 
-def _structure(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel, qids: list[str], focus: str,
-               *, fold: bool = False) -> None:
+def _structure(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel, qids: list[str], focus: str) -> None:
     ftok = tokens(focus)
     comps = [e for e in aem.elements.values() if e.kind == "component"]
     if vp.id == "uses":
@@ -162,9 +150,6 @@ def _structure(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel, qids: 
                        {r.target for r in aem.relations.values() if r.kind == "generalization"}
         comps = [c for c in comps if c.id in in_hierarchy]
     ranked = sorted(comps, key=lambda e: _relevance(aem, e, qids, ftok), reverse=True)
-    if fold:
-        _folded(view, vp, aem, ranked)
-        return
     stores = [e for e in aem.elements.values() if e.kind == "datastore"] if "datastore" in vp.element_kinds else []
     stores = stores if any(e.layer == "persistence" for e in ranked) else []
     kept = _cap(view, ranked, reserve=len(stores))
@@ -188,41 +173,6 @@ def _structure(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel, qids: 
     _layers(view, elements)
     if vp.id == "decomposition" and "layered" not in view.overlays:
         _packages(view, elements)
-
-
-def _folded(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel, ranked: list[ArchElement]) -> None:
-    """Coarser grain: one element per layer (or package when there are no layers), listing its components."""
-    names = {layer["id"]: layer["name"] for layer in corpus_rules()["layers"]}
-    groups: dict[str, list[ArchElement]] = {}
-    for el in ranked:
-        key = el.layer or (el.realized_by[0].rsplit(".", 1)[0] if el.realized_by and "." in el.realized_by[0] else "other")
-        groups.setdefault(key, []).append(el)
-    member_of = {}
-    kind = "module" if "module" in vp.element_kinds else _view_kind(ranked[0], vp) if ranked else "component"
-    keys = list(groups)
-    if len(keys) > view.max_elements:
-        view.overflow = [m.id for k in keys[view.max_elements:] for m in groups[k]]
-        view.limitations.append(f"{len(keys) - view.max_elements} further group(s) exceed the cap of {view.max_elements}")
-    for key in keys[: view.max_elements]:
-        members = groups[key]
-        fid = f"fold:{key}"
-        for m in members:
-            member_of[m.id] = fid
-        view.elements.append(ViewElement(id=fid, kind=kind, name=names.get(key, key.rsplit(".", 1)[-1]),
-                                         stereotype=key if key in names else None,
-                                         responsibilities=[f"{m.name}" + (f": {m.responsibilities[0].text}" if m.responsibilities else "")
-                                                           for m in members[:6]] + ([f"… {len(members) - 6} more"] if len(members) > 6 else []),
-                                         realized_by=[m.id for m in members]))
-    lifted: dict[tuple[str, str], int] = {}
-    for r in aem.relations.values():
-        a, b = member_of.get(r.source), member_of.get(r.target)
-        if r.kind == "uses" and a and b and a != b:
-            lifted[(a, b)] = lifted.get((a, b), 0) + 1
-    rel_kind = "allowed-to-use" if vp.id == "layered" else ("uses" if "uses" in vp.relation_kinds else vp.relation_kinds[0])
-    for (a, b), n in lifted.items():
-        view.relations.append(ViewRelation(id=f"rel:{a}:{rel_kind}:{b}", kind=rel_kind, source=a, target=b,
-                                           label=f"{n} dependencies"))
-    view.limitations.append("simplified to one element per layer or package (Phase 6)")
 
 
 def _uses_neighbourhood(aem: EvidenceModel, comps: list[ArchElement], qids: list[str], ftok: set[str]) -> list[ArchElement]:
@@ -374,21 +324,11 @@ def _deployment(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel) -> No
         view.gaps.append("no deployment descriptors or build units found")
 
 
-def _table(view: ArchitectureView, vp: Viewpoint, aem: EvidenceModel) -> None:
-    if vp.id == "implementation":  # components, mapped to their files by the traceability table
-        rows = [e for e in aem.elements.values() if e.kind == "component"]
-    else:  # modules and components alone do not answer an interface, decision or requirement table
-        rows = [e for e in aem.elements.values() if e.kind in set(vp.element_kinds) - {"module", "component"}]
-    view.elements.extend(_element(e, _view_kind(e, vp)) for e in _cap(view, rows))
-    if not rows:
-        view.gaps.append(f"no evidence for {vp.name.lower()}")
-
-
 # ------------------------------------------------------------ traceability
 
 def _traceability(view: ArchitectureView, aem: EvidenceModel, card: RepositoryCard) -> None:
     for e in view.content_elements():
-        members = [aem.elements[m] for m in e.realized_by if m in aem.elements]  # folded elements list AEM ids
+        members = [aem.elements[m] for m in e.realized_by if m in aem.elements]  # parts list AEM ids
         symbols = [s for s in e.realized_by if s in card.symbols] + [s for m in members for s in m.realized_by]
         files = sorted({card.symbols[s].file for s in symbols})
         el = aem.elements.get(e.id)
