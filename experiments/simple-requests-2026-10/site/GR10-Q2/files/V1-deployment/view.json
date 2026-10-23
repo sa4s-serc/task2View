@@ -1,0 +1,218 @@
+{
+  "id": "V1-deployment",
+  "viewpoint_id": "deployment",
+  "viewpoint_name": "Deployment",
+  "vb_ref": "5.2 Deployment Style",
+  "model_kind": "uml-deployment",
+  "title": "Deployment view — progetto_ing_software_gr10-main-English",
+  "purpose": "Deployment (5.2 Deployment Style) answering deployment",
+  "detail_level": "overview",
+  "max_elements": 8,
+  "addresses": [
+    "AQ1"
+  ],
+  "overlays": [],
+  "scenario": null,
+  "elements": [
+    {
+      "id": "artifact:municipal-report-management",
+      "kind": "artifact",
+      "name": "municipal-report-management.jar",
+      "stereotype": null,
+      "parent": "execution_env:municipal-report-management-system",
+      "responsibilities": [],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "artifact:mysql-connector-j",
+      "kind": "artifact",
+      "name": "mysql-connector-j",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "JDBC driver packaged as a dependency"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "artifact:hibernate-core",
+      "kind": "artifact",
+      "name": "hibernate-core",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "Hibernate ORM JPA implementation dependency"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "execution_env:municipal-report-management-system",
+      "kind": "execution_env",
+      "name": "Municipal_Report_Management_System",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "Hibernate/JPA persistence unit, resource-local transactions"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "node:java-gui-client-jvm",
+      "kind": "node",
+      "name": "Java GUI client JVM",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "runs the desktop client and creates the JPA EntityManagerFactory in-process"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    },
+    {
+      "id": "datastore:reports-db",
+      "kind": "datastore",
+      "name": "reports_db",
+      "stereotype": null,
+      "parent": null,
+      "responsibilities": [
+        "MySQL database at 127.0.0.1:3306"
+      ],
+      "attributes": [],
+      "realized_by": [],
+      "support": "observed",
+      "group": false,
+      "technology": ""
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:node-java-gui-client-jvm:contains:execution-env-municipal-report-management-system",
+      "kind": "contains",
+      "source": "node:java-gui-client-jvm",
+      "target": "execution_env:municipal-report-management-system",
+      "label": "JpaUtil creates EntityManagerFactory",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "",
+      "against_layering": false
+    },
+    {
+      "id": "rel:node-java-gui-client-jvm:communicates:datastore-reports-db",
+      "kind": "communicates",
+      "source": "node:java-gui-client-jvm",
+      "target": "datastore:reports-db",
+      "label": "JDBC via Hibernate (com.mysql.cj.jdbc.Driver)",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "",
+      "against_layering": false
+    },
+    {
+      "id": "rel:artifact-municipal-report-management:contains:artifact-mysql-connector-j",
+      "kind": "contains",
+      "source": "artifact:municipal-report-management",
+      "target": "artifact:mysql-connector-j",
+      "label": "dependency",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "",
+      "against_layering": false
+    },
+    {
+      "id": "rel:artifact-municipal-report-management:contains:artifact-hibernate-core",
+      "kind": "contains",
+      "source": "artifact:municipal-report-management",
+      "target": "artifact:hibernate-core",
+      "label": "dependency",
+      "multiplicity": null,
+      "support": "observed",
+      "protocol": "",
+      "against_layering": false
+    },
+    {
+      "id": "rel:artifact-municipal-report-management:communicates:datastore-reports-db",
+      "kind": "communicates",
+      "source": "artifact:municipal-report-management",
+      "target": "datastore:reports-db",
+      "label": null,
+      "multiplicity": null,
+      "support": "inferred",
+      "protocol": "",
+      "against_layering": false
+    }
+  ],
+  "interactions": [],
+  "fragments": [],
+  "traceability": [
+    {
+      "element": "artifact:municipal-report-management",
+      "name": "municipal-report-management.jar",
+      "files": [
+        "pom.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "artifact:mysql-connector-j",
+      "name": "mysql-connector-j",
+      "files": [
+        "pom.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "artifact:hibernate-core",
+      "name": "hibernate-core",
+      "files": [
+        "pom.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "execution_env:municipal-report-management-system",
+      "name": "Municipal_Report_Management_System",
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "node:java-gui-client-jvm",
+      "name": "Java GUI client JVM",
+      "files": [
+        "src/main/java/Database/JpaUtil.java"
+      ],
+      "symbols": []
+    },
+    {
+      "element": "datastore:reports-db",
+      "name": "reports_db",
+      "files": [
+        "src/main/resources/META-INF/persistence.xml"
+      ],
+      "symbols": []
+    }
+  ],
+  "limitations": [],
+  "gaps": [],
+  "overflow": []
+}

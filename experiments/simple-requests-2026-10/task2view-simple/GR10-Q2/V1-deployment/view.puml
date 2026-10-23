@@ -1,0 +1,20 @@
+@startuml
+mainframe dep Deployment view — progetto_ing_software_gr10-main-English
+skinparam shadowing false
+allowmixing
+hide empty members
+hide circle
+left to right direction
+artifact "mysql-connector-j" as e_artifact_mysql_connector_j_628066
+artifact "hibernate-core" as e_artifact_hibernate_core_60a33a
+node "Municipal_Report_Management_System" as e_execution_env_municipal_report_management_system_3d053a {
+  artifact "municipal-report-management.jar" as e_artifact_municipal_report_management_0f31d4
+}
+node "Java GUI client JVM" as e_node_java_gui_client_jvm_229bad
+node "reports_db" as e_datastore_reports_db_d882ef <<executionEnvironment>>
+e_node_java_gui_client_jvm_229bad ..> e_execution_env_municipal_report_management_system_3d053a : JpaUtil creates EntityManagerFactory
+e_node_java_gui_client_jvm_229bad -- e_datastore_reports_db_d882ef : JDBC via Hibernate (com.mysql.cj.jdbc.Driver)
+e_artifact_municipal_report_management_0f31d4 ..> e_artifact_mysql_connector_j_628066 : dependency
+e_artifact_municipal_report_management_0f31d4 ..> e_artifact_hibernate_core_60a33a : dependency
+e_artifact_municipal_report_management_0f31d4 -- e_datastore_reports_db_d882ef
+@enduml

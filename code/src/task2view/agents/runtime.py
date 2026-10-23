@@ -32,6 +32,7 @@ class AgentRuntime:
         self.model = model
         self.cache_dir = Path(cache_dir) if cache_dir else None
         self.ledger = UsageLedger()
+        self.transcript: list[dict] = []  # every call: purpose, prompt, reply (written as model_calls.jsonl)
         self._client = None if generate is not None else get_client(model)
         self.generate = generate or (lambda prompt, model=None: self._client.complete_json(prompt))
         self.spec = self._client.spec if self._client is not None else (model or "scripted")
@@ -42,6 +43,7 @@ class AgentRuntime:
             saved = json.loads(cached.read_text(encoding="utf-8"))
             usage = Usage(**saved["usage"]) if saved.get("usage") else None  # the original call's tokens
             self.ledger.record(purpose or "unlabelled", self.spec, usage, saved.get("seconds", 0.0), replayed=True)
+            self.transcript.append({"purpose": purpose, "prompt": joined(prompt), "reply": saved["reply"], "replayed": True})
             return saved["reply"]
         start = time.monotonic()
         usage = None
@@ -56,6 +58,7 @@ class AgentRuntime:
         if not isinstance(raw, dict):
             raise PipelineError("model reply is not a JSON object")
         reply = {k: v for k, v in raw.items() if not str(k).startswith("_")}
+        self.transcript.append({"purpose": purpose, "prompt": joined(prompt), "reply": reply, "replayed": False})
         if cached is not None:
             cached.parent.mkdir(parents=True, exist_ok=True)
             cached.write_text(json.dumps({"reply": reply, "seconds": seconds,

@@ -1,0 +1,2754 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IS-reg-L1 · Task2View walkthrough</title><style>
+:root{--bg:#fbfaf7;--fg:#1f1f1e;--mut:#5f5e5a;--line:#d8d6cf;--card:#fff;--soft:#f1efe8;--llm:#e6f1fb;--llmfg:#0c447c;
+--code:#e1f5ee;--codefg:#085041;--bad:#fcebeb;--badfg:#791f1f;--accent:#185fa5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1b1a;--fg:#ececea;--mut:#a8a69e;--line:#3d3d3a;
+--card:#232321;--soft:#2c2c2a;--llm:#10263b;--llmfg:#b5d4f4;--code:#0c3a2c;--codefg:#9fe1cb;--bad:#3a1515;--badfg:#f7c1c1;--accent:#85b7eb}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 -apple-system,Helvetica,Arial,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:16px}a{color:var(--accent)}h1{font-size:24px;margin:8px 0}
+.req{font-size:18px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:8px;padding:12px 16px}
+.mut{color:var(--mut)}.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:14px 0}
+.sh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.n{background:var(--fg);color:var(--bg);border-radius:50%;width:28px;height:28px;
+display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}.sh h2{font-size:18px;margin:0}
+.b{font-size:12px;border-radius:4px;padding:2px 8px}.b.llm{background:var(--llm);color:var(--llmfg)}.b.code{background:var(--code);color:var(--codefg)}
+.what{margin:6px 0 10px}.io{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:8px 0}.io>b{color:var(--mut);font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}th,td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+th{background:var(--soft)}.wrap{overflow-x:auto}details{margin:6px 0}summary{cursor:pointer;color:var(--accent)}
+pre{background:var(--soft);border-radius:6px;padding:10px;overflow:auto;max-height:420px;font-size:12px;white-space:pre-wrap;word-break:break-word}
+.rej td{background:var(--bad);color:var(--badfg)}.img{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px}
+.img img{max-width:100%;display:block}.arrow{text-align:center;color:var(--mut);font-size:20px;line-height:1}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}.cards a{text-decoration:none;color:inherit}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.card img{width:100%;max-height:180px;object-fit:contain;background:#fff}
+nav{font-size:14px;margin-bottom:6px}.chips span{display:inline-block;background:var(--soft);border-radius:12px;padding:1px 8px;margin:2px;font-size:12px}
+</style></head><body><main><nav><a href="../index.html">← all examples</a></nav><h1>IS-reg-L1</h1><p class="mut">System: Progetto-IS-main-English · model: claude-code:claude-sonnet-5-5 · the model replies are those of the original run, replayed</p><section class="step"><div class="sh"><span class="n">0</span><h2>The request (input)</h2></div><p class="req">I am an integration tester, and I would like a dynamic view of the user registration functionality.</p></section><div class="arrow">▼</div><section class="step" id="s1"><div class="sh"><span class="n">1</span><h2>Phase 0 · Repository card</h2><span class="b llm">code, no model</span></div><p class="what">Parses the whole repository once with tree-sitter: classes, dependencies, entry points, entities, database and deployment facts.</p><div class="io"><b>Input</b><div>the repository folder</div><b>Output</b><div>109 files · 81 classes · 1391 code dependencies · 19 entry points · 8 entities<div class="chips"><span>build-config</span><span>deploy-config</span><span>gui-client</span><span>inheritance</span><span>layered</span><span>lifecycle</span><span>persisted-data</span><span>rest-api</span><span>tests</span><span>threads</span><span>web-client</span></div></div></div><details><summary>The repository card as the model sees it</summary><pre>REPOSITORY Progetto-IS-main-English
+languages: java (71 files)
+files: build 1, code 71, config 1, docs 1, other 15, test 10, web 10
+layers (top to bottom):
+  presentation: it.unina.reservations.boundary, it.unina.reservations.boundary.SpringBoot, it.unina.reservations.boundary.Swing
+  application: it.unina.reservations.controller, it.unina.reservations.controller.factory, it.unina.reservations.controller.strategy
+  domain: it.unina.reservations.dto, it.unina.reservations.entity, it.unina.reservations.entity.state
+  persistence: it.unina.reservations.database
+entry points (19):
+  main it.unina.reservations.Launcher — main (JavaProject/src/main/java/it/unina/reservations/Launcher.java:10)
+  main it.unina.reservations.ReservationsApplication — main (JavaProject/src/main/java/it/unina/reservations/ReservationsApplication.java:16)
+  scheduled it.unina.reservations.boundary.NotificationScheduler — esegui (JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java:15)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/register&quot;) register (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/login&quot;) authenticate (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/rooms&quot;) monitoraSale (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/statistics&quot;) monitoraStatisticheServizio (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:28)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PostMapping RequestMapping(&quot;/api/reservations&quot;) PostMapping(&quot;/create&quot;) makeReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:21)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/cancel&quot;) cancelReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/checkIn&quot;) performCheckIn (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:45)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/profile&quot;) viewPersonalProfile (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:23)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/history&quot;) getReservationHistory (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:31)
+persisted entities (8):
+  Area [orm] id*, type, studyRoom→StudyRoom, seats→Seat
+  Librarian [orm] internalIdentifierCode
+  Reservation [orm] id*, date, stateName, student→Student, seat→Seat, timeSlot→TimeSlot, reminderSent
+  Seat [orm] id*, area→Area
+  Student [orm] studentNumber, totalVisitCount, reservations→Reservation
+  StudyRoom [orm] id*, name, description, totalSeatCount, active, areas→Area, timeSlots→TimeSlot, timeLavorativo→TimeSlot
+  TimeSlot [orm] id*, startTime, endTime
+  User [orm] id*, name, surname, institutionalEmail, password, failedAttempts, lockedUntil
+deployment / configuration:
+  persistence-unit reservationsPU {&#x27;provider&#x27;: &#x27;org.hibernate.jpa.HibernatePersistenceProvider&#x27;, &#x27;jdbc_url&#x27;: &#x27;jdbc:mysql://localhost:3306/reservationsdb?serverTimezone=UTC&amp;createDatebaseIfNotExist=true&#x27;}
+build:
+  maven library-reservation-system jar deps: junit-jupiter, spring-boot-starter-web, forms_rt, mysql-connector-j, hibernate-core
+most depended-on symbols:
+  it.unina.reservations.entity.Reservation (99 incoming)
+  it.unina.reservations.boundary.Swing.WizardState (77 incoming)
+  it.unina.reservations.boundary.Swing.WizardStyle (71 incoming)
+  it.unina.reservations.dto.UserDTO (52 incoming)
+  it.unina.reservations.entity.StudyRoom (46 incoming)
+  it.unina.reservations.entity.TimeSlot (41 incoming)
+  it.unina.reservations.dto.ReservationDTO (37 incoming)
+  it.unina.reservations.database.PersistenceManager (35 incoming)
+  it.unina.reservations.entity.Seat (31 incoming)
+  it.unina.reservations.controller.LibraryFacade (30 incoming)
+  it.unina.reservations.entity.StudyRoomRegistry (28 incoming)
+  it.unina.reservations.dto.StudyRoomCreationDTO (27 incoming)
+signals: build-config, deploy-config, gui-client, inheritance, layered, lifecycle, persisted-data, rest-api, tests, threads, web-client
+</pre></details><p class=mut>Raw files: <a href="files/repository_card.txt">repository_card.txt</a> · <a href="files/repository_card.json">repository_card.json</a></p></section><div class="arrow">▼</div><section class="step" id="s2"><div class="sh"><span class="n">2</span><h2>Phase 1 · Read the request</h2><span class="b llm">model, 1 call</span></div><p class="what">The model reads the request and returns who is asking, what they need (each need must quote the request; code drops any that doesn't), the target and the level of detail. Code then sets the view spec.</p><div class="io"><b>Input</b><div>the request + the catalogue of needs and roles</div><b>Output</b><div>role <b>tester</b> (integration tester) · target <b>user registration functionality</b> · detail <b>overview</b> · spec: feature scope, medium granularity, interaction<div class="wrap"><table><tr><th>need</th><th>primary?</th><th>quoted from the request</th></tr><tr><td>interaction-order</td><td>primary</td><td>“dynamic view of the user registration functionality”</td></tr></table></div><ul><li>asked: Do you also want to see which parts take part in user registration and the interfaces between them, or only the order of calls? → <b>interaction</b> (default used)</li></ul></div></div><details><summary>Phase 1 call: prompt sent to the model (10,447 characters)</summary><pre># Task2View — Phase 1: Stakeholder-task interpretation
+
+## Role
+You read a stakeholder&#x27;s request for architecture documentation and record what they need, using a fixed vocabulary.
+
+## Task
+Record who the person is, what part of the system they are asking about, and which kinds of architectural information they need to see.
+You do not choose diagrams. A program chooses them from your answer, and every need you list can add a diagram. So list exactly what the request asks for, nothing more and nothing less.
+
+## Inputs
+
+### The request (the only text you interpret)
+&lt;request&gt;
+I am an integration tester, and I would like a dynamic view of the user registration functionality.
+&lt;/request&gt;
+
+### Information needs (use only these ids)
+- actors-goals: who uses the system and what each user type can achieve with it. Words: user roles, kinds of users, what each user can do, user goals, use cases
+- boundary: the system edge, external systems and services, datastores at the boundary. Words: external systems, third-party services, system boundary, what is outside the system
+- decomposition: the parts of the system, their responsibilities, and how they are contained in subsystems. Words: overall organization, subsystems, modules, how the system is split, top-level parts
+- layering: how the parts are separated into layers and which layer may use which. Words: layers, tiers, separation of presentation and logic and data, which layer may use which
+- dependencies: which parts depend on which other parts. Words: dependencies between parts, depends on, relies on, coupling
+- change-impact: which parts are affected when a given part changes. Words: impact of a change, affected parts, ripple effects, what else must change
+- inheritance-extension: type hierarchies, specialisations, and interfaces with their implementations. Words: type hierarchy, specialisation, subtypes, interfaces and their implementations
+- variability: where and how the system can vary (configuration options, variation points, feature flags, plug-ins). Words: configuration options, variants, feature flags, variation points, plug-in mechanism
+- crosscutting: concerns that cut across many parts (logging, security checks, transactions). Words: cross-cutting concerns, logging, security checks, transactions, interceptors
+- collaboration: which parts work together for a feature and through which interfaces or connectors. Words: parts involved in a feature, how parts work together, interfaces between parts, connectors
+- interaction-order: the order of calls in a scenario, including alternative and failure paths. Words: order of calls, sequence of interactions, request flow, what happens when, alternative and error paths
+- process-flow: the steps and decisions of a business or technical process. Words: workflow, process steps, procedure, activities and decisions
+- lifecycle: the states an element goes through and the transitions between them. Words: states, status transitions, lifecycle of an object
+- data-structure: the data entities, their attributes, keys, and relationships. Words: data entities, attributes, relationships between entities, data schema
+- data-storage: where and how data is persisted (databases, schemas, stores). Words: where data is stored, databases, persistence technology, storage schema
+- concurrency: processes, threads, scheduling and their synchronisation. Words: concurrency, threads, background jobs, scheduling, asynchronous processing
+- deployment: runtime nodes and environments, what runs where, and how they communicate. Words: deployment, runtime environment, servers and nodes, what runs where, network communication
+- build-packaging: the deployable artifacts and how they are built and packaged. Words: build artifacts, packaging, binaries, container images, installation
+- code-location: where in the source tree each architectural element is implemented. Words: where it is implemented, source files, which code implements it
+- ownership: which team or person is responsible for which part. Words: who owns which part, teams, responsibilities of people
+- interface-contract: the operations an element provides or requires, with their parameters, semantics and errors. Words: APIs, endpoints, interface operations, contracts, integration points
+- rationale: the architectural decisions and the reasons behind them. Words: design decisions, why it was built this way, trade-offs, alternatives
+- requirement-traceability: which requirements are realised by which architectural elements. Words: which requirements are realised where, traceability to requirements
+
+### Roles (use only these ids)
+- developer: Software developer (also called: software developer, developer, programmer, software engineer, implementer)
+- tester: Tester / integrator (also called: integration tester, tester, test engineer, qa engineer, integrator)
+- maintainer: Maintainer (also called: maintainer, maintenance engineer)
+- architect: Software architect (also called: software architect, architect, solution architect, enterprise architect)
+- devops: Infrastructure support (DevOps, operations) (also called: devops engineer, devops, dev-ops, infrastructure engineer, system administrator, sysadmin, site reliability engineer, sre, operations engineer)
+- analyst: Analyst (quality attributes, e.g. security, performance) (also called: security analyst, security engineer, performance analyst, performance engineer, quality analyst)
+- project-manager: Project manager (also called: project manager, manager, team lead)
+- customer: Customer (also called: customer, client, acquirer)
+- end-user: End user (also called: end user, user)
+- designer-of-other-systems: Designer of other systems (also called: external developer, api consumer, integrating system designer)
+- product-line-application-builder: Product line application builder (also called: product line engineer, application builder)
+- data-engineer: Database / data engineer (also called: database engineer, dba, database administrator, data engineer, data architect)
+- business-analyst: Business analyst (also called: business analyst, product owner, domain expert, requirements engineer)
+
+### Quality attributes (use only these ids)
+functional-suitability, performance-efficiency, compatibility, usability, reliability, security, maintainability, portability
+
+## Rules
+1. **role_label** is the words the person uses for themselves. **role** is one role id, or null if none fits.
+   *Why:* the original words are kept for the record; the id makes requests comparable.
+2. **target** is the feature, subsystem or system the request is about, copied exactly as a short noun phrase. Use &quot;&quot; if it is the whole system.
+3. **needs**: list every information need the request asks for. For each one give:
+   - **need**: an id from the list.
+   - **evidence**: the exact words from the request that ask for it, copied character for character.
+   - **salience**: &quot;primary&quot; if the request is about this (it says the person needs to understand, identify or see it); &quot;secondary&quot; if it is only mentioned in passing, is context, or is implied by a primary need.
+
+   How to decide:
+   - A need is information the person asks to **see**. Words that only name the thing they will work on, or describe their situation, are not a need. For example, &quot;I will change the persistence layer&quot; names their work; it does not ask how the system is layered.
+   - **Structural** needs ask which parts exist and how they relate. **Behavioural** needs (interaction-order, process-flow, lifecycle, actors-goals) ask what happens: the order of steps, the flow of a process, the states something goes through, or who uses the system for what. List a behavioural need only when the request asks about that dynamic aspect.
+   - **People** who use the system belong to actors-goals. **Software parts** that work together belong to collaboration.
+
+   *Why:* only primary needs can add a diagram. A need nobody asked for adds a diagram nobody wanted, and a missed primary need leaves the person without the view they asked for.
+4. **subjects** are the specific items the request enumerates as things to understand, for example a list of sub-functions, data items or cases. Copy each exactly and give the need ids it belongs to. The system, the feature being changed and the person are not subjects. A request that enumerates nothing has no subjects.
+   *Why:* every subject must appear in a view, so the details of a long request are not lost.
+5. **quality_attributes** are quality ids the request stresses, or an empty list. They never choose diagrams.
+6. **clarifications**: questions for the person, only where the request leaves one of these open, at most 3, usually none:
+   - `scope`: whole system (&quot;system&quot;) or one feature (&quot;feature&quot;);
+   - `granularity`: big blocks (&quot;coarse&quot;), the main parts (&quot;medium&quot;) or individual classes (&quot;fine&quot;);
+   - `behaviour`: parts only (&quot;structure&quot;), order of calls only (&quot;interaction&quot;), or both (&quot;both&quot;).
+
+   Give each as `{&quot;field&quot;: ..., &quot;question&quot;: &quot;...&quot;, &quot;default&quot;: ...}`, with the default being your best reading of the request.
+   *Why:* asking only when it matters improves the result; asking about what the request already says wastes the person&#x27;s time.
+
+## Output
+Return one JSON object and nothing else, in this shape:
+```json
+{
+  &quot;role_label&quot;: &quot;integration tester&quot;,
+  &quot;role&quot;: &quot;tester&quot;,
+  &quot;target&quot;: &quot;order checkout&quot;,
+  &quot;needs&quot;: [
+    {&quot;need&quot;: &quot;collaboration&quot;, &quot;evidence&quot;: &quot;which components are involved&quot;, &quot;salience&quot;: &quot;primary&quot;},
+    {&quot;need&quot;: &quot;interaction-order&quot;, &quot;evidence&quot;: &quot;in which order they are called&quot;, &quot;salience&quot;: &quot;primary&quot;}
+  ],
+  &quot;subjects&quot;: [
+    {&quot;text&quot;: &quot;retrying a declined card payment&quot;, &quot;needs&quot;: [&quot;interaction-order&quot;]}
+  ],
+  &quot;quality_attributes&quot;: [],
+  &quot;clarifications&quot;: [
+    {&quot;field&quot;: &quot;behaviour&quot;, &quot;question&quot;: &quot;Do you also want the order in which they are called, or only which parts are involved?&quot;, &quot;default&quot;: &quot;both&quot;}
+  ]
+}
+```
+The example shows the shape only; your values must come from the request above.
+
+## Check before answering
+- Every `evidence`, `text` and `target` appears word for word in the request.
+- Every need, role and quality id is from the lists above.
+- Each behavioural need is there because the request asks how something happens, not because a word looked similar.
+- Nothing is marked primary that the request only mentions in passing.
+- Each clarification is about something the request really leaves open; most requests need none.
+</pre></details><details><summary>Phase 1 call: the model&#x27;s reply</summary><pre>{
+  &quot;role_label&quot;: &quot;integration tester&quot;,
+  &quot;role&quot;: &quot;tester&quot;,
+  &quot;target&quot;: &quot;user registration functionality&quot;,
+  &quot;needs&quot;: [
+    {
+      &quot;need&quot;: &quot;interaction-order&quot;,
+      &quot;evidence&quot;: &quot;dynamic view of the user registration functionality&quot;,
+      &quot;salience&quot;: &quot;primary&quot;
+    }
+  ],
+  &quot;subjects&quot;: [],
+  &quot;quality_attributes&quot;: [],
+  &quot;clarifications&quot;: [
+    {
+      &quot;field&quot;: &quot;behaviour&quot;,
+      &quot;question&quot;: &quot;Do you also want to see which parts take part in user registration and the interfaces between them, or only the order of calls?&quot;,
+      &quot;default&quot;: &quot;interaction&quot;
+    }
+  ]
+}</pre></details><p class=mut>Raw files: <a href="files/stakeholder_profile.json">stakeholder_profile.json</a></p></section><div class="arrow">▼</div><section class="step" id="s3"><div class="sh"><span class="n">3</span><h2>Phase 3 · Choose the view</h2><span class="b llm">code, no model</span></div><p class="what">Picks the one Views &amp; Beyond viewpoint (drawable as a UML diagram) that best covers the primary needs.</p><div class="io"><b>Input</b><div>the needs + the repository's signals</div><b>Output</b><div><b>sequence</b> (uml-sequence) — Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)) covers interaction-order; combined with layered (V&amp;B 6.6)<br>needs not covered: none</div></div><p class=mut>Raw files: <a href="files/view_plan.json">view_plan.json</a></p></section><div class="arrow">▼</div><section class="step" id="s4"><div class="sh"><span class="n">4</span><h2>Phase 2 · Questions for the view</h2><span class="b llm">code, no model</span></div><p class="what">Writes the question(s) the view must answer, from the viewpoint's template and the target.</p><div class="io"><b>Input</b><div>the chosen view + the needs</div><b>Output</b><div><ul><li><b>AQ1</b>: For user registration functionality: the order of calls in a scenario, including alternative and failure paths?</li></ul></div></div><p class=mut>Raw files: <a href="files/architectural_questions.json">architectural_questions.json</a></p></section><div class="arrow">▼</div><section class="step" id="s5"><div class="sh"><span class="n">5</span><h2>Phase 4 · Investigation plan</h2><span class="b llm">model, 1 call</span></div><p class="what">The model is shown the repository card and the questions and suggests where in the code to start looking.</p><div class="io"><b>Input</b><div>the questions + the repository card</div><b>Output</b><div><div class="wrap"><table><tr><th>task</th><th>goal for the evidence agent</th><th>starting classes</th><th>step budget</th></tr><tr><td>IT1</td><td>Collect the ordered call chain for user registration from the REST/Swing boundary through LibraryFacade, UserManager, UserFactory/StudentFactory and UserRegistry to persistence, including duplicate-email, validation and other failure or exception branches and what is returned to the caller.</td><td>AuthenticationController<br>LibraryFacade<br>UserManager<br>UserRegistry<br>UserFactory<br>Registration</td><td>12</td></tr></table></div></div></div><details><summary>Phase 4 call: prompt sent to the model (7,600 characters)</summary><pre># Task2View — Phase 4: Investigation planning
+
+## Role
+You plan where to look in a code repository. You do not answer the questions yourself.
+
+## Task
+Choose the starting points from which another agent will read the code to answer the questions below. That agent can follow references beyond your starting points, so choose the places most likely to hold the answer rather than everything that might be related.
+
+## Inputs
+
+### Repository card (summary of the repository)
+&lt;card&gt;
+REPOSITORY Progetto-IS-main-English
+languages: java (71 files)
+files: build 1, code 71, config 1, docs 1, other 15, test 10, web 10
+layers (top to bottom):
+  presentation: it.unina.reservations.boundary, it.unina.reservations.boundary.SpringBoot, it.unina.reservations.boundary.Swing
+  application: it.unina.reservations.controller, it.unina.reservations.controller.factory, it.unina.reservations.controller.strategy
+  domain: it.unina.reservations.dto, it.unina.reservations.entity, it.unina.reservations.entity.state
+  persistence: it.unina.reservations.database
+entry points (19):
+  main it.unina.reservations.Launcher — main (JavaProject/src/main/java/it/unina/reservations/Launcher.java:10)
+  main it.unina.reservations.ReservationsApplication — main (JavaProject/src/main/java/it/unina/reservations/ReservationsApplication.java:16)
+  scheduled it.unina.reservations.boundary.NotificationScheduler — esegui (JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java:15)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/register&quot;) register (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/login&quot;) authenticate (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/rooms&quot;) monitoraSale (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/statistics&quot;) monitoraStatisticheServizio (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:28)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PostMapping RequestMapping(&quot;/api/reservations&quot;) PostMapping(&quot;/create&quot;) makeReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:21)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/cancel&quot;) cancelReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/checkIn&quot;) performCheckIn (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:45)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/profile&quot;) viewPersonalProfile (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:23)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/history&quot;) getReservationHistory (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:31)
+persisted entities (8):
+  Area [orm] id*, type, studyRoom→StudyRoom, seats→Seat
+  Librarian [orm] internalIdentifierCode
+  Reservation [orm] id*, date, stateName, student→Student, seat→Seat, timeSlot→TimeSlot, reminderSent
+  Seat [orm] id*, area→Area
+  Student [orm] studentNumber, totalVisitCount, reservations→Reservation
+  StudyRoom [orm] id*, name, description, totalSeatCount, active, areas→Area, timeSlots→TimeSlot, timeLavorativo→TimeSlot
+  TimeSlot [orm] id*, startTime, endTime
+  User [orm] id*, name, surname, institutionalEmail, password, failedAttempts, lockedUntil
+deployment / configuration:
+  persistence-unit reservationsPU {&#x27;provider&#x27;: &#x27;org.hibernate.jpa.HibernatePersistenceProvider&#x27;, &#x27;jdbc_url&#x27;: &#x27;jdbc:mysql://localhost:3306/reservationsdb?serverTimezone=UTC&amp;createDatebaseIfNotExist=true&#x27;}
+build:
+  maven library-reservation-system jar deps: junit-jupiter, spring-boot-starter-web, forms_rt, mysql-connector-j, hibernate-core
+most depended-on symbols:
+  it.unina.reservations.entity.Reservation (99 incoming)
+  it.unina.reservations.boundary.Swing.WizardState (77 incoming)
+  it.unina.reservations.boundary.Swing.WizardStyle (71 incoming)
+  it.unina.reservations.dto.UserDTO (52 incoming)
+  it.unina.reservations.entity.StudyRoom (46 incoming)
+  it.unina.reservations.entity.TimeSlot (41 incoming)
+  it.unina.reservations.dto.ReservationDTO (37 incoming)
+  it.unina.reservations.database.PersistenceManager (35 incoming)
+  it.unina.reservations.entity.Seat (31 incoming)
+  it.unina.reservations.controller.LibraryFacade (30 incoming)
+  it.unina.reservations.entity.StudyRoomRegistry (28 incoming)
+  it.unina.reservations.dto.StudyRoomCreationDTO (27 incoming)
+signals: build-config, deploy-config, gui-client, inheritance, layered, lifecycle, persisted-data, rest-api, tests, threads, web-client
+&lt;/card&gt;
+
+### The view these questions belong to
+Sequence (8.3.1 Notations for Capturing Traces (sequence diagrams)). It can draw these elements: actor, lifeline. It can draw these relations: message, return.
+
+### Questions
+- AQ1: For user registration functionality: the order of calls in a scenario, including alternative and failure paths?
+
+### Suggested starting points (symbol id — why it was suggested)
+- it.unina.reservations.entity.UserRegistry (symbol-name)
+- it.unina.reservations.controller.UserManager (symbol-name)
+- it.unina.reservations.boundary.SpringBoot.AuthenticationController (method-name)
+- it.unina.reservations.boundary.Swing.Registration (symbol-name)
+- it.unina.reservations.controller.factory.UserFactory (symbol-name)
+- it.unina.reservations.dto.UserDTO (symbol-name)
+- it.unina.reservations.entity.User (graph-neighbour)
+- it.unina.reservations.database.PersistenceManager (graph-neighbour)
+- it.unina.reservations.controller.LibraryFacade (graph-neighbour)
+- it.unina.reservations.controller.factory.StudentFactory (graph-neighbour)
+
+## Rules
+1. **symbols**: up to 6 symbol ids from the card or the suggestions that most likely hold the answer. Use only ids that exist.
+   *Why:* any id that is not in the repository is discarded.
+2. **paths**: files or directories to start from that are not code symbols, for example configuration, deployment or schema files. Use only paths shown in the card.
+3. **goal**: one sentence saying what evidence to collect.
+
+## Output
+Return one JSON object and nothing else:
+```json
+{&quot;symbols&quot;: [&quot;com.example.orders.OrderService&quot;], &quot;paths&quot;: [&quot;src/main/resources/application.yml&quot;], &quot;goal&quot;: &quot;Find which components handle a checkout request and in what order they call each other.&quot;}
+```
+
+## Check before answering
+- Every symbol id and path appears in the card or the suggestions.
+- The goal names the evidence, not the answer.
+</pre></details><details><summary>Phase 4 call: the model&#x27;s reply</summary><pre>{
+  &quot;symbols&quot;: [
+    &quot;it.unina.reservations.boundary.SpringBoot.AuthenticationController&quot;,
+    &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+    &quot;it.unina.reservations.controller.UserManager&quot;,
+    &quot;it.unina.reservations.entity.UserRegistry&quot;,
+    &quot;it.unina.reservations.controller.factory.UserFactory&quot;,
+    &quot;it.unina.reservations.boundary.Swing.Registration&quot;
+  ],
+  &quot;paths&quot;: [],
+  &quot;goal&quot;: &quot;Collect the ordered call chain for user registration from the REST/Swing boundary through LibraryFacade, UserManager, UserFactory/StudentFactory and UserRegistry to persistence, including duplicate-email, validation and other failure or exception branches and what is returned to the caller.&quot;
+}</pre></details><p class=mut>Raw files: <a href="files/investigation_plan.json">investigation_plan.json</a></p></section><div class="arrow">▼</div><section class="step" id="s6"><div class="sh"><span class="n">6</span><h2>Phase 5 · Evidence agent reads the code</h2><span class="b llm">model, 3 turns with tools</span></div><p class="what">An agent with read-only tools (read, search, symbol, neighbours) reads the code and ends with claims, each citing file, lines and the exact code.</p><div class="io"><b>Input</b><div>the task + the repository card + the tools</div><b>Output</b><div><div class="wrap"><table><tr><th>turn</th><th>what the agent did</th><th>on</th></tr><tr><td>1</td><td>read</td><td>AuthenticationController.java, LibraryFacade.java, UserManager.java, UserRegistry.java, UserFactory.java</td></tr><tr><td>2</td><td>read</td><td>StudentFactory.java, PersistenceManager.java, Registration.java</td></tr><tr><td>3</td><td><b>final answer</b></td><td>27 claims</td></tr></table></div></div></div><details><summary>Turn 1: prompt sent to the model (11,455 characters)</summary><pre># Task2View — Phase 5: Evidence extraction and grounding
+
+## Role
+You are an evidence collector for architecture documentation. You read code and report small facts, each backed by the exact lines that show it.
+
+## Task
+Collect the ordered call chain for user registration from the REST/Swing boundary through LibraryFacade, UserManager, UserFactory/StudentFactory and UserRegistry to persistence, including duplicate-email, validation and other failure or exception branches and what is returned to the caller.
+
+Collect claims that answer the questions below. You do not draw a diagram: a program builds the diagram from the claims you return, after checking every citation against the files.
+
+## Inputs
+
+### Questions to answer
+- AQ1: For user registration functionality: the order of calls in a scenario, including alternative and failure paths?
+
+### The view the claims are for
+Sequence. Elements it can show: actor, lifeline. Relations it can show: message, return.
+
+### Repository card (summary of the repository)
+&lt;card&gt;
+REPOSITORY Progetto-IS-main-English
+languages: java (71 files)
+files: build 1, code 71, config 1, docs 1, other 15, test 10, web 10
+layers (top to bottom):
+  presentation: it.unina.reservations.boundary, it.unina.reservations.boundary.SpringBoot, it.unina.reservations.boundary.Swing
+  application: it.unina.reservations.controller, it.unina.reservations.controller.factory, it.unina.reservations.controller.strategy
+  domain: it.unina.reservations.dto, it.unina.reservations.entity, it.unina.reservations.entity.state
+  persistence: it.unina.reservations.database
+entry points (19):
+  main it.unina.reservations.Launcher — main (JavaProject/src/main/java/it/unina/reservations/Launcher.java:10)
+  main it.unina.reservations.ReservationsApplication — main (JavaProject/src/main/java/it/unina/reservations/ReservationsApplication.java:16)
+  scheduled it.unina.reservations.boundary.NotificationScheduler — esegui (JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java:15)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/register&quot;) register (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/login&quot;) authenticate (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/rooms&quot;) monitoraSale (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/statistics&quot;) monitoraStatisticheServizio (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:28)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PostMapping RequestMapping(&quot;/api/reservations&quot;) PostMapping(&quot;/create&quot;) makeReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:21)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/cancel&quot;) cancelReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/checkIn&quot;) performCheckIn (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:45)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/profile&quot;) viewPersonalProfile (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:23)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/history&quot;) getReservationHistory (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:31)
+persisted entities (8):
+  Area [orm] id*, type, studyRoom→StudyRoom, seats→Seat
+  Librarian [orm] internalIdentifierCode
+  Reservation [orm] id*, date, stateName, student→Student, seat→Seat, timeSlot→TimeSlot, reminderSent
+  Seat [orm] id*, area→Area
+  Student [orm] studentNumber, totalVisitCount, reservations→Reservation
+  StudyRoom [orm] id*, name, description, totalSeatCount, active, areas→Area, timeSlots→TimeSlot, timeLavorativo→TimeSlot
+  TimeSlot [orm] id*, startTime, endTime
+  User [orm] id*, name, surname, institutionalEmail, password, failedAttempts, lockedUntil
+deployment / configuration:
+  persistence-unit reservationsPU {&#x27;provider&#x27;: &#x27;org.hibernate.jpa.HibernatePersistenceProvider&#x27;, &#x27;jdbc_url&#x27;: &#x27;jdbc:mysql://localhost:3306/reservationsdb?serverTimezone=UTC&amp;createDatebaseIfNotExist=true&#x27;}
+build:
+  maven library-reservation-system jar deps: junit-jupiter, spring-boot-starter-web, forms_rt, mysql-connector-j, hibernate-core
+most depended-on symbols:
+  it.unina.reservations.entity.Reservation (99 incoming)
+  it.unina.reservations.boundary.Swing.WizardState (77 incoming)
+  it.unina.reservations.boundary.Swing.WizardStyle (71 incoming)
+  it.unina.reservations.dto.UserDTO (52 incoming)
+  it.unina.reservations.entity.StudyRoom (46 incoming)
+  it.unina.reservations.entity.TimeSlot (41 incoming)
+  it.unina.reservations.dto.ReservationDTO (37 incoming)
+  it.unina.reservations.database.PersistenceManager (35 incoming)
+  it.unina.reservations.entity.Seat (31 incoming)
+  it.unina.reservations.controller.LibraryFacade (30 incoming)
+  it.unina.reservations.entity.StudyRoomRegistry (28 incoming)
+  it.unina.reservations.dto.StudyRoomCreationDTO (27 incoming)
+signals: build-config, deploy-config, gui-client, inheritance, layered, lifecycle, persisted-data, rest-api, tests, threads, web-client
+&lt;/card&gt;
+
+### Where to start
+These are starting points, not a boundary: follow imports, calls, configuration and tests wherever they lead.
+- symbols: it.unina.reservations.boundary.SpringBoot.AuthenticationController, it.unina.reservations.controller.LibraryFacade, it.unina.reservations.controller.UserManager, it.unina.reservations.entity.UserRegistry, it.unina.reservations.controller.factory.UserFactory, it.unina.reservations.boundary.Swing.Registration
+- paths: none
+
+## Tools
+Each turn, reply with exactly one JSON object: either one tool call or your final answer.
+
+| Call | What it returns |
+|---|---|
+| `{&quot;tool&quot;: &quot;list_tree&quot;, &quot;args&quot;: {&quot;path&quot;: &quot;.&quot;, &quot;depth&quot;: 2}}` | Files and folders under a path, with each file&#x27;s class (code, config, …). |
+| `{&quot;tool&quot;: &quot;search&quot;, &quot;args&quot;: {&quot;pattern&quot;: &quot;regex&quot;, &quot;path&quot;: &quot;optional/dir&quot;}}` | Matching lines as `file:line: text`. |
+| `{&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;path&quot;: &quot;file&quot;, &quot;start&quot;: 1, &quot;end&quot;: 120}}` | The file&#x27;s lines, each prefixed with its line number. Use these numbers in citations. |
+| `{&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;paths&quot;: [&quot;file1&quot;, &quot;file2&quot;]}}` | Up to 5 files in one step, each from line 1 with line numbers. Prefer this when you already know which files you need: steps are limited. |
+| `{&quot;tool&quot;: &quot;symbol&quot;, &quot;args&quot;: {&quot;id&quot;: &quot;symbol id or simple name&quot;}}` | A class or module: file and lines, annotations, fields, methods with their calls. |
+| `{&quot;tool&quot;: &quot;neighbours&quot;, &quot;args&quot;: {&quot;id&quot;: &quot;symbol id&quot;, &quot;direction&quot;: &quot;out&quot;}}` | Code dependencies of a symbol (`out`) or on it (`in`), with file and line. |
+| `{&quot;final&quot;: {&quot;claims&quot;: [ ... ]}}` | Ends the task with your claims. |
+
+UML models and binary files cannot be read; they are never evidence.
+
+## Output: claims
+Every claim states one fact, says which question(s) it answers (`&quot;answers&quot;: [&quot;AQ2&quot;]`, ids from the questions above), and has at least one citation:
+`{&quot;file&quot;: &quot;path&quot;, &quot;symbol&quot;: &quot;symbol id (optional)&quot;, &quot;lines&quot;: [start, end], &quot;excerpt&quot;: &quot;text copied exactly from those lines&quot;}`
+
+Claim shapes:
+```json
+{&quot;kind&quot;: &quot;element&quot;, &quot;element_kind&quot;: &quot;component&quot;, &quot;name&quot;: &quot;OrderService&quot;, &quot;symbol&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;answers&quot;: [&quot;AQ1&quot;], &quot;responsibilities&quot;: [&quot;validates that an order can be paid&quot;],
+ &quot;evidence&quot;: [{&quot;file&quot;: &quot;src/main/java/com/example/orders/OrderService.java&quot;, &quot;lines&quot;: [41, 43],
+               &quot;excerpt&quot;: &quot;if (order.getStatus() != OrderStatus.NEW) {&quot;}],
+ &quot;confidence&quot;: 0.9}
+
+{&quot;kind&quot;: &quot;relation&quot;, &quot;source&quot;: &quot;com.example.web.OrderController&quot;, &quot;target&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;relation&quot;: &quot;uses&quot;, &quot;label&quot;: &quot;pay&quot;, &quot;evidence&quot;: [ ... ], &quot;confidence&quot;: 0.9}
+
+{&quot;kind&quot;: &quot;interaction&quot;, &quot;scenario&quot;: &quot;pay order&quot;, &quot;order&quot;: 2, &quot;source&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;target&quot;: &quot;com.example.payment.PaymentGateway&quot;, &quot;label&quot;: &quot;charge(order)&quot;, &quot;condition&quot;: &quot;order status is NEW&quot;,
+ &quot;evidence&quot;: [ ... ], &quot;confidence&quot;: 0.8}
+
+{&quot;kind&quot;: &quot;state&quot;, &quot;name&quot;: &quot;PAID&quot;, &quot;evidence&quot;: [ ... ]}
+{&quot;kind&quot;: &quot;transition&quot;, &quot;source&quot;: &quot;NEW&quot;, &quot;target&quot;: &quot;PAID&quot;, &quot;label&quot;: &quot;pay&quot;, &quot;evidence&quot;: [ ... ]}
+```
+For an entity, add `&quot;attributes&quot;: [{&quot;name&quot;: &quot;id&quot;, &quot;type&quot;: &quot;Long&quot;, &quot;key&quot;: true}]` to its element claim.
+For a person or role that uses the system, use `&quot;element_kind&quot;: &quot;actor&quot;`. For a use case, use `&quot;element_kind&quot;: &quot;use_case&quot;`. Neither needs a symbol, but both need a citation.
+
+## Rules
+1. **Cite only what you have read.** Copy each excerpt exactly from lines you opened with `read`, and give those line numbers.
+   *Why:* a citation whose excerpt is not in the cited lines is rejected.
+2. **Use the code&#x27;s names.** `name`, `symbol`, `source` and `target` are classes or files as the code writes them, never packages or folders. A responsibility is a short phrase in its own field, never part of a name.
+   *Why:* an element whose name is not a symbol in the repository is rejected (except non-code kinds such as actors, use cases, nodes, datastores and states), and names are what readers look up in the code.
+3. **One fact per claim.** Report several small claims rather than one large one.
+4. **Interactions:** number them with `order` in the sequence the code executes them, give the same `scenario` name to steps of the same scenario, and put the guard of an alternative or failure path in `condition`.
+5. **Leave unanswered rather than guess.** If the code does not show something, do not claim it.
+6. **Stay within the view.** Use the element and relation kinds listed above.
+7. **Cover the whole path.** When a question is about a functionality, follow it through the code from where it starts (the entry points in the repository summary: REST controllers, UI screens, schedulers, main) through the parts it passes to where its data is stored, and claim each part the code shows, not only the middle.
+   *Why:* a reader changing a functionality needs every layer it touches; a view that skips the entry points or storage hides what a change affects.
+
+## Check before answering with `final`
+- Each excerpt is copied exactly from the cited lines.
+- Each name is the code&#x27;s own name.
+- Each claim answers one of the questions above, and `answers` names exactly the ones it answers.
+- For a functionality: its entry points, the parts it passes and its storage are claimed where the code shows them.
+</pre></details><details><summary>Turn 1: the model&#x27;s reply</summary><pre>{
+  &quot;tool&quot;: &quot;read&quot;,
+  &quot;args&quot;: {
+    &quot;paths&quot;: [
+      &quot;JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java&quot;,
+      &quot;JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java&quot;,
+      &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+      &quot;JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java&quot;,
+      &quot;JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java&quot;
+    ]
+  }
+}</pre></details><details><summary>Turn 2: prompt sent to the model (32,088 characters)</summary><pre># Task2View — Phase 5: Evidence extraction and grounding
+
+## Role
+You are an evidence collector for architecture documentation. You read code and report small facts, each backed by the exact lines that show it.
+
+## Task
+Collect the ordered call chain for user registration from the REST/Swing boundary through LibraryFacade, UserManager, UserFactory/StudentFactory and UserRegistry to persistence, including duplicate-email, validation and other failure or exception branches and what is returned to the caller.
+
+Collect claims that answer the questions below. You do not draw a diagram: a program builds the diagram from the claims you return, after checking every citation against the files.
+
+## Inputs
+
+### Questions to answer
+- AQ1: For user registration functionality: the order of calls in a scenario, including alternative and failure paths?
+
+### The view the claims are for
+Sequence. Elements it can show: actor, lifeline. Relations it can show: message, return.
+
+### Repository card (summary of the repository)
+&lt;card&gt;
+REPOSITORY Progetto-IS-main-English
+languages: java (71 files)
+files: build 1, code 71, config 1, docs 1, other 15, test 10, web 10
+layers (top to bottom):
+  presentation: it.unina.reservations.boundary, it.unina.reservations.boundary.SpringBoot, it.unina.reservations.boundary.Swing
+  application: it.unina.reservations.controller, it.unina.reservations.controller.factory, it.unina.reservations.controller.strategy
+  domain: it.unina.reservations.dto, it.unina.reservations.entity, it.unina.reservations.entity.state
+  persistence: it.unina.reservations.database
+entry points (19):
+  main it.unina.reservations.Launcher — main (JavaProject/src/main/java/it/unina/reservations/Launcher.java:10)
+  main it.unina.reservations.ReservationsApplication — main (JavaProject/src/main/java/it/unina/reservations/ReservationsApplication.java:16)
+  scheduled it.unina.reservations.boundary.NotificationScheduler — esegui (JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java:15)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/register&quot;) register (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/login&quot;) authenticate (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/rooms&quot;) monitoraSale (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/statistics&quot;) monitoraStatisticheServizio (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:28)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PostMapping RequestMapping(&quot;/api/reservations&quot;) PostMapping(&quot;/create&quot;) makeReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:21)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/cancel&quot;) cancelReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/checkIn&quot;) performCheckIn (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:45)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/profile&quot;) viewPersonalProfile (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:23)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/history&quot;) getReservationHistory (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:31)
+persisted entities (8):
+  Area [orm] id*, type, studyRoom→StudyRoom, seats→Seat
+  Librarian [orm] internalIdentifierCode
+  Reservation [orm] id*, date, stateName, student→Student, seat→Seat, timeSlot→TimeSlot, reminderSent
+  Seat [orm] id*, area→Area
+  Student [orm] studentNumber, totalVisitCount, reservations→Reservation
+  StudyRoom [orm] id*, name, description, totalSeatCount, active, areas→Area, timeSlots→TimeSlot, timeLavorativo→TimeSlot
+  TimeSlot [orm] id*, startTime, endTime
+  User [orm] id*, name, surname, institutionalEmail, password, failedAttempts, lockedUntil
+deployment / configuration:
+  persistence-unit reservationsPU {&#x27;provider&#x27;: &#x27;org.hibernate.jpa.HibernatePersistenceProvider&#x27;, &#x27;jdbc_url&#x27;: &#x27;jdbc:mysql://localhost:3306/reservationsdb?serverTimezone=UTC&amp;createDatebaseIfNotExist=true&#x27;}
+build:
+  maven library-reservation-system jar deps: junit-jupiter, spring-boot-starter-web, forms_rt, mysql-connector-j, hibernate-core
+most depended-on symbols:
+  it.unina.reservations.entity.Reservation (99 incoming)
+  it.unina.reservations.boundary.Swing.WizardState (77 incoming)
+  it.unina.reservations.boundary.Swing.WizardStyle (71 incoming)
+  it.unina.reservations.dto.UserDTO (52 incoming)
+  it.unina.reservations.entity.StudyRoom (46 incoming)
+  it.unina.reservations.entity.TimeSlot (41 incoming)
+  it.unina.reservations.dto.ReservationDTO (37 incoming)
+  it.unina.reservations.database.PersistenceManager (35 incoming)
+  it.unina.reservations.entity.Seat (31 incoming)
+  it.unina.reservations.controller.LibraryFacade (30 incoming)
+  it.unina.reservations.entity.StudyRoomRegistry (28 incoming)
+  it.unina.reservations.dto.StudyRoomCreationDTO (27 incoming)
+signals: build-config, deploy-config, gui-client, inheritance, layered, lifecycle, persisted-data, rest-api, tests, threads, web-client
+&lt;/card&gt;
+
+### Where to start
+These are starting points, not a boundary: follow imports, calls, configuration and tests wherever they lead.
+- symbols: it.unina.reservations.boundary.SpringBoot.AuthenticationController, it.unina.reservations.controller.LibraryFacade, it.unina.reservations.controller.UserManager, it.unina.reservations.entity.UserRegistry, it.unina.reservations.controller.factory.UserFactory, it.unina.reservations.boundary.Swing.Registration
+- paths: none
+
+## Tools
+Each turn, reply with exactly one JSON object: either one tool call or your final answer.
+
+| Call | What it returns |
+|---|---|
+| `{&quot;tool&quot;: &quot;list_tree&quot;, &quot;args&quot;: {&quot;path&quot;: &quot;.&quot;, &quot;depth&quot;: 2}}` | Files and folders under a path, with each file&#x27;s class (code, config, …). |
+| `{&quot;tool&quot;: &quot;search&quot;, &quot;args&quot;: {&quot;pattern&quot;: &quot;regex&quot;, &quot;path&quot;: &quot;optional/dir&quot;}}` | Matching lines as `file:line: text`. |
+| `{&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;path&quot;: &quot;file&quot;, &quot;start&quot;: 1, &quot;end&quot;: 120}}` | The file&#x27;s lines, each prefixed with its line number. Use these numbers in citations. |
+| `{&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;paths&quot;: [&quot;file1&quot;, &quot;file2&quot;]}}` | Up to 5 files in one step, each from line 1 with line numbers. Prefer this when you already know which files you need: steps are limited. |
+| `{&quot;tool&quot;: &quot;symbol&quot;, &quot;args&quot;: {&quot;id&quot;: &quot;symbol id or simple name&quot;}}` | A class or module: file and lines, annotations, fields, methods with their calls. |
+| `{&quot;tool&quot;: &quot;neighbours&quot;, &quot;args&quot;: {&quot;id&quot;: &quot;symbol id&quot;, &quot;direction&quot;: &quot;out&quot;}}` | Code dependencies of a symbol (`out`) or on it (`in`), with file and line. |
+| `{&quot;final&quot;: {&quot;claims&quot;: [ ... ]}}` | Ends the task with your claims. |
+
+UML models and binary files cannot be read; they are never evidence.
+
+## Output: claims
+Every claim states one fact, says which question(s) it answers (`&quot;answers&quot;: [&quot;AQ2&quot;]`, ids from the questions above), and has at least one citation:
+`{&quot;file&quot;: &quot;path&quot;, &quot;symbol&quot;: &quot;symbol id (optional)&quot;, &quot;lines&quot;: [start, end], &quot;excerpt&quot;: &quot;text copied exactly from those lines&quot;}`
+
+Claim shapes:
+```json
+{&quot;kind&quot;: &quot;element&quot;, &quot;element_kind&quot;: &quot;component&quot;, &quot;name&quot;: &quot;OrderService&quot;, &quot;symbol&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;answers&quot;: [&quot;AQ1&quot;], &quot;responsibilities&quot;: [&quot;validates that an order can be paid&quot;],
+ &quot;evidence&quot;: [{&quot;file&quot;: &quot;src/main/java/com/example/orders/OrderService.java&quot;, &quot;lines&quot;: [41, 43],
+               &quot;excerpt&quot;: &quot;if (order.getStatus() != OrderStatus.NEW) {&quot;}],
+ &quot;confidence&quot;: 0.9}
+
+{&quot;kind&quot;: &quot;relation&quot;, &quot;source&quot;: &quot;com.example.web.OrderController&quot;, &quot;target&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;relation&quot;: &quot;uses&quot;, &quot;label&quot;: &quot;pay&quot;, &quot;evidence&quot;: [ ... ], &quot;confidence&quot;: 0.9}
+
+{&quot;kind&quot;: &quot;interaction&quot;, &quot;scenario&quot;: &quot;pay order&quot;, &quot;order&quot;: 2, &quot;source&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;target&quot;: &quot;com.example.payment.PaymentGateway&quot;, &quot;label&quot;: &quot;charge(order)&quot;, &quot;condition&quot;: &quot;order status is NEW&quot;,
+ &quot;evidence&quot;: [ ... ], &quot;confidence&quot;: 0.8}
+
+{&quot;kind&quot;: &quot;state&quot;, &quot;name&quot;: &quot;PAID&quot;, &quot;evidence&quot;: [ ... ]}
+{&quot;kind&quot;: &quot;transition&quot;, &quot;source&quot;: &quot;NEW&quot;, &quot;target&quot;: &quot;PAID&quot;, &quot;label&quot;: &quot;pay&quot;, &quot;evidence&quot;: [ ... ]}
+```
+For an entity, add `&quot;attributes&quot;: [{&quot;name&quot;: &quot;id&quot;, &quot;type&quot;: &quot;Long&quot;, &quot;key&quot;: true}]` to its element claim.
+For a person or role that uses the system, use `&quot;element_kind&quot;: &quot;actor&quot;`. For a use case, use `&quot;element_kind&quot;: &quot;use_case&quot;`. Neither needs a symbol, but both need a citation.
+
+## Rules
+1. **Cite only what you have read.** Copy each excerpt exactly from lines you opened with `read`, and give those line numbers.
+   *Why:* a citation whose excerpt is not in the cited lines is rejected.
+2. **Use the code&#x27;s names.** `name`, `symbol`, `source` and `target` are classes or files as the code writes them, never packages or folders. A responsibility is a short phrase in its own field, never part of a name.
+   *Why:* an element whose name is not a symbol in the repository is rejected (except non-code kinds such as actors, use cases, nodes, datastores and states), and names are what readers look up in the code.
+3. **One fact per claim.** Report several small claims rather than one large one.
+4. **Interactions:** number them with `order` in the sequence the code executes them, give the same `scenario` name to steps of the same scenario, and put the guard of an alternative or failure path in `condition`.
+5. **Leave unanswered rather than guess.** If the code does not show something, do not claim it.
+6. **Stay within the view.** Use the element and relation kinds listed above.
+7. **Cover the whole path.** When a question is about a functionality, follow it through the code from where it starts (the entry points in the repository summary: REST controllers, UI screens, schedulers, main) through the parts it passes to where its data is stored, and claim each part the code shows, not only the middle.
+   *Why:* a reader changing a functionality needs every layer it touches; a view that skips the entry points or storage hides what a change affects.
+
+## Check before answering with `final`
+- Each excerpt is copied exactly from the cited lines.
+- Each name is the code&#x27;s own name.
+- Each claim answers one of the questions above, and `answers` names exactly the ones it answers.
+- For a functionality: its entry points, the parts it passes and its storage are claimed where the code shows them.
+
+
+CALL {&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;paths&quot;: [&quot;JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java&quot;]}}
+RESULT:
+=== JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java
+    1  package it.unina.reservations.boundary.SpringBoot;
+    2  
+    3  import it.unina.reservations.controller.LibraryFacade;
+    4  import it.unina.reservations.dto.UserDTO;
+    5  import org.springframework.web.bind.yeartation.PostMapping;
+    6  import org.springframework.web.bind.yeartation.RequestMapping;
+    7  import org.springframework.web.bind.yeartation.RequestParam;
+    8  import org.springframework.web.bind.yeartation.RestController;
+    9  
+   10  /**
+   11    * English implementation note.
+   12    * English implementation note.
+   13   */
+   14  
+   15  @RestController
+   16  @RequestMapping(&quot;/api/auth&quot;)
+   17  public class AuthenticationController {
+   18  
+   19      /**
+   20        * English implementation note.
+   21       */
+   22      @PostMapping(&quot;/register&quot;)
+   23      public UserDTO register(@RequestParam(&quot;role&quot;) String role,
+   24                                     @RequestParam(&quot;name&quot;) String name,
+   25                                     @RequestParam(&quot;surname&quot;) String surname,
+   26                                     @RequestParam(&quot;email&quot;) String email,
+   27                                     @RequestParam(&quot;password&quot;) String password,
+   28                                     @RequestParam(&quot;identifier&quot;) String identifier) {
+   29          return LibraryFacade.getInstance()
+   30                  .register(role, name, surname, email, password, identifier);
+   31      }
+   32  
+   33      /**
+   34        * English implementation note.
+   35       */
+   36      @PostMapping(&quot;/login&quot;)
+   37      public UserDTO authenticate(@RequestParam(&quot;email&quot;) String email,
+   38                                      @RequestParam(&quot;password&quot;) String password) {
+   39          return LibraryFacade.getInstance().authenticate(email, password);
+   40      }
+   41  }
+
+=== JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java
+    1  package it.unina.reservations.controller;
+    2  
+    3  import it.unina.reservations.dto.*;
+    4  
+    5  import java.time.LocalDate;
+    6  import java.util.List;
+    7  
+    8  /**
+    9    * English implementation note.
+   10    * English implementation note.
+   11    * English implementation note.
+   12   */
+   13  public class LibraryFacade {
+   14  
+   15      private static LibraryFacade instance;
+   16  
+   17      private LibraryFacade() {}
+   18  
+   19      public static LibraryFacade getInstance() {
+   20          if (instance == null) {
+   21              instance = new LibraryFacade();
+   22          }
+   23          return instance;
+   24      }
+   25  
+   26      // --- UserManager (UC1, UC2, UC8) ---
+   27  
+   28      /**
+   29        * English implementation note.
+   30       * @param role &quot;Student&quot; o &quot;Librarian&quot;
+   31       * @param name name anagrafico
+   32       * @param surname surname anagrafico
+   33       * @param email email istituzionale (dominio unina.it)
+   34        * English implementation note.
+   35        * English implementation note.
+   36       */
+   37      public UserDTO register(String role, String name, String surname,
+   38                                     String email, String password, String identifier) {
+   39          return UserManager.getInstance().register(role, name, surname, email, password, identifier);
+   40      }
+   41  
+   42      /**
+   43        * English implementation note.
+   44       * @param email email istituzionale dell&#x27;account
+   45       * @param password password dell&#x27;account
+   46       */
+   47      public UserDTO authenticate(String email, String password) {
+   48          return UserManager.getInstance().authenticate(email, password);
+   49      }
+   50  
+   51      /**
+   52        * English implementation note.
+   53        * English implementation note.
+   54       */
+   55      public UserDTO viewPersonalProfile(Long studentId) {
+   56          return UserManager.getInstance().visualizzaProfilo(studentId);
+   57      }
+   58  
+   59      // --- StudyRoomManager (UC3, UC4, UC6, UC11) ---
+   60  
+   61      /**
+   62        * English implementation note.
+   63        * English implementation note.
+   64       */
+   65      public StudyRoomDTO createStudyRoom(StudyRoomCreationDTO request) {
+   66          return StudyRoomManager.getInstance().createStudyRoom(request);
+   67      }
+   68  
+   69      /**
+   70        * English implementation note.
+   71        * English implementation note.
+   72       */
+   73      public void deleteStudyRoom(Long studyRoomId) {
+   74          StudyRoomManager.getInstance().deleteStudyRoom(studyRoomId);
+   75      }
+   76  
+   77      /**
+   78        * English implementation note.
+   79       * @param date day richiesto (feriale e non past)
+   80       */
+   81      public List&lt;StudyRoomDTO&gt; getAvailableStudyRooms(LocalDate date) {
+   82          return StudyRoomManager.getInstance().getAvailableStudyRooms(date);
+   83      }
+   84  
+   85      /**
+   86        * English implementation note.
+   87        * English implementation note.
+   88        * English implementation note.
+   89       */
+   90      public List&lt;AvailableTimeSlotDTO&gt; getAvailableTimeSlots(Long roomId, LocalDate date) {
+   91          return StudyRoomManager.getInstance().getAvailableTimeSlots(roomId, date);
+   92      }
+   93  
+   94      /**
+   95        * English implementation note.
+   96        * English implementation note.
+   97        * English implementation note.
+   98        * English implementation note.
+   99       */
+  100      public RoomDetailDTO getRoomDetail(Long roomId, Long timeSlotId, LocalDate date) {
+  101          return StudyRoomManager.getInstance().getRoomDetail(roomId, timeSlotId, date);
+  102      }
+  103  
+  104      /**
+  105        * English implementation note.
+  106       */
+  107      public List&lt;RoomMonitoringDTO&gt; monitoraSale() {
+  108          return StudyRoomManager.getInstance().monitoraSale();
+  109      }
+  110  
+  111      // --- ReservationManager (UC7, UC9, UC10, UC12, UC13, UC16) ---
+  112  
+  113      /**
+  114        * English implementation note.
+  115        * English implementation note.
+  116       */
+  117      public ReservationDTO makeReservation(ReservationRequestDTO request) {
+  118          return ReservationManager.getInstance().makeReservation(request);
+  119      }
+  120  
+  121      /**
+  122        * English implementation note.
+  123        * English implementation note.
+  124        * English implementation note.
+  125       */
+  126      public void cancelReservation(Long reservationId, Long studentId) {
+  127          ReservationManager.getInstance().cancelReservation(reservationId, studentId);
+  128      }
+  129  
+  130      /**
+  131        * English implementation note.
+  132        * English implementation note.
+  133        * English implementation note.
+  134       */
+  135      public void performCheckIn(Long reservationId, Long studentId) {
+  136          ReservationManager.getInstance().performCheckIn(reservationId, studentId);
+  137      }
+  138  
+  139      /**
+  140        * English implementation note.
+  141        * English implementation note.
+  142       */
+  143      public List&lt;ReservationDTO&gt; getReservationHistory(Long studentId) {
+  144          return ReservationManager.getInstance().getReservationHistory(studentId);
+  145      }
+  146  
+  147      /** English implementation note. */
+  148      public void manageReservationEnd() {
+  149          ReservationManager.getInstance().manageReservationEnd();
+  150      }
+  151  
+  152      /**
+  153        * English implementation note.
+  154       */
+  155      public StatisticsDTO monitoraStatisticheServizio() {
+  156          return ReservationManager.getInstance().monitoraStatisticheServizio();
+  157      }
+  158  
+  159      // --- NotificationManager (UC14) ---
+  160  
+  161      /** English implementation note. */
+  162      public void sendReminders() {
+  163          NotificationManager.getInstance().sendReminders();
+  164      }
+  165  }
+
+=== JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java
+    1  package it.unina.reservations.controller;
+    2  
+    3  import it.unina.reservations.controller.factory.LibrarianFactory;
+    4  import it.unina.reservations.controller.factory.StudentFactory;
+    5  import it.unina.reservations.controller.factory.UserFactory;
+    6  import it.unina.reservations.dto.UserDTO;
+    7  import it.unina.reservations.entity.Librarian;
+    8  import it.unina.reservations.entity.UserRegistry;
+    9  import it.unina.reservations.entity.Student;
+   10  import it.unina.reservations.entity.User;
+   11  
+   12  import java.time.LocalDateTime;
+   13  import java.time.ZoneId;
+   14  
+   15  /**
+   16    * English implementation note.
+   17    * English implementation note.
+   18    * English implementation note.
+   19   */
+   20  public class UserManager {
+   21  
+   22      private static final int MAX_TENTATIVI = 5;
+   23      private static final int MINUTI_BLOCCO = 15;
+   24  
+   25      /** English implementation note. */
+   26      private static final String REGEX_EMAIL_ISTITUZIONALE = &quot;^[^@\\s]+@([^@\\s]+\\.)*unina\\.it$&quot;;
+   27  
+   28      /** English implementation note. */
+   29      private static final String REGEX_STUDENT_NUMBER = &quot;[A-Z]\\d{8}&quot;;
+   30  
+   31      private final UserRegistry userRegistry = UserRegistry.getInstance();
+   32  
+   33      private static UserManager instance;
+   34  
+   35      private UserManager() {}
+   36  
+   37      public static UserManager getInstance() {
+   38          if (instance == null) {
+   39              instance = new UserManager();
+   40          }
+   41          return instance;
+   42      }
+   43  
+   44      /** English implementation note. */
+   45      private void require(boolean condition, String message) {
+   46          if (!condition) {
+   47              throw new IllegalArgumentException(message);
+   48          }
+   49      }
+   50  
+   51      /** English implementation note. */
+   52      private void validate(String role, String name, String password) {
+   53          // English implementation note.
+   54          require(role != null &amp;&amp; !role.isEmpty() &amp;&amp; isValidRole(role), &quot;A valid role is required.&quot;);
+   55          require(name != null &amp;&amp; !name.isEmpty(), &quot;First name is required.&quot;);
+   56          require(password != null &amp;&amp; password.length() &gt;= 8, &quot;Password must contain at least 8 characters.&quot;);
+   57          require(password.length() &lt;= 32, &quot;Password cannot exceed 32 characters.&quot;);
+   58      }
+   59  
+   60      // ------------------------------------------------------------------ UC1
+   61      /**
+   62        * English implementation note.
+   63        * English implementation note.
+   64       */
+   65      public UserDTO register(String role, String name, String surname,
+   66                                  String email, String password, String identifier) {
+   67          validate(role, name, password);
+   68  
+   69          // English implementation note.
+   70          boolean student = &quot;Student&quot;.equalsIgnoreCase(role);
+   71          if (student) {
+   72              validateStudent(name, surname, email, identifier);
+   73          } else {
+   74              validateLibrarian(name, surname, email, identifier);
+   75          }
+   76  
+   77          if (userRegistry.institutionalEmailExists(email)) {
+   78              throw new IllegalArgumentException(&quot;Email is already associated with an account.&quot;);
+   79          }
+   80  
+   81          boolean identifierGiaUsato = student
+   82                  ? userRegistry.findStudentByStudentNumber(identifier) != null
+   83                  : userRegistry.findLibrarianByCode(identifier) != null;
+   84          if (identifierGiaUsato) {
+   85              throw new IllegalArgumentException(&quot;Identifier is already in use.&quot;);
+   86          }
+   87  
+   88          // English implementation note.
+   89          UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();
+   90          User newUser = factory.createUser(name, surname, email, password, identifier);
+   91  
+   92          boolean success = userRegistry.registerUser(newUser);
+   93          if (!success){
+   94              throw new RuntimeException(&quot;Server error: the user could not be saved. Please try again.&quot;);
+   95          }
+   96          return toDTO(newUser);
+   97      }
+   98  
+   99      // ------------------------------------------------------------------ UC2
+  100      /**
+  101        * English implementation note.
+  102        * English implementation note.
+  103        * English implementation note.
+  104        * English implementation note.
+  105       */
+  106      public UserDTO authenticate(String email, String password) {
+  107          validateCredentialFormat(email, password);
+  108  
+  109          User user = userRegistry.findUserByEmail(email);
+  110  
+  111          if (user == null) {
+  112              throw new SecurityException(&quot;Invalid credentials or user does not exist.&quot;);
+  113          }
+  114          if (user.isBloccato()) {
+  115              throw new SecurityException(&quot;Account locked after too many failed attempts. Try again in &quot;
+  116                      + MINUTI_BLOCCO + &quot; minutes.&quot;);
+  117          }
+  118  
+  119          if (!verifyCredentials(user, password)) {
+  120              incrementaTentativi(user);
+  121              boolean appenaBloccato = user.getFailedAttempts() &gt;= MAX_TENTATIVI;
+  122              if (appenaBloccato) {
+  123                  bloccaAccountTemporaneamente(user, MINUTI_BLOCCO);
+  124              }
+  125              userRegistry.update(user);
+  126              if (appenaBloccato) {
+  127                  throw new SecurityException(&quot;Invalid credentials. Account locked for &quot; + MINUTI_BLOCCO
+  128                          + &quot; minutes after too many failed attempts.&quot;);
+  129              }
+  130              throw new SecurityException(&quot;Invalid credentials or user does not exist.&quot;);
+  131          }
+  132  
+  133          resetTentativi(user);
+  134          userRegistry.update(user);
+  135          return toDTO(user);
+  136      }
+  137  
+  138      /**
+  139        * English implementation note.
+  140        * English implementation note.
+  141        * English implementation note.
+  142       */
+  143      private void validateCredentialFormat(String email, String password) {
+  144          require(email != null &amp;&amp; !email.isEmpty(), &quot;Email is required.&quot;);
+  145          require(isEmailWellFormed(email), &quot;Invalid email format.&quot;);
+  146          require(password != null &amp;&amp; !password.isEmpty(), &quot;Password is required.&quot;);
+  147          require(password.length() &gt;= 8, &quot;Password must contain at least 8 characters.&quot;);
+  148          require(password.length() &lt;= 32, &quot;Invalid password format.&quot;);
+  149      }
+  150  
+  151      /** English implementation note. */
+  152      private boolean isEmailWellFormed(String email) {
+  153          return email.length() &lt; 255 &amp;&amp; email.matches(REGEX_EMAIL_ISTITUZIONALE);
+  154      }
+  155  
+  156      // -------------------------------------------------------------- UC8 (profile)
+  157      /**
+  158        * English implementation note.
+  159       */
+  160      public UserDTO visualizzaProfilo(Long studentId) {
+  161          Student student = userRegistry.findStudentById(studentId);
+  162          if (student == null) {
+  163              throw new IllegalArgumentException(&quot;Student not found&quot;);
+  164          }
+  165          return toDTO(student);
+  166      }
+  167  
+  168      // ------------------------------------------------------------------ helper privati
+  169      private boolean isValidRole(String role) {
+  170          return &quot;Student&quot;.equalsIgnoreCase(role) || &quot;Librarian&quot;.equalsIgnoreCase(role);
+  171      }
+  172  
+  173      private void validateStudent(String name, String surname, String email, String studentNumber) {
+  174          validateNameAndSurname(name, surname);
+  175          validateEmail(email);
+  176          validateIdentifier(studentNumber, &quot;studentNumber&quot;);
+  177          if (!studentNumber.matches(REGEX_STUDENT_NUMBER)) {
+  178              throw new IllegalArgumentException(
+  179                      &quot;Unrecognized identifier format: the student ID must be an uppercase letter followed by 8 digits (e.g. N86001234).&quot;);
+  180          }
+  181      }
+  182  
+  183      private void validateLibrarian(String name, String surname, String email, String code) {
+  184          validateNameAndSurname(name, surname);
+  185          validateEmail(email);
+  186          validateIdentifier(code, &quot;code identifier&quot;);
+  187      }
+  188  
+  189      private void validateNameAndSurname(String name, String surname) {
+  190          if (!name.matches(&quot;\\p{L}{1,20}&quot;)) {
+  191              throw new IllegalArgumentException(&quot;Invalid first-name format (letters only, max 20 characters).&quot;);
+  192          }
+  193          if (surname == null || surname.isEmpty()) {
+  194              throw new IllegalArgumentException(&quot;Last name is required.&quot;);
+  195          }
+  196          if (!surname.matches(&quot;\\p{L}{1,20}&quot;)) {
+  197              throw new IllegalArgumentException(&quot;Invalid last-name format (letters only, max 20 characters).&quot;);
+  198          }
+  199      }
+  200  
+
+=== JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java
+    1  package it.unina.reservations.entity;
+    2  
+    3  import it.unina.reservations.database.PersistenceManager;
+    4  
+    5  import java.util.Map;
+    6  
+    7  /**
+    8    * English implementation note.
+    9   */
+   10  public class UserRegistry {
+   11  
+   12      private static UserRegistry instance;
+   13      private final PersistenceManager persistenceManager;
+   14  
+   15      private UserRegistry() {
+   16          this.persistenceManager = new PersistenceManager();
+   17      }
+   18  
+   19      public static UserRegistry getInstance() {
+   20          if (instance == null) {
+   21              instance = new UserRegistry();
+   22          }
+   23          return instance;
+   24      }
+   25  
+   26      public boolean registerUser(User newUser) {
+   27          return persistenceManager.save(newUser);
+   28      }
+   29  
+   30      public User update(User user) {
+   31          return persistenceManager.update(user);
+   32      }
+   33  
+   34      /**
+   35        * English implementation note.
+   36       */
+   37      public User findUserByEmail(String email) {
+   38          return persistenceManager.findFirstByFields(User.class, Map.of(&quot;institutionalEmail&quot;, email));
+   39      }
+   40  
+   41      /**
+   42        * English implementation note.
+   43       */
+   44      public Student findStudentByStudentNumber(String studentNumber) {
+   45          return persistenceManager.findFirstByFields(Student.class, Map.of(&quot;studentNumber&quot;, studentNumber));
+   46      }
+   47  
+   48      /**
+   49        * English implementation note.
+   50       */
+   51      public Student findStudentById(Long id) {
+   52          return persistenceManager.findById(Student.class, id);
+   53      }
+   54  
+   55      /**
+   56        * English implementation note.
+   57       */
+   58      public Librarian findLibrarianByCode(String code) {
+   59          return persistenceManager.findFirstByFields(Librarian.class, Map.of(&quot;internalIdentifierCode&quot;, code));
+   60      }
+   61  
+   62      /**
+   63        * English implementation note.
+   64       */
+   65      public boolean institutionalEmailExists(String email) {
+   66          return findUserByEmail(email) != null;
+   67      }
+   68  }
+
+=== JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java
+    1  package it.unina.reservations.controller.factory;
+    2  
+    3  import it.unina.reservations.entity.User;
+    4  
+    5  /**
+    6    * English implementation note.
+    7    * English implementation note.
+    8   */
+    9  public interface UserFactory {
+   10      User createUser(String name, String surname, String email, String password, String identifier);
+   11  }
+
+Continue. JSON only.</pre></details><details><summary>Turn 2: the model&#x27;s reply</summary><pre>{
+  &quot;tool&quot;: &quot;read&quot;,
+  &quot;args&quot;: {
+    &quot;paths&quot;: [
+      &quot;JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java&quot;,
+      &quot;JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java&quot;,
+      &quot;JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java&quot;
+    ]
+  }
+}</pre></details><details><summary>Turn 3: prompt sent to the model (50,563 characters)</summary><pre># Task2View — Phase 5: Evidence extraction and grounding
+
+## Role
+You are an evidence collector for architecture documentation. You read code and report small facts, each backed by the exact lines that show it.
+
+## Task
+Collect the ordered call chain for user registration from the REST/Swing boundary through LibraryFacade, UserManager, UserFactory/StudentFactory and UserRegistry to persistence, including duplicate-email, validation and other failure or exception branches and what is returned to the caller.
+
+Collect claims that answer the questions below. You do not draw a diagram: a program builds the diagram from the claims you return, after checking every citation against the files.
+
+## Inputs
+
+### Questions to answer
+- AQ1: For user registration functionality: the order of calls in a scenario, including alternative and failure paths?
+
+### The view the claims are for
+Sequence. Elements it can show: actor, lifeline. Relations it can show: message, return.
+
+### Repository card (summary of the repository)
+&lt;card&gt;
+REPOSITORY Progetto-IS-main-English
+languages: java (71 files)
+files: build 1, code 71, config 1, docs 1, other 15, test 10, web 10
+layers (top to bottom):
+  presentation: it.unina.reservations.boundary, it.unina.reservations.boundary.SpringBoot, it.unina.reservations.boundary.Swing
+  application: it.unina.reservations.controller, it.unina.reservations.controller.factory, it.unina.reservations.controller.strategy
+  domain: it.unina.reservations.dto, it.unina.reservations.entity, it.unina.reservations.entity.state
+  persistence: it.unina.reservations.database
+entry points (19):
+  main it.unina.reservations.Launcher — main (JavaProject/src/main/java/it/unina/reservations/Launcher.java:10)
+  main it.unina.reservations.ReservationsApplication — main (JavaProject/src/main/java/it/unina/reservations/ReservationsApplication.java:16)
+  scheduled it.unina.reservations.boundary.NotificationScheduler — esegui (JavaProject/src/main/java/it/unina/reservations/boundary/NotificationScheduler.java:15)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/register&quot;) register (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.AuthenticationController — PostMapping RequestMapping(&quot;/api/auth&quot;) PostMapping(&quot;/login&quot;) authenticate (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/rooms&quot;) monitoraSale (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:22)
+  http-route it.unina.reservations.boundary.SpringBoot.MonitoringController — GetMapping RequestMapping(&quot;/api/monitoring&quot;) GetMapping(&quot;/statistics&quot;) monitoraStatisticheServizio (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/MonitoringController.java:28)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PostMapping RequestMapping(&quot;/api/reservations&quot;) PostMapping(&quot;/create&quot;) makeReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:21)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/cancel&quot;) cancelReservation (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:36)
+  http-route it.unina.reservations.boundary.SpringBoot.ReservationController — PutMapping RequestMapping(&quot;/api/reservations&quot;) PutMapping(&quot;/{reservationId}/checkIn&quot;) performCheckIn (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:45)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/profile&quot;) viewPersonalProfile (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:23)
+  http-route it.unina.reservations.boundary.SpringBoot.StudentController — GetMapping RequestMapping(&quot;/api/student&quot;) GetMapping(&quot;/{studentId}/history&quot;) getReservationHistory (JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java:31)
+persisted entities (8):
+  Area [orm] id*, type, studyRoom→StudyRoom, seats→Seat
+  Librarian [orm] internalIdentifierCode
+  Reservation [orm] id*, date, stateName, student→Student, seat→Seat, timeSlot→TimeSlot, reminderSent
+  Seat [orm] id*, area→Area
+  Student [orm] studentNumber, totalVisitCount, reservations→Reservation
+  StudyRoom [orm] id*, name, description, totalSeatCount, active, areas→Area, timeSlots→TimeSlot, timeLavorativo→TimeSlot
+  TimeSlot [orm] id*, startTime, endTime
+  User [orm] id*, name, surname, institutionalEmail, password, failedAttempts, lockedUntil
+deployment / configuration:
+  persistence-unit reservationsPU {&#x27;provider&#x27;: &#x27;org.hibernate.jpa.HibernatePersistenceProvider&#x27;, &#x27;jdbc_url&#x27;: &#x27;jdbc:mysql://localhost:3306/reservationsdb?serverTimezone=UTC&amp;createDatebaseIfNotExist=true&#x27;}
+build:
+  maven library-reservation-system jar deps: junit-jupiter, spring-boot-starter-web, forms_rt, mysql-connector-j, hibernate-core
+most depended-on symbols:
+  it.unina.reservations.entity.Reservation (99 incoming)
+  it.unina.reservations.boundary.Swing.WizardState (77 incoming)
+  it.unina.reservations.boundary.Swing.WizardStyle (71 incoming)
+  it.unina.reservations.dto.UserDTO (52 incoming)
+  it.unina.reservations.entity.StudyRoom (46 incoming)
+  it.unina.reservations.entity.TimeSlot (41 incoming)
+  it.unina.reservations.dto.ReservationDTO (37 incoming)
+  it.unina.reservations.database.PersistenceManager (35 incoming)
+  it.unina.reservations.entity.Seat (31 incoming)
+  it.unina.reservations.controller.LibraryFacade (30 incoming)
+  it.unina.reservations.entity.StudyRoomRegistry (28 incoming)
+  it.unina.reservations.dto.StudyRoomCreationDTO (27 incoming)
+signals: build-config, deploy-config, gui-client, inheritance, layered, lifecycle, persisted-data, rest-api, tests, threads, web-client
+&lt;/card&gt;
+
+### Where to start
+These are starting points, not a boundary: follow imports, calls, configuration and tests wherever they lead.
+- symbols: it.unina.reservations.boundary.SpringBoot.AuthenticationController, it.unina.reservations.controller.LibraryFacade, it.unina.reservations.controller.UserManager, it.unina.reservations.entity.UserRegistry, it.unina.reservations.controller.factory.UserFactory, it.unina.reservations.boundary.Swing.Registration
+- paths: none
+
+## Tools
+Each turn, reply with exactly one JSON object: either one tool call or your final answer.
+
+| Call | What it returns |
+|---|---|
+| `{&quot;tool&quot;: &quot;list_tree&quot;, &quot;args&quot;: {&quot;path&quot;: &quot;.&quot;, &quot;depth&quot;: 2}}` | Files and folders under a path, with each file&#x27;s class (code, config, …). |
+| `{&quot;tool&quot;: &quot;search&quot;, &quot;args&quot;: {&quot;pattern&quot;: &quot;regex&quot;, &quot;path&quot;: &quot;optional/dir&quot;}}` | Matching lines as `file:line: text`. |
+| `{&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;path&quot;: &quot;file&quot;, &quot;start&quot;: 1, &quot;end&quot;: 120}}` | The file&#x27;s lines, each prefixed with its line number. Use these numbers in citations. |
+| `{&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;paths&quot;: [&quot;file1&quot;, &quot;file2&quot;]}}` | Up to 5 files in one step, each from line 1 with line numbers. Prefer this when you already know which files you need: steps are limited. |
+| `{&quot;tool&quot;: &quot;symbol&quot;, &quot;args&quot;: {&quot;id&quot;: &quot;symbol id or simple name&quot;}}` | A class or module: file and lines, annotations, fields, methods with their calls. |
+| `{&quot;tool&quot;: &quot;neighbours&quot;, &quot;args&quot;: {&quot;id&quot;: &quot;symbol id&quot;, &quot;direction&quot;: &quot;out&quot;}}` | Code dependencies of a symbol (`out`) or on it (`in`), with file and line. |
+| `{&quot;final&quot;: {&quot;claims&quot;: [ ... ]}}` | Ends the task with your claims. |
+
+UML models and binary files cannot be read; they are never evidence.
+
+## Output: claims
+Every claim states one fact, says which question(s) it answers (`&quot;answers&quot;: [&quot;AQ2&quot;]`, ids from the questions above), and has at least one citation:
+`{&quot;file&quot;: &quot;path&quot;, &quot;symbol&quot;: &quot;symbol id (optional)&quot;, &quot;lines&quot;: [start, end], &quot;excerpt&quot;: &quot;text copied exactly from those lines&quot;}`
+
+Claim shapes:
+```json
+{&quot;kind&quot;: &quot;element&quot;, &quot;element_kind&quot;: &quot;component&quot;, &quot;name&quot;: &quot;OrderService&quot;, &quot;symbol&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;answers&quot;: [&quot;AQ1&quot;], &quot;responsibilities&quot;: [&quot;validates that an order can be paid&quot;],
+ &quot;evidence&quot;: [{&quot;file&quot;: &quot;src/main/java/com/example/orders/OrderService.java&quot;, &quot;lines&quot;: [41, 43],
+               &quot;excerpt&quot;: &quot;if (order.getStatus() != OrderStatus.NEW) {&quot;}],
+ &quot;confidence&quot;: 0.9}
+
+{&quot;kind&quot;: &quot;relation&quot;, &quot;source&quot;: &quot;com.example.web.OrderController&quot;, &quot;target&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;relation&quot;: &quot;uses&quot;, &quot;label&quot;: &quot;pay&quot;, &quot;evidence&quot;: [ ... ], &quot;confidence&quot;: 0.9}
+
+{&quot;kind&quot;: &quot;interaction&quot;, &quot;scenario&quot;: &quot;pay order&quot;, &quot;order&quot;: 2, &quot;source&quot;: &quot;com.example.orders.OrderService&quot;,
+ &quot;target&quot;: &quot;com.example.payment.PaymentGateway&quot;, &quot;label&quot;: &quot;charge(order)&quot;, &quot;condition&quot;: &quot;order status is NEW&quot;,
+ &quot;evidence&quot;: [ ... ], &quot;confidence&quot;: 0.8}
+
+{&quot;kind&quot;: &quot;state&quot;, &quot;name&quot;: &quot;PAID&quot;, &quot;evidence&quot;: [ ... ]}
+{&quot;kind&quot;: &quot;transition&quot;, &quot;source&quot;: &quot;NEW&quot;, &quot;target&quot;: &quot;PAID&quot;, &quot;label&quot;: &quot;pay&quot;, &quot;evidence&quot;: [ ... ]}
+```
+For an entity, add `&quot;attributes&quot;: [{&quot;name&quot;: &quot;id&quot;, &quot;type&quot;: &quot;Long&quot;, &quot;key&quot;: true}]` to its element claim.
+For a person or role that uses the system, use `&quot;element_kind&quot;: &quot;actor&quot;`. For a use case, use `&quot;element_kind&quot;: &quot;use_case&quot;`. Neither needs a symbol, but both need a citation.
+
+## Rules
+1. **Cite only what you have read.** Copy each excerpt exactly from lines you opened with `read`, and give those line numbers.
+   *Why:* a citation whose excerpt is not in the cited lines is rejected.
+2. **Use the code&#x27;s names.** `name`, `symbol`, `source` and `target` are classes or files as the code writes them, never packages or folders. A responsibility is a short phrase in its own field, never part of a name.
+   *Why:* an element whose name is not a symbol in the repository is rejected (except non-code kinds such as actors, use cases, nodes, datastores and states), and names are what readers look up in the code.
+3. **One fact per claim.** Report several small claims rather than one large one.
+4. **Interactions:** number them with `order` in the sequence the code executes them, give the same `scenario` name to steps of the same scenario, and put the guard of an alternative or failure path in `condition`.
+5. **Leave unanswered rather than guess.** If the code does not show something, do not claim it.
+6. **Stay within the view.** Use the element and relation kinds listed above.
+7. **Cover the whole path.** When a question is about a functionality, follow it through the code from where it starts (the entry points in the repository summary: REST controllers, UI screens, schedulers, main) through the parts it passes to where its data is stored, and claim each part the code shows, not only the middle.
+   *Why:* a reader changing a functionality needs every layer it touches; a view that skips the entry points or storage hides what a change affects.
+
+## Check before answering with `final`
+- Each excerpt is copied exactly from the cited lines.
+- Each name is the code&#x27;s own name.
+- Each claim answers one of the questions above, and `answers` names exactly the ones it answers.
+- For a functionality: its entry points, the parts it passes and its storage are claimed where the code shows them.
+
+
+CALL {&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;paths&quot;: [&quot;JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java&quot;]}}
+RESULT:
+=== JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java
+    1  package it.unina.reservations.boundary.SpringBoot;
+    2  
+    3  import it.unina.reservations.controller.LibraryFacade;
+    4  import it.unina.reservations.dto.UserDTO;
+    5  import org.springframework.web.bind.yeartation.PostMapping;
+    6  import org.springframework.web.bind.yeartation.RequestMapping;
+    7  import org.springframework.web.bind.yeartation.RequestParam;
+    8  import org.springframework.web.bind.yeartation.RestController;
+    9  
+   10  /**
+   11    * English implementation note.
+   12    * English implementation note.
+   13   */
+   14  
+   15  @RestController
+   16  @RequestMapping(&quot;/api/auth&quot;)
+   17  public class AuthenticationController {
+   18  
+   19      /**
+   20        * English implementation note.
+   21       */
+   22      @PostMapping(&quot;/register&quot;)
+   23      public UserDTO register(@RequestParam(&quot;role&quot;) String role,
+   24                                     @RequestParam(&quot;name&quot;) String name,
+   25                                     @RequestParam(&quot;surname&quot;) String surname,
+   26                                     @RequestParam(&quot;email&quot;) String email,
+   27                                     @RequestParam(&quot;password&quot;) String password,
+   28                                     @RequestParam(&quot;identifier&quot;) String identifier) {
+   29          return LibraryFacade.getInstance()
+   30                  .register(role, name, surname, email, password, identifier);
+   31      }
+   32  
+   33      /**
+   34        * English implementation note.
+   35       */
+   36      @PostMapping(&quot;/login&quot;)
+   37      public UserDTO authenticate(@RequestParam(&quot;email&quot;) String email,
+   38                                      @RequestParam(&quot;password&quot;) String password) {
+   39          return LibraryFacade.getInstance().authenticate(email, password);
+   40      }
+   41  }
+
+=== JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java
+    1  package it.unina.reservations.controller;
+    2  
+    3  import it.unina.reservations.dto.*;
+    4  
+    5  import java.time.LocalDate;
+    6  import java.util.List;
+    7  
+    8  /**
+    9    * English implementation note.
+   10    * English implementation note.
+   11    * English implementation note.
+   12   */
+   13  public class LibraryFacade {
+   14  
+   15      private static LibraryFacade instance;
+   16  
+   17      private LibraryFacade() {}
+   18  
+   19      public static LibraryFacade getInstance() {
+   20          if (instance == null) {
+   21              instance = new LibraryFacade();
+   22          }
+   23          return instance;
+   24      }
+   25  
+   26      // --- UserManager (UC1, UC2, UC8) ---
+   27  
+   28      /**
+   29        * English implementation note.
+   30       * @param role &quot;Student&quot; o &quot;Librarian&quot;
+   31       * @param name name anagrafico
+   32       * @param surname surname anagrafico
+   33       * @param email email istituzionale (dominio unina.it)
+   34        * English implementation note.
+   35        * English implementation note.
+   36       */
+   37      public UserDTO register(String role, String name, String surname,
+   38                                     String email, String password, String identifier) {
+   39          return UserManager.getInstance().register(role, name, surname, email, password, identifier);
+   40      }
+   41  
+   42      /**
+   43        * English implementation note.
+   44       * @param email email istituzionale dell&#x27;account
+   45       * @param password password dell&#x27;account
+   46       */
+   47      public UserDTO authenticate(String email, String password) {
+   48          return UserManager.getInstance().authenticate(email, password);
+   49      }
+   50  
+   51      /**
+   52        * English implementation note.
+   53        * English implementation note.
+   54       */
+   55      public UserDTO viewPersonalProfile(Long studentId) {
+   56          return UserManager.getInstance().visualizzaProfilo(studentId);
+   57      }
+   58  
+   59      // --- StudyRoomManager (UC3, UC4, UC6, UC11) ---
+   60  
+   61      /**
+   62        * English implementation note.
+   63        * English implementation note.
+   64       */
+   65      public StudyRoomDTO createStudyRoom(StudyRoomCreationDTO request) {
+   66          return StudyRoomManager.getInstance().createStudyRoom(request);
+   67      }
+   68  
+   69      /**
+   70        * English implementation note.
+   71        * English implementation note.
+   72       */
+   73      public void deleteStudyRoom(Long studyRoomId) {
+   74          StudyRoomManager.getInstance().deleteStudyRoom(studyRoomId);
+   75      }
+   76  
+   77      /**
+   78        * English implementation note.
+   79       * @param date day richiesto (feriale e non past)
+   80       */
+   81      public List&lt;StudyRoomDTO&gt; getAvailableStudyRooms(LocalDate date) {
+   82          return StudyRoomManager.getInstance().getAvailableStudyRooms(date);
+   83      }
+   84  
+   85      /**
+   86        * English implementation note.
+   87        * English implementation note.
+   88        * English implementation note.
+   89       */
+   90      public List&lt;AvailableTimeSlotDTO&gt; getAvailableTimeSlots(Long roomId, LocalDate date) {
+   91          return StudyRoomManager.getInstance().getAvailableTimeSlots(roomId, date);
+   92      }
+   93  
+   94      /**
+   95        * English implementation note.
+   96        * English implementation note.
+   97        * English implementation note.
+   98        * English implementation note.
+   99       */
+  100      public RoomDetailDTO getRoomDetail(Long roomId, Long timeSlotId, LocalDate date) {
+  101          return StudyRoomManager.getInstance().getRoomDetail(roomId, timeSlotId, date);
+  102      }
+  103  
+  104      /**
+  105        * English implementation note.
+  106       */
+  107      public List&lt;RoomMonitoringDTO&gt; monitoraSale() {
+  108          return StudyRoomManager.getInstance().monitoraSale();
+  109      }
+  110  
+  111      // --- ReservationManager (UC7, UC9, UC10, UC12, UC13, UC16) ---
+  112  
+  113      /**
+  114        * English implementation note.
+  115        * English implementation note.
+  116       */
+  117      public ReservationDTO makeReservation(ReservationRequestDTO request) {
+  118          return ReservationManager.getInstance().makeReservation(request);
+  119      }
+  120  
+  121      /**
+  122        * English implementation note.
+  123        * English implementation note.
+  124        * English implementation note.
+  125       */
+  126      public void cancelReservation(Long reservationId, Long studentId) {
+  127          ReservationManager.getInstance().cancelReservation(reservationId, studentId);
+  128      }
+  129  
+  130      /**
+  131        * English implementation note.
+  132        * English implementation note.
+  133        * English implementation note.
+  134       */
+  135      public void performCheckIn(Long reservationId, Long studentId) {
+  136          ReservationManager.getInstance().performCheckIn(reservationId, studentId);
+  137      }
+  138  
+  139      /**
+  140        * English implementation note.
+  141        * English implementation note.
+  142       */
+  143      public List&lt;ReservationDTO&gt; getReservationHistory(Long studentId) {
+  144          return ReservationManager.getInstance().getReservationHistory(studentId);
+  145      }
+  146  
+  147      /** English implementation note. */
+  148      public void manageReservationEnd() {
+  149          ReservationManager.getInstance().manageReservationEnd();
+  150      }
+  151  
+  152      /**
+  153        * English implementation note.
+  154       */
+  155      public StatisticsDTO monitoraStatisticheServizio() {
+  156          return ReservationManager.getInstance().monitoraStatisticheServizio();
+  157      }
+  158  
+  159      // --- NotificationManager (UC14) ---
+  160  
+  161      /** English implementation note. */
+  162      public void sendReminders() {
+  163          NotificationManager.getInstance().sendReminders();
+  164      }
+  165  }
+
+=== JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java
+    1  package it.unina.reservations.controller;
+    2  
+    3  import it.unina.reservations.controller.factory.LibrarianFactory;
+    4  import it.unina.reservations.controller.factory.StudentFactory;
+    5  import it.unina.reservations.controller.factory.UserFactory;
+    6  import it.unina.reservations.dto.UserDTO;
+    7  import it.unina.reservations.entity.Librarian;
+    8  import it.unina.reservations.entity.UserRegistry;
+    9  import it.unina.reservations.entity.Student;
+   10  import it.unina.reservations.entity.User;
+   11  
+   12  import java.time.LocalDateTime;
+   13  import java.time.ZoneId;
+   14  
+   15  /**
+   16    * English implementation note.
+   17    * English implementation note.
+   18    * English implementation note.
+   19   */
+   20  public class UserManager {
+   21  
+   22      private static final int MAX_TENTATIVI = 5;
+   23      private static final int MINUTI_BLOCCO = 15;
+   24  
+   25      /** English implementation note. */
+   26      private static final String REGEX_EMAIL_ISTITUZIONALE = &quot;^[^@\\s]+@([^@\\s]+\\.)*unina\\.it$&quot;;
+   27  
+   28      /** English implementation note. */
+   29      private static final String REGEX_STUDENT_NUMBER = &quot;[A-Z]\\d{8}&quot;;
+   30  
+   31      private final UserRegistry userRegistry = UserRegistry.getInstance();
+   32  
+   33      private static UserManager instance;
+   34  
+   35      private UserManager() {}
+   36  
+   37      public static UserManager getInstance() {
+   38          if (instance == null) {
+   39              instance = new UserManager();
+   40          }
+   41          return instance;
+   42      }
+   43  
+   44      /** English implementation note. */
+   45      private void require(boolean condition, String message) {
+   46          if (!condition) {
+   47              throw new IllegalArgumentException(message);
+   48          }
+   49      }
+   50  
+   51      /** English implementation note. */
+   52      private void validate(String role, String name, String password) {
+   53          // English implementation note.
+   54          require(role != null &amp;&amp; !role.isEmpty() &amp;&amp; isValidRole(role), &quot;A valid role is required.&quot;);
+   55          require(name != null &amp;&amp; !name.isEmpty(), &quot;First name is required.&quot;);
+   56          require(password != null &amp;&amp; password.length() &gt;= 8, &quot;Password must contain at least 8 characters.&quot;);
+   57          require(password.length() &lt;= 32, &quot;Password cannot exceed 32 characters.&quot;);
+   58      }
+   59  
+   60      // ------------------------------------------------------------------ UC1
+   61      /**
+   62        * English implementation note.
+   63        * English implementation note.
+   64       */
+   65      public UserDTO register(String role, String name, String surname,
+   66                                  String email, String password, String identifier) {
+   67          validate(role, name, password);
+   68  
+   69          // English implementation note.
+   70          boolean student = &quot;Student&quot;.equalsIgnoreCase(role);
+   71          if (student) {
+   72              validateStudent(name, surname, email, identifier);
+   73          } else {
+   74              validateLibrarian(name, surname, email, identifier);
+   75          }
+   76  
+   77          if (userRegistry.institutionalEmailExists(email)) {
+   78              throw new IllegalArgumentException(&quot;Email is already associated with an account.&quot;);
+   79          }
+   80  
+   81          boolean identifierGiaUsato = student
+   82                  ? userRegistry.findStudentByStudentNumber(identifier) != null
+   83                  : userRegistry.findLibrarianByCode(identifier) != null;
+   84          if (identifierGiaUsato) {
+   85              throw new IllegalArgumentException(&quot;Identifier is already in use.&quot;);
+   86          }
+   87  
+   88          // English implementation note.
+   89          UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();
+   90          User newUser = factory.createUser(name, surname, email, password, identifier);
+   91  
+   92          boolean success = userRegistry.registerUser(newUser);
+   93          if (!success){
+   94              throw new RuntimeException(&quot;Server error: the user could not be saved. Please try again.&quot;);
+   95          }
+   96          return toDTO(newUser);
+   97      }
+   98  
+   99      // ------------------------------------------------------------------ UC2
+  100      /**
+  101        * English implementation note.
+  102        * English implementation note.
+  103        * English implementation note.
+  104        * English implementation note.
+  105       */
+  106      public UserDTO authenticate(String email, String password) {
+  107          validateCredentialFormat(email, password);
+  108  
+  109          User user = userRegistry.findUserByEmail(email);
+  110  
+  111          if (user == null) {
+  112              throw new SecurityException(&quot;Invalid credentials or user does not exist.&quot;);
+  113          }
+  114          if (user.isBloccato()) {
+  115              throw new SecurityException(&quot;Account locked after too many failed attempts. Try again in &quot;
+  116                      + MINUTI_BLOCCO + &quot; minutes.&quot;);
+  117          }
+  118  
+  119          if (!verifyCredentials(user, password)) {
+  120              incrementaTentativi(user);
+  121              boolean appenaBloccato = user.getFailedAttempts() &gt;= MAX_TENTATIVI;
+  122              if (appenaBloccato) {
+  123                  bloccaAccountTemporaneamente(user, MINUTI_BLOCCO);
+  124              }
+  125              userRegistry.update(user);
+  126              if (appenaBloccato) {
+  127                  throw new SecurityException(&quot;Invalid credentials. Account locked for &quot; + MINUTI_BLOCCO
+  128                          + &quot; minutes after too many failed attempts.&quot;);
+  129              }
+  130              throw new SecurityException(&quot;Invalid credentials or user does not exist.&quot;);
+  131          }
+  132  
+  133          resetTentativi(user);
+  134          userRegistry.update(user);
+  135          return toDTO(user);
+  136      }
+  137  
+  138      /**
+  139        * English implementation note.
+  140        * English implementation note.
+  141        * English implementation note.
+  142       */
+  143      private void validateCredentialFormat(String email, String password) {
+  144          require(email != null &amp;&amp; !email.isEmpty(), &quot;Email is required.&quot;);
+  145          require(isEmailWellFormed(email), &quot;Invalid email format.&quot;);
+  146          require(password != null &amp;&amp; !password.isEmpty(), &quot;Password is required.&quot;);
+  147          require(password.length() &gt;= 8, &quot;Password must contain at least 8 characters.&quot;);
+  148          require(password.length() &lt;= 32, &quot;Invalid password format.&quot;);
+  149      }
+  150  
+  151      /** English implementation note. */
+  152      private boolean isEmailWellFormed(String email) {
+  153          return email.length() &lt; 255 &amp;&amp; email.matches(REGEX_EMAIL_ISTITUZIONALE);
+  154      }
+  155  
+  156      // -------------------------------------------------------------- UC8 (profile)
+  157      /**
+  158        * English implementation note.
+  159       */
+  160      public UserDTO visualizzaProfilo(Long studentId) {
+  161          Student student = userRegistry.findStudentById(studentId);
+  162          if (student == null) {
+  163              throw new IllegalArgumentException(&quot;Student not found&quot;);
+  164          }
+  165          return toDTO(student);
+  166      }
+  167  
+  168      // ------------------------------------------------------------------ helper privati
+  169      private boolean isValidRole(String role) {
+  170          return &quot;Student&quot;.equalsIgnoreCase(role) || &quot;Librarian&quot;.equalsIgnoreCase(role);
+  171      }
+  172  
+  173      private void validateStudent(String name, String surname, String email, String studentNumber) {
+  174          validateNameAndSurname(name, surname);
+  175          validateEmail(email);
+  176          validateIdentifier(studentNumber, &quot;studentNumber&quot;);
+  177          if (!studentNumber.matches(REGEX_STUDENT_NUMBER)) {
+  178              throw new IllegalArgumentException(
+  179                      &quot;Unrecognized identifier format: the student ID must be an uppercase letter followed by 8 digits (e.g. N86001234).&quot;);
+  180          }
+  181      }
+  182  
+  183      private void validateLibrarian(String name, String surname, String email, String code) {
+  184          validateNameAndSurname(name, surname);
+  185          validateEmail(email);
+  186          validateIdentifier(code, &quot;code identifier&quot;);
+  187      }
+  188  
+  189      private void validateNameAndSurname(String name, String surname) {
+  190          if (!name.matches(&quot;\\p{L}{1,20}&quot;)) {
+  191              throw new IllegalArgumentException(&quot;Invalid first-name format (letters only, max 20 characters).&quot;);
+  192          }
+  193          if (surname == null || surname.isEmpty()) {
+  194              throw new IllegalArgumentException(&quot;Last name is required.&quot;);
+  195          }
+  196          if (!surname.matches(&quot;\\p{L}{1,20}&quot;)) {
+  197              throw new IllegalArgumentException(&quot;Invalid last-name format (letters only, max 20 characters).&quot;);
+  198          }
+  199      }
+  200  
+
+=== JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java
+    1  package it.unina.reservations.entity;
+    2  
+    3  import it.unina.reservations.database.PersistenceManager;
+    4  
+    5  import java.util.Map;
+    6  
+    7  /**
+    8    * English implementation note.
+    9   */
+   10  public class UserRegistry {
+   11  
+   12      private static UserRegistry instance;
+   13      private final PersistenceManager persistenceManager;
+   14  
+   15      private UserRegistry() {
+   16          this.persistenceManager = new PersistenceManager();
+   17      }
+   18  
+   19      public static UserRegistry getInstance() {
+   20          if (instance == null) {
+   21              instance = new UserRegistry();
+   22          }
+   23          return instance;
+   24      }
+   25  
+   26      public boolean registerUser(User newUser) {
+   27          return persistenceManager.save(newUser);
+   28      }
+   29  
+   30      public User update(User user) {
+   31          return persistenceManager.update(user);
+   32      }
+   33  
+   34      /**
+   35        * English implementation note.
+   36       */
+   37      public User findUserByEmail(String email) {
+   38          return persistenceManager.findFirstByFields(User.class, Map.of(&quot;institutionalEmail&quot;, email));
+   39      }
+   40  
+   41      /**
+   42        * English implementation note.
+   43       */
+   44      public Student findStudentByStudentNumber(String studentNumber) {
+   45          return persistenceManager.findFirstByFields(Student.class, Map.of(&quot;studentNumber&quot;, studentNumber));
+   46      }
+   47  
+   48      /**
+   49        * English implementation note.
+   50       */
+   51      public Student findStudentById(Long id) {
+   52          return persistenceManager.findById(Student.class, id);
+   53      }
+   54  
+   55      /**
+   56        * English implementation note.
+   57       */
+   58      public Librarian findLibrarianByCode(String code) {
+   59          return persistenceManager.findFirstByFields(Librarian.class, Map.of(&quot;internalIdentifierCode&quot;, code));
+   60      }
+   61  
+   62      /**
+   63        * English implementation note.
+   64       */
+   65      public boolean institutionalEmailExists(String email) {
+   66          return findUserByEmail(email) != null;
+   67      }
+   68  }
+
+=== JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java
+    1  package it.unina.reservations.controller.factory;
+    2  
+    3  import it.unina.reservations.entity.User;
+    4  
+    5  /**
+    6    * English implementation note.
+    7    * English implementation note.
+    8   */
+    9  public interface UserFactory {
+   10      User createUser(String name, String surname, String email, String password, String identifier);
+   11  }
+
+Continue. JSON only.
+
+CALL {&quot;tool&quot;: &quot;read&quot;, &quot;args&quot;: {&quot;paths&quot;: [&quot;JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java&quot;, &quot;JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java&quot;]}}
+RESULT:
+=== JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java
+    1  package it.unina.reservations.controller.factory;
+    2  
+    3  import it.unina.reservations.entity.Student;
+    4  import it.unina.reservations.entity.User;
+    5  
+    6  
+    7  /** English implementation note. */
+    8  public class StudentFactory implements UserFactory {
+    9      @Override
+   10      public User createUser(String name, String surname, String email, String password, String identifier) {
+   11          Student student = new Student();
+   12          student.setName(name);
+   13          student.setSurname(surname);
+   14          student.setInstitutionalEmail(email);
+   15          student.setPassword(password);
+   16          student.setStudentNumber(identifier);
+   17          return student;
+   18      }
+   19  }
+
+=== JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java
+    1  package it.unina.reservations.database;
+    2  
+    3  import jakarta.persistence.EntityManager;
+    4  import jakarta.persistence.TypedQuery;
+    5  
+    6  import java.util.List;
+    7  import java.util.Map;
+    8  
+    9  /**
+   10    * English implementation note.
+   11    * English implementation note.
+   12    * English implementation note.
+   13    * English implementation note.
+   14    * English implementation note.
+   15   */
+   16  public class PersistenceManager {
+   17  
+   18      /** English implementation note. */
+   19      public boolean save(Object object) {
+   20          EntityManager em = JpaUtil.getInstance().getEntityManager();
+   21  
+   22          try {
+   23              em.getTransaction().begin();
+   24  
+   25              em.persist(object);
+   26  
+   27              em.getTransaction().commit();
+   28  
+   29              return true;
+   30  
+   31          } catch (RuntimeException e) {
+   32  
+   33              if (em.getTransaction().isActive()) {
+   34                  em.getTransaction().rollback();
+   35              }
+   36  
+   37              e.printStackTrace();
+   38              return false;
+   39  
+   40          } finally {
+   41              em.close();
+   42          }
+   43      }
+   44  
+   45      /** English implementation note. */
+   46      public boolean saveAll(Object... objects) {
+   47          EntityManager em = JpaUtil.getInstance().getEntityManager();
+   48  
+   49          try {
+   50              em.getTransaction().begin();
+   51  
+   52              for (Object object : objects) {
+   53                  em.persist(object);
+   54              }
+   55  
+   56              em.getTransaction().commit();
+   57              return true;
+   58  
+   59          } catch (RuntimeException e) {
+   60  
+   61              if (em.getTransaction().isActive()) {
+   62                  em.getTransaction().rollback();
+   63              }
+   64  
+   65              e.printStackTrace();
+   66              return false;
+   67  
+   68          } finally {
+   69              em.close();
+   70          }
+   71      }
+   72  
+   73      /** English implementation note. */
+   74      public &lt;T&gt; T findById(Class&lt;T&gt; entityClass, Long id) {
+   75  
+   76          EntityManager em = JpaUtil.getInstance().getEntityManager();
+   77  
+   78          try {
+   79              return em.find(entityClass, id);
+   80  
+   81          } finally {
+   82              em.close();
+   83          }
+   84      }
+   85  
+   86      /** English implementation note. */
+   87      public &lt;T&gt; List&lt;T&gt; findByField(Class&lt;T&gt; entityClass,
+   88              String fieldName,
+   89              Object value) {
+   90  
+   91          return findByFields(
+   92                  entityClass,
+   93                  Map.of(fieldName, value));
+   94      }
+   95  
+   96      /**
+   97        * English implementation note.
+   98        * English implementation note.
+   99       */
+  100      public &lt;T&gt; List&lt;T&gt; findByFields(Class&lt;T&gt; entityClass,
+  101              Map&lt;String, Object&gt; fields) {
+  102  
+  103          EntityManager em = JpaUtil.getInstance().getEntityManager();
+  104  
+  105          try {
+  106              StringBuilder jpql = new StringBuilder();
+  107  
+  108              jpql.append(&quot;SELECT e FROM &quot;)
+  109                      .append(entityClass.getSimpleName())
+  110                      .append(&quot; e&quot;);
+  111  
+  112              if (!fields.isEmpty()) {
+  113                  jpql.append(&quot; WHERE &quot;);
+  114  
+  115                  int contatore = 0;
+  116  
+  117                  for (String fieldName : fields.keySet()) {
+  118                      if (contatore &gt; 0) {
+  119                          jpql.append(&quot; AND &quot;);
+  120                      }
+  121  
+  122                      // English implementation note.
+  123                      String parameterName = fieldName.replace(&quot;.&quot;, &quot;_&quot;);
+  124  
+  125                      jpql.append(&quot;e.&quot;)
+  126                              .append(fieldName)
+  127                              .append(&quot; = :&quot;)
+  128                              .append(parameterName);
+  129  
+  130                      contatore++;
+  131                  }
+  132              }
+  133  
+  134              TypedQuery&lt;T&gt; query = em.createQuery(
+  135                      jpql.toString(),
+  136                      entityClass);
+  137  
+  138              for (String fieldName : fields.keySet()) {
+  139                  String parameterName = fieldName.replace(&quot;.&quot;, &quot;_&quot;);
+  140                  query.setParameter(parameterName, fields.get(fieldName));
+  141              }
+  142  
+  143              return query.getResultList();
+  144  
+  145          } finally {
+  146              em.close();
+  147          }
+  148      }
+  149  
+  150      /** English implementation note. */
+  151      public &lt;T&gt; List&lt;T&gt; eseguiQueryCustom(String jpql, Class&lt;T&gt; entityClassRisultato, Map&lt;String, Object&gt; parametri) {
+  152  
+  153          EntityManager em = JpaUtil.getInstance().getEntityManager();
+  154  
+  155          try {
+  156              TypedQuery&lt;T&gt; query = em.createQuery(jpql, entityClassRisultato);
+  157  
+  158              if (parametri != null &amp;&amp; !parametri.isEmpty()) {
+  159                  for (Map.Entry&lt;String, Object&gt; parametro : parametri.entrySet()) {
+  160                      query.setParameter(parametro.getKey(), parametro.getValue());
+  161                  }
+  162              }
+  163  
+  164              return query.getResultList();
+  165  
+  166          } finally {
+  167              em.close();
+  168          }
+  169      }
+  170  
+  171      /** English implementation note. */
+  172      public &lt;T&gt; T findFirstByFields(Class&lt;T&gt; entityClass,
+  173              Map&lt;String, Object&gt; fields) {
+  174  
+  175          List&lt;T&gt; results = findByFields(entityClass, fields);
+  176  
+  177          if (results.isEmpty()) {
+  178              return null;
+  179          }
+  180  
+  181          return results.get(0);
+  182      }
+  183  
+  184      /** English implementation note. */
+  185      public &lt;T&gt; T update(T object) {
+  186  
+  187          EntityManager em = JpaUtil.getInstance().getEntityManager();
+  188  
+  189          try {
+  190              em.getTransaction().begin();
+  191  
+  192              T objectAggiornato = em.merge(object);
+  193  
+  194              em.getTransaction().commit();
+  195  
+  196              return objectAggiornato;
+  197  
+  198          } catch (RuntimeException e) {
+  199  
+  200              if (em.getTransaction().isActive()) {
+
+=== JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java
+    1  package it.unina.reservations.boundary.Swing;
+    2  
+    3  import com.intellij.uiDesigner.core.GridConstraints;
+    4  import com.intellij.uiDesigner.core.GridLayoutManager;
+    5  import com.intellij.uiDesigner.core.Spacer;
+    6  import it.unina.reservations.controller.LibraryFacade;
+    7  
+    8  import javax.swing.*;
+    9  import javax.swing.border.EmptyBorder;
+   10  import javax.swing.border.LineBorder;
+   11  import javax.swing.plaf.FontUIResource;
+   12  import javax.swing.text.StyleContext;
+   13  import java.awt.*;
+   14  import java.awt.event.FocusAdapter;
+   15  import java.awt.event.FocusEvent;
+   16  import java.awt.event.MouseAdapter;
+   17  import java.awt.event.MouseEvent;
+   18  import java.util.Locale;
+   19  
+   20  public class Registration {
+   21  
+   22      public static void main(String[] args) {
+   23          // English implementation note.
+   24          new Registration().openForm();
+   25      }
+   26  
+   27      private static final String NAME_PLACEHOLDER = &quot;First Name&quot;;
+   28      private static final String SURNAME_PLACEHOLDER = &quot;Last Name&quot;;
+   29      private static final String PLACEHOLDER_EMAIL = &quot;Institutional Email&quot;;
+   30      private static final String PLACEHOLDER_PASSWORD = &quot;Password&quot;;
+   31      private static final String IDENTIFIER_PLACEHOLDER = &quot;Student ID/Code&quot;;
+   32  
+   33      // English implementation note.
+   34      private JPanel registrationPanel;
+   35      private JPanel cardRegistration;
+   36      private JLabel titleLabel;
+   37      private JTextField nameField;
+   38      private JTextField surnameField;
+   39      private JTextField fieldEmail;
+   40      private JPasswordField fieldPassword;
+   41      private JComboBox&lt;String&gt; roleComboBox;
+   42      private JTextField identifierField;
+   43      private JButton registerButton;
+   44      private JLabel labelAccedi;
+   45  
+   46      // English implementation note.
+   47      private JFrame currentFrame;
+   48  
+   49      public Registration() {
+   50          // English implementation note.
+   51          cardRegistration.setBorder(BorderFactory.createCompoundBorder(
+   52                  new LineBorder(new Color(220, 220, 228), 1, true),
+   53                  new EmptyBorder(35, 40, 35, 40)));
+   54  
+   55          // English implementation note.
+   56          for (JTextField field : new JTextField[]{nameField, surnameField, fieldEmail, fieldPassword, identifierField}) {
+   57              WizardStyle.styleField(field);
+   58          }
+   59          WizardStyle.installPlaceholder(nameField, NAME_PLACEHOLDER);
+   60          WizardStyle.installPlaceholder(surnameField, SURNAME_PLACEHOLDER);
+   61          WizardStyle.installPlaceholder(fieldEmail, PLACEHOLDER_EMAIL);
+   62          WizardStyle.installPlaceholder(identifierField, IDENTIFIER_PLACEHOLDER);
+   63  
+   64          // Placeholder password
+   65          fieldPassword.setEchoChar((char) 0);
+   66          fieldPassword.setForeground(WizardStyle.PLACEHOLDER);
+   67          fieldPassword.addFocusListener(new FocusAdapter() {
+   68              @Override
+   69              public void focusGained(FocusEvent e) {
+   70                  if (String.valueOf(fieldPassword.getPassword()).equals(PLACEHOLDER_PASSWORD)) {
+   71                      fieldPassword.setText(&quot;&quot;);
+   72                      fieldPassword.setEchoChar(&#x27;●&#x27;);
+   73                      fieldPassword.setForeground(Color.DARK_GRAY);
+   74                  }
+   75              }
+   76  
+   77              @Override
+   78              public void focusLost(FocusEvent e) {
+   79                  if (fieldPassword.getPassword().length == 0) {
+   80                      fieldPassword.setEchoChar((char) 0);
+   81                      fieldPassword.setText(PLACEHOLDER_PASSWORD);
+   82                      fieldPassword.setForeground(WizardStyle.PLACEHOLDER);
+   83                  }
+   84              }
+   85          });
+   86  
+   87          roleComboBox.setModel(new DefaultComboBoxModel&lt;&gt;(new String[]{&quot;Student&quot;, &quot;Librarian&quot;}));
+   88          roleComboBox.setRenderer(new DefaultListCellRenderer() {
+   89              @Override
+   90              public Component getListCellRendererComponent(JList&lt;?&gt; list, Object value, int index,
+   91                                                            boolean isSelected, boolean cellHasFocus) {
+   92                  String label = &quot;Student&quot;.equals(value) ? &quot;Student&quot;
+   93                          : &quot;Librarian&quot;.equals(value) ? &quot;Librarian&quot; : String.valueOf(value);
+   94                  return super.getListCellRendererComponent(list, label, index, isSelected, cellHasFocus);
+   95              }
+   96          });
+   97          roleComboBox.setBackground(Color.WHITE);
+   98  
+   99          WizardStyle.styleButton(registerButton, WizardStyle.PURPLE);
+  100  
+  101          labelAccedi.setText(&quot;&lt;html&gt;Already have an account? &lt;font color=&#x27;#7C73E6&#x27;&gt;&lt;b&gt;Sign In&lt;/b&gt;&lt;/font&gt;&lt;/html&gt;&quot;);
+  102          labelAccedi.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+  103          labelAccedi.addMouseListener(new MouseAdapter() {
+  104              @Override
+  105              public void mouseClicked(MouseEvent e) {
+  106                  currentFrame.dispose();
+  107                  new Login().openLogin();
+  108              }
+  109          });
+  110  
+  111          registerButton.addActionListener(e -&gt; register());
+  112      }
+  113  
+  114      // English implementation note.
+  115  
+  116      private void register() {
+  117          String name = WizardStyle.fieldValue(nameField, NAME_PLACEHOLDER);
+  118          String surname = WizardStyle.fieldValue(surnameField, SURNAME_PLACEHOLDER);
+  119          String email = WizardStyle.fieldValue(fieldEmail, PLACEHOLDER_EMAIL);
+  120          String password = String.valueOf(fieldPassword.getPassword());
+  121          String role = (String) roleComboBox.getSelectedItem();
+  122          String identifier = WizardStyle.fieldValue(identifierField, IDENTIFIER_PLACEHOLDER);
+  123  
+  124          if (password.equals(PLACEHOLDER_PASSWORD)) {
+  125              password = &quot;&quot;;
+  126          }
+  127          if (name.isBlank() || surname.isBlank() || email.isBlank()
+  128                  || password.isBlank() || identifier.isBlank()) {
+  129              showError(&quot;Complete all fields&quot;);
+  130              return;
+  131          }
+  132  
+  133          try {
+  134              LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);
+  135              JOptionPane.showMessageDialog(registrationPanel,
+  136                      &quot;Registration complete! You can now sign in.&quot;,
+  137                      &quot;Registration&quot;, JOptionPane.INFORMATION_MESSAGE);
+  138              currentFrame.dispose();
+  139              new Login().openLogin();
+  140          } catch (RuntimeException ex) {
+  141              showError(ex.getMessage());
+  142          }
+  143      }
+  144  
+  145      // --- APRI FORM ---
+  146  
+  147      public JFrame openForm() {
+  148          currentFrame = new JFrame(&quot;Create Account&quot;);
+  149          currentFrame.setContentPane(registrationPanel);
+  150          currentFrame.setSize(1000, 1000);
+  151          currentFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+  152          currentFrame.setLocationRelativeTo(null);
+  153          currentFrame.setResizable(false);
+  154          currentFrame.setVisible(true);
+  155          return currentFrame;
+  156      }
+  157  
+  158      public void showError(String message) {
+  159          JOptionPane.showMessageDialog(registrationPanel, message, &quot;Registration error&quot;, JOptionPane.ERROR_MESSAGE);
+  160      }
+  161  
+  162      {
+  163  // GUI initializer generated by IntelliJ IDEA GUI Designer
+  164  // &gt;&gt;&gt; IMPORTANT!! &lt;&lt;&lt;
+  165  // DO NOT EDIT OR ADD ANY CODE HERE!
+  166          $$$setupUI$$$();
+  167      }
+  168  
+  169      /**
+  170       * Method generated by IntelliJ IDEA GUI Designer
+  171       * &gt;&gt;&gt; IMPORTANT!! &lt;&lt;&lt;
+  172       * DO NOT edit this method OR call it in your code!
+  173       *
+  174       * @noinspection ALL
+  175       */
+  176      private void $$$setupUI$$$() {
+  177          registrationPanel = new JPanel();
+  178          registrationPanel.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+  179          registrationPanel.setBackground(new Color(-5192482));
+  180          final Spacer spacer1 = new Spacer();
+  181          registrationPanel.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+  182          final JPanel panel1 = new JPanel();
+  183          panel1.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+  184          panel1.setBackground(new Color(-5192482));
+  185          panel1.setOpaque(true);
+  186          registrationPanel.add(panel1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+  187          final Spacer spacer2 = new Spacer();
+  188          panel1.add(spacer2, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+  189          cardRegistration = new JPanel();
+  190          cardRegistration.setLayout(new GridLayoutManager(9, 1, new Insets(35, 40, 35, 40), -1, 10));
+  191          cardRegistration.setBackground(new Color(-1));
+  192          cardRegistration.setOpaque(true);
+  193          panel1.add(cardRegistration, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(400, 560), null, 0, false));
+  194          titleLabel = new JLabel();
+  195          Font titleLabelFont = this.$$$getFont$$$(&quot;SansSerif&quot;, Font.BOLD, 24, titleLabel.getFont());
+  196          if (titleLabelFont != null) titleLabel.setFont(titleLabelFont);
+  197          titleLabel.setHorizontalAlignment(0);
+  198          titleLabel.setText(&quot;Create Account&quot;);
+  199          cardRegistration.add(titleLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+  200          nameField = new JTextField();
+
+Continue. JSON only.</pre></details><details><summary>Turn 3: the model&#x27;s reply</summary><pre>{
+  &quot;final&quot;: {
+    &quot;claims&quot;: [
+      {
+        &quot;kind&quot;: &quot;element&quot;,
+        &quot;element_kind&quot;: &quot;actor&quot;,
+        &quot;name&quot;: &quot;User registering (Student or Librarian)&quot;,
+        &quot;answers&quot;: [
+          &quot;AQ1&quot;
+        ],
+        &quot;responsibilities&quot;: [
+          &quot;chooses a role and submits the registration form&quot;
+        ],
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java&quot;,
+            &quot;lines&quot;: [
+              87,
+              87
+            ],
+            &quot;excerpt&quot;: &quot;roleComboBox.setModel(new DefaultComboBoxModel&lt;&gt;(new String[]{\&quot;Student\&quot;, \&quot;Librarian\&quot;}));&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.8
+      },
+      {
+        &quot;kind&quot;: &quot;element&quot;,
+        &quot;element_kind&quot;: &quot;component&quot;,
+        &quot;name&quot;: &quot;AuthenticationController&quot;,
+        &quot;symbol&quot;: &quot;it.unina.reservations.boundary.SpringBoot.AuthenticationController&quot;,
+        &quot;answers&quot;: [
+          &quot;AQ1&quot;
+        ],
+        &quot;responsibilities&quot;: [
+          &quot;REST entry point POST /api/auth/register&quot;
+        ],
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java&quot;,
+            &quot;lines&quot;: [
+              22,
+              23
+            ],
+            &quot;excerpt&quot;: &quot;@PostMapping(\&quot;/register\&quot;)\n    public UserDTO register(@RequestParam(\&quot;role\&quot;) String role,&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;element&quot;,
+        &quot;element_kind&quot;: &quot;component&quot;,
+        &quot;name&quot;: &quot;Registration&quot;,
+        &quot;symbol&quot;: &quot;it.unina.reservations.boundary.Swing.Registration&quot;,
+        &quot;answers&quot;: [
+          &quot;AQ1&quot;
+        ],
+        &quot;responsibilities&quot;: [
+          &quot;Swing registration form&quot;
+        ],
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java&quot;,
+            &quot;lines&quot;: [
+              116,
+              116
+            ],
+            &quot;excerpt&quot;: &quot;private void register() {&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;element&quot;,
+        &quot;element_kind&quot;: &quot;component&quot;,
+        &quot;name&quot;: &quot;LibraryFacade&quot;,
+        &quot;symbol&quot;: &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+        &quot;answers&quot;: [
+          &quot;AQ1&quot;
+        ],
+        &quot;responsibilities&quot;: [
+          &quot;facade delegating registration to UserManager&quot;
+        ],
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java&quot;,
+            &quot;lines&quot;: [
+              39,
+              39
+            ],
+            &quot;excerpt&quot;: &quot;return UserManager.getInstance().register(role, name, surname, email, password, identifier);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;element&quot;,
+        &quot;element_kind&quot;: &quot;component&quot;,
+        &quot;name&quot;: &quot;UserManager&quot;,
+        &quot;symbol&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;answers&quot;: [
+          &quot;AQ1&quot;
+        ],
+        &quot;responsibilities&quot;: [
+          &quot;validates input&quot;,
+          &quot;checks duplicates&quot;,
+          &quot;creates and registers the user&quot;
+        ],
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              65,
+              67
+            ],
+            &quot;excerpt&quot;: &quot;public UserDTO register(String role, String name, String surname,\n                                String email, String password, String identifier) {\n        validate(role, name, password);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;element&quot;,
+        &quot;element_kind&quot;: &quot;component&quot;,
+        &quot;name&quot;: &quot;UserRegistry&quot;,
+        &quot;symbol&quot;: &quot;it.unina.reservations.entity.UserRegistry&quot;,
+        &quot;answers&quot;: [
+          &quot;AQ1&quot;
+        ],
+        &quot;responsibilities&quot;: [
+          &quot;looks up and saves users via PersistenceManager&quot;
+        ],
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java&quot;,
+            &quot;lines&quot;: [
+              26,
+              28
+            ],
+            &quot;excerpt&quot;: &quot;public boolean registerUser(User newUser) {\n        return persistenceManager.save(newUser);\n    }&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;element&quot;,
+        &quot;element_kind&quot;: &quot;component&quot;,
+        &quot;name&quot;: &quot;StudentFactory&quot;,
+        &quot;symbol&quot;: &quot;it.unina.reservations.controller.factory.StudentFactory&quot;,
+        &quot;answers&quot;: [
+          &quot;AQ1&quot;
+        ],
+        &quot;responsibilities&quot;: [
+          &quot;builds a Student entity from registration data&quot;
+        ],
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java&quot;,
+            &quot;lines&quot;: [
+              8,
+              8
+            ],
+            &quot;excerpt&quot;: &quot;public class StudentFactory implements UserFactory {&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;element&quot;,
+        &quot;element_kind&quot;: &quot;component&quot;,
+        &quot;name&quot;: &quot;PersistenceManager&quot;,
+        &quot;symbol&quot;: &quot;it.unina.reservations.database.PersistenceManager&quot;,
+        &quot;answers&quot;: [
+          &quot;AQ1&quot;
+        ],
+        &quot;responsibilities&quot;: [
+          &quot;persists entities in a JPA transaction&quot;
+        ],
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java&quot;,
+            &quot;lines&quot;: [
+              19,
+              19
+            ],
+            &quot;excerpt&quot;: &quot;public boolean save(Object object) {&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 1,
+        &quot;source&quot;: &quot;it.unina.reservations.boundary.SpringBoot.AuthenticationController&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+        &quot;label&quot;: &quot;register(role, name, surname, email, password, identifier)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java&quot;,
+            &quot;lines&quot;: [
+              29,
+              30
+            ],
+            &quot;excerpt&quot;: &quot;return LibraryFacade.getInstance()\n                .register(role, name, surname, email, password, identifier);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 2,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;label&quot;: &quot;register(role, name, surname, email, password, identifier)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java&quot;,
+            &quot;lines&quot;: [
+              39,
+              39
+            ],
+            &quot;excerpt&quot;: &quot;return UserManager.getInstance().register(role, name, surname, email, password, identifier);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 3,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;label&quot;: &quot;validate(role, name, password); throws IllegalArgumentException if invalid&quot;,
+        &quot;condition&quot;: &quot;role, name or password invalid (role invalid, empty name, password shorter than 8 or longer than 32)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              67,
+              67
+            ],
+            &quot;excerpt&quot;: &quot;validate(role, name, password);&quot;
+          },
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              46,
+              47
+            ],
+            &quot;excerpt&quot;: &quot;if (!condition) {\n            throw new IllegalArgumentException(message);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.85
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 4,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;label&quot;: &quot;validateStudent / validateLibrarian&quot;,
+        &quot;condition&quot;: &quot;role is Student, otherwise Librarian; invalid name, surname, email or identifier format throws IllegalArgumentException&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              71,
+              75
+            ],
+            &quot;excerpt&quot;: &quot;if (student) {\n            validateStudent(name, surname, email, identifier);\n        } else {\n            validateLibrarian(name, surname, email, identifier);\n        }&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 5,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.entity.UserRegistry&quot;,
+        &quot;label&quot;: &quot;institutionalEmailExists(email)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              77,
+              77
+            ],
+            &quot;excerpt&quot;: &quot;if (userRegistry.institutionalEmailExists(email)) {&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 6,
+        &quot;source&quot;: &quot;it.unina.reservations.entity.UserRegistry&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.database.PersistenceManager&quot;,
+        &quot;label&quot;: &quot;findFirstByFields(User.class, institutionalEmail)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java&quot;,
+            &quot;lines&quot;: [
+              38,
+              38
+            ],
+            &quot;excerpt&quot;: &quot;return persistenceManager.findFirstByFields(User.class, Map.of(\&quot;institutionalEmail\&quot;, email));&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 7,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+        &quot;label&quot;: &quot;IllegalArgumentException(\&quot;Email is already associated with an account.\&quot;)&quot;,
+        &quot;condition&quot;: &quot;email already exists in the registry (duplicate email)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              77,
+              78
+            ],
+            &quot;excerpt&quot;: &quot;if (userRegistry.institutionalEmailExists(email)) {\n            throw new IllegalArgumentException(\&quot;Email is already associated with an account.\&quot;);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 8,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.entity.UserRegistry&quot;,
+        &quot;label&quot;: &quot;findStudentByStudentNumber(identifier) / findLibrarianByCode(identifier)&quot;,
+        &quot;condition&quot;: &quot;email not yet used&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              81,
+              83
+            ],
+            &quot;excerpt&quot;: &quot;boolean identifierGiaUsato = student\n                ? userRegistry.findStudentByStudentNumber(identifier) != null\n                : userRegistry.findLibrarianByCode(identifier) != null;&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 9,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+        &quot;label&quot;: &quot;IllegalArgumentException(\&quot;Identifier is already in use.\&quot;)&quot;,
+        &quot;condition&quot;: &quot;student number or librarian code already in use&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              84,
+              85
+            ],
+            &quot;excerpt&quot;: &quot;if (identifierGiaUsato) {\n            throw new IllegalArgumentException(\&quot;Identifier is already in use.\&quot;);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 10,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.factory.StudentFactory&quot;,
+        &quot;label&quot;: &quot;createUser(name, surname, email, password, identifier)&quot;,
+        &quot;condition&quot;: &quot;role is Student (LibrarianFactory otherwise)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              89,
+              90
+            ],
+            &quot;excerpt&quot;: &quot;UserFactory factory = student ? new StudentFactory() : new LibrarianFactory();\n        User newUser = factory.createUser(name, surname, email, password, identifier);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 11,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.entity.UserRegistry&quot;,
+        &quot;label&quot;: &quot;registerUser(newUser)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              92,
+              92
+            ],
+            &quot;excerpt&quot;: &quot;boolean success = userRegistry.registerUser(newUser);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 12,
+        &quot;source&quot;: &quot;it.unina.reservations.entity.UserRegistry&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.database.PersistenceManager&quot;,
+        &quot;label&quot;: &quot;save(newUser)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java&quot;,
+            &quot;lines&quot;: [
+              27,
+              27
+            ],
+            &quot;excerpt&quot;: &quot;return persistenceManager.save(newUser);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 13,
+        &quot;source&quot;: &quot;it.unina.reservations.database.PersistenceManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.entity.UserRegistry&quot;,
+        &quot;label&quot;: &quot;persist in transaction; returns true on commit, false after rollback&quot;,
+        &quot;condition&quot;: &quot;RuntimeException during persist leads to rollback and false&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java&quot;,
+            &quot;lines&quot;: [
+              25,
+              29
+            ],
+            &quot;excerpt&quot;: &quot;em.persist(object);\n\n            em.getTransaction().commit();\n\n            return true;&quot;
+          },
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java&quot;,
+            &quot;lines&quot;: [
+              31,
+              38
+            ],
+            &quot;excerpt&quot;: &quot;} catch (RuntimeException e) {\n\n            if (em.getTransaction().isActive()) {\n                em.getTransaction().rollback();\n            }\n\n            e.printStackTrace();\n            return false;&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 14,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+        &quot;label&quot;: &quot;RuntimeException(\&quot;Server error: the user could not be saved. Please try again.\&quot;)&quot;,
+        &quot;condition&quot;: &quot;registerUser returns false&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              93,
+              94
+            ],
+            &quot;excerpt&quot;: &quot;if (!success){\n            throw new RuntimeException(\&quot;Server error: the user could not be saved. Please try again.\&quot;);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (REST)&quot;,
+        &quot;order&quot;: 15,
+        &quot;source&quot;: &quot;it.unina.reservations.controller.UserManager&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+        &quot;label&quot;: &quot;return UserDTO (toDTO(newUser))&quot;,
+        &quot;condition&quot;: &quot;user saved successfully; the REST controller returns this UserDTO to the HTTP client&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java&quot;,
+            &quot;lines&quot;: [
+              96,
+              96
+            ],
+            &quot;excerpt&quot;: &quot;return toDTO(newUser);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (Swing)&quot;,
+        &quot;order&quot;: 1,
+        &quot;source&quot;: &quot;it.unina.reservations.boundary.Swing.Registration&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.boundary.Swing.Registration&quot;,
+        &quot;label&quot;: &quot;showError(\&quot;Complete all fields\&quot;) and abort&quot;,
+        &quot;condition&quot;: &quot;any of name, surname, email, password or identifier is blank&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java&quot;,
+            &quot;lines&quot;: [
+              127,
+              130
+            ],
+            &quot;excerpt&quot;: &quot;if (name.isBlank() || surname.isBlank() || email.isBlank()\n                || password.isBlank() || identifier.isBlank()) {\n            showError(\&quot;Complete all fields\&quot;);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (Swing)&quot;,
+        &quot;order&quot;: 2,
+        &quot;source&quot;: &quot;it.unina.reservations.boundary.Swing.Registration&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.controller.LibraryFacade&quot;,
+        &quot;label&quot;: &quot;register(role, name, surname, email, password, identifier)&quot;,
+        &quot;condition&quot;: &quot;all fields filled&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java&quot;,
+            &quot;lines&quot;: [
+              134,
+              134
+            ],
+            &quot;excerpt&quot;: &quot;LibraryFacade.getInstance().register(role, name, surname, email, password, identifier);&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (Swing)&quot;,
+        &quot;order&quot;: 3,
+        &quot;source&quot;: &quot;it.unina.reservations.boundary.Swing.Registration&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.boundary.Swing.Registration&quot;,
+        &quot;label&quot;: &quot;success dialog, then open Login&quot;,
+        &quot;condition&quot;: &quot;register returns without exception&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java&quot;,
+            &quot;lines&quot;: [
+              135,
+              139
+            ],
+            &quot;excerpt&quot;: &quot;JOptionPane.showMessageDialog(registrationPanel,\n                    \&quot;Registration complete! You can now sign in.\&quot;,\n                    \&quot;Registration\&quot;, JOptionPane.INFORMATION_MESSAGE);\n            currentFrame.dispose();\n            new Login().openLogin();&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      },
+      {
+        &quot;kind&quot;: &quot;interaction&quot;,
+        &quot;scenario&quot;: &quot;register user (Swing)&quot;,
+        &quot;order&quot;: 4,
+        &quot;source&quot;: &quot;it.unina.reservations.boundary.Swing.Registration&quot;,
+        &quot;target&quot;: &quot;it.unina.reservations.boundary.Swing.Registration&quot;,
+        &quot;label&quot;: &quot;showError(ex.getMessage())&quot;,
+        &quot;condition&quot;: &quot;register throws RuntimeException (validation, duplicate email or identifier, save failure)&quot;,
+        &quot;evidence&quot;: [
+          {
+            &quot;file&quot;: &quot;JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java&quot;,
+            &quot;lines&quot;: [
+              140,
+              141
+            ],
+            &quot;excerpt&quot;: &quot;} catch (RuntimeException ex) {\n            showError(ex.getMessage());&quot;
+          }
+        ],
+        &quot;confidence&quot;: 0.9
+      }
+    ]
+  }
+}</pre></details><p class=mut>Raw files: <a href="files/model_calls.jsonl">model_calls.jsonl</a></p></section><div class="arrow">▼</div><section class="step" id="s7"><div class="sh"><span class="n">7</span><h2>Verify every claim against the code</h2><span class="b llm">code, no model</span></div><p class="what">Each citation is checked: the file exists, the lines exist, the quoted code is really there, the symbol exists. Claims that fail are rejected and never drawn.</p><div class="io"><b>Input</b><div>27 claims from the agent</div><b>Output</b><div>27 accepted · 0 rejected<div class="wrap"><table><tr><th>id</th><th>kind</th><th>claim</th><th>responsibility / reason</th><th>cited</th><th>support</th></tr><tr><td>C1</td><td>element</td><td>User registering (Student or Librarian)</td><td>chooses a role and submits the registration form</td><td>Registration.java:87-87</td><td>observed</td></tr><tr><td>C2</td><td>element</td><td>AuthenticationController</td><td>REST entry point POST /api/auth/register</td><td>AuthenticationController.java:22-23</td><td>observed</td></tr><tr><td>C3</td><td>element</td><td>Registration</td><td>Swing registration form</td><td>Registration.java:116-116</td><td>observed</td></tr><tr><td>C4</td><td>element</td><td>LibraryFacade</td><td>facade delegating registration to UserManager</td><td>LibraryFacade.java:39-39</td><td>observed</td></tr><tr><td>C5</td><td>element</td><td>UserManager</td><td>validates input; checks duplicates</td><td>UserManager.java:65-67</td><td>observed</td></tr><tr><td>C6</td><td>element</td><td>UserRegistry</td><td>looks up and saves users via PersistenceManager</td><td>UserRegistry.java:26-28</td><td>observed</td></tr><tr><td>C7</td><td>element</td><td>StudentFactory</td><td>builds a Student entity from registration data</td><td>StudentFactory.java:8-8</td><td>observed</td></tr><tr><td>C8</td><td>element</td><td>PersistenceManager</td><td>persists entities in a JPA transaction</td><td>PersistenceManager.java:19-19</td><td>observed</td></tr><tr><td>C9</td><td>interaction</td><td>it.unina.reservations.boundary.SpringBoot.AuthenticationController → it.unina.reservations.controller.LibraryFacade : register(role, name, surname, email, password, identifier)</td><td></td><td>AuthenticationController.java:29-30</td><td>observed</td></tr><tr><td>C10</td><td>interaction</td><td>it.unina.reservations.controller.LibraryFacade → it.unina.reservations.controller.UserManager : register(role, name, surname, email, password, identifier)</td><td></td><td>LibraryFacade.java:39-39</td><td>observed</td></tr><tr><td>C11</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.controller.UserManager : validate(role, name, password); throws IllegalArgumentException if invalid</td><td></td><td>UserManager.java:67-67<br>UserManager.java:46-47</td><td>observed</td></tr><tr><td>C12</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.controller.UserManager : validateStudent / validateLibrarian</td><td></td><td>UserManager.java:71-75</td><td>observed</td></tr><tr><td>C13</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.entity.UserRegistry : institutionalEmailExists(email)</td><td></td><td>UserManager.java:77-77</td><td>observed</td></tr><tr><td>C14</td><td>interaction</td><td>it.unina.reservations.entity.UserRegistry → it.unina.reservations.database.PersistenceManager : findFirstByFields(User.class, institutionalEmail)</td><td></td><td>UserRegistry.java:38-38</td><td>observed</td></tr><tr><td>C15</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.controller.LibraryFacade : IllegalArgumentException(&quot;Email is already associated with an account.&quot;)</td><td></td><td>UserManager.java:77-78</td><td>observed</td></tr><tr><td>C16</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.entity.UserRegistry : findStudentByStudentNumber(identifier) / findLibrarianByCode(identifier)</td><td></td><td>UserManager.java:81-83</td><td>observed</td></tr><tr><td>C17</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.controller.LibraryFacade : IllegalArgumentException(&quot;Identifier is already in use.&quot;)</td><td></td><td>UserManager.java:84-85</td><td>observed</td></tr><tr><td>C18</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.controller.factory.StudentFactory : createUser(name, surname, email, password, identifier)</td><td></td><td>UserManager.java:89-90</td><td>observed</td></tr><tr><td>C19</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.entity.UserRegistry : registerUser(newUser)</td><td></td><td>UserManager.java:92-92</td><td>observed</td></tr><tr><td>C20</td><td>interaction</td><td>it.unina.reservations.entity.UserRegistry → it.unina.reservations.database.PersistenceManager : save(newUser)</td><td></td><td>UserRegistry.java:27-27</td><td>observed</td></tr><tr><td>C21</td><td>interaction</td><td>it.unina.reservations.database.PersistenceManager → it.unina.reservations.entity.UserRegistry : persist in transaction; returns true on commit, false after rollback</td><td></td><td>PersistenceManager.java:25-29<br>PersistenceManager.java:31-38</td><td>observed</td></tr><tr><td>C22</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.controller.LibraryFacade : RuntimeException(&quot;Server error: the user could not be saved. Please try again.&quot;)</td><td></td><td>UserManager.java:93-94</td><td>observed</td></tr><tr><td>C23</td><td>interaction</td><td>it.unina.reservations.controller.UserManager → it.unina.reservations.controller.LibraryFacade : return UserDTO (toDTO(newUser))</td><td></td><td>UserManager.java:96-96</td><td>observed</td></tr><tr><td>C24</td><td>interaction</td><td>it.unina.reservations.boundary.Swing.Registration → it.unina.reservations.boundary.Swing.Registration : showError(&quot;Complete all fields&quot;) and abort</td><td></td><td>Registration.java:127-130</td><td>observed</td></tr><tr><td>C25</td><td>interaction</td><td>it.unina.reservations.boundary.Swing.Registration → it.unina.reservations.controller.LibraryFacade : register(role, name, surname, email, password, identifier)</td><td></td><td>Registration.java:134-134</td><td>observed</td></tr><tr><td>C26</td><td>interaction</td><td>it.unina.reservations.boundary.Swing.Registration → it.unina.reservations.boundary.Swing.Registration : success dialog, then open Login</td><td></td><td>Registration.java:135-139</td><td>observed</td></tr><tr><td>C27</td><td>interaction</td><td>it.unina.reservations.boundary.Swing.Registration → it.unina.reservations.boundary.Swing.Registration : showError(ex.getMessage())</td><td></td><td>Registration.java:140-141</td><td>observed</td></tr></table></div></div></div><p class=mut>Raw files: <a href="files/evidence_model.json">evidence_model.json</a></p></section><div class="arrow">▼</div><section class="step" id="s8"><div class="sh"><span class="n">8</span><h2>Evidence model</h2><span class="b llm">code, no model</span></div><p class="what">The accepted claims and the code facts are merged into one model: elements, relations and ordered scenarios.</p><div class="io"><b>Input</b><div>accepted claims + repository card</div><b>Output</b><div>23 elements · 14 relations · 2 scenario(s)</div></div><details><summary>Elements</summary><div class="wrap"><table><tr><th>kind</th><th>name</th><th>layer</th><th>responsibility</th></tr><tr><td>component</td><td>AuthenticationController</td><td>presentation</td><td>REST entry point POST /api/auth/register</td></tr><tr><td>component</td><td>Registration</td><td>presentation</td><td>Swing registration form</td></tr><tr><td>component</td><td>LibraryFacade</td><td>application</td><td>facade delegating registration to UserManager</td></tr><tr><td>component</td><td>UserManager</td><td>application</td><td>validates input</td></tr><tr><td>component</td><td>UserRegistry</td><td>domain</td><td>looks up and saves users via PersistenceManager</td></tr><tr><td>component</td><td>StudentFactory</td><td>application</td><td>builds a Student entity from registration data</td></tr><tr><td>component</td><td>PersistenceManager</td><td>persistence</td><td>persists entities in a JPA transaction</td></tr><tr><td>actor</td><td>User registering (Student or Librarian)</td><td></td><td>chooses a role and submits the registration form</td></tr><tr><td>entity</td><td>Area</td><td></td><td></td></tr><tr><td>entity</td><td>Librarian</td><td></td><td></td></tr><tr><td>entity</td><td>Reservation</td><td></td><td></td></tr><tr><td>entity</td><td>Seat</td><td></td><td></td></tr><tr><td>entity</td><td>Student</td><td></td><td></td></tr><tr><td>entity</td><td>StudyRoom</td><td></td><td></td></tr><tr><td>entity</td><td>TimeSlot</td><td></td><td></td></tr><tr><td>entity</td><td>User</td><td></td><td></td></tr><tr><td>artifact</td><td>library-reservation-system.jar</td><td></td><td></td></tr><tr><td>datastore</td><td>reservationsdb</td><td></td><td></td></tr><tr><td>state</td><td>ActiveState</td><td></td><td></td></tr><tr><td>state</td><td>CancelledState</td><td></td><td></td></tr><tr><td>state</td><td>CompletedState</td><td></td><td></td></tr><tr><td>state</td><td>ConfirmedState</td><td></td><td></td></tr><tr><td>state</td><td>ExpiredState</td><td></td><td></td></tr></table></div></details><details><summary>Relations</summary><div class="wrap"><table><tr><th>from</th><th>kind</th><th>to</th><th>label</th></tr><tr><td>AuthenticationController</td><td>uses</td><td>LibraryFacade</td><td>getInstance</td></tr><tr><td>Registration</td><td>uses</td><td>LibraryFacade</td><td>getInstance</td></tr><tr><td>LibraryFacade</td><td>uses</td><td>UserManager</td><td>getInstance</td></tr><tr><td>UserManager</td><td>uses</td><td>UserRegistry</td><td>update, institutionalEmailExists</td></tr><tr><td>UserManager</td><td>uses</td><td>StudentFactory</td><td></td></tr><tr><td>UserRegistry</td><td>uses</td><td>PersistenceManager</td><td>findFirstByFields, save</td></tr><tr><td>Area</td><td>association</td><td>StudyRoom</td><td>studyRoom</td></tr><tr><td>Area</td><td>association</td><td>Seat</td><td>seats</td></tr><tr><td>Reservation</td><td>association</td><td>Student</td><td>student</td></tr><tr><td>Reservation</td><td>association</td><td>Seat</td><td>seat</td></tr><tr><td>Reservation</td><td>association</td><td>TimeSlot</td><td>timeSlot</td></tr><tr><td>StudyRoom</td><td>association</td><td>TimeSlot</td><td>timeSlots</td></tr><tr><td>StudyRoom</td><td>association</td><td>TimeSlot</td><td>timeLavorativo</td></tr><tr><td>library-reservation-system.jar</td><td>communicates</td><td>reservationsdb</td><td>mysql</td></tr></table></div></details><details><summary>Scenario steps</summary><ol><li>AuthenticationController → LibraryFacade: register(role, name, surname, email, password, identifier)</li><li>LibraryFacade → UserManager: register(role, name, surname, email, password, identifier)</li><li>UserManager → UserManager: validate(role, name, password); throws IllegalArgumentException if invalid</li><li>UserManager → UserManager: validateStudent / validateLibrarian</li><li>UserManager → UserRegistry: institutionalEmailExists(email)</li><li>UserRegistry → PersistenceManager: findFirstByFields(User.class, institutionalEmail)</li><li>UserManager → LibraryFacade: IllegalArgumentException(&quot;Email is already associated with an account.&quot;)</li><li>UserManager → UserRegistry: findStudentByStudentNumber(identifier) / findLibrarianByCode(identifier)</li><li>UserManager → LibraryFacade: IllegalArgumentException(&quot;Identifier is already in use.&quot;)</li><li>UserManager → StudentFactory: createUser(name, surname, email, password, identifier)</li><li>UserManager → UserRegistry: registerUser(newUser)</li><li>UserRegistry → PersistenceManager: save(newUser)</li><li>PersistenceManager → UserRegistry: persist in transaction; returns true on commit, false after rollback</li><li>UserManager → LibraryFacade: RuntimeException(&quot;Server error: the user could not be saved. Please try again.&quot;)</li><li>UserManager → LibraryFacade: return UserDTO (toDTO(newUser))</li><li>Registration → Registration: showError(&quot;Complete all fields&quot;) and abort</li><li>Registration → LibraryFacade: register(role, name, surname, email, password, identifier)</li><li>Registration → Registration: success dialog, then open Login</li><li>Registration → Registration: showError(ex.getMessage())</li></ol></details><p class=mut>Raw files: <a href="files/evidence_model.json">evidence_model.json</a></p></section><div class="arrow">▼</div><section class="step" id="s9"><div class="sh"><span class="n">9</span><h2>Phase 7 · Draw the UML view</h2><span class="b llm">code, no model</span></div><p class="what">The view is drawn as a UML sequence diagram in PlantUML, from the evidence model (projection: the most relevant elements, up to the cap).</p><div class="io"><b>Input</b><div>the parts / the evidence model</div><b>Output</b><div><div class="img"><a href="files/V1-sequence/view.png"><img src="files/V1-sequence/view.png" alt="the view"></a></div><p>Limitations noted:</p><ul><li>one scenario per view; also recovered: register user (Swing)</li><li>1 participant(s) exceed the overview cap</li><li>alternative paths beyond the overview level are not drawn</li></ul></div></div><details><summary>PlantUML source</summary><pre>@startuml
+mainframe sd Sequence view — user registration functionality
+skinparam shadowing false
+participant &quot;AuthenticationController&quot; as e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92
+participant &quot;LibraryFacade&quot; as e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3
+participant &quot;UserManager&quot; as e_cmp_it_unina_reservations_controller_UserManager_95503d
+participant &quot;UserRegistry&quot; as e_cmp_it_unina_reservations_entity_UserRegistry_804bf0
+participant &quot;PersistenceManager&quot; as e_cmp_it_unina_reservations_database_PersistenceManager_4432c4
+e_cmp_it_unina_reservations_boundary_SpringBoot_AuthenticationController_e9ef92 -&gt; e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 1. register(role, name, surname, email, password, identifier)
+e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 -&gt; e_cmp_it_unina_reservations_controller_UserManager_95503d : 2. register(role, name, surname, email, password, identifier)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_controller_UserManager_95503d : 3. validate(role, name, password); throws IllegalArgumentException if invalid
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_controller_UserManager_95503d : 4. validateStudent / validateLibrarian
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 5. institutionalEmailExists(email)
+e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 -&gt; e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 6. findFirstByFields(User.class, institutionalEmail)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 7. IllegalArgumentException(&#x27;Email is already associated with an account.&#x27;)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 8. findStudentByStudentNumber(identifier) / findLibrarianByCode(identifier)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 9. IllegalArgumentException(&#x27;Identifier is already in use.&#x27;)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 11. registerUser(newUser)
+e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 -&gt; e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 : 12. save(newUser)
+e_cmp_it_unina_reservations_database_PersistenceManager_4432c4 -&gt; e_cmp_it_unina_reservations_entity_UserRegistry_804bf0 : 13. persist in transaction; returns true on commit, false after rollback
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 14. RuntimeException(&#x27;Server error: the user could not be saved. Please try again.&#x27;)
+e_cmp_it_unina_reservations_controller_UserManager_95503d -&gt; e_cmp_it_unina_reservations_controller_LibraryFacade_47e8b3 : 15. return UserDTO (toDTO(newUser))
+@enduml</pre></details><p class=mut>Raw files: <a href="files/V1-sequence/view.puml">V1-sequence/view.puml</a> · <a href="files/V1-sequence/view.json">V1-sequence/view.json</a></p></section><div class="arrow">▼</div><section class="step" id="s10"><div class="sh"><span class="n">10</span><h2>Phase 8 · Check</h2><span class="b llm">code, no model</span></div><p class="what">Two rules: the diagram compiles, and every mark is backed by verified code.</p><div class="io"><b>Input</b><div>the drawn view + the evidence model</div><b>Output</b><div>verdict <b>pass_with_limitations</b> · compiles: pass · no faithfulness problems</div></div><p class=mut>Raw files: <a href="files/validation_report.json">validation_report.json</a> · <a href="files/traceability.md">traceability.md</a></p></section><p class="mut">Model calls in the original run: 5; cost $0.19. <a href="files/README.md">Run README</a> · <a href="files/run.log">run.log</a></p></main></body></html>

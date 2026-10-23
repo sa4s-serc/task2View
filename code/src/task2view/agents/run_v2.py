@@ -52,6 +52,7 @@ class RunV2Result:
     arch_views: dict[str, ArchView] = field(default_factory=dict)  # parts and connectors of a structural view
     usage: dict = field(default_factory=dict)  # UsageLedger.summary(); calls in usage["calls"]
     log: list[str] = field(default_factory=list)
+    transcript: list[dict] = field(default_factory=list)  # every model call: purpose, prompt, reply
 
 
 def run_v2(
@@ -126,7 +127,7 @@ def run_v2(
                + ("" if total["cost_complete"] else " (incomplete: some calls had no reported usage or no price)"))
     return RunV2Result(goal=goal, card=card, profile=profile, plan=plan, questions=questions, tasks=tasks, aem=aem,
                        viewset=viewset, renders=renders, validation=validation, llm=runtime.spec,
-                       arch_views=arch_views, usage=usage, log=log)
+                       arch_views=arch_views, usage=usage, log=log, transcript=runtime.transcript)
 
 
 def _request_parts(card, aem, runtime, profile, questions, goal: str, max_parts: int, log: list[str]) -> ArchView:

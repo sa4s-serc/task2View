@@ -41,6 +41,9 @@ def write_run_v2(result: RunV2Result, out: str | Path) -> Path:
     (out / "traceability.md").write_text(_traceability(result), encoding="utf-8")
     (out / "README.md").write_text(_readme(result), encoding="utf-8")
     (out / "run.log").write_text("\n".join(result.log) + "\n", encoding="utf-8")
+    with (out / "model_calls.jsonl").open("w", encoding="utf-8") as fh:  # what the model was asked and answered
+        for call in result.transcript:
+            fh.write(json.dumps(call, ensure_ascii=False) + "\n")
     return out
 
 

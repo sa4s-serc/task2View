@@ -1,0 +1,65 @@
+@startuml
+mainframe pkg Decomposition view — progetto_ing_software_gr10-main-English
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+
+package "Presentation" as layer0 <<layer>> {
+  package "Citizen report screens" as p_presentation {
+    class "UserDashboardGUI" as p_presentation_0
+    class "ReportCreationGUI" as p_presentation_1
+    class "ActivityMonitoringGUI" as p_presentation_2
+    note "and 4 more" as p_presentation_note
+    p_presentation_0 -[hidden]right- p_presentation_1
+    p_presentation_1 -[hidden]right- p_presentation_2
+  }
+}
+package "Application" as layer1 <<layer>> {
+  package "Report and user services" as p_application {
+    class "ReportService" as p_application_0
+    class "SystemServicesController" as p_application_1
+    class "UserService" as p_application_2
+    note "and 1 more" as p_application_note
+    p_application_0 -[hidden]right- p_application_1
+    p_application_1 -[hidden]right- p_application_2
+  }
+}
+package "Domain" as layer2 <<layer>> {
+  package "Report and user model" as p_domain {
+    class "Report" as p_domain_0
+    class "User" as p_domain_1
+    class "Citizen" as p_domain_2
+    note "and 11 more" as p_domain_note
+    p_domain_0 -[hidden]right- p_domain_1
+    p_domain_1 -[hidden]right- p_domain_2
+  }
+}
+package "Data access" as layer3 <<layer>> {
+  package "Report storage" as p_data_access {
+    class "PersistenceService" as p_data_access_0
+    note "and 1 more" as p_data_access_note
+  }
+}
+p_presentation_0 -[hidden]-> p_application_0
+p_presentation_0 -[hidden]-> p_application_1
+p_presentation_0 -[hidden]-> p_application_2
+p_presentation_1 -[hidden]-> p_application_0
+p_presentation_1 -[hidden]-> p_application_1
+p_presentation_1 -[hidden]-> p_application_2
+p_presentation_2 -[hidden]-> p_application_0
+p_presentation_2 -[hidden]-> p_application_1
+p_presentation_2 -[hidden]-> p_application_2
+p_application_0 -[hidden]-> p_domain_0
+p_application_0 -[hidden]-> p_domain_1
+p_application_0 -[hidden]-> p_domain_2
+p_application_1 -[hidden]-> p_domain_0
+p_application_1 -[hidden]-> p_domain_1
+p_application_1 -[hidden]-> p_domain_2
+p_application_2 -[hidden]-> p_domain_0
+p_application_2 -[hidden]-> p_domain_1
+p_application_2 -[hidden]-> p_domain_2
+p_domain_0 -[hidden]-> p_data_access_0
+p_domain_1 -[hidden]-> p_data_access_0
+p_domain_2 -[hidden]-> p_data_access_0
+@enduml
