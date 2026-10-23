@@ -1,0 +1,15 @@
+# Traceability
+
+## V1-client-server — Client-Server
+
+| Element | Files | Symbols |
+|---|---|---|
+| Library client apps | JavaProject/src/main/java/it/unina/reservations/boundary/Swing/LibrarianDashboard.java, JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java, JavaProject/src/main/java/it/unina/reservations/boundary/Swing/StudentDashboard.java, JavaProject/src/main/resources/static/app.js | it.unina.reservations.boundary.Swing.StudentDashboard, it.unina.reservations.boundary.Swing.LibrarianDashboard, it.unina.reservations.boundary.Swing.Registration |
+| Registration endpoint | JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java, JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudentController.java | it.unina.reservations.boundary.SpringBoot.AuthenticationController, it.unina.reservations.boundary.SpringBoot.StudentController |
+| Registration error mapper | JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java | it.unina.reservations.boundary.SpringBoot.RestExceptionHandler |
+| Library facade | JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java, JavaProject/src/main/java/it/unina/reservations/dto/AvailableTimeSlotDTO.java, JavaProject/src/main/java/it/unina/reservations/dto/ReservationRequestDTO.java, JavaProject/src/main/java/it/unina/reservations/dto/RoomDetailDTO.java, JavaProject/src/main/java/it/unina/reservations/dto/StudyRoomCreationDTO.java, JavaProject/src/main/java/it/unina/reservations/dto/StudyRoomDTO.java | it.unina.reservations.controller.LibraryFacade, it.unina.reservations.dto.StudyRoomCreationDTO, it.unina.reservations.dto.ReservationRequestDTO, it.unina.reservations.dto.StudyRoomDTO, it.unina.reservations.dto.RoomDetailDTO, it.unina.reservations.dto.AvailableTimeSlotDTO |
+| User registration validator | JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java | it.unina.reservations.controller.UserManager |
+| Library domain model | JavaProject/src/main/java/it/unina/reservations/entity/Librarian.java, JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java, JavaProject/src/main/java/it/unina/reservations/entity/Student.java, JavaProject/src/main/java/it/unina/reservations/entity/User.java | it.unina.reservations.entity.Reservation, it.unina.reservations.entity.Student, it.unina.reservations.entity.User, it.unina.reservations.entity.Librarian |
+| User registry storage | JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java | it.unina.reservations.entity.UserRegistry |
+| Persistence storage | JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java, JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java | it.unina.reservations.database.PersistenceManager, it.unina.reservations.entity.ReservationRegistry |
+| MySQL database | JavaProject/src/main/resources/META-INF/persistence.xml | — |

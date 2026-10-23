@@ -1,0 +1,80 @@
+@startuml
+mainframe cmp Client-Server view — user registration functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+skinparam componentStyle uml2
+
+package "Progetto-IS-main-English" as system {
+  component p_clients [
+  Library client apps
+  --
+  dashboards and registration screen that users see and use
+  ..realizations..
+  Web client, User interface, … 2 more
+  ]
+  component p_api_1 [
+  Registration endpoint
+  --
+  exposes POST /api/auth/register and receives registration parameters
+  ..realizations..
+  AuthenticationController, StudentController
+  ]
+  component p_api_2 [
+  Registration error mapper
+  --
+  maps invalid, existing-user and security errors to HTTP 400 or 401
+  ..realizations..
+  RestExceptionHandler
+  ]
+  component p_service_1 [
+  Library facade
+  --
+  forwards registration requests to the user manager
+  ..realizations..
+  LibraryFacade, … 5 more
+  ]
+  component p_service_2 [
+  User registration validator
+  --
+  validates role data, checks uniqueness, creates and registers the user
+  ..realizations..
+  UserManager
+  ]
+  component p_domain <<Entity>> [
+  Library domain model
+  --
+  holds users, students, librarians and reservations
+  ..realizations..
+  Reservation, Student, User, … 1 more
+  ]
+  component p_data_access_1 [
+  User registry storage
+  --
+  looks up users for uniqueness checks and saves new users
+  ..realizations..
+  UserRegistry
+  ]
+  component p_data_access_2 [
+  Persistence storage
+  --
+  persists entities in JPA transactions with rollback and queries by field
+  ..realizations..
+  PersistenceManager, ReservationRegistry
+  ]
+}
+component p_database <<database>> [
+MySQL database
+..realizations..
+reservationsdb
+]
+p_service_2 ..> p_domain : creates and updates
+p_service_2 ..> p_data_access_1 : reads and saves
+p_clients ..> p_service_1 : requests operations {in-process}
+p_data_access_1 ..> p_data_access_2 : uses
+p_api_1 ..> p_service_1 : delegates requests {in-process}
+p_service_1 ..> p_service_2 : uses
+p_data_access_2 ..> p_database : persists {JPA / JDBC}
+p_clients ..> p_api_1 : sends requests {HTTP/JSON}
+@enduml

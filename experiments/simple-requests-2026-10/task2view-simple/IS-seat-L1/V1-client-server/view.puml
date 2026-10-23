@@ -1,0 +1,63 @@
+@startuml
+mainframe cmp Client-Server view — seat booking functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+skinparam componentStyle uml2
+
+package "Progetto-IS-main-English" as system {
+  component p_web_client [
+  Web client
+  ..realizations..
+  app.js
+  ]
+  component p_ui [
+  Seat booking desktop app
+  --
+  Swing wizard where users pick room, area, seat and confirm reservations
+  ..realizations..
+  SeatSelection, AreaSelection, ReservationSummary, … 11 more
+  ]
+  component p_api [
+  Reservation REST endpoints
+  --
+  REST entry point for creating, cancelling and checking in reservations
+  ..realizations..
+  ReservationController, StudyRoomController, StudentController
+  ]
+  component p_service [
+  Seat booking service
+  --
+  validates booking requests, assigns seats, creates and saves reservations for clients
+  ..realizations..
+  LibraryFacade, ReservationManager
+  ]
+  component p_domain <<Entity>> [
+  Library reservation model
+  --
+  reservations, students, rooms, areas, seats, time slots and reservation states
+  ..realizations..
+  Reservation, Student, StudyRoom, … 13 more
+  ]
+  component p_data_access [
+  Reservation storage
+  --
+  saves and queries reservations, rooms, areas, seats and students via JPA
+  ..realizations..
+  StudyRoomRegistry, ReservationRegistry, PersistenceManager, … 2 more
+  ]
+}
+component p_database <<database>> [
+MySQL database
+..realizations..
+reservationsdb
+]
+p_service ..> p_domain : creates and updates
+p_service ..> p_data_access : reads and saves
+p_ui ..> p_service : requests operations {in-process}
+p_api ..> p_service : delegates requests {in-process}
+p_domain .[#A32D2D].> p_data_access : queries {against the layering}
+p_data_access ..> p_database : persists {JPA / JDBC}
+p_web_client ..> p_api : sends requests {HTTP/JSON}
+@enduml

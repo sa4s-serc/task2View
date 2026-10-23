@@ -1,0 +1,70 @@
+@startuml
+mainframe cmp Client-Server view — seat booking functionality
+skinparam shadowing false
+hide empty members
+hide circle
+top to bottom direction
+skinparam componentStyle uml2
+
+package "Progetto-IS-main-English" as system {
+  component p_web_client [
+  Web client
+  ..realizations..
+  app.js
+  ]
+  component p_ui [
+  Seat booking desktop app
+  --
+  Swing screens for selecting room, time slot, seat and confirming reservations
+  ..realizations..
+  WizardState, SeatSelection, AreaSelection, … 7 more
+  ]
+  component p_job [
+  Reservation reminder scheduler
+  --
+  periodically triggers reservation end handling and reminders
+  ..realizations..
+  NotificationScheduler
+  ]
+  component p_api [
+  Booking and availability REST API
+  --
+  REST boundary for creating, cancelling, checking in reservations and querying availability
+  ..realizations..
+  StudyRoomController, ReservationController, StudentController
+  ]
+  component p_service [
+  Booking and notification services
+  --
+  delegates requests, assigns seats, handles cancel and check-in, sends notifications
+  ..realizations..
+  LibraryFacade, ReservationManager, StudyRoomManager, … 4 more
+  ]
+  component p_domain <<Entity>> [
+  Reservation domain model
+  --
+  entities for rooms, seats, time slots and reservations, computing available seats
+  ..realizations..
+  Area, Reservation, Student, … 13 more
+  ]
+  component p_data_access [
+  Reservation storage
+  --
+  saves, updates and queries rooms, users and reservations through JPA
+  ..realizations..
+  StudyRoomRegistry, ReservationRegistry, PersistenceManager, … 1 more
+  ]
+}
+component p_database <<database>> [
+MySQL database
+..realizations..
+reservationsdb
+]
+p_service ..> p_domain : creates and updates
+p_service ..> p_data_access : reads and saves
+p_api ..> p_service : delegates requests {in-process}
+p_ui ..> p_service : requests operations {in-process}
+p_domain .[#A32D2D].> p_data_access : queries {against the layering}
+p_data_access ..> p_database : persists {JPA / JDBC}
+p_web_client ..> p_api : sends requests {HTTP/JSON}
+@enduml
