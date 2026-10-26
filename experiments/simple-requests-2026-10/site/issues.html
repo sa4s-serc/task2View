@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Task2View phase inspection</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1f1f1e;--mut:#5f5e5a;--line:#d8d6cf;--card:#fff;--soft:#f1efe8;--accent:#185fa5;--bad:#fcebeb;--badfg:#791f1f;--ok:#e1f5ee;--okfg:#085041;--warn:#faeeda;--warnfg:#633806}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1b1a;--fg:#ececea;--mut:#a8a69e;--line:#3d3d3a;--card:#232321;--soft:#2c2c2a;--accent:#85b7eb;--bad:#3a1515;--badfg:#f7c1c1;--ok:#0c3a2c;--okfg:#9fe1cb;--warn:#3a2a12;--warnfg:#fac775}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 -apple-system,Helvetica,Arial,sans-serif}
+main{max-width:1150px;margin:0 auto;padding:16px}a{color:var(--accent)}h1{font-size:24px;margin:8px 0}h2{font-size:20px;margin:28px 0 8px;border-top:1px solid var(--line);padding-top:16px}
+h3{font-size:16px;margin:14px 0 6px}.mut{color:var(--mut)}
+.phase{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:12px 0}
+.io{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;margin:6px 0}.io>b{color:var(--mut)}
+ul{margin:4px 0 8px;padding-left:20px}li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:6px 0}th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}th{background:var(--soft)}
+.wrap{overflow-x:auto}.tag{font-size:12px;border-radius:4px;padding:1px 7px;white-space:nowrap}.no{background:var(--bad);color:var(--badfg)}.part{background:var(--warn);color:var(--warnfg)}.yes{background:var(--ok);color:var(--okfg)}
+.ans{background:var(--soft);border-radius:8px;padding:10px 14px;margin:8px 0}
+</style></head><body><main>
+<p><a href="index.html">← all examples</a></p>
+<h1>Task2View: phase-by-phase inspection</h1>
+<p class="mut">2026-10-26. Based on the 10 runs on this site (simplified pipeline, one view per request), the code, the earlier design docs, your observations and the expert feedback from the email thread (numbered E1–E25 below). Every finding was checked against the run files or the source code; opinions are marked as such.</p>
+
+<h2>Short answers to your questions</h2>
+<div class="ans"><b>Is "component view" not the right view?</b> It is the right view; the pipeline got it wrong. Phase 1 has no need called "component", so the model mapped "high-level component view" to <i>decomposition</i>. A component-and-connector view was a candidate but lost a tie-break. Nothing maps a requested diagram type (component, sequence, deployment, use case) directly to a view: 3 of the 4 short requests got the right view only because their words matched the catalogue's descriptions.</div>
+<div class="ans"><b>Does the knowledge make sense for choosing the view?</b> Mostly not. Of 23 needs, 30 viewpoints and 13 roles, the 10 runs used 11 needs, 6 viewpoints and 5 roles. The role priors (from V&amp;B Table 9.1) changed the chosen view in 0 of 10 cases. Need names ("collaboration", "actors-goals", "interaction-order") are catalogue words, not what stakeholders say. Seven component-and-connector viewpoints overlap, and ties are settled by catalogue order.</div>
+<div class="ans"><b>Is the repository card iffy?</b> Yes, in specific ways. Its basics are right (all classes, layers, REST routes, entities, database settings check out), but it finds <b>no Swing screens</b> in either repository, the text version the model reads cuts key facts (12 of 19 entry points; the Report entity's links), embeddables are listed as tables, entity subclasses show no fields, and the "most depended-on" ranking puts a UI styling class above the main facade.</div>
+<div class="ans"><b>Can evidence collection be made better? Do the GR10-Q1 replies make sense?</b> The GR10-Q1 claims are true but do not fit the request: the agent is told to claim classes, then the code throws class identity away and rolls them up into four package boxes. One relation is reversed and mistyped ("SystemServicesController is-part-of UserRegistrationController"). Verification only checks that cited lines exist: 0 of 221 claims were rejected and 201 are "observed", so it confirms citations, not claims. Phase 5 is 86–93% of each run's cost, with prompts growing to 50–80k characters because whole files are read.</div>
+<div class="ans"><b>Should the evidence model be the same for a repository whatever the task?</b> I think yes. Today it is not: between requests on the same repository the claimed classes overlap only 0–20% (GR10) and 10–78% (Progetto-IS), so names and parts change with the wording of the prompt. That is exactly the coupling you saw: a more detailed prompt gives more subjects, which give more questions, more agent steps and finer grain. The docs never weighed a per-repository model and rejected it; it came from ADR-005 (choose the viewpoint before the questions) and the Phase 4 redesign (one task per view and subject). Your own literature report recommends "one model, views as queries over it". Risk: a generic model may miss a specific call path, so keep an on-demand trace for sequence views.</div>
+<div class="ans"><b>Abstraction and the cap?</b> The repository is literally organised as Boundary/Control/Entity/Database, but abstraction classifies by class-name endings first, so it invents "Presentation/Application/Domain/Data access", draws false "against the layering" arrows and hides the booking-rule classes (Strategy) as helpers. The cap cuts in list order, not by importance: GR10-Q4 drops 5 of 8 use cases; the sequence view drops all 9 alternative fragments; short requests always get the smallest cap because "complete" or "the functionalities" don't count.</div>
+
+<h2>Phase by phase: input, output, problems</h2>
+
+<div class="phase"><h3>Phase 0 · Repository card (code)</h3>
+<div class="io"><b>Input</b><div>the repository</div><b>Output</b><div>files by class, classes (symbols), dependency edges, entry points, entities, deployment and build facts, layers, signals; a 40–48-line text card for the model</div></div>
+<ul>
+<li>Verified correct: all classes, BCED layers, 14 REST routes, 4 main methods, @Entity sets, JDBC URLs; 10 of 10 sampled edges true.</li>
+<li><b>No screens found</b>: only classes that <code>extends JFrame</code> count, but these apps create JFrames inside other classes (~10 GR10, 13 IS screens missed). <code>.form</code> files are classed "other" and cannot be read by the agent.</li>
+<li><b>Text card truncates</b> every list at 12 and entities at 8 fields: IS shows 12 of 19 entry points (no StudyRoomController routes, no Login/Registration mains); GR10 Report loses its links to Citizen and operator.</li>
+<li><code>@Embeddable</code> types (Credentials, Location) listed as tables; entity subclasses (Citizen, Student) shown with no fields and no <code>extends User</code>.</li>
+<li>"Most depended-on" counts repeated calls, not distinct callers: WizardStyle (UI style) ranks above LibraryFacade.</li>
+<li>No primary entry point (IS Launcher). Noisy lines: raw Python dicts, internal signal names, fully qualified names everywhere.</li>
+<li>Unused: card notes, layer dict, file line counts, all signal evidence; several signals never fire.</li>
+</ul></div>
+
+<div class="phase"><h3>Phase 1 · Read the request (model, 1 call)</h3>
+<div class="io"><b>Input</b><div>the request + a 10–11k-character prompt (23 needs, 13 roles, an example)</div><b>Output</b><div>role, target, needs with quotes, subjects, detail level; view spec; clarification</div></div>
+<ul>
+<li>Short requests → 1 need, 1 view, 1 question. Long requests → 3–6 needs, 2–13 questions (36 in total for the six).</li>
+<li><b>No view-type vocabulary</b>: "component view" → decomposition; "dynamic view" worked only because the model inferred interaction-order. (E25)</li>
+<li>"software analyst" matches no role (analyst = security/performance). Role priors never changed a choice.</li>
+<li><b>Detail level</b> is decided by counting needs/subjects: "a <i>complete</i> deployment view", "<i>the functionalities</i> of the system" → overview → smallest cap.</li>
+<li>Clarifications are never answered (defaults); for the IS-seat requests code overrides the model's default to "both" and adds an order-of-calls need that the single view then cannot show.</li>
+</ul></div>
+
+<div class="phase"><h3>Phase 3 · Choose the view (code) and Phase 2 · Questions (code)</h3>
+<div class="io"><b>Input</b><div>needs, repository signals, catalogue</div><b>Output</b><div>one viewpoint + rationale + uncovered needs; template questions per (need, subject)</div></div>
+<ul>
+<li>Ties between overlapping viewpoints settled by "frames vs also-covers" and catalogue order (invisible to a stakeholder).</li>
+<li>Needs only table viewpoints frame (ownership, rationale, variability) can be extracted but never shown.</li>
+<li><b>One view per request loses the dynamic view</b>: all five long IS requests lose the order of calls; IS-seat-L2/L3 lose change impact; GR10-Q3 loses dependencies. This conflicts with the expert's advice to give a static <i>and</i> a dynamic view (E3, E14, E19).</li>
+<li>Questions are near-identical templates (IS-reg-L3: 5 decomposition questions differing only in the subject); an order-of-calls subject was filed under decomposition.</li>
+</ul></div>
+
+<div class="phase"><h3>Phase 4 · Investigation plan (model, 1 call) and Phase 5 · Evidence agent (model, 3–7 turns)</h3>
+<div class="io"><b>Input</b><div>questions + text card; tools: list, read, search, symbol, neighbours</div><b>Output</b><div>claims (elements, relations, call steps), each citing file, lines and code</div></div>
+<ul>
+<li><b>GR10-Q1</b>: 13 claims, all true, but at the wrong grain: classes, while the view rolls them into package boxes. Entities claimed as "components". Boundary covered by 1 of 9 GUIs, Control by 2 of 10 controllers. One reversed, mistyped relation.</li>
+<li><b>IS-reg-L1</b>: correct call chain, but only StudentFactory (the librarian branch is lost); thrown exceptions modelled as messages; REST and Swing entry points mixed in one scenario.</li>
+<li><b>GR10-Q4</b>: actor–use case links right; "Register" missing; "Log in" has no actor; the same file read 3 times.</li>
+<li><b>Cost</b>: Phase 5 = 86–93% of each run; prompts grow 8k → 50–80k characters (whole files read; old results never trimmed; no cache hits).</li>
+<li><b>Task-dependent</b>: claimed classes overlap 0–20% between GR10 requests, 10–78% between IS requests. (E20, E21)</li>
+</ul></div>
+
+<div class="phase"><h3>Verification and evidence model (code)</h3>
+<div class="io"><b>Input</b><div>claims + repository card</div><b>Output</b><div>accepted/rejected claims; elements, relations, scenarios</div></div>
+<ul>
+<li>Checks only that file, lines, excerpt and symbol exist. <b>0 of 221 claims rejected</b>; 201 "observed". It does not check that a responsibility is true, a relation's direction or kind, or relevance.</li>
+<li>"observed" is decided by name matching in the excerpt; non-code elements default to observed; use-case links are always "inferred". The labels carry no information.</li>
+<li>Card facts (all entities, states, artifact, datastore) are added to every model whatever the request.</li>
+<li>Evidence model and view disagree on layers (ReportService: domain in the model, application in the view).</li>
+</ul></div>
+
+<div class="phase"><h3>Abstraction into parts (code + naming call) — structural views</h3>
+<div class="io"><b>Input</b><div>evidence model + dependency graph</div><b>Output</b><div>parts with member classes, arrows lifted from code, names</div></div>
+<ul>
+<li><b>Ignores the repository's own BCED layering</b> (name suffix beats package): entity registries become "data access", so intra-Entity calls are drawn red "against the layering"; layers are renamed. (E8, E9)</li>
+<li>Booking rules (AssignmentStrategy, FirstAvailableAssignment) classed as helpers and not drawn — the very classes IS-seat-L2/L3 want to change.</li>
+<li>DTOs and off-topic classes inside parts; role labels ("Web client, User interface") shown as if they were classes; orphan parts with no arrows; arrow labels are fixed templates ("reads and saves"), not observed intent. (E10, E12, E13)</li>
+<li>Subject splits and naming-call splits are mostly undone by the cap, or produce single-class parts (IS-reg-L3 is a class diagram with renamed boxes). (E22)</li>
+</ul></div>
+
+<div class="phase"><h3>Phase 7 · Draw (code) — caps and projection</h3>
+<div class="io"><b>Input</b><div>parts, or the evidence model for other views</div><b>Output</b><div>one UML diagram (PlantUML)</div></div>
+<ul>
+<li><b>Caps</b> set in 3 places (pipeline.yaml max_parts 7/9/9; viewpoints.yaml max_elements per family and level; a hidden minimum arrow weight of 3) and applied in ~8 places. They cut in list order, unranked.</li>
+<li>GR10-Q4: 5 of 8 use cases dropped; Municipal Operator left with one. IS-reg-L1: one lifeline cut (a gap in message numbers) and all 9 alt fragments dropped, so error paths look like the normal flow. GR10-Q3: the enums asked for are not drawn and not listed. GR10-Q1: the database is silently left out. (E7, E15, E16)</li>
+<li>Sequence labels are full signatures and exception texts; returns drawn as solid calls; use-case diagram has conflicting layout directions. (E5, E11)</li>
+</ul></div>
+
+<div class="phase"><h3>Phase 8 · Check (code)</h3>
+<div class="io"><b>Input</b><div>the drawn view + evidence model</div><b>Output</b><div>verdict</div></div>
+<ul>
+<li>Checks only "compiles" and "every mark is backed by a verified claim". Any limitation gives "pass with limitations": 8 of 10 views. The verdict carries no signal.</li>
+<li>Misses: cut elements the request asked for, orphan parts, wrong layering, PNG vs JSON mismatch, arrow meaning. (E6)</li>
+</ul></div>
+
+<h2>Cross-cutting: why a detailed prompt makes everything more complicated</h2>
+<ul>
+<li>Detail level = number of subjects in the request → more questions (1 vs up to 13) → bigger agent budget (12/16/20 steps) → class grain → more claims and splits → more parts → more is cut by the cap. The request controls the <i>content</i> of the model, not just the choice of view.</li>
+<li>Because the evidence model is rebuilt per request, the same system gets different parts and names for different stakeholders (0–20% overlap on GR10).</li>
+<li>Docs are stale after the 23 Oct simplification: README still lists reconciliation.json and "five-layer validation"; ADR-006 still says 3 views, Phase 6, a judge; ADR-007 still mentions the judge; the paper's method section describes the old pilot pipeline.</li>
+</ul>
+
+<h2>The expert's points (email thread) and where they stand</h2>
+<div class="wrap"><table>
+<tr><th>#</th><th>Point</th><th>Now</th><th>Cause found in this inspection</th></tr>
+<tr><td>E1</td><td>Views too verbose</td><td><span class="tag part">partly</span></td><td>descriptions and class lists still inside boxes; sequence labels are full signatures</td></tr>
+<tr><td>E2</td><td>Mixed abstraction levels</td><td><span class="tag part">partly</span></td><td>class claims rolled into packages; DTOs and role labels inside parts</td></tr>
+<tr><td>E3</td><td>Separate static and dynamic views</td><td><span class="tag no">worse</span></td><td>one view per request: the dynamic view is lost for all long requests</td></tr>
+<tr><td>E4</td><td>Non-standard notation</td><td><span class="tag yes">fixed</span></td><td>UML only, Annex A frames</td></tr>
+<tr><td>E5</td><td>UML syntax errors</td><td><span class="tag part">partly</span></td><td>returns drawn as calls; use-case layout conflict</td></tr>
+<tr><td>E6</td><td>Not semantically correct</td><td><span class="tag no">open</span></td><td>verification checks citations only; check does not test meaning</td></tr>
+<tr><td>E7</td><td>Use case diagrams incomplete</td><td><span class="tag no">open</span></td><td>cap cuts 5 of 8; "Register" not collected</td></tr>
+<tr><td>E8</td><td>Missing higher-level decomposition</td><td><span class="tag part">partly</span></td><td>overview packages exist; feature views use roles, not the repository's packages</td></tr>
+<tr><td>E9</td><td>BCED layering</td><td><span class="tag no">open</span></td><td>name suffix beats package in role assignment</td></tr>
+<tr><td>E10</td><td>Descriptions instead of architecture</td><td><span class="tag part">partly</span></td><td>one-line descriptions in every component</td></tr>
+<tr><td>E11</td><td>Too many relationships</td><td><span class="tag part">partly</span></td><td>structural views ≤ 8 arrows; sequence 14 messages</td></tr>
+<tr><td>E12</td><td>Components without relationships</td><td><span class="tag no">open</span></td><td>"component view" drawn as decomposition (no arrows); orphan parts from the weight threshold</td></tr>
+<tr><td>E13</td><td>Spurious / unclear arrows</td><td><span class="tag part">partly</span></td><td>template labels; reversed relation accepted</td></tr>
+<tr><td>E14–16</td><td>Sequence diagrams missing / incomplete / dynamic behaviour poor</td><td><span class="tag no">open</span></td><td>one view per request; alt fragments dropped at overview; factory branch lost</td></tr>
+<tr><td>E17–18</td><td>Task formulation matters; simpler requests</td><td><span class="tag yes">confirmed</span></td><td>simple requests got the named view in 3 of 4; long ones lose needs</td></tr>
+<tr><td>E19</td><td>Multiple complementary views valuable</td><td><span class="tag no">removed</span></td><td>the 23 Oct simplification went the other way</td></tr>
+<tr><td>E20</td><td>How elements are selected</td><td><span class="tag no">open</span></td><td>task-dependent evidence; accidental coverage; unranked caps</td></tr>
+<tr><td>E21</td><td>Naming consistency</td><td><span class="tag no">open</span></td><td>names change with the request because the model is rebuilt per request</td></tr>
+<tr><td>E22</td><td>Abstraction not sufficient</td><td><span class="tag no">confirmed</span></td><td>see the abstraction section</td></tr>
+<tr><td>E23–24</td><td>UML spec; UML diagram types only</td><td><span class="tag yes">done</span></td><td>knowledge file; only UML-drawable viewpoints selected (conformance checker removed)</td></tr>
+<tr><td>E25</td><td>Robust request interpretation</td><td><span class="tag no">open</span></td><td>no view-type vocabulary; detail level by counting</td></tr>
+</table></div>
+
+<h2>What I would change (opinion), in order</h2>
+<ol>
+<li><b>One repository model, built once</b> (cached per repository): packages/layers as the repository has them (BCED here), components, dependencies, entities, deployment, and the main call paths per entry point. The request then only chooses the view, the scope and the level of detail. This removes Phase 2, most of Phase 4 and the per-request agent, and makes names consistent.</li>
+<li><b>Phase 1: read the view type first.</b> Map explicit words ("component view", "sequence/dynamic view", "deployment view", "use case diagram", "class/data model") straight to the UML diagram; use the needs catalogue only when no type is named. Allow a static + dynamic pair when the request asks for both (the expert's advice).</li>
+<li><b>No caps on enumerations</b> the request asks for (use cases, entities, enums); rank before any cut; keep alt fragments whenever their messages are drawn.</li>
+<li><b>Fix the card</b>: detect screens by <code>new JFrame</code>, stop truncating, drop embeddables, show inheritance, rank by distinct callers.</li>
+<li><b>Simplify abstraction</b>: one part per repository package/layer (fall back to roles only without packages); no subject or naming splits; keep the naming call for names only; drop DTOs.</li>
+<li><b>Sequence views</b>: method names only, dashed returns, alt fragments for error paths.</li>
+</ol>
+</main></body></html>

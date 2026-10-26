@@ -298,7 +298,9 @@ def main() -> int:
                      f'<p class="mut">{e(prof.get("goal", ""))}</p>{img}</div></a>')
     body = ("<h1>Task2View walkthroughs</h1><p class=mut>One page per request: the request, then every stage in order "
             "(input, what it did, output; for model calls the prompt and the reply), down to the UML view.</p>"
-            f'<div class="cards">{"".join(cards)}</div>')
+            + ('<p><a href="issues.html"><b>Phase-by-phase inspection: inputs, outputs and problems →</b></a></p>'
+               if (args.out / "issues.html").exists() else "")
+            + f'<div class="cards">{"".join(cards)}</div>')
     (args.out / "index.html").write_text(doc("Task2View walkthroughs", body), encoding="utf-8")
     print(f"wrote {args.out / 'index.html'} ({len(cards)} examples)")
     return 0
