@@ -1,0 +1,35 @@
+{
+  "model_kind": "UML deployment diagram",
+  "detail_level": "balanced",
+  "takeaway": "The k8s manifests run two single-container pods: the prebuilt dsyer/petclinic image (profile postgres, NodePort 80 -> 8080) and postgres:18.4, sharing credentials through the demo-db Secret.",
+  "elements": [
+    {"alias": "client", "name": "Client machine", "responsibility": "Reaches the app through the NodePort Service", "evidence": ["k8s/petclinic.yml:2-12"]},
+    {"alias": "cluster", "name": "Kubernetes cluster (kind in CI)", "responsibility": "Target of kubectl apply -f k8s/; kind cluster in the CI workflow", "evidence": [".github/workflows/deploy-and-test-cluster.yml:20-30"]},
+    {"alias": "appPod", "name": "petclinic Pod", "responsibility": "Deployment petclinic, 1 replica, port 8080, SPRING_PROFILES_ACTIVE=postgres, probes /livez and /readyz", "evidence": ["k8s/petclinic.yml:15-58"]},
+    {"alias": "appImg", "name": "dsyer/petclinic (container image)", "responsibility": "Prebuilt app image; not built from this repo's manifests", "evidence": ["k8s/petclinic.yml:33"]},
+    {"alias": "secret", "name": "Secret demo-db", "responsibility": "Service-binding Secret (type servicebinding.io/postgresql): host, port, database, username, password", "evidence": ["k8s/db.yml:2-14"]},
+    {"alias": "dbPod", "name": "demo-db Pod", "responsibility": "Deployment demo-db, port 5432, TCP probes", "evidence": ["k8s/db.yml:28-73"]},
+    {"alias": "dbImg", "name": "postgres:18.4 (container image)", "responsibility": "PostgreSQL server image", "evidence": ["k8s/db.yml:44"]}
+  ],
+  "relations": [
+    {"from": "client", "to": "appPod", "label": "HTTP, Service petclinic NodePort :80 -> 8080", "evidence": ["k8s/petclinic.yml:5-12", "k8s/petclinic.yml:44-46"]},
+    {"from": "appPod", "to": "dbPod", "label": "PostgreSQL :5432, Service demo-db (unconfirmed)", "evidence": ["k8s/db.yml:17-25", "k8s/petclinic.yml:35-38", "src/main/resources/application-postgres.properties:3"]},
+    {"from": "appPod", "to": "secret", "label": "mounts (volume)", "evidence": ["k8s/petclinic.yml:55-64"]},
+    {"from": "dbPod", "to": "secret", "label": "reads user, password, db", "evidence": ["k8s/db.yml:46-61"]}
+  ],
+  "concern_details": [
+    {"detail": "runtime nodes and the images deployed on them", "answered_by": ["cluster", "appPod", "appImg", "dbPod", "dbImg"]},
+    {"detail": "how clients reach the app (ports, Service type)", "answered_by": ["client", "appPod"]},
+    {"detail": "app-to-database connection and credentials", "answered_by": ["appPod", "dbPod", "secret"]},
+    {"detail": "health checks", "answered_by": ["appPod", "dbPod"]}
+  ],
+  "omitted": [
+    {"name": "docker-compose.yml (local MySQL 9.7 and PostgreSQL 18.4 containers)", "reason": "a second, local-dev deployment with no app container; drawing both would need two views"},
+    {"name": "Kubernetes Service objects as boxes", "reason": "Services are routing, not nodes; shown as labels on the communication paths"},
+    {"name": ".devcontainer / .gitpod.yml", "reason": "developer workspace, not where the application runs"},
+    {"name": "Application components", "reason": "different abstraction level; see component-overview"}
+  ],
+  "assumptions": [
+    "The app reads the Secret through Spring Cloud Bindings inside the dsyer/petclinic image; this repo's pom.xml has no bindings dependency, so the app -> database path is marked (unconfirmed)."
+  ]
+}

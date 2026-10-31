@@ -1,0 +1,113 @@
+{
+  "model_kind": "UML sequence diagram",
+  "detail_level": "balanced",
+  "takeaway": "POST /owners/new is validated in OwnerController before anything is saved: valid input is inserted via OwnerRepository and answered with a 302 to /owners/{id}; invalid input returns 200 with the form and field errors and writes nothing.",
+  "elements": [
+    {
+      "alias": "client",
+      "name": "Test client (HTTP / MockMvc)",
+      "responsibility": "Submits the owner form, as the tests do",
+      "evidence": [
+        "src/test/java/org/springframework/samples/petclinic/owner/OwnerControllerTests.java:114-134"
+      ]
+    },
+    {
+      "alias": "ctl",
+      "name": "Owner web controller (OwnerController)",
+      "responsibility": "Binds and validates Owner (@Valid: Bean Validation on Owner/Person fields), then saves or re-renders the form",
+      "evidence": [
+        "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:77-87",
+        "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:59-62",
+        "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:78",
+        "src/main/java/org/springframework/samples/petclinic/owner/Owner.java:52-65",
+        "src/main/java/org/springframework/samples/petclinic/model/Person.java:31-39"
+      ]
+    },
+    {
+      "alias": "repo",
+      "name": "OwnerRepository",
+      "responsibility": "Spring Data JPA save",
+      "evidence": [
+        "src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java:36"
+      ]
+    },
+    {
+      "alias": "db",
+      "name": "Clinic database",
+      "responsibility": "owners table",
+      "evidence": [
+        "src/main/resources/db/h2/schema.sql:36-44"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "client",
+      "to": "ctl",
+      "label": "POST /owners/new; 302 or 200 reply",
+      "evidence": [
+        "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:77-87"
+      ]
+    },
+    {
+      "from": "ctl",
+      "to": "repo",
+      "label": "save(owner)",
+      "evidence": [
+        "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:84"
+      ]
+    },
+    {
+      "from": "repo",
+      "to": "db",
+      "label": "INSERT INTO owners",
+      "evidence": [
+        "src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java:36",
+        "src/main/java/org/springframework/samples/petclinic/model/BaseEntity.java:35-37"
+      ]
+    }
+  ],
+  "concern_details": [
+    {
+      "detail": "the request and which parts it crosses",
+      "answered_by": [
+        "client",
+        "ctl",
+        "repo",
+        "db"
+      ]
+    },
+    {
+      "detail": "what is persisted on success and what comes back",
+      "answered_by": [
+        "repo",
+        "db",
+        "ctl"
+      ]
+    },
+    {
+      "detail": "the validation error path and its response",
+      "answered_by": [
+        "ctl"
+      ]
+    }
+  ],
+  "omitted": [
+    {
+      "name": "GET /owners/new (empty form)",
+      "reason": "not part of adding; trivial view return (OwnerController.java:72-75)"
+    },
+    {
+      "name": "Spring MVC DispatcherServlet, WebDataBinder, Hibernate",
+      "reason": "framework internals; collapsed into the controller and repository lifelines (3 internal hops collapsed)"
+    },
+    {
+      "name": "Follow-up GET /owners/{id}",
+      "reason": "a separate request the browser makes after the redirect; the tests only assert the 3xx"
+    },
+    {
+      "name": "Concurrency and DB-level errors",
+      "reason": "not asked; no explicit handling in processCreationForm"
+    }
+  ]
+}

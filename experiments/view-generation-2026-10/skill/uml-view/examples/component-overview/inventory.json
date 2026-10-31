@@ -1,0 +1,30 @@
+{
+  "model_kind": "UML component diagram",
+  "detail_level": "overview",
+  "takeaway": "PetClinic is one Spring Boot web app with two functional areas, Owners & Pets and Veterinarians, both persisting through JPA to one relational database (H2 by default, MySQL or PostgreSQL by profile).",
+  "elements": [
+    {"alias": "user", "name": "Clinic user (browser)", "responsibility": "Uses the HTML pages; no authentication or roles in the code", "evidence": ["src/main/resources/templates/fragments/layout.html:46-53", "README.md:36"]},
+    {"alias": "app", "name": "PetClinic web application", "responsibility": "Single Spring Boot deployable (Spring MVC + Thymeleaf + Spring Data JPA)", "evidence": ["src/main/java/org/springframework/samples/petclinic/PetClinicApplication.java:28-34", "pom.xml:52-64"]},
+    {"alias": "owners", "name": "Owners & Pets", "responsibility": "Find/register/edit owners, add/edit pets, book visits (package owner: 3 controllers, 2 repositories, entities)", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:48-57", "src/main/java/org/springframework/samples/petclinic/owner/PetController.java:47-60", "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:42-49"]},
+    {"alias": "vets", "name": "Veterinarians", "responsibility": "Read-only vet list as HTML page and JSON/XML resource, cached in JCache cache 'vets'", "evidence": ["src/main/java/org/springframework/samples/petclinic/vet/VetController.java:45-79", "src/main/java/org/springframework/samples/petclinic/vet/VetRepository.java:44-56", "src/main/java/org/springframework/samples/petclinic/system/CacheConfiguration.java:31-38"]},
+    {"alias": "db", "name": "Clinic database", "responsibility": "Relational store; schema and seed data per database under db/<database>/", "evidence": ["src/main/resources/application.properties:2-4", "src/main/resources/application-mysql.properties:2-3", "src/main/resources/application-postgres.properties:2-3", "pom.xml:78-93"]}
+  ],
+  "relations": [
+    {"from": "user", "to": "owners", "label": "HTTP /owners/**", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:72-94", "src/main/resources/templates/fragments/layout.html:46"]},
+    {"from": "user", "to": "vets", "label": "HTTP /vets.html, /vets", "evidence": ["src/main/java/org/springframework/samples/petclinic/vet/VetController.java:45", "src/main/java/org/springframework/samples/petclinic/vet/VetController.java:72", "src/main/resources/templates/fragments/layout.html:51"]},
+    {"from": "owners", "to": "db", "label": "JPA / JDBC", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java:36", "src/main/java/org/springframework/samples/petclinic/owner/PetTypeRepository.java:30"]},
+    {"from": "vets", "to": "db", "label": "JPA / JDBC (read-only)", "evidence": ["src/main/java/org/springframework/samples/petclinic/vet/VetRepository.java:38-46"]}
+  ],
+  "concern_details": [
+    {"detail": "functional areas of the web app", "answered_by": ["owners", "vets"]},
+    {"detail": "how users reach them", "answered_by": ["user"]},
+    {"detail": "where data is kept and which stores are supported", "answered_by": ["db"]}
+  ],
+  "omitted": [
+    {"name": "system package (WelcomeController, CrashController, WebConfiguration, CacheConfiguration)", "reason": "framework glue and configuration; caching shown as a technology label on Veterinarians"},
+    {"name": "model package (BaseEntity, NamedEntity, Person)", "reason": "shared JPA superclasses, code-level detail; see class-balanced"},
+    {"name": "individual controllers and repositories", "reason": "overview merges each controller/repository chain into one component"},
+    {"name": "Actuator endpoints, i18n message bundles, Thymeleaf templates", "reason": "framework features, not architectural parts"},
+    {"name": "docker-compose and k8s files", "reason": "deployment is a different abstraction level; see deployment-balanced"}
+  ]
+}

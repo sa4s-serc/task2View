@@ -32,6 +32,12 @@ tags; the tags are explained in `DERIVATION.md`. Where this skill and `plantuml-
 
    The budget is a prompt to cut, not a target to fill; a smaller view that answers the concern is better. [CC, CL]
 
+## Examples
+`examples/` holds worked examples from spring-petclinic, a repository unrelated to yours: a request, the view, its
+inventory and why it was drawn that way. Before drawing, read the example for your model kind (and both component
+examples, which show one system at overview and at detailed level). Copy the level of abstraction and the
+notation, not the content. See `examples/README.md`.
+
 ## 2. Find the evidence
 1. Explore in this order and stop when the concern is covered: entry points → interfaces/APIs and their
    callers → data stores, schemas, migrations → deployment and build files → tests → docs (docs give intent
