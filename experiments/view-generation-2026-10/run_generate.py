@@ -73,6 +73,10 @@ def build_prompt(case: str, c: dict, entities: dict, cond: str) -> str:
     return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities, with_level=cond == "E")
 
 
+class SessionFailed(RuntimeError):
+    """A session ended on an API error (e.g. usage limit); the case is left unrecorded so a rerun redoes it."""
+
+
 def claude(prompt: str, workdir: Path, log_file: Path, model: str, tools: list[str], resume: str = "") -> str:
     """Run one headless session; return its session id."""
     cmd = ["claude", "-p", prompt, "--model", model, "--permission-mode", "auto",
@@ -81,14 +85,16 @@ def claude(prompt: str, workdir: Path, log_file: Path, model: str, tools: list[s
         cmd += ["--allowedTools", *tools]
     with log_file.open("w", encoding="utf-8") as stream:
         subprocess.run(cmd, cwd=workdir, stdin=subprocess.DEVNULL, stdout=stream, stderr=subprocess.STDOUT, env=ENV)
+    session = ""
     for line in log_file.read_text(encoding="utf-8").splitlines():
         try:
             event = json.loads(line)
         except ValueError:
             continue
-        if event.get("session_id"):
-            return event["session_id"]
-    return ""
+        session = session or event.get("session_id", "")
+        if event.get("type") == "result" and event.get("api_error_status"):
+            raise SessionFailed(f"{log_file.name}: {event.get('api_error')} ({event.get('result')})")
+    return session
 
 
 def score(critique: Path) -> tuple[int, int]:
@@ -192,7 +198,12 @@ def main() -> int:
     for case, c in sheet["cases"].items():
         if args.only and case != args.only:
             continue
-        if not run_case(case, c, sheet["entities_of_interest"], args.condition, args.dry_run):
+        try:
+            ok = run_case(case, c, sheet["entities_of_interest"], args.condition, args.dry_run)
+        except SessionFailed as e:
+            log(f"stop: {case} not recorded; {e}. Delete its workdir before rerunning.")
+            return 2
+        if not ok:
             return 2
     log("all cases done")
     return 0
