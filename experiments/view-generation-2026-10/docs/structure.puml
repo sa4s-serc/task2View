@@ -1,0 +1,76 @@
+@startuml
+title 1. Structure: files, functions, processes and artifacts (conditions A–D)
+skinparam linetype polyline
+skinparam nodesep 45
+skinparam ranksep 60
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowFontSize 11
+
+package "inputs" as inp {
+  artifact "inputs.yaml\n2 entities of interest,\n10 cases × 42010 inputs" as yaml
+  artifact "prompt.txt + prompt-B/C/D.txt\ncritic.txt, revise.txt" as prompts
+}
+
+package "run_generate.py" as rg {
+  component "main()\n~--condition A|B|C|D, ~--only" as main
+  component "run_case()\nprepare workdir, copy skills,\nmemory (C), copy outputs" as runcase
+  component "fill() / build_prompt()" as fill
+  component "claude()\nspawns one headless session,\nreturns its session id" as claudefn
+  component "critic_loop()  [D]\ncritique, revise once,\ncritique, keep best" as loopfn
+  component "score()\nyes 2, partly 1, level right 2,\nminus unsupported" as scorefn
+}
+
+package "skill/  (copied to workdir/.claude/skills)" as sk {
+  component "uml-view\nSKILL.md, DERIVATION.md,\nexamples/ (6, spring-petclinic)" as umlview
+  component "check_inventory.py" as chkinv
+  component "plantuml-diagrams (vendored, MIT)\nSKILL.md, templates, references" as pd
+  component "puml-new, puml-check" as pscripts
+}
+
+package "processes" as procs {
+  node "prepare_subject.py\n(drops UML models, binaries)" as prep
+  node "claude -p generator\nSonnet 5.5, auto memory off" as gen
+  node "claude -p critic  [D]\nOpus 5.5, fresh session,\nread-only + critique file" as critic
+  node "plantuml 1.2026.9 + Graphviz" as plantuml
+}
+
+package "~/t2v-subjects" as subj {
+  artifact "task2view/<repo>" as srcrepo
+  artifact "view-generation/<cond>/<case>/<repo>\n+ .claude/skills + view-out/<case>/" as workdir
+}
+
+package "results (git)" as res {
+  artifact "outputs/, outputs-B/C/D/<case>/\nview.puml, view.png, README.md, prompt.txt\nD: inventory.json, critique-1/2.json,\nloop.json, v1/" as outs
+  artifact "check.json per view" as chk
+  artifact "memory/ [C]" as mem
+  artifact "logs*/ (local only)" as logs
+}
+
+package "pages" as pages {
+  component "make_page.py → index.html" as mkpage
+  component "make_blind.py → rating.html,\nblind-key.json" as mkblind
+}
+actor "Researcher" as human
+
+main --> runcase : each case
+runcase --> fill
+fill ..> inp : reads
+runcase --> prep : once per workdir
+prep ..> srcrepo : copies
+prep --> workdir : writes
+runcase --> claudefn : generate
+runcase --> loopfn : D only
+loopfn --> claudefn : critic, revise, critic
+loopfn --> scorefn
+claudefn --> gen : spawns
+claudefn --> critic : spawns
+claudefn --> logs : stream-json
+gen ..> sk : follows (B–D)
+gen --> workdir : reads code,\nwrites view
+critic --> workdir : reads view,\nwrites critique
+pscripts --> plantuml : renders
+runcase --> res : copies view-out
+pages ..> res : reads
+human --> mkblind : rates
+@enduml

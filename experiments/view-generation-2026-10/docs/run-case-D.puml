@@ -1,0 +1,55 @@
+@startuml
+title 2. One case in condition D: run_case() and critic_loop()
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign left
+hide footbox
+autonumber
+
+participant "run_generate.py\nrun_case()" as rc
+participant "prepare_subject.py" as prep
+participant "workdir\n(copy of repo)" as wd
+participant "claude -p\ngenerator (Sonnet)" as gen
+participant "claude -p\ncritic (Opus)" as cr
+participant "critic_loop()\nscore()" as cl
+participant "outputs-D/<case>/" as out
+
+== prepare ==
+rc -> rc : build_prompt(): prompt.txt + prompt-D.txt\nfilled from inputs.yaml
+rc -> prep : ~--src task2view/<repo> ~--dst view-generation/D/<case>/<repo>
+prep -> wd : copy files except UML models and binaries
+rc -> wd : copy skill/uml-view and skill/plantuml-diagrams\ninto .claude/skills/
+
+== generate (one session, see diagram 3) ==
+rc -> gen : claude(prompt, Sonnet, allowed: skill scripts, plantuml;\nCLAUDE_CODE_DISABLE_AUTO_MEMORY=1)
+gen -> wd : read code; write view-out/<case>/\nview.puml, view.png, inventory.json, README.md
+gen --> rc : session id (from stream-json), log <case>.jsonl
+
+== review 1 ==
+rc -> cl : critic_loop(session)
+cl -> cr : claude(critic.txt filled, Opus,\nRead, Grep, Glob, Write critique-1.json only)
+cr -> wd : read view, PNG, inventory, code;\nwrite critique-1.json
+cl -> cl : first = score(critique-1)
+
+alt verdict is accept, or no session id
+  cl --> rc : loop = {kept: v1}
+else verdict is revise
+  cl -> gen : claude(revise.txt, Sonnet, ~--resume session)
+  gen -> wd : copy current files to v1/;\nrevise once; rerun puml-check, check_inventory
+  cl -> cr : claude(critic.txt, Opus, fresh session,\nwrite critique-2.json only)
+  cr -> wd : write critique-2.json
+  cl -> cl : second = score(critique-2)
+  opt second < first
+    cl -> wd : restore v1/ files
+  end
+  cl --> rc : loop = {critique_1, critique_2, kept}
+end
+
+== collect ==
+rc -> out : copy view-out/<case>/ (incl. v1/, critiques);\nwrite loop.json, prompt.txt
+note over rc, out
+  Afterwards, outside the run: puml-check on every
+  view writes check.json; make_page.py and
+  make_blind.py build the two pages.
+end note
+@enduml

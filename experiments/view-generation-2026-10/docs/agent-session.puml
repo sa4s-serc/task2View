@@ -1,0 +1,60 @@
+@startuml
+title 3. Inside one generator session (uml-view skill, conditions B–D)
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ActivityFontSize 12
+
+start
+:Load skills uml-view and plantuml-diagrams;
+:Read prompt: request + 42010 inputs
+(stakeholder, perspective, concern + details,
+aspect, viewpoint, model kind);
+partition "1. Before drawing" {
+  :Write the one-sentence takeaway;
+  :Choose detail level (overview, balanced,
+  detailed) from the perspective, and wording
+  from the stakeholder → element budget;
+  note right: the agent chooses the level itself;\nin D it often chose higher than the request
+  :D only: read the matching example(s)
+  in examples/;
+}
+partition "2. Find evidence" {
+  :Explore: entry points → APIs and callers →
+  stores and migrations → deploy and build files
+  → tests → docs;
+  :Build the inventory: element, relation,
+  responsibility, path:line or "unknown";
+  :D only: write inventory.json;
+}
+partition "3–4. Draw" {
+  :puml-new <type> view.puml (template);
+  :Choose what to show: one abstraction level,
+  omit DTOs, helpers, glue; lifelines = roles;
+  :Write PlantUML: standard UML stereotypes only,
+  verb labels, caller → dependency;
+}
+partition "5. Check loop" {
+  repeat
+    :puml-check view.puml
+    (render, measure SVG geometry);
+    :Fix one issue kind (direction, grouping,
+    hidden links, split, drop);
+  repeat while (issue count fell in one\nof the last two runs, and under 12 runs?) is (yes)
+  if (condition D?) then (yes)
+    :check_inventory.py inventory.json;
+    :Fix evidence, two-way, relation,
+    concern and budget issues;
+  else (B, C)
+    :Look at view.png and
+    revise (at most two rounds);
+  endif
+  :Keep the best version;
+}
+:Write README.md: takeaway, level, each concern
+detail answered or not, omitted, assumptions,
+check results;
+if (condition C?) then (yes)
+  :Update memory/<entity>.md;
+endif
+stop
+@enduml
