@@ -13,8 +13,11 @@ Conditions (--condition):
      separate critic: a fresh session on a different model reviews the view (critique-1.json); if it asks for a
      revision, the generator session is resumed once with the critique; the critic reviews again
      (critique-2.json) and the better-scored version is kept (loop.json). No memory (outputs-D/)
+  E  D with the detail level given in the stakeholder perspective (inputs.yaml) instead of chosen by the agent;
+     the critic judges against it and the inventory is checked against its budget (outputs-E/)
 
-B and C ran with the skills as of commit 91dc18a; built-in auto memory is off for every run.
+B and C ran with the skills as of commit 91dc18a, D with skills, critic.txt and check_inventory.py as of
+e381c51; built-in auto memory is off for every run.
 
     cd Task2View/code && .venv/bin/python ../experiments/view-generation-2026-10/run_generate.py [--condition B] [--only GR10-Q1] [--dry-run]
 """
@@ -58,15 +61,16 @@ def perspective(c: dict, with_level: bool) -> str:
 
 def fill(template: str, case: str, c: dict, entities: dict, with_level: bool = False, **extra: str) -> str:
     details = "\n".join(f"  - {d}" for d in c.get("concern_details", []))
+    level = c["perspective"]["detail_level"] if isinstance(c["perspective"], dict) else ""
     return template.format(
-        request=c["request"], entity=entities[c["entity_of_interest"]]["description"],
+        detail_level=level, request=c["request"], entity=entities[c["entity_of_interest"]]["description"],
         stakeholder=c["stakeholder"], perspective=perspective(c, with_level), concern=c["concern"], details=details,
         aspect=c["aspect"], viewpoint=c["viewpoint"], model_kind=c["model_kind"], case=case, **extra)
 
 
 def build_prompt(case: str, c: dict, entities: dict, cond: str) -> str:
     extra = "" if cond == "A" else (HERE / f"prompt-{cond}.txt").read_text()
-    return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities)
+    return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities, with_level=cond == "E")
 
 
 def claude(prompt: str, workdir: Path, log_file: Path, model: str, tools: list[str], resume: str = "") -> str:
@@ -99,10 +103,10 @@ def score(critique: Path) -> tuple[int, int]:
     return (s - len(cr.get("unsupported", [])), 1 if cr.get("verdict") == "accept" else 0)
 
 
-def critic_loop(case: str, c: dict, entities: dict, workdir: Path, logs: Path, session: str) -> dict:
+def critic_loop(case: str, c: dict, entities: dict, workdir: Path, logs: Path, session: str, lvl: bool) -> dict:
     produced = workdir / "view-out" / case
     critic = (HERE / "critic.txt").read_text()
-    claude(fill(critic, case, c, entities, out="critique-1.json"), workdir, logs / f"{case}.critic-1.jsonl",
+    claude(fill(critic, case, c, entities, lvl, out="critique-1.json"), workdir, logs / f"{case}.critic-1.jsonl",
            CRITIC_MODEL, ["Read", "Grep", "Glob", f"Write(view-out/{case}/critique-1.json)"])
     first = score(produced / "critique-1.json")
     loop = {"critique_1": first, "revised": False, "kept": "v1"}
@@ -112,11 +116,11 @@ def critic_loop(case: str, c: dict, entities: dict, workdir: Path, logs: Path, s
         verdict = None
     if verdict != "revise" or not session:
         return loop
-    claude(fill((HERE / "revise.txt").read_text(), case, c, entities), workdir, logs / f"{case}.revise.jsonl",
+    claude(fill((HERE / "revise.txt").read_text(), case, c, entities, lvl), workdir, logs / f"{case}.revise.jsonl",
            MODEL, TOOLS, resume=session)
     if not (produced / "v1" / "view.puml").exists():
         return {**loop, "note": "revision did not keep v1; kept what it wrote"}
-    claude(fill(critic, case, c, entities, out="critique-2.json"), workdir, logs / f"{case}.critic-2.jsonl",
+    claude(fill(critic, case, c, entities, lvl, out="critique-2.json"), workdir, logs / f"{case}.critic-2.jsonl",
            CRITIC_MODEL, ["Read", "Grep", "Glob", f"Write(view-out/{case}/critique-2.json)"])
     second = score(produced / "critique-2.json")
     loop.update(revised=True, critique_2=second, kept="v2" if second >= first else "v1")
@@ -161,10 +165,15 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     if not (produced / "view.puml").exists():
         log(f"stop: {case} wrote no view.puml; see {logs.name}/{case}.jsonl")
         return False
-    loop = critic_loop(case, c, entities, workdir, logs, session) if cond == "D" else None
+    loop = critic_loop(case, c, entities, workdir, logs, session, cond == "E") if cond in ("D", "E") else None
     shutil.copytree(produced, out_dir, dirs_exist_ok=True)
     if loop:
         (out_dir / "loop.json").write_text(json.dumps(loop, indent=2), encoding="utf-8")
+    if cond == "E" and (out_dir / "inventory.json").exists():
+        check = subprocess.run([sys.executable, "-I", str(SKILLS["uml-view"] / "scripts" / "check_inventory.py"),
+                                str(out_dir / "inventory.json"), "--repo", str(workdir),
+                                "--level", c["perspective"]["detail_level"]], capture_output=True, text=True)
+        (out_dir / "inventory-check.txt").write_text(check.stdout, encoding="utf-8")
     (out_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
     if shutil.which("plantuml") and not (out_dir / "view.png").exists():
         with (out_dir / "view.puml").open("rb") as src_puml, (out_dir / "view.png").open("wb") as png:
@@ -175,7 +184,7 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--condition", choices=["A", "B", "C", "D"], default="A")
+    parser.add_argument("--condition", choices=["A", "B", "C", "D", "E"], default="A")
     parser.add_argument("--only")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()

@@ -9,7 +9,8 @@ The view source is view.puml next to the inventory. Checks:
   two-way       every element declared in view.puml is in the inventory, and every inventory element is drawn
   relations     every inventory relation is drawn, and every drawn relation is in the inventory
   concern       every concern detail says which elements answer it, or why it is not answered
-  budget        element count against the uml-view budget for the stated model kind and detail level
+  budget        element count against the uml-view budget for the model kind and the detail level (--level, the
+                level given in the inputs, overrides the inventory's own detail_level)
 
 Exit codes: 0 clean, 1 issues found, 2 the inventory or view could not be read.
 Stdlib only.
@@ -79,6 +80,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("inventory")
     ap.add_argument("--repo", default=".")
+    ap.add_argument("--level", choices=["overview", "balanced", "detailed"],
+                    help="the detail level given in the inputs; overrides the inventory's detail_level")
     args = ap.parse_args()
     inv_path, repo = Path(args.inventory), Path(args.repo)
     try:
@@ -117,6 +120,10 @@ def main() -> int:
 
     kind = str(inv.get("model_kind", "")).lower()
     level = str(inv.get("detail_level", "")).lower()
+    if args.level:
+        if level and level != args.level:
+            issues.append(("budget", f"inventory says detail_level {level}, but the given level is {args.level}"))
+        level = args.level
     caps = next((v for k, v in BUDGET.items() if k in kind), None)
     levels = ["overview", "balanced", "detailed"]
     if caps and level in levels:

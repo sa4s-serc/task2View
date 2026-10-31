@@ -17,8 +17,11 @@ tags; the tags are explained in `DERIVATION.md`. Where this skill and `plantuml-
 1. **Write the takeaway**: one sentence that answers the concern for this stakeholder. If it needs "and", the
    concern needs two views; say so in the README and draw the one the model kind names. [GD, NIR, OAI]
 2. **Set two dials from the inputs** [CL, DW]:
-   - *Detail* from the perspective: whole system / high level → **overview**; one feature or area →
-     **balanced**; a change the stakeholder is about to make → **detailed** for that area only.
+   - *Detail* is given in the stakeholder perspective as `detail level: overview | balanced | detailed`. Use
+     that level; do not choose another one. If it seems wrong for the concern, still draw at the given level and
+     say in the README what a different level would add. Only if no level is given, take it from the
+     perspective: whole system / high level → **overview**; one feature or area → **balanced**; a change the
+     stakeholder is about to make → **detailed** for that area only.
    - *Wording* from the stakeholder: business/analyst roles get domain terms and no technology names;
      engineering roles get technology and protocol names. [DW, WS, A42]
 3. **Element budget** (defaults from the sources; over budget → split or drop, never shrink) [CL, VHU, GD]:
@@ -102,7 +105,8 @@ notation, not the content. See `examples/README.md`.
    Anthropic harness design. This replaces the image self-review of GD and A365.)
    When fixing, change the graph (direction, grouping, splitting, dropping), never add elements that are not in
    the inventory. [GD, DIO, YH]
-3. Run `python3 -I .claude/skills/uml-view/scripts/check_inventory.py view-out/<case>/inventory.json` and fix
+3. Run `python3 -I .claude/skills/uml-view/scripts/check_inventory.py view-out/<case>/inventory.json --level <given
+   detail level>` and fix
    what it reports: evidence that does not exist, elements or relations drawn but not in the inventory (or the
    reverse), concern details with no answer, and elements over the budget. Exit 0 means clean.
 4. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
