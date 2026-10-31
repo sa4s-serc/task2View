@@ -1,0 +1,125 @@
+@startuml
+' ---- house style ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 360 }
+.accent { BackgroundColor #DBEAFE; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 70
+hide empty members
+skinparam classAttributeIconSize 0
+
+title UML class diagram: persisted report data and its dependents (MySQL reports_db via JPA/Hibernate)
+
+abstract class "User" as User <<accent>> {
+  userId: Long {PK}
+  name: String {≤ 50}
+  lastName: String {≤ 50}
+  phoneNumber: String {≤ 20}
+  role: String {discriminator}
+}
+class "Credentials" as Credentials {
+  email: String {unique, ≤ 100}
+  password: String {≤ 100}
+}
+class "Citizen" as Citizen
+class "MunicipalOperator" as MunicipalOperator
+class "Report" as Report <<accent>> {
+  reportId: Long {PK}
+  title: String {≤ 50}
+  description: String {≤ 1000}
+  category: ReportCategory
+  dateReport: Date
+  imageAttached: String {optional}
+  currentStatusName: String {≤ 30}
+  citizenEditable: boolean
+}
+class "Location" as Location {
+  city: String
+  cap: String {≤ 5}
+  street: String
+  streetNumber: String
+  municipalArea: String
+}
+enum "ReportCategory" as ReportCategory {
+  BROKEN_STREETLIGHT
+  DAMAGED_ROAD
+  ABANDONED_WASTE
+  GENERAL_HAZARD
+  DAMAGED_STREET_FURNITURE
+}
+interface "ReportStatus" as ReportStatus <<muted>> {
+  updateStatus(report)
+  isStatusNotifiable()
+}
+class "StatusUpdate" as StatusUpdate {
+  updateId: Long {PK}
+  updateDate: Date
+  newStatus: String {≤ 30}
+}
+class "InternalNote" as InternalNote {
+  noteId: Long {PK}
+  text: String {≤ 1000}
+  dateEntry: Date
+}
+class "Notification" as Notification {
+  notificationId: Long {PK}
+  sentDate: Date
+  message: String {≤ 1000}
+  notifiedStatus: String {assigned | resolved}
+}
+class "ReportService" as ReportService <<muted>>
+class "UserService" as UserService <<muted>>
+class "PersistenceService" as PersistenceService <<muted>>
+
+User *-- Credentials : embeds
+User <|-- Citizen
+User <|-- MunicipalOperator
+Report *-- Location : embeds
+Report ..> ReportCategory : category
+Report ..> ReportStatus : current state (transient)
+Citizen "1" <-- "0..*" Report
+MunicipalOperator "0..1" <-- "0..*" Report
+Report "1" *-- "0..*" StatusUpdate : statusUpdates
+Report "1" *-- "0..*" InternalNote : internalNotes
+Report "1" <-- "0..*" Notification
+Citizen "1" <-- "0..*" Notification
+MunicipalOperator "1" <-- "0..*" StatusUpdate
+MunicipalOperator "1" <-- "0..*" InternalNote
+
+ReportService ..> PersistenceService : save / update / find
+UserService ..> PersistenceService : save / find
+ReportService ..> Report
+ReportService ..> Notification
+UserService ..> User
+
+note bottom of ReportStatus
+  Not stored as a table: Submitted, Assigned,
+  InProgress, Resolved implement it and are
+  rebuilt from Report.currentStatusName (@PostLoad).
+end note
+note bottom of UserService
+  Callers: the controllers (login, registration, creation, review, details, status update, notes, monitoring, notification) instantiate these services; the GUIs reach them via the controllers.
+end note
+legend right
+  Filled diamond = composition: JPA cascade ALL + orphanRemoval, or @Embedded (same table). Users share one table (single table inheritance).
+  Grey = dependents / non-persistent. No DDL: hbm2ddl=update.
+end legend
+@enduml

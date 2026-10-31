@@ -1,0 +1,42 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main components in the booking process, their responsibilities, interactions and dependencies",
+      "answered": "yes",
+      "why": "Both entry paths (web via ReservationController, Swing in-process), ReservationManager, the domain model, the registries, NotificationManager, the adapter and the gateway are drawn. Each has a short responsibility in its label, and the numbered steps 1 to 4 show the order of makeReservation (ReservationManager.java:65-102). One small gap: the dom --> ReservationRegistry edge is labelled only 'reads seat occupancy', but Student.hasActiveOrConfirmedReservationForDateAndSlot also reads ReservationRegistry.findActiveReservations (Student.java:42-49). That is the uniqueness rule's data dependency, and a new rule of that kind would add a similar query."
+    },
+    {
+      "detail": "which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications",
+      "answered": "partly",
+      "why": "Request handling, availability (Area.getAvailableSeats -> StudyRoomRegistry, Seat.isAvailable -> ReservationRegistry), storage (ReservationRegistry via PersistenceManager) and the notification path (Observer, NotificationService, adapter, gateway) all match the code. Rule placement is still not quite right. The note and the ReservationManager label say ReservationManager holds the 'room, slot' checks, and the domain box lists only Student, Area, Seat and Reservation. In the code, ReservationManager.resolveRoom and resolveTimeSlot only call into the entity: the weekday-opening rule is StudyRoom.isOpenOnDate (StudyRoom.java:141-147), and the bookable slots come from StudyRoom.getScheduledTimeSlots (used at ReservationManager.java:366). So StudyRoom is a third place where booking rules live, and the view does not show it. Seat selection runs through the AssignmentStrategy interface (ReservationManager.java:31, 400), which is a natural extension point for a seat-choice rule. It is named only as 'seat strategy' in the label, which is acceptable at this level."
+    },
+    {
+      "detail": "which parts need to be modified and which other components may be affected",
+      "answered": "yes",
+      "why": "ReservationManager is marked as the main change point. The domain model, ReservationRegistry, ReservationController and NotificationManager are marked as likely affected, and the legend explains the marking. The note says a new rule may go in ReservationManager or the domain model. The Swing client is not marked even though ReservationController is. A new request field or error message would reach ReservationSummary in the same way, because both build a ReservationRequestDTO."
+    }
+  ],
+  "level": "right",
+  "level_why": "Ten components and two interfaces cover the booking path at a balanced level. LibraryFacade and PersistenceManager are folded into labels, and the domain classes are grouped. Nothing finer than a balanced view needs is drawn, and no booking-path component is missing. The fixes below change labels and the note only, so the element count does not grow.",
+  "unsupported": [
+    "Note and ReservationManager label put the 'room, slot' rule checks in ReservationManager. ReservationManager only does null and ID checks and calls room.isActive(), room.isOpenOnDate() and room.getScheduledTimeSlots() (ReservationManager.java:173-197, 357-375). The weekday rule and slot schedule are in the StudyRoom entity (StudyRoom.java:141-160).",
+    "rm --> nm labelled '4 attaches observer, notifies': ReservationManager only attaches NotificationManager, then calls reservation.notifyObservers() on the Reservation (ReservationManager.java:120-123). NotificationManager.update is reached through Reservation -> Observer, which the dom ..> Observer edge already shows. 'notifies' on rm --> nm suggests a direct call that does not exist."
+  ],
+  "missing": [
+    "StudyRoom (and TimeSlot) as part of the domain model box, with the opening-day and slot-schedule rules (StudyRoom.isOpenOnDate, getScheduledTimeSlots) named as rule locations alongside Student and Seat.",
+    "The uniqueness rule's read of ReservationRegistry (Student.hasActiveOrConfirmedReservationForDateAndSlot -> findActiveReservations, Student.java:42-49) in the dom --> ReservationRegistry edge label.",
+    "The Swing client marked as possibly affected, like ReservationController, because a new request field or error text reaches it too (ReservationSummary.java:99-100)."
+  ],
+  "uml": [
+    "The numbered labels 1 to 4 on dependency arrows borrow communication-diagram notation. That is tolerable here because the README explains it, but the labels should name the dependency (e.g. 'uses: resolve room, area, seat'). Do not read them as messages.",
+    "The external gateway is marked external only by '(external, stub)' in its name. A visible keyword such as «external» on ExternalEmailGateway would state this in UML terms rather than through styling. The hidden <<accent>>/<<alert>>/<<muted>> stereotypes are styling hooks only and are not displayed, so they are acceptable."
+  ],
+  "fixes": [
+    "Correct rule placement. Add StudyRoom and TimeSlot to the domain model box, and rewrite the note: ReservationManager does request checks, orchestration and seat strategy. Booking rules live in the entities: StudyRoom.isOpenOnDate and getScheduledTimeSlots (opening days and slots), Student.hasActiveOrConfirmedReservationForDateAndSlot (uniqueness) and Seat.isAvailable (occupancy).",
+    "Relabel rm --> nm as '4 attaches as observer' and leave the notification to the existing dom ..> Observer edge, so the view does not claim a direct notify call.",
+    "Relabel dom --> ReservationRegistry as 'reads active reservations, seat occupancy', so the uniqueness rule's data dependency shows.",
+    "Mark the Swing client as likely affected, like ReservationController.",
+    "Give ExternalEmailGateway a visible «external» keyword instead of relying on the name suffix."
+  ]
+}

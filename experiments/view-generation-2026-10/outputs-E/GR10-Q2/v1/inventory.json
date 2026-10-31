@@ -1,0 +1,40 @@
+{
+  "model_kind": "UML deployment diagram",
+  "detail_level": "detailed",
+  "takeaway": "A Java 23 Swing desktop client, with Hibernate, the MySQL JDBC driver and persistence.xml on its classpath, runs on the user's workstation and talks JDBC over TCP 3306 to a MySQL server (default 127.0.0.1, schema reports_db).",
+  "elements": [
+    {"alias": "build", "name": "Build machine", "responsibility": "Host where mvn builds and tests the project", "evidence": ["pom.xml:1-75", "README.md:46-51"]},
+    {"alias": "mvn", "name": "Maven 3 + JDK 23", "responsibility": "Compiles at Java 23 and resolves dependencies", "evidence": ["pom.xml:13-14", "pom.xml:60-70", "README.md:19-21"]},
+    {"alias": "central", "name": "Maven Central", "responsibility": "Repository the dependencies are downloaded from", "evidence": ["pom.xml:19-22"]},
+    {"alias": "ws", "name": "User workstation", "responsibility": "Desktop machine where the Swing GUI is shown", "evidence": ["src/main/java/Boundary/HomePageGUI.java:75-86"]},
+    {"alias": "jvm", "name": "JVM (Java 23) Swing desktop client", "responsibility": "Runs the GUI, controllers, entities and JPA code in one process", "evidence": ["src/main/java/Boundary/HomePageGUI.java:75-86", "pom.xml:13-14"]},
+    {"alias": "app", "name": "municipal-report-management-1.0-SNAPSHOT (Java classes)", "responsibility": "Application classes (Boundary, Control, Entity, Database)", "evidence": ["pom.xml:9-11", "src/main/java/Database/JpaUtil.java:17"]},
+    {"alias": "pxml", "name": "META-INF/persistence.xml", "responsibility": "Persistence unit, JDBC URL, credentials, hbm2ddl update", "evidence": ["src/main/resources/META-INF/persistence.xml:10-45"]},
+    {"alias": "hib", "name": "hibernate-core 6.6.50.Final", "responsibility": "JPA provider", "evidence": ["pom.xml:49-52", "src/main/resources/META-INF/persistence.xml:12"]},
+    {"alias": "jdbc", "name": "mysql-connector-j 9.4.0", "responsibility": "JDBC driver com.mysql.cj.jdbc.Driver", "evidence": ["pom.xml:42-45", "src/main/resources/META-INF/persistence.xml:23-24"]},
+    {"alias": "forms", "name": "forms_rt 7.0.3", "responsibility": "GUI Designer runtime for .form bound panels", "evidence": ["pom.xml:35-38", "src/main/java/Boundary/HomePageGUI.form:1"]},
+    {"alias": "dbhost", "name": "Database host (default 127.0.0.1)", "responsibility": "Machine running MySQL; local by default", "evidence": ["src/main/resources/META-INF/persistence.xml:26-27"]},
+    {"alias": "mysql", "name": "MySQL server port 3306", "responsibility": "Stores all application data", "evidence": ["src/main/resources/META-INF/persistence.xml:26-27", "README.md:22-43"]},
+    {"alias": "schema", "name": "schema reports_db (user reports_user)", "responsibility": "Database created manually; tables managed by Hibernate", "evidence": ["README.md:26-35", "src/main/resources/META-INF/persistence.xml:35-36"]}
+  ],
+  "relations": [
+    {"from": "mvn", "to": "central", "label": "downloads dependencies, HTTPS", "evidence": ["pom.xml:19-22"]},
+    {"from": "mvn", "to": "app", "label": "create", "evidence": ["pom.xml:60-70"]},
+    {"from": "app", "to": "pxml", "label": "use reads", "evidence": ["src/main/java/Database/JpaUtil.java:17"]},
+    {"from": "app", "to": "hib", "label": "use JPA API", "evidence": ["src/main/java/Database/PersistenceService.java:5-7"]},
+    {"from": "app", "to": "forms", "label": "use form layouts", "evidence": ["src/main/java/Boundary/HomePageGUI.form:1", "pom.xml:35-38"]},
+    {"from": "hib", "to": "jdbc", "label": "use loads driver", "evidence": ["src/main/resources/META-INF/persistence.xml:23-24"]},
+    {"from": "jvm", "to": "mysql", "label": "JDBC over TCP :3306", "evidence": ["src/main/resources/META-INF/persistence.xml:26-27"]}
+  ],
+  "concern_details": [
+    {"detail": "required runtime environments and software artifacts", "answered_by": ["jvm", "mysql", "app", "pxml", "hib", "jdbc", "forms", "mvn"]},
+    {"detail": "where the application runs and where its data is stored", "answered_by": ["ws", "jvm", "dbhost", "mysql", "schema"]},
+    {"detail": "how the main runtime elements communicate", "answered_by": ["jvm", "mysql", "mvn", "central"]},
+    {"detail": "technologies and runtime dependencies between application and database", "answered_by": ["hib", "jdbc", "pxml", "schema"]}
+  ],
+  "omitted": [
+    {"name": "Application layers (Boundary, Control, Entity, Database)", "reason": "component-level; a different view"},
+    {"name": "junit-jupiter 5.10.2", "reason": "test scope, not needed at runtime"},
+    {"name": "Swing/JDK modules", "reason": "part of the JVM, shown as a label"}
+  ]
+}

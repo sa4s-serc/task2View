@@ -1,0 +1,71 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+top to bottom direction
+
+title UML component diagram: seat booking in the study-room reservation app
+
+component "Web and Swing clients" as clients
+component "ReservationController\n(Spring REST)" as ctl
+component "LibraryFacade" as facade
+component "ReservationManager\n(booking rules)" as rm <<accent>>
+component "AssignmentStrategy\n(FirstAvailableAssignment)" as strat
+component "Reservation domain model\n(Student, Area, Seat, Reservation + state)" as dom
+component "ReservationRegistry" as resreg
+component "Room and User registries" as otherreg
+component "PersistenceManager\n(JPA to MySQL)" as pm
+component "NotificationManager" as nm
+component "Email notification adapter\n(external email gateway)" as mail <<muted>>
+component "NotificationScheduler\n(every 60 s)" as sched
+
+clients --> ctl : POST /api/reservations/create
+clients --> facade : makeReservation (Swing)
+ctl --> facade : makeReservation
+facade --> rm : delegates
+rm --> otherreg : resolves room, area, seat
+rm --> dom : checks availability, rules
+rm --> strat : picks seat
+rm --> resreg : saves reservation
+dom --> resreg : finds seat occupancy
+dom --> nm : notifies on state change
+rm --> nm : sends cancel notice
+resreg --> pm : persists
+otherreg --> pm : loads
+nm --> mail : sendNotification
+sched --> facade : expiry, reminders
+facade --> nm : sendReminders
+nm --> resreg : finds pending reminders
+
+note left of rm
+  New booking rules go here:
+  makeReservation validation chain
+  (room, slot, seat, uniqueness)
+end note
+legend right
+  Blue: main change point.
+  Grey: external service stub.
+end legend
+@enduml

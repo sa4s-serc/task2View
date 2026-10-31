@@ -1,0 +1,62 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML deployment diagram: Municipal Report Management System (desktop client + MySQL, default single-host setup)
+
+node "User workstation" as ws <<device>> {
+  node "JVM (Java 23)\nSwing desktop client" as jvm <<executionEnvironment>> {
+    artifact "municipal-report-management\n-1.0-SNAPSHOT (Java classes)" as app
+    artifact "hibernate-core 6.6.50.Final\n(JPA provider)" as hib
+    artifact "mysql-connector-j 9.4.0\n(JDBC driver)" as jdbc
+    artifact "forms_rt 7.0.3\n(GUI Designer runtime)" as forms
+    artifact "META-INF/persistence.xml (classpath)\nurl jdbc:mysql://127.0.0.1:3306/reports_db\nuser reports_user, hbm2ddl.auto=update" as pxml <<deploymentSpec>>
+  }
+  node "MySQL server\n127.0.0.1:3306" as mysql <<executionEnvironment>> {
+    artifact "schema reports_db\n(user reports_user@localhost)" as schema
+  }
+}
+
+app ..> hib : <<use>> JPA API
+app ..> forms : <<use>> form layouts
+hib ..> jdbc : <<use>> loads driver
+pxml ..> app : configures
+jvm -- mysql : JDBC/TCP 3306
+
+note bottom of mysql
+  Create first: database reports_db, user
+  reports_user@localhost and its grant.
+  Hibernate then creates/alters the tables.
+  A remote DB needs a new JDBC URL and a
+  grant for that client host.
+end note
+
+note bottom of ws
+  Entry points: main() in HomePageGUI,
+  UserLoginGUI, UserRegistrationGUI.
+  No fat jar: put the transitive dependencies
+  (e.g. jakarta.persistence-api) on the classpath.
+  /images/logo.png is expected but absent;
+  the GUIs only log it.
+  Build: mvn, Java 23, from Maven Central.
+end note
+@enduml

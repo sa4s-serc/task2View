@@ -1,0 +1,28 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main types of users that interact with the system", "answered": "yes",
+     "why": "Citizen and Municipal operator are the two roles the code distinguishes (UserRegistrationGUI.java:112-113 role choice; role guards in UserDashboardGUI.java:450, 479, 509, 539, 569). Both are drawn as actors."},
+    {"detail": "goals each of them can achieve through it", "answered": "yes",
+     "why": "Each dashboard function is a use case linked to the right actor: create report and view submitted reports (citizen), view received reports, update status and monitor trends (operator), plus register/log in for both (HomePageGUI). Internal notes and details are folded into the operator's review use case, which is fine at overview level."},
+    {"detail": "how the functionalities are related to each other", "answered": "no",
+     "why": "The diagram has only actor-use case associations, no relations between use cases. The README admits this. The code has real dependencies: 'Update report status' is reached only by picking a report from the received-reports list (UserDashboardGUI.java:575 opens ReceivedReportsGUI(userSessionData, true), and ReceivedReportsGUI.java:1105-1122 opens ReportStatusUpdateGUI for the selected report). The status update also triggers the citizen notification that the citizen reads in their own report details (NotificationController.sendNotificationToCitizen; SubmittedReportsGUI.java:239-260, 743). Every use case also needs a logged-in user. None of this shows in the drawing. It only appears in labels (\"citizen is notified\") or not at all."}
+  ],
+  "level": "right",
+  "level_why": "For an overview, two actors and six goal-level use cases in domain wording is the right size. No element should be dropped. Merging details, history and internal notes into the two list use cases suits an overview. The gap is relations, not elements: adding relations between the existing use cases does not push the view past the overview level.",
+  "unsupported": [],
+  "missing": [
+    "Relation between 'Update report status' and 'Review received reports': in the code, a status update always starts from the received-reports list (UserDashboardGUI.java:569-575 -> ReceivedReportsGUI(..., true) -> ReportStatusUpdateGUI). Draw it as «extend» (status update extends reviewing received reports) or «include», using only the existing elements.",
+    "The notification link between the operator's status update and the citizen's goal: citizens view notifications in their report details (SubmittedReportsGUI.java:239 'View Notifications', 743-770). Today this appears only as a parenthetical in one label. Name it in the citizen's use case (e.g. 'View own reports, history and notifications') so the reader can see how the two sides connect.",
+    "Login as a precondition for every other use case (UserDashboardGUI is opened only after UserLoginGUI). Neither the drawing nor a note shows this."
+  ],
+  "uml": [
+    "No subject (system boundary rectangle) around the use cases. Without it, nothing shows which use cases belong to the desktop application and which lie outside it. Add a rectangle named after the system.",
+    "Use case names carry parenthetical side effects ('(citizen is notified)'). Name the use case as a goal and express the side effect through a relation or a note, not inside the name."
+  ],
+  "fixes": [
+    "Add relations between use cases to answer 'how the functionalities are related', using the existing elements only. At minimum, draw 'Update report status' «extend» 'Review received reports' (or «include»), based on UserDashboardGUI.java:575 and ReceivedReportsGUI.java:1105-1122.",
+    "Show the status update -> citizen notification connection. Either rename the citizen use case to 'View own reports, history and notifications' (SubmittedReportsGUI.java:239-260) and attach a short note linking it to the status update, or tie the two through a relation instead of the '(citizen is notified)' label text.",
+    "Add a short note that every use case other than 'Register and log in' requires an authenticated session. Do not add a separate login include from each use case, which would clutter an overview.",
+    "Draw a system boundary (subject) around the six use cases.",
+    "In the README, stop citing the element budget as the reason relations are missing. Relations do not add elements, and this concern detail is part of the request."
+  ]}

@@ -15,7 +15,8 @@ import yaml
 HERE = Path(__file__).resolve().parent
 FIELDS = ["stakeholder", "perspective", "concern", "aspect", "viewpoint", "model_kind"]
 CONDITIONS = {"outputs": "A: agent", "outputs-B": "B: + skill and feedback loop", "outputs-C": "C: + memory",
-              "outputs-D": "D: revised skill + separate critic"}
+              "outputs-D": "D: revised skill + separate critic",
+              "outputs-E": "E: D + detail level given in the perspective"}
 
 
 def esc(s: object) -> str:
@@ -118,7 +119,8 @@ can a view be generated that addresses the concern? The architecture is not give
 derives it from the repository and writes one view. Conditions side by side: A the agent alone; B with the uml-view
 skill and its render, check and look loop; C as B plus a notes file per repository kept across cases; D with the
 revised skill (checked inventory, examples, no self-review) and a separate critic on a different model, one
-revision, better version kept. Layout issues are counted by puml-check, which B, C and D also used while working,
+revision, better version kept; E as D with the detail level given in the stakeholder perspective instead of
+chosen by the agent. Layout issues are counted by puml-check, which B, C and D also used while working,
 so they favour those conditions; per node normalises for size. The judgement is the blind rating.</p>
 <nav>{nav}</nav>
 {body}

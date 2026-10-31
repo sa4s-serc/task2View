@@ -1,0 +1,167 @@
+{
+ "model_kind": "UML component diagram",
+ "detail_level": "overview",
+ "elements": [
+  {
+   "alias": "swing",
+   "name": "Swing booking wizard",
+   "responsibility": "Desktop wizard (date/room, area, seat, summary) that submits the reservation",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java:98-106",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/AreaSelection.java:85-86"
+   ]
+  },
+  {
+   "alias": "rest",
+   "name": "REST controllers",
+   "responsibility": "Spring MVC endpoint POST /api/reservations/create delegating to the facade",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:15-31"
+   ]
+  },
+  {
+   "alias": "facade",
+   "name": "LibraryFacade",
+   "responsibility": "Singleton single entry point delegating to the managers",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:13-24",
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:117-119"
+   ]
+  },
+  {
+   "alias": "resmgr",
+   "name": "ReservationManager",
+   "responsibility": "Validates request, selects seat (chosen or via assignment strategy), saves reservation, notifies",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:65-102",
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:378-401"
+   ]
+  },
+  {
+   "alias": "roommgr",
+   "name": "StudyRoomManager",
+   "responsibility": "Room, time-slot and seat availability queries used by the wizard",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:21-26",
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:100-102"
+   ]
+  },
+  {
+   "alias": "registries",
+   "name": "Registries and domain model",
+   "responsibility": "Registries, entities (Reservation, Seat, Area, state classes) persisted via JPA to MySQL",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java:28-35",
+    "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java:19",
+    "JavaProject/src/main/resources/META-INF/persistence.xml:21"
+   ]
+  },
+  {
+   "alias": "notif",
+   "name": "Notification",
+   "responsibility": "Observer on Reservation that sends an email via adapter and gateway",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java:15-46",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java:12-20",
+    "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java:181-185"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "swing",
+   "to": "facade",
+   "label": "makeReservation, get room detail",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java:100",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/AreaSelection.java:85-86"
+   ]
+  },
+  {
+   "from": "rest",
+   "to": "facade",
+   "label": "makeReservation",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:29"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "resmgr",
+   "label": "makeReservation",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:118"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "roommgr",
+   "label": "getRoomDetail",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:101"
+   ]
+  },
+  {
+   "from": "resmgr",
+   "to": "registries",
+   "label": "find, save",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:28-30",
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:134"
+   ]
+  },
+  {
+   "from": "roommgr",
+   "to": "registries",
+   "label": "query seats",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:21-22"
+   ]
+  },
+  {
+   "from": "resmgr",
+   "to": "notif",
+   "label": "notifyObservers",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:120-123"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main system components involved in seat booking",
+   "answered_by": [
+    "swing",
+    "rest",
+    "facade",
+    "resmgr",
+    "roommgr",
+    "registries",
+    "notif"
+   ]
+  },
+  {
+   "detail": "how they interact",
+   "answered_by": [
+    "facade",
+    "resmgr",
+    "registries",
+    "notif"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Static web pages (reservation.html, app.js)",
+   "reason": "Browser client of the REST controllers (reservation.html:385 POSTs /reservations/create); not drawn, to stay within the 7-component budget"
+  },
+  {
+   "name": "Assignment strategy, state classes, DTOs, factories, UserManager, NotificationScheduler, other controllers",
+   "reason": "Detail below overview level or unrelated to booking"
+  },
+  {
+   "name": "Student actor",
+   "reason": "Users are not components; counted against the budget"
+  }
+ ]
+}

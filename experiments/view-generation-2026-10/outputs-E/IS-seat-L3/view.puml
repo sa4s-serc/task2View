@@ -1,0 +1,70 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+top to bottom direction
+
+title UML component diagram: seat booking in the study-room reservation app
+
+component "Web client\n(reservation.html)" as web
+component "Swing client\n(ReservationSummary)" as swing
+component "ReservationController\n(Spring REST)" as ctl <<alert>>
+component "ReservationManager\n(entered via LibraryFacade;\nrequest checks, seat strategy,\nsave, notify)" as rm <<accent>>
+component "Reservation domain model\n(Student, Area, Seat, Reservation)\nuniqueness and occupancy rules" as dom <<alert>>
+component "ReservationRegistry\n(via PersistenceManager, JPA to MySQL)" as resreg <<alert>>
+component "Room and User registries\n(StudyRoomRegistry, UserRegistry;\nvia PersistenceManager)" as otherreg
+component "NotificationManager" as nm <<alert>>
+component "NotificationServiceAdapter" as adapter
+component "ExternalEmailGateway\n(external, stub)" as gateway <<muted>>
+interface "Observer" as obs
+interface "NotificationService" as nsvc
+
+web --> ctl : POST /api/reservations/create
+swing --> rm : makeReservation (in-process)
+ctl --> rm : makeReservation
+rm --> otherreg : 1 resolves room, area, seat
+rm --> dom : 2 checks rules, availability
+rm --> resreg : 3 saves reservation
+rm --> nm : 4 attaches observer, notifies
+dom --> resreg : reads seat occupancy
+dom --> otherreg : lists area seats
+dom ..> obs : notifies
+nm -- obs
+nm ..> nsvc : sendNotification
+adapter -- nsvc
+adapter --> gateway : sends email
+
+note bottom of rm
+  Rules live in two places: ReservationManager
+  (room, slot, seat checks, seat strategy) and
+  the domain model (Student uniqueness check,
+  Seat.isAvailable). A new rule may go in either.
+end note
+legend right
+  Blue: main change point.
+  Red: likely affected by a new rule.
+  Grey: external system.
+end legend
+@enduml

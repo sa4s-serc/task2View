@@ -1,0 +1,40 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML component diagram: Municipal Report Management System, whole system
+
+component "User Interface\n(Java Swing screens, Boundary)" as ui
+component "Application Controllers\n(Control: SystemServicesController\nfacade + use-case controllers)" as ctrl
+component "Domain Services\n(ReportService, UserService)" as svc
+component "Domain Entities\n(User, Report, status states,\nNote, Notification)" as ent
+component "Persistence Layer\n(PersistenceService, JpaUtil;\nJPA / Hibernate)" as pers
+component "Reports Database\n(MySQL reports_db)" as db <<muted>>
+
+ui   --> ctrl : invokes use cases
+ctrl --> svc  : delegates operations
+svc  --> ent  : creates, changes
+svc  --> pers : saves, queries
+pers --> ent  : maps (ORM)
+pers --> db   : JDBC
+@enduml

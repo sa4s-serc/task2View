@@ -1,0 +1,35 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "system components involved in user registration",
+     "answered": "yes",
+     "why": "All seven lifelines exist in the code and lie on the web registration path: registration.html/app.js -> AuthenticationController -> LibraryFacade -> UserManager -> UserRegistry -> PersistenceManager -> MySQL. RestExceptionHandler, the component that turns failures into HTTP 400, appears only as text on message 12. That is acceptable at this level. A tester can see every component the request goes through."},
+    {"detail": "how they interact",
+     "answered": "partly",
+     "why": "The happy path is in the correct order. The control flow for rejection is wrong, though. In the code, UserManager.register throws IllegalArgumentException in two places: at the validation step (message 04, before any database lookup) and right after each uniqueness lookup. The exception goes back up through LibraryFacade to AuthenticationController, and RestExceptionHandler maps it to 400. The view places the alt after the SELECT. So the [rejected] branch seems to start after the lookups, and it shows no message that causes it: no exception and no return from UserManager. Messages 11 and 12 come from the controller even though its call to the facade (02) never returns, and the return chain exists only in a note. The third outcome a tester can trigger, registerUser returning false -> RuntimeException -> not mapped by RestExceptionHandler (so not 400), also exists only in the note."}
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines, about a dozen messages and one alt frame suit a balanced end-to-end view for an integration tester. The database lifeline is worth keeping because test setup and checks touch reservationsdb. Collapsing the two uniqueness lookups into 05-07 and leaving out the factories and the DTO mapping are appropriate cuts. The fixes below change where existing messages sit and add at most one or two return or exception messages. They do not add lifelines, so the view stays at the balanced level.",
+  "unsupported": [
+    "The alt frame starts after 'SELECT user by email / identifier' (07), which implies that rejection is decided only after the database lookup. In UserManager.register (lines 65-75), validate()/validateStudent()/validateLibrarian() throw IllegalArgumentException before any lookup. Only the duplicate checks (lines 77-86) happen after a SELECT.",
+    "Message 05 'check email and identifier unused' is drawn as one call. The code makes two separate calls: userRegistry.institutionalEmailExists(email), then findStudentByStudentNumber or findLibrarianByCode depending on the role (UserManager.java:77-84). The README admits this simplification. It is acceptable only if the label makes clear that these are two lookups, the second chosen by role.",
+    "Message 01 shows a body '(role, name, ...)' with no encoding stated, while the README says the error is a 'JSON error body'. The request is sent as application/x-www-form-urlencoded (app.js api(), isJson=false) and bound with @RequestParam. Only the 400 response is JSON ({\"error\": msg}). This is minor, but it matters to a tester who builds requests by hand."
+  ],
+  "missing": [
+    "The source of the rejection: UserManager throws IllegalArgumentException (on invalid input, duplicate email or identifier in use), the exception goes through LibraryFacade and AuthenticationController, and RestExceptionHandler.handleInvalidRequest returns 400 {error}. None of this is drawn as messages. Only the controller's reply is shown.",
+    "Return messages on the accepted path (UserDTO from UserManager -> LibraryFacade -> AuthenticationController, after toDTO). Without them, reply 11 has no preceding return of call 02.",
+    "The save-failure outcome. PersistenceManager.save catches the exception, rolls back and returns false. UserManager then throws RuntimeException, which RestExceptionHandler does not handle, so the client gets a non-400 server error. A tester needs this outcome as a separate operand, not a note."
+  ],
+  "uml": [
+    "Replies 11 and 12 come from AuthenticationController, but the synchronous calls 02 and 03 have no matching reply or exception messages. Under UML sequence semantics, the controller cannot reply before its call returns. Add returns (or exception replies) along um -> facade -> ctl, or at least the um -> ctl chain.",
+    "The alt guards '[accepted]' / '[rejected]' sit after the lookups, while the rejection condition is also decided before them. The fragment should enclose the whole decision (validation plus the lookups), or use separate guards such as [invalid input], [email or identifier taken], [saved] and [save failed]. Each operand should start with the message that actually happens first in that case.",
+    "Calls 06 and 07 to the database have no return messages, so the result that the uniqueness decision depends on is not shown. One dashed reply ('user or null') from PersistenceManager to UserRegistry/UserManager would make the guard traceable.",
+    "The note carries behaviour (return path, unmapped RuntimeException, Swing client). Behaviour that belongs to the flow should be drawn as messages or operands. Notes should hold only commentary such as the Swing alternative."
+  ],
+  "fixes": [
+    "Restructure the alt so that the decision is visible where it happens. Either open the alt immediately after 04 with an [invalid input] operand, or use an alt with operands [invalid input] / [email or identifier taken] / [accepted]. In each rejection operand, show UserManager raising IllegalArgumentException back through LibraryFacade to AuthenticationController, then '400 {error}' via RestExceptionHandler.",
+    "Add the return chain on the accepted path: UserManager --> LibraryFacade : UserDTO, LibraryFacade --> AuthenticationController : UserDTO, then 200 UserDTO to the form.",
+    "Turn the save-failure case into an operand: PersistenceManager returns false (after rollback), UserManager throws RuntimeException, and the client gets an unmapped server error (not 400). Remove that text from the note.",
+    "Add a dashed reply for the lookup result (user found / null), and label 05 as two lookups: email, then student number or librarian code by role.",
+    "State the request encoding on message 01 (form-urlencoded @RequestParam) and fix the README so it does not imply a JSON request body. Keep only the Swing-client remark in the note."
+  ]
+}

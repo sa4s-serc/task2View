@@ -1,0 +1,185 @@
+{
+ "model_kind": "UML component diagram",
+ "detail_level": "overview",
+ "elements": [
+  {
+   "alias": "ui",
+   "name": "User Interface",
+   "responsibility": "Swing screens (login, registration, report creation, submitted/received reports, status update, notes, monitoring); entry point HomePageGUI.main",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75",
+    "src/main/java/Boundary/ReportCreationGUI.java:70"
+   ]
+  },
+  {
+   "alias": "ctrl",
+   "name": "Application Controllers",
+   "responsibility": "SystemServicesController facade delegating to use-case controllers (registration, creation, review, details, status update, notes, monitoring); login and notification controllers",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:22-29",
+    "src/main/java/Control/UserLoginController.java:18"
+   ]
+  },
+  {
+   "alias": "svc",
+   "name": "Domain Services",
+   "responsibility": "Business rules: validation, report lifecycle, notifications, monitoring statistics, credential lookup (logical component; classes live in package Entity)",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:14-22",
+    "src/main/java/Entity/UserService.java:12"
+   ]
+  },
+  {
+   "alias": "ent",
+   "name": "Domain Entities",
+   "responsibility": "User/Citizen/MunicipalOperator, Report with state classes (Submitted, Assigned, InProgress, Resolved), InternalNote, StatusUpdate, Notification, Location",
+   "evidence": [
+    "src/main/java/Entity/User.java:28",
+    "src/main/java/Entity/Report.java:76",
+    "src/main/java/Entity/Submitted.java:1"
+   ]
+  },
+  {
+   "alias": "pers",
+   "name": "Persistence Layer",
+   "responsibility": "Generic JPA save/update/find over EntityManager (does not import Entity; entities mapped via persistence.xml)",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13-18",
+    "src/main/java/Database/JpaUtil.java:17"
+   ]
+  },
+  {
+   "alias": "db",
+   "name": "Reports Database",
+   "responsibility": "External MySQL database reports_db accessed over JDBC with Hibernate",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:15-26"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "ui",
+   "to": "ctrl",
+   "label": "invokes use cases",
+   "evidence": [
+    "src/main/java/Boundary/ReportCreationGUI.java:518",
+    "src/main/java/Boundary/UserLoginGUI.java:111"
+   ]
+  },
+  {
+   "from": "ui",
+   "to": "ent",
+   "label": "ReportCategory enum",
+   "evidence": [
+    "src/main/java/Boundary/ReportCreationGUI.java:4",
+    "src/main/java/Boundary/ReceivedReportsGUI.java:4"
+   ]
+  },
+  {
+   "from": "ctrl",
+   "to": "svc",
+   "label": "delegates operations",
+   "evidence": [
+    "src/main/java/Control/ReportCreationController.java:21-22",
+    "src/main/java/Control/ActivityMonitoringController.java:105"
+   ]
+  },
+  {
+   "from": "svc",
+   "to": "ent",
+   "label": "creates, changes",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:82",
+    "src/main/java/Entity/ReportService.java:298"
+   ]
+  },
+  {
+   "from": "svc",
+   "to": "pers",
+   "label": "saves, queries",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:22",
+    "src/main/java/Entity/ReportService.java:113"
+   ]
+  },
+  {
+   "from": "pers",
+   "to": "ent",
+   "label": "ORM mapping",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:13-19"
+   ]
+  },
+  {
+   "from": "pers",
+   "to": "db",
+   "label": "JDBC",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:15-26",
+    "src/main/java/Database/JpaUtil.java:17"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main architectural components and their responsibilities",
+   "answered_by": [
+    "ui",
+    "ctrl",
+    "svc",
+    "ent",
+    "pers",
+    "db"
+   ]
+  },
+  {
+   "detail": "decomposition into layers or subsystems",
+   "answered_by": [
+    "ui",
+    "ctrl",
+    "svc",
+    "pers"
+   ]
+  },
+  {
+   "detail": "main dependencies among them",
+   "answered_by": [
+    "ui",
+    "ctrl",
+    "svc",
+    "ent",
+    "pers",
+    "db"
+   ]
+  },
+  {
+   "detail": "separation of user interface, application logic, domain entities and persistence, and how they collaborate",
+   "answered_by": [
+    "ui",
+    "ctrl",
+    "svc",
+    "ent",
+    "pers"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Individual GUI screens and use-case controllers",
+   "reason": "overview level; merged into ui and ctrl"
+  },
+  {
+   "name": "Report state classes, enums, Credentials, Location",
+   "reason": "class-level detail inside ent"
+  },
+  {
+   "name": "Tests (black-box, white-box)",
+   "reason": "not part of runtime structure"
+  },
+  {
+   "name": "Controller dependency on ReportCategory enum, Map<String,Object> data exchange, SystemServicesController facade",
+   "reason": "stated in a note, not drawn as separate edges (evidence: Control/ReportCreationController.java:3, Control/SystemServicesController.java:35,59,85)"
+  }
+ ]
+}

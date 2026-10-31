@@ -1,0 +1,33 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "main data entities stored and their relationships", "answered": "yes",
+     "why": "All persisted entities are drawn with PK, column lengths and DATE/TIMESTAMP markers. These are User/Citizen/MunicipalOperator (single table users, discriminator values on the subclasses), Report, StatusUpdate, InternalNote and Notification, plus the embeddables Credentials and Location. The FK columns (citizen_id, operator_id, report_id) are on the associations, and the multiplicities match the JPA mappings: Report->Citizen 1 (nullable=false, Report.java:87-89), Report->MunicipalOperator 0..1 (Report.java:94-96), and the StatusUpdate, InternalNote and Notification FKs are all NOT NULL (StatusUpdate.java:45-54, InternalNote.java:45-54, Notification.java:48-54)."},
+    {"detail": "information persisted throughout the lifecycle of a report", "answered": "yes",
+     "why": "The Report note gives the shared status vocabulary, including the IllegalStateException on load (Report.java:406-437), the citizenEditable rule and the rule that a StatusUpdate needs an assigned operator (Report.java:367-382). It also says the notification restriction is enforced in code only. The compositions show that status updates and notes are cascaded child rows. One small gap remains: the view does not say that Notification, unlike StatusUpdate and InternalNote, is not cascaded from Report. Report has no collection of notifications, so notification rows block or outlive a report delete. The plain association implies this but does not state it."},
+    {"detail": "how users, reports, locations, categories, states, state changes, internal notes and notifications are related", "answered": "yes",
+     "why": "Each of the eight concepts is drawn and connected. Location is embedded, category is an enum stored as a string, the state is the current_status string plus a transient ReportStatus, and state changes, notes and notifications are rows that reference the report and an operator or citizen. The note links the three status columns."},
+    {"detail": "which parts of the application depend on the persisted information", "answered": "partly",
+     "why": "ReportService, UserService and PersistenceService are drawn with their dependencies on every entity, and the code confirms them (ReportService.java:43, 113, 200, 213, 248, 269, 398). The note on the controllers is accurate: nine controllers import only the services. However, the note says the GUIs reach persisted data only through the controllers. In fact ReceivedReportsGUI and ReportCreationGUI, as well as ReportCreationController, import ReportCategory directly (Boundary/ReceivedReportsGUI.java:4, Boundary/ReportCreationGUI.java:4). Changing the stored category values therefore also touches the GUIs."}
+  ],
+  "level": "right",
+  "level_why": "14 classes with typed, constrained attributes, FK names and multiplicities fit a detailed data model for a database engineer. The state implementations, controllers, GUIs and JpaUtil are rightly kept out. One small cut is possible: the two operations on ReportStatus (updateStatus, isStatusNotifiable) are behaviour, not persisted data, and could be dropped, leaving the interface and its note. ReportService..>User and ReportService..>MunicipalOperator could be merged into one dependency on User. Nothing needs to be added beyond the notes below.",
+  "unsupported": [
+    "The UserService note says 'the GUIs reach them via the controllers', which suggests the GUIs have no direct dependency on persisted types. ReceivedReportsGUI and ReportCreationGUI import Entity.ReportCategory directly (Boundary/ReceivedReportsGUI.java:4, Boundary/ReportCreationGUI.java:4)."
+  ],
+  "missing": [
+    "Direct dependencies on the ReportCategory enum, whose literals are the stored values of reports.category: ReportCreationController and two GUIs. This is a one-line addition to the dependents note.",
+    "Notification is not cascaded or orphan-removed from Report. Report has no notifications collection, and Notification.report_id is NOT NULL (Notification.java:52-54), so notification rows must be handled separately when reports are deleted or changed. This matters for persistence changes and can be said in the legend or the Report note."
+  ],
+  "uml": [
+    "Report has both the attribute 'category: ReportCategory' and a directed association to ReportCategory named category. In UML these are two properties with the same name; keep one, preferably the attribute.",
+    "Report -> ReportStatus is a directed association with the {transient} constraint and no multiplicity at the ReportStatus end. Give the end a multiplicity of 1, or show the property as the attribute 'currentStatus: ReportStatus {transient}'.",
+    "'discriminator role = CITIZEN' and 'discriminator role = MUNICIPAL_OPERATOR' are placed in the attribute compartment although they are not attributes. Show them as a constraint on the class, e.g. {discriminator role = CITIZEN}.",
+    "The association names (credentials, location, statusUpdates, internalNotes, citizenReporting, operator, destinatario, report) are drawn as mid-edge association names, not as role names at the navigable end. This is acceptable, but role names belong at the end."
+  ],
+  "fixes": [
+    "Correct the dependents note: ReportCategory is used directly by ReportCreationController, ReportCreationGUI and ReceivedReportsGUI, so changing stored category values affects them.",
+    "State that Notification rows are not cascaded from Report (no collection, report_id NOT NULL), unlike StatusUpdate and InternalNote.",
+    "Remove the duplicate category property: keep either the attribute or the association to ReportCategory, not both.",
+    "Show the discriminator values as class constraints instead of attribute entries, and give the ReportStatus association end a multiplicity of 1.",
+    "Optionally drop the ReportStatus operations, which are behaviour rather than persisted data."
+  ]}

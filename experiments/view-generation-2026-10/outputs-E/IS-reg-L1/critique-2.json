@@ -1,0 +1,29 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "system components involved in user registration", "answered": "yes",
+     "why": "The view shows the whole runtime path in the code: registration.html/app.js -> AuthenticationController -> LibraryFacade -> UserManager -> UserRegistry/PersistenceManager -> MySQL. It also names RestExceptionHandler on the 400 reply. The only weak spot is the merged 'UserRegistry + PersistenceManager' lifeline. That is acceptable at balanced level, but it is not one UML lifeline (see uml)."},
+    {"detail": "how they interact", "answered": "partly",
+     "why": "The order is correct: validation (UserManager.java:67-75), then the email check, then the identifier check (77-86), then registerUser (92-95). The 200/400/unmapped outcomes also match RestExceptionHandler.java:19-22. The control flow is still drawn in a way that contradicts itself. Each 'break' ends the interaction, yet messages 15-18 go on to route those same exceptions to the form. Message 15 'UserDTO or the exception' hides which path the tester is following. The view also leaves out one end-to-end outcome a tester will hit: app.js:22 drops empty fields. A blank field becomes a missing @RequestParam, so Spring rejects it with a 400 before UserManager runs. That response has no {\"error\"} body, so the page shows 'Error 400'. The view never draws this path."}
+  ],
+  "level": "too detailed",
+  "level_why": "Balanced calls for about 12 messages, and the README says the view has 18. The extra messages are plumbing, not decision points. The MySQL lifeline with SELECT/INSERT (07, 11) repeats what the JPA lifeline already says. Three separate exception-return messages (05, 09, 13), the generic message 15 and an alt of three replies show the same propagation twice. A tester needs the four outcomes and where each is decided, not each hop on the way back.",
+  "unsupported": [
+    "Message 06 plus the single reply 08 'user or null' suggest one lookup. The code makes two separate queries (institutionalEmailExists, then findStudentByStudentNumber or findLibrarianByCode, UserManager.java:77-83), and it throws between them if the email is taken. The reply 'user or null' is also inaccurate, because institutionalEmailExists returns a boolean.",
+    "Message 04 'validate fields (unina.it email, ...)': the code supports this (REGEX_EMAIL_ISTITUZIONALE, UserManager.java:26). Validation also covers role, name and surname format, password length 8-32 and the student-number format (UserManager.java:52-58, 173-181). Validation is not about email alone, so the label should say 'role, name, email, password, identifier format' or simply 'validate input'."
+  ],
+  "missing": [
+    "The missing-parameter path: app.js:22 drops empty values, so @RequestParam fails in AuthenticationController (lines 23-28) before LibraryFacade is called. Spring answers with a default 400, and the form shows 'Error 400', not a message. This can go in as a branch condition or a note on the 400 reply. It needs no new lifeline.",
+    "What the form does on success: it shows an alert and redirects to index.html (registration.html:65-66). On error it shows the message in place (registration.html:68). An end-to-end tester checks these, so the replies to the form should state them in one short label each."
+  ],
+  "uml": [
+    "The 'break' fragments are misused. A break operand replaces the rest of the enclosing interaction, so the exceptions raised in it cannot later reach the 'alt' at the controller. Use one 'alt' (or break operands that each carry the exception through to the 400 or 500 reply to the form) instead of breaks followed by a separate alt.",
+    "'UserRegistry + PersistenceManager (JPA)' is two classifiers on one lifeline. A lifeline represents one participant. Either name the lifeline UserRegistry only and fold PersistenceManager/JPA into its role, or keep two lifelines.",
+    "Exceptions are drawn as dashed reply messages labelled with the exception type. That is tolerable, but message 15 'UserDTO or the exception' merges a reply and an exception into one message. Reply messages should each carry one return value, inside the operand where they occur."
+  ],
+  "fixes": [
+    "Replace the three breaks, message 15 and the controller alt with one alt after UserManager's checks. Use the guards [invalid input], [email or identifier taken], [save failed] and [ok], and have each operand carry the outcome all the way to the form (400 {error} / 400 {error} / 500 unmapped / 200 UserDTO).",
+    "Cut toward the balanced budget: drop the MySQL lifeline and messages 07 and 11, and state 'JPA, MySQL reservationsdb, transactional persist' in the persistence lifeline's name or in the INSERT/registerUser label.",
+    "Make the lookup step correct: either show two lookup calls (emailExists, then find by student number or librarian code), or label the single message 'emailExists; find by identifier (role-specific)' with a boolean reply. Do not keep 'user or null'.",
+    "Give the store one lifeline name (UserRegistry) instead of the 'A + B' composite.",
+    "Add the missing-parameter 400 as a guard or note on the 400 path, and state the form's visible result (redirect to index.html, or the error text shown) on the replies to the form. Do not add new messages for these."
+  ]}

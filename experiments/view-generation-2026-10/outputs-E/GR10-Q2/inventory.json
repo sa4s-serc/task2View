@@ -1,0 +1,191 @@
+{
+  "model_kind": "UML deployment diagram",
+  "detail_level": "detailed",
+  "takeaway": "By default a Java 23 Swing client and a MySQL server (127.0.0.1:3306, schema reports_db) run on the same workstation; the JVM talks JDBC/TCP 3306 using Hibernate, the MySQL driver and the persistence.xml deployment spec.",
+  "elements": [
+    {
+      "alias": "ws",
+      "name": "User workstation",
+      "responsibility": "Desktop machine; by default also hosts MySQL (JDBC URL 127.0.0.1)",
+      "evidence": [
+        "src/main/java/Boundary/HomePageGUI.java:75-86",
+        "src/main/resources/META-INF/persistence.xml:26-27"
+      ]
+    },
+    {
+      "alias": "jvm",
+      "name": "JVM (Java 23) Swing desktop client",
+      "responsibility": "Runs the GUI, controllers, entities and JPA code in one process",
+      "evidence": [
+        "src/main/java/Boundary/HomePageGUI.java:75-86",
+        "pom.xml:13-14",
+        "src/main/java/Database/JpaUtil.java:7-9"
+      ]
+    },
+    {
+      "alias": "app",
+      "name": "municipal-report-management-1.0-SNAPSHOT (Java classes)",
+      "responsibility": "Application classes (Boundary, Control, Entity, Database)",
+      "evidence": [
+        "pom.xml:9-11",
+        "src/main/java/Database/JpaUtil.java:17"
+      ]
+    },
+    {
+      "alias": "pxml",
+      "name": "META-INF/persistence.xml (deploymentSpec)",
+      "responsibility": "Classpath deployment spec: JDBC URL, user, password, hbm2ddl=update, show_sql=true; edit to change the database",
+      "evidence": [
+        "src/main/resources/META-INF/persistence.xml:23-40"
+      ]
+    },
+    {
+      "alias": "hib",
+      "name": "hibernate-core 6.6.50.Final",
+      "responsibility": "JPA provider",
+      "evidence": [
+        "pom.xml:49-52",
+        "src/main/resources/META-INF/persistence.xml:12"
+      ]
+    },
+    {
+      "alias": "jdbc",
+      "name": "mysql-connector-j 9.4.0",
+      "responsibility": "JDBC driver com.mysql.cj.jdbc.Driver",
+      "evidence": [
+        "pom.xml:42-45",
+        "src/main/resources/META-INF/persistence.xml:23-24"
+      ]
+    },
+    {
+      "alias": "forms",
+      "name": "forms_rt 7.0.3",
+      "responsibility": "GUI Designer runtime for .form bound panels",
+      "evidence": [
+        "pom.xml:35-38",
+        "src/main/java/Boundary/HomePageGUI.form:1"
+      ]
+    },
+    {
+      "alias": "mysql",
+      "name": "MySQL server 127.0.0.1:3306",
+      "responsibility": "Stores all data; same host by default, remote needs new URL and grant",
+      "evidence": [
+        "src/main/resources/META-INF/persistence.xml:26-27",
+        "README.md:22-43"
+      ]
+    },
+    {
+      "alias": "schema",
+      "name": "schema reports_db (user reports_user@localhost)",
+      "responsibility": "Database created manually; tables managed by Hibernate",
+      "evidence": [
+        "README.md:26-33",
+        "src/main/resources/META-INF/persistence.xml:29-36"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "app",
+      "to": "hib",
+      "label": "use JPA API",
+      "evidence": [
+        "src/main/java/Database/PersistenceService.java:5-7"
+      ]
+    },
+    {
+      "from": "app",
+      "to": "forms",
+      "label": "use form layouts",
+      "evidence": [
+        "src/main/java/Boundary/UserLoginGUI.java:4-5"
+      ]
+    },
+    {
+      "from": "hib",
+      "to": "jdbc",
+      "label": "use loads driver",
+      "evidence": [
+        "src/main/resources/META-INF/persistence.xml:23-24"
+      ]
+    },
+    {
+      "from": "pxml",
+      "to": "app",
+      "label": "configures",
+      "evidence": [
+        "src/main/java/Database/JpaUtil.java:17"
+      ]
+    },
+    {
+      "from": "jvm",
+      "to": "mysql",
+      "label": "JDBC/TCP 3306",
+      "evidence": [
+        "src/main/resources/META-INF/persistence.xml:26-27"
+      ]
+    }
+  ],
+  "concern_details": [
+    {
+      "detail": "required runtime environments and software artifacts",
+      "answered_by": [
+        "jvm",
+        "mysql",
+        "app",
+        "pxml",
+        "hib",
+        "jdbc",
+        "forms"
+      ]
+    },
+    {
+      "detail": "where the application runs and where its data is stored",
+      "answered_by": [
+        "ws",
+        "jvm",
+        "mysql",
+        "schema"
+      ]
+    },
+    {
+      "detail": "how the main runtime elements communicate",
+      "answered_by": [
+        "jvm",
+        "mysql"
+      ]
+    },
+    {
+      "detail": "technologies and runtime dependencies between application and database",
+      "answered_by": [
+        "hib",
+        "jdbc",
+        "pxml",
+        "schema"
+      ]
+    }
+  ],
+  "omitted": [
+    {
+      "name": "Build machine, Maven, Maven Central",
+      "reason": "build-time, not runtime; reduced to a note (mvn, Java 23)"
+    },
+    {
+      "name": "Separate database host",
+      "reason": "not supported as configured (127.0.0.1, grant @localhost); described in a note"
+    },
+    {
+      "name": "Application layers (Boundary, Control, Entity, Database)",
+      "reason": "component-level; a different view"
+    },
+    {
+      "name": "junit-jupiter 5.10.2",
+      "reason": "test scope"
+    },
+    {
+      "name": "Hibernate transitive dependencies",
+      "reason": "not enumerated; named in a note (e.g. jakarta.persistence-api)"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components involved in seat booking and their responsibilities",
+     "answered": "yes",
+     "why": "Every component on the makeReservation path is drawn with a short responsibility: the Swing wizard, the REST controllers, LibraryFacade, ReservationManager, AssignmentStrategy/FirstAvailableAssignment, StudyRoomManager, the two model groups, the registries and NotificationManager. The note listing today's rules matches the code: resolveRoom checks isActive/isOpenOnDate, resolveTimeSlot rejects started slots, validateUniqueness enforces one booking per student and slot, and selectSeat/availableSeats check the seat is free (ReservationManager.java:65-101, 141-197, 357-400). One gap: the note puts the uniqueness rule in ReservationManager, but the check itself is Student.hasActiveOrConfirmedReservationForDateAndSlot in the Reservation model, which queries ReservationRegistry (Student.java:42-50). The view does not show this."},
+    {"detail": "how they interact with each other",
+     "answered": "partly",
+     "why": "The booking chain is drawn correctly and with proper contracts: UI -> makeReservation interface -> LibraryFacade -> ReservationManager -> AssignmentStrategy, models, registries and notifier. The availability side is cut off at the top, though. LibraryFacade -> StudyRoomManager 'delegates queries' appears, but no UI is shown using those queries. In the code the Swing wizard and StudyRoomController call getAvailableStudyRooms, getAvailableTimeSlots and getRoomDetail on the facade (DateAndRoomSelection.java:214, TimeSlotSelection.java:87, StudyRoomController.java:44-65, LibraryFacade.java:90-101). The reader cannot see how the availability that StudyRoomManager computes reaches students. The Reservation model -> Registries dependency that carries the uniqueness check is also missing."},
+    {"detail": "which parts of the system may be affected by the modification",
+     "answered": "partly",
+     "why": "The blue/red marking and the occupiesSlot note answer most of this, and the makeReservation(ReservationRequestDTO) interface shows that both UIs are affected when request data changes. But StudyRoomManager is marked affected 'because of availability shown to students', and the view never connects StudyRoomManager to the UIs, so that reason cannot be traced in the diagram. In the code a new rule that changes which seats or slots are bookable also has to be reflected in the query path: wizard and REST to facade query operations to StudyRoomManager. That path is not drawn. The uniqueness rule's location in Student, which queries the registry, is also not visible, and a developer adding per-student rules would edit it."}
+  ],
+  "level": "right",
+  "level_why": "12 elements and 14 relations fit a balanced view of one feature. The groupings (two model boxes, one registries box, one REST box, one Swing box) are at the right granularity, and the off-feature parts (users, factories, notification delivery, scheduler, exception handler) are left out. NotificationManager is at the margin, but it is a real side effect of makeReservation (ReservationManager.java:120-123), so it can stay. The fixes below add one interface and two edges, which keeps the view within the balanced level. Nothing needs to be cut.",
+  "unsupported": [],
+  "missing": [
+    "Availability query interface on LibraryFacade (getAvailableStudyRooms / getAvailableTimeSlots / getRoomDetail, LibraryFacade.java:90-101), required by the Swing wizard (DateAndRoomSelection.java:214, TimeSlotSelection.java:87) and the REST StudyRoomController (StudyRoomController.java:44-65). Without it, the 'delegates queries' edge and StudyRoomManager's red marking have no visible link to what students see.",
+    "Reservation model -> Registries dependency: Student.hasActiveOrConfirmedReservationForDateAndSlot calls ReservationRegistry.findActiveReservations (Student.java:42-50). This is where the 'one booking per student and slot' rule is actually evaluated, so per-student rules would change it.",
+    "Minor: ReservationManager instantiates FirstAvailableAssignment directly as the default strategy (ReservationManager.java:37-40), so swapping or adding an assignment rule also touches ReservationManager.getInstance. A short note is enough; no extra element is needed."
+  ],
+  "uml": [
+    "No notation errors that matter. Components, provided interfaces (lollipops) and dashed usage dependencies to the interfaces are valid UML. The plain 'requires' labels would read more as standard UML as the «use» keyword, or as sockets (assembly connectors).",
+    "The custom stereotypes <<accent>> and <<alert>> are only styling hooks and are hidden in the render. That is acceptable, but they are not standard UML stereotypes, and the source carries them on model elements."
+  ],
+  "fixes": [
+    "Add an availability-query interface provided by LibraryFacade and required by the Swing wizard and the REST controllers, so the 'delegates queries' path and the reason StudyRoomManager is affected show in the view.",
+    "Add Reservation model -> Registries ('checks student's bookings'), and change the rules note to say that the one-booking-per-student-and-slot check lives in Student.hasActiveOrConfirmedReservationForDateAndSlot.",
+    "Optionally note that ReservationManager.getInstance creates FirstAvailableAssignment as the default strategy, so a new assignment rule also touches that line.",
+    "Optionally replace the 'requires' labels with «use», or draw the dependencies as sockets."
+  ]}

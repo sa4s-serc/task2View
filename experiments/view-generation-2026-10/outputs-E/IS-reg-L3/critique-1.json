@@ -1,0 +1,42 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components in the registration process, their responsibilities, interactions and dependencies",
+     "answered": "yes",
+     "why": "All seven code-backed participants on the registration path are shown (AuthenticationController, LibraryFacade, UserManager, UserRegistry, Student/LibrarianFactory, PersistenceManager), and the call chain between them is correct. One flaw: the Swing client is drawn as calling through the REST controller, but it does not (see unsupported)."},
+    {"detail": "which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness of the account, and persist the new user",
+     "answered": "partly",
+     "why": "Handling, validation (self-call 04 in UserManager), uniqueness (05-08) and persistence (11-14) are placed correctly. Role-specific handling appears only in a note. The diagram does not show that the role picks validateStudent or validateLibrarian, findStudentByStudentNumber or findLibrarianByCode (UserManager.java:81-83), or StudentFactory or LibrarianFactory (UserManager.java:89), where the factory sets studentNumber or internalIdentifierCode. Message 05 merges two separate registry calls (institutionalEmailExists and the role-specific identifier lookup) into one pseudo-message, so the tester cannot see the role-dependent integration point."},
+    {"detail": "how they collaborate when invalid or already existing data is provided",
+     "answered": "partly",
+     "why": "All three failure outcomes are listed, but the control flow is wrong. The 'invalid field or format' alternative sits after the registry/persistence lookups (05-08), yet validation throws at UserManager.java:67-75 before any registry call. In the invalid case UserRegistry and PersistenceManager are never called, which is exactly what an integration test should assert. The lookups are also sequential with early exit: an existing email throws at line 77-78 before the identifier lookup runs, so '(x2)' is not always true. Exceptions are drawn as replies from UserManager straight to the client, which hides how they propagate through LibraryFacade and AuthenticationController to RestExceptionHandler (HTTP 400 only for IllegalArgumentException; the save-failure RuntimeException is not mapped and would become HTTP 500). The Swing form also rejects blank fields itself before calling the facade (Registration.java:126-130)."},
+    {"detail": "main integration points and interactions the tests should cover",
+     "answered": "partly",
+     "why": "The adjacent-lifeline calls show the boundaries, but two integration points are wrong or hidden. The Swing entry calls LibraryFacade directly, so there are two entry points (REST controller and Swing form → facade), not one. The role-specific registry lookup and the factory choice are merged away. Where the exception crosses the controller/exception-handler boundary, which defines the observable HTTP status, is not shown."}
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines at component/class granularity with a short alt block fits a balanced view for an integration tester. Nothing needs to be dropped: the facade is a pass-through, but it is the real shared entry point for both the Swing and REST clients. The fixes below restructure the existing messages (validation before lookups, separate email and identifier lookups, exceptions returned along the call chain). They do not add finer-grained elements, so the view stays at the balanced level.",
+  "unsupported": [
+    "Client '(Swing form or HTTP)' → AuthenticationController.register: the Swing Registration form calls LibraryFacade.getInstance().register(...) directly (Registration.java:133) and never uses the REST controller. Only the HTTP client goes through AuthenticationController.",
+    "Message 06 'findFirstByFields (x2)' / 08 'existing user or null' drawn as always occurring for every request, including invalid input: the code calls the registry only after validation passes (UserManager.java:67-77), and skips the identifier lookup when the email already exists (lines 77-78).",
+    "'IllegalArgumentException (HTTP 400 / error dialog)' and the RuntimeException reply go directly from UserManager to the client: the exceptions propagate through LibraryFacade and AuthenticationController, and RestExceptionHandler maps only IllegalArgumentException/IllegalStateException to 400 (RestExceptionHandler.java:19-22). The 'user could not be saved' RuntimeException is not mapped to 400.",
+    "Note 'Student ID [A-Z]+8 digits': the regex is [A-Z]\\d{8} (exactly one uppercase letter, then 8 digits, UserManager.java:29). '[A-Z]+' reads as one or more letters."
+  ],
+  "missing": [
+    "The role decision as control flow: an alt or opt on role choosing student vs librarian validation, the identifier lookup (findStudentByStudentNumber vs findLibrarianByCode, UserRegistry.java:44-60) and the factory (StudentFactory vs LibrarianFactory), with the role-specific field each factory sets.",
+    "The correct order of the failure paths: validation failure before any registry call; email-exists check (institutionalEmailExists) before the identifier lookup, each with its own early exit.",
+    "Two entry points: Swing Registration → LibraryFacade directly (with its own blank-field pre-check), and HTTP → AuthenticationController → LibraryFacade.",
+    "Exception propagation back along the call chain to the controller, and the resulting HTTP mapping (400 for IllegalArgumentException via RestExceptionHandler; save-failure RuntimeException unmapped).",
+    "PersistenceManager.save rolls back and returns false on a persistence RuntimeException (PersistenceManager.java:19-38). This is the trigger for the 'save returns false' branch and is not stated on the diagram."
+  ],
+  "uml": [
+    "Exceptions and the UserDTO result are drawn as reply messages from UserManager to the actor, which is not its caller. In a UML sequence diagram a reply goes back to the sender of the call. Return each one along the activation chain (UserManager → LibraryFacade → AuthenticationController → client), and end the activations of the controller and facade, which currently never end.",
+    "Message 05 'email exists? identifier used?' and 06 'findFirstByFields (x2)' each represent two distinct operation calls as one message. A message should be one operation; draw two messages, or use a loop/opt fragment.",
+    "The alt fragment's guards cover outcomes decided at different points in time (validation before the lookups, uniqueness after them, save failure after registerUser), but the fragment is placed after all lookups, so the guard order contradicts the message order. Use nested alt/opt or break fragments placed where each decision is actually made (e.g. break [invalid] right after 04, break [email exists] after the email lookup)."
+  ],
+  "fixes": [
+    "Restructure the failure flow to match UserManager.register: after self-call 04 add a break [invalid field/format] with no registry calls; then the email lookup with a break [email exists]; then the identifier lookup with a break [identifier in use]; then create and save, with an alt for save true/false.",
+    "Split message 05/06 into institutionalEmailExists(email) and the role-dependent identifier lookup, and show the role choice (alt [Student]/[Librarian]) for validation, lookup and factory (StudentFactory sets studentNumber, LibrarianFactory sets internalIdentifierCode), replacing the explanatory note.",
+    "Fix the entry points: HTTP client → AuthenticationController → LibraryFacade, and the Swing Registration form → LibraryFacade directly (e.g. a second actor or an alt on the entry), noting the Swing blank-field pre-check.",
+    "Return results and exceptions along the call chain instead of from UserManager to the actor, and state the HTTP mapping at the controller (400 for IllegalArgumentException via RestExceptionHandler; the save-failure RuntimeException is not mapped to 400).",
+    "Correct the note's student ID format to 'one uppercase letter + 8 digits' ([A-Z]\\d{8}), and keep the librarian code as alphanumeric."
+  ]}

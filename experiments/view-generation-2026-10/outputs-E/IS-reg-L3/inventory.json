@@ -1,0 +1,244 @@
+{
+ "model_kind": "UML sequence diagram",
+ "detail_level": "balanced",
+ "takeaway": "UserManager validates role, personal data and role-specific identifier, checks email and identifier uniqueness through UserRegistry, builds the Student or Librarian via a factory and persists it through PersistenceManager; any failure raises an exception and nothing is saved.",
+ "elements": [
+  {
+   "alias": "client",
+   "name": "Client (HTTP request)",
+   "responsibility": "Submits the registration request over HTTP; the Swing form is a second entry that calls LibraryFacade directly",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:126-134"
+   ]
+  },
+  {
+   "alias": "ctl",
+   "name": "REST controller (AuthenticationController)",
+   "responsibility": "Receives POST /api/auth/register and delegates to the facade",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31"
+   ]
+  },
+  {
+   "alias": "facade",
+   "name": "Facade (LibraryFacade)",
+   "responsibility": "Single entry point delegating register to UserManager",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-40"
+   ]
+  },
+  {
+   "alias": "um",
+   "name": "User manager (UserManager)",
+   "responsibility": "Validates role, personal data, identifier format; checks uniqueness; creates and saves user",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:52-58",
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97",
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:173-221"
+   ]
+  },
+  {
+   "alias": "reg",
+   "name": "User registry (UserRegistry)",
+   "responsibility": "Lookups for email, student number, librarian code; registerUser",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-28",
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:44-67"
+   ]
+  },
+  {
+   "alias": "factory",
+   "name": "User factory (Student/LibrarianFactory)",
+   "responsibility": "Creates Student with student number or Librarian with internal identifier code",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java:8-18",
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java:8-18",
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/UserFactory.java:9-11"
+   ]
+  },
+  {
+   "alias": "pm",
+   "name": "Persistence manager (PersistenceManager, MySQL)",
+   "responsibility": "Finds by fields and persists in a transaction, false on failure",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-38",
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:172-182",
+    "JavaProject/src/main/resources/META-INF/persistence.xml:21"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "client",
+   "to": "ctl",
+   "label": "register",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-28"
+   ]
+  },
+  {
+   "from": "ctl",
+   "to": "facade",
+   "label": "register",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:29-30"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "um",
+   "label": "register",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "reg",
+   "label": "check uniqueness / registerUser",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:77-92"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "factory",
+   "label": "createUser",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:89-90"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "pm",
+   "label": "find / save",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:27",
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:38"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "facade",
+   "label": "exception or UserDTO",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:47",
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:96"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "ctl",
+   "label": "exception or UserDTO",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-40"
+   ]
+  },
+  {
+   "from": "ctl",
+   "to": "client",
+   "label": "HTTP 400 or UserDTO",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19-22",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "um",
+   "label": "lookup / save result",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-28",
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:65-67"
+   ]
+  },
+  {
+   "from": "factory",
+   "to": "um",
+   "label": "new Student or Librarian",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java:10-17",
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java:10-17"
+   ]
+  },
+  {
+   "from": "pm",
+   "to": "reg",
+   "label": "match, or true/false",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-38"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "Component handling the request",
+   "answered_by": [
+    "client",
+    "ctl",
+    "facade"
+   ]
+  },
+  {
+   "detail": "Validation of personal data and role",
+   "answered_by": [
+    "um"
+   ]
+  },
+  {
+   "detail": "Role-specific data (student ID, librarian identifier)",
+   "answered_by": [
+    "um",
+    "factory"
+   ]
+  },
+  {
+   "detail": "Validity and uniqueness check",
+   "answered_by": [
+    "um",
+    "reg",
+    "pm"
+   ]
+  },
+  {
+   "detail": "Persisting the new user",
+   "answered_by": [
+    "reg",
+    "pm"
+   ]
+  },
+  {
+   "detail": "Collaboration on invalid or existing data",
+   "answered_by": [
+    "um",
+    "client"
+   ]
+  },
+  {
+   "detail": "Integration points for tests",
+   "answered_by": [
+    "ctl",
+    "facade",
+    "um",
+    "reg",
+    "factory",
+    "pm"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "DTO, entities, JpaUtil, RestExceptionHandler",
+   "reason": "glue or data carriers; HTTP 400 shown in a label"
+  },
+  {
+   "name": "Login/authenticate flow",
+   "reason": "outside registration"
+  },
+  {
+   "name": "Swing Registration form as separate lifeline",
+   "reason": "balanced lifeline budget (7); shown in a note"
+  }
+ ]
+}

@@ -1,0 +1,374 @@
+{
+ "model_kind": "UML class diagram",
+ "detail_level": "detailed",
+ "elements": [
+  {
+   "alias": "User",
+   "name": "User",
+   "responsibility": "Abstract base of all users; table users, single-table inheritance with role discriminator",
+   "evidence": [
+    "src/main/java/Entity/User.java:20-67"
+   ]
+  },
+  {
+   "alias": "Credentials",
+   "name": "Credentials",
+   "responsibility": "Embedded email (unique) and password of a user",
+   "evidence": [
+    "src/main/java/Entity/Credentials.java:9-16"
+   ]
+  },
+  {
+   "alias": "Citizen",
+   "name": "Citizen",
+   "responsibility": "User who submits reports and receives notifications",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:9-11"
+   ]
+  },
+  {
+   "alias": "MunicipalOperator",
+   "name": "MunicipalOperator",
+   "responsibility": "User who handles reports, changes status, writes notes",
+   "evidence": [
+    "src/main/java/Entity/MunicipalOperator.java:9-11"
+   ]
+  },
+  {
+   "alias": "Report",
+   "name": "Report",
+   "responsibility": "Central entity (table reports) with current status name, category, location, owners and history",
+   "evidence": [
+    "src/main/java/Entity/Report.java:29-112"
+   ]
+  },
+  {
+   "alias": "Location",
+   "name": "Location",
+   "responsibility": "Embedded address columns of a report",
+   "evidence": [
+    "src/main/java/Entity/Location.java:9-25"
+   ]
+  },
+  {
+   "alias": "ReportCategory",
+   "name": "ReportCategory",
+   "responsibility": "Enum stored as string in reports.category",
+   "evidence": [
+    "src/main/java/Entity/ReportCategory.java:6-12",
+    "src/main/java/Entity/Report.java:49-51"
+   ]
+  },
+  {
+   "alias": "ReportStatus",
+   "name": "ReportStatus",
+   "responsibility": "Non-persisted state interface (Submitted/Assigned/InProgress/Resolved) rebuilt from current_status",
+   "evidence": [
+    "src/main/java/Entity/ReportStatus.java:6-12",
+    "src/main/java/Entity/Report.java:75-76",
+    "src/main/java/Entity/Report.java:406-437"
+   ]
+  },
+  {
+   "alias": "StatusUpdate",
+   "name": "StatusUpdate",
+   "responsibility": "Row per status change (table status_updates): date, new status, report, operator",
+   "evidence": [
+    "src/main/java/Entity/StatusUpdate.java:20-54"
+   ]
+  },
+  {
+   "alias": "InternalNote",
+   "name": "InternalNote",
+   "responsibility": "Operator's private note on a report (table internal_notes)",
+   "evidence": [
+    "src/main/java/Entity/InternalNote.java:20-54"
+   ]
+  },
+  {
+   "alias": "Notification",
+   "name": "Notification",
+   "responsibility": "Message to citizen on assigned/resolved status (table notifications)",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:19-54",
+    "src/main/java/Entity/Notification.java:151-160"
+   ]
+  },
+  {
+   "alias": "ReportService",
+   "name": "ReportService",
+   "responsibility": "Creates, updates and queries reports, notes, updates and notifications",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:14-22"
+   ]
+  },
+  {
+   "alias": "UserService",
+   "name": "UserService",
+   "responsibility": "Registers and looks up users",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:12-20"
+   ]
+  },
+  {
+   "alias": "PersistenceService",
+   "name": "PersistenceService",
+   "responsibility": "Generic save/update/find over JPA EntityManager (persistence unit to MySQL)",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13-18",
+    "src/main/resources/META-INF/persistence.xml:9-30"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "User",
+   "to": "Credentials",
+   "label": "1 credentials",
+   "evidence": [
+    "src/main/java/Entity/User.java:47-67"
+   ]
+  },
+  {
+   "from": "Citizen",
+   "to": "User",
+   "label": "inherits",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:11"
+   ]
+  },
+  {
+   "from": "MunicipalOperator",
+   "to": "User",
+   "label": "inherits",
+   "evidence": [
+    "src/main/java/Entity/MunicipalOperator.java:11"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "Location",
+   "label": "1 location",
+   "evidence": [
+    "src/main/java/Entity/Report.java:56-57"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "ReportCategory",
+   "label": "category",
+   "evidence": [
+    "src/main/java/Entity/Report.java:49-51"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "ReportStatus",
+   "label": "current state (transient)",
+   "evidence": [
+    "src/main/java/Entity/Report.java:75-76"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "Citizen",
+   "label": "citizen_id",
+   "evidence": [
+    "src/main/java/Entity/Report.java:87-89"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "MunicipalOperator",
+   "label": "operator_id",
+   "evidence": [
+    "src/main/java/Entity/Report.java:94-96"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "StatusUpdate",
+   "label": "statusUpdates",
+   "evidence": [
+    "src/main/java/Entity/Report.java:112-113"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "InternalNote",
+   "label": "internalNotes",
+   "evidence": [
+    "src/main/java/Entity/Report.java:101-107"
+   ]
+  },
+  {
+   "from": "Notification",
+   "to": "Report",
+   "label": "report_id",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:52-54"
+   ]
+  },
+  {
+   "from": "Notification",
+   "to": "Citizen",
+   "label": "citizen_id",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:48-50"
+   ]
+  },
+  {
+   "from": "StatusUpdate",
+   "to": "MunicipalOperator",
+   "label": "operator_id",
+   "evidence": [
+    "src/main/java/Entity/StatusUpdate.java:52-54"
+   ]
+  },
+  {
+   "from": "InternalNote",
+   "to": "MunicipalOperator",
+   "label": "operator_id",
+   "evidence": [
+    "src/main/java/Entity/InternalNote.java:45-47"
+   ]
+  },
+  {
+   "from": "ReportService",
+   "to": "PersistenceService",
+   "label": "save / update / find",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:113",
+    "src/main/java/Entity/ReportService.java:298"
+   ]
+  },
+  {
+   "from": "UserService",
+   "to": "PersistenceService",
+   "label": "save / find",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:89",
+    "src/main/java/Entity/UserService.java:123"
+   ]
+  },
+  {
+   "from": "ReportService",
+   "to": "Report",
+   "label": "depends on",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:140"
+   ]
+  },
+  {
+   "from": "ReportService",
+   "to": "Notification",
+   "label": "depends on",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:390-398"
+   ]
+  },
+  {
+   "from": "UserService",
+   "to": "User",
+   "label": "depends on",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:123"
+   ]
+  },
+  {
+   "from": "ReportService",
+   "to": "StatusUpdate",
+   "label": "depends on",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:248-249"
+   ]
+  },
+  {
+   "from": "ReportService",
+   "to": "InternalNote",
+   "label": "depends on",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:213-214"
+   ]
+  },
+  {
+   "from": "ReportService",
+   "to": "User",
+   "label": "depends on",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:43"
+   ]
+  },
+  {
+   "from": "ReportService",
+   "to": "MunicipalOperator",
+   "label": "depends on",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:269",
+    "src/main/java/Entity/ReportService.java:323"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main data entities stored and their relationships",
+   "answered_by": [
+    "User",
+    "Report",
+    "Location",
+    "ReportCategory",
+    "StatusUpdate",
+    "InternalNote",
+    "Notification",
+    "Citizen",
+    "MunicipalOperator",
+    "Credentials"
+   ]
+  },
+  {
+   "detail": "information persisted throughout the lifecycle of a report",
+   "answered_by": [
+    "Report",
+    "StatusUpdate",
+    "InternalNote",
+    "Notification",
+    "ReportStatus"
+   ]
+  },
+  {
+   "detail": "how users, reports, locations, categories, states, state changes, internal notes and notifications are related",
+   "answered_by": [
+    "User",
+    "Report",
+    "Location",
+    "ReportCategory",
+    "ReportStatus",
+    "StatusUpdate",
+    "InternalNote",
+    "Notification"
+   ]
+  },
+  {
+   "detail": "which parts of the application depend on the persisted information",
+   "answered_by": [
+    "ReportService",
+    "UserService",
+    "PersistenceService"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Submitted, Assigned, InProgress, Resolved",
+   "reason": "non-persisted state classes, summarised in a note on ReportStatus"
+  },
+  {
+   "name": "Controllers and GUIs",
+   "reason": "callers only; summarised in a note, a component view would show them"
+  },
+  {
+   "name": "JpaUtil",
+   "reason": "infrastructure glue behind PersistenceService"
+  }
+ ]
+}

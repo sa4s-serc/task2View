@@ -1,0 +1,35 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main architectural components and their responsibilities", "answered": "yes",
+     "why": "Six components that match the code's packages (Boundary, Control, Entity split into services and entities, Database) plus the MySQL database. Each box names what it holds. The responsibility is mostly implied by the name and the class list rather than stated as a responsibility; e.g. 'Domain Services' never says it holds the business rules, validation and report lifecycle, which inventory.json says it does."},
+    {"detail": "decomposition into layers or subsystems", "answered": "partly",
+     "why": "The layering is only implied by the vertical chain of arrows. No layer grouping is drawn, so the reader cannot see that Domain Services and Domain Entities share one code package (Entity: ReportService.java and UserService.java live in src/main/java/Entity). The split is an interpretation, written down only in the README."},
+    {"detail": "main dependencies among them", "answered": "partly",
+     "why": "The main chain ui->ctrl->svc->pers->db is correct: the GUIs only call SystemServicesController or UserLoginController, the controllers only call ReportService and UserService, and only the services use PersistenceService. But the Boundary and Control layers both import Entity.ReportCategory (ReceivedReportsGUI.java:4, ReportCreationGUI.java:4, ReportCreationController.java:3), and the view leaves this out. The arrows are also drawn as solid associations, not dependencies."},
+    {"detail": "separation of user interface, application logic, domain entities and persistence, and how they collaborate", "answered": "partly",
+     "why": "The separation is visible. The view does not show how the layers collaborate: the controllers and the UI exchange plain Map<String,Object> data, not entities (SystemServicesController and the controllers only import java.util.Map/List). Entities therefore stay inside the service and persistence layers, apart from the ReportCategory enum. PersistenceService is generic (Class<T>) and does not import Entity, so the persistence-to-entity link is only through the ORM mapping in persistence.xml. None of this is in the diagram."}
+  ],
+  "level": "right",
+  "level_why": "Six components and six relations suit an overview for an architect. Screens, use-case controllers and state classes are merged in correctly. Nothing needs to be cut. The long class lists inside the box names (e.g. 'SystemServicesController facade + use-case controllers', 'status states') sit at the edge of the overview level and could be shortened to a one-line responsibility.",
+  "unsupported": [
+    "pers --> ent 'maps (ORM)' is drawn as if it were a code dependency. PersistenceService and JpaUtil do not import Entity; the link exists only through the <class> list in META-INF/persistence.xml and the JPA annotations on the entities. The label should say it is a configuration/ORM mapping, or the arrow should be dropped in favour of a note.",
+    "'Domain Services' as a separate component has no package boundary of its own: ReportService and UserService are in package Entity. The split is defensible, but the view presents it as a real subsystem without saying it is a logical one."
+  ],
+  "missing": [
+    "Dependency from User Interface (and Application Controllers) to Domain Entities through the ReportCategory enum (Boundary/ReceivedReportsGUI.java:4, Boundary/ReportCreationGUI.java:4, Control/ReportCreationController.java:3). This is the only place where the UI reaches past the controllers, and it matters to an architect planning the system's evolution.",
+    "Grouping of components into layers. This could be by Java package, with Domain Services and Domain Entities shown together as the 'Entity' package/layer, or as an explicit note that the split is logical.",
+    "How the layers collaborate: the UI and the controllers pass Map<String,Object> data transfer structures, and entities do not cross into the controllers or the UI. A short note on the ui->ctrl/ctrl->svc relations would show this.",
+    "SystemServicesController as the single facade entry point (UserLoginController being the one exception) could be shown as a provided interface of Application Controllers, which would make the separation of the UI from the logic explicit."
+  ],
+  "uml": [
+    "Relations are written with '-->', which renders as solid-line associations. Usage between components in a UML component diagram is a dependency: a dashed line with an open arrowhead ('..>'), optionally with the standard «use» keyword.",
+    "<<muted>> is a styling stereotype, not a UML one. It is hidden in the PNG, but it remains in the model source. For the external MySQL database, use a component (or node/artifact) without a custom stereotype, or with a standard keyword. Do not use a styling tag as a stereotype.",
+    "No provided or required interfaces or ports are shown. That is acceptable at overview level, but the facade SystemServicesController is a natural provided interface and would make the component notation more meaningful than labelled boxes."
+  ],
+  "fixes": [
+    "Change all relations to UML dependencies ('..>' dashed, open arrowhead), keeping the labels.",
+    "Add the dependency from User Interface (and Application Controllers) to Domain Entities for the ReportCategory enum, or add a note that this is the only entity type the UI uses.",
+    "Group the components into layers (e.g. packages Presentation / Application / Domain / Persistence). Show that Domain Services and Domain Entities share the Java package Entity, or mark the split as logical.",
+    "Add a short note on how the layers collaborate: UI<->controllers exchange Map<String,Object> data, entities stay below the services, and PersistenceService is generic over entity classes mapped by JPA (persistence.xml). Relabel or replace the pers->ent arrow to match.",
+    "Remove the custom <<muted>> stereotype from the database element, and shorten the box texts to name + one-line responsibility (e.g. 'Domain Services: business rules, validation, report lifecycle, notifications')."
+  ]}

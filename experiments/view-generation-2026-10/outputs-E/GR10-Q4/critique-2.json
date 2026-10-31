@@ -1,0 +1,19 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "main types of users that interact with the system", "answered": "yes", "why": "Citizen and Municipal operator are the two roles the code distinguishes: the registration form offers exactly these two in boxRole (UserRegistrationGUI.java:112-113) and the dashboard branches on them (UserDashboardGUI.java:299-305, guards at 447/476/506/536/566). No other role exists."},
+    {"detail": "goals each of them can achieve through it", "answered": "yes", "why": "Each actor's associations match the role-guarded dashboard actions: citizen creates and follows reports (incl. history/notifications in SubmittedReportsGUI.java:239-260); operator reviews received reports with details and internal notes (ReceivedReportsGUI.java:790), updates status (ReceivedReportsGUI.java:1122) and monitors trends (ActivityMonitoringGUI); both register and log in (HomePageGUI.java:130,155)."},
+    {"detail": "how the functionalities are related to each other", "answered": "partly", "why": "One formal relation («extend» Update status -> Review received reports) is drawn and is backed by the code (dashboard opens ReceivedReportsGUI in status mode, UserDashboardGUI.java:575, then ReceivedReportsGUI.java:1105-1122). The other two dependencies (login precondition, status update feeding the citizen's notifications via NotificationController) are given only as notes. That is acceptable at overview level and readable for an analyst, but they are commentary rather than model relations."}
+  ],
+  "level": "right",
+  "level_why": "Overview asked for: 2 actors, 6 use cases at user-goal granularity, domain wording, no GUI/controller/entity detail. Details, history and internal notes are correctly folded into the list use cases rather than shown as separate ovals; nothing should be cut and nothing added would stay at overview level.",
+  "unsupported": [],
+  "missing": [],
+  "uml": [
+    "«extend» is defensible but arguable: the operator's 'Update status' dashboard entry always goes through the received-reports list (UserDashboardGUI.java:575 opens ReceivedReportsGUI(userSessionData, true)), so status update is not an optional increment of reviewing; an «include» from 'Update report status' to 'Review received reports' (or keeping «extend» with an extension point named e.g. 'report selected') would state it more precisely. Minor.",
+    "The notification dependency is drawn as a note anchored to two use cases; there is no UML relation between use cases of different actors for this, so the note is the correct choice, not a defect."
+  ],
+  "fixes": [
+    "Optional: reconsider «extend» vs «include» for Update report status / Review received reports, or name the extension point, so the relation reads unambiguously.",
+    "Optional: README assumption about role choice at registration can be closed: UserRegistrationGUI.java:112-113 offers 'Citizen' and 'Municipal Operator' in a combo box, which supports one shared 'Register and log in' use case for both actors."
+  ]
+}

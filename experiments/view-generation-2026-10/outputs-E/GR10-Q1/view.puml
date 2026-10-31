@@ -1,0 +1,49 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+</style>
+hide <<accent>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML component diagram: Municipal Report Management System, whole system
+
+component "User Interface\nPresentation layer (Boundary):\nSwing screens" as ui
+component "Application Controllers\nApplication layer (Control):\nuse-case entry points, facade" as ctrl
+component "Domain Services\nDomain layer: business rules,\nreport lifecycle" as svc
+component "Domain Entities\nDomain layer: users, reports,\nnotes, notifications" as ent
+component "Persistence Layer\nPersistence layer (Database):\ngeneric JPA save / query" as pers
+component "Reports Database\nMySQL reports_db" as db
+
+ui   ..> ctrl : invokes use cases
+ui   .[norank].> ent  : ReportCategory enum
+ctrl ..> svc  : delegates operations
+svc  ..> ent  : creates, changes
+svc  ...> pers : saves, queries
+pers ..> ent  : ORM mapping
+pers ..> db   : JDBC
+
+note right of ctrl
+  Domain Services and Domain Entities are one
+  logical split of Java package Entity.
+  Controllers also use the ReportCategory enum.
+  UI and controllers exchange
+  Map<String,Object> data, not entities.
+  SystemServicesController is the facade;
+  only login bypasses it.
+end note
+@enduml
