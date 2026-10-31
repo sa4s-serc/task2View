@@ -90,12 +90,12 @@ tags; the tags are explained in `DERIVATION.md`. Where this skill and `plantuml-
 1. Render and check with the `plantuml-diagrams` skill's `scripts/puml-check` (renders the SVG and measures
    overlaps, edges through text, lifeline crossings, tiny text). Fix one issue kind per run; stop when two runs in
    a row do not reduce the issue count. [GD]
-2. Then read the PNG once and check, in order [GD, A365, YH, NIR]:
-   - every element and edge is in the inventory, and every inventory item the concern needs is drawn (two-way);
-   - the view answers each concern detail at the chosen detail level, and nothing in it is outside the budget;
-   - reading order, crowding, labels next to their edge.
-   At most two rounds of fixes from the image. Fix by changing the graph (direction, grouping, splitting,
-   dropping), never by adding elements that are not in the inventory. [GD, DIO, YH]
+2. Do not grade your own view. A separate reviewer with a fresh context will judge whether it answers the concern
+   at the right level, and you may get its critique back for one revision. (Self-review with shared context
+   inflates scores without improving them for people: Pan et al. 2024; a separate evaluator is easier to tune:
+   Anthropic harness design. This replaces the image self-review of GD and A365.)
+   When fixing, change the graph (direction, grouping, splitting, dropping), never add elements that are not in
+   the inventory. [GD, DIO, YH]
 3. Run `python3 -I .claude/skills/uml-view/scripts/check_inventory.py view-out/<case>/inventory.json` and fix
    what it reports: evidence that does not exist, elements or relations drawn but not in the inventory (or the
    reverse), concern details with no answer, and elements over the budget. Exit 0 means clean.
@@ -121,4 +121,4 @@ Written up from what the agent had to rediscover in earlier runs (they hold for 
 - A pointer to `inventory.json` (do not repeat it) and the final `check_inventory.py` result.
 - Omitted on purpose (what was left out to stay within budget or level).
 - Assumptions and "(unconfirmed)" items. [CH, DW, MP]
-- Check result: final puml-check issue count and what the image review changed.
+- Check result: final puml-check and check_inventory.py results; after a revision, what changed and why.

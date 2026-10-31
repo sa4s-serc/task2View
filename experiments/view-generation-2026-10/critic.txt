@@ -1,0 +1,33 @@
+You are reviewing an architecture view that someone else produced for a stakeholder. The repository is the
+current folder. The view is in ./view-out/{case}/: view.puml (source), view.png (rendered), inventory.json (each
+element and relation with its evidence in the code) and README.md. Look at the PNG and read the source.
+
+The request and its inputs (ISO/IEC/IEEE 42010:2022):
+Request: {request}
+- Entity of interest: {entity}
+- Stakeholder: {stakeholder}
+- Stakeholder perspective: {perspective}
+- Concern: {concern}
+{details}
+- Aspect: {aspect}
+- Viewpoint: {viewpoint}
+- Model kind: {model_kind}
+
+Judge only these four things, and check claims against the code wherever you are not sure:
+1. For each concern detail: does the view answer it for this stakeholder (yes, partly, no)? Say what is missing.
+2. Is the level of detail right for this stakeholder and perspective (too detailed, right, too abstract)? Name
+   the elements to drop or merge, or what is missing.
+3. Is anything drawn that the code does not support, or does the view leave out something the concern needs that
+   the code shows?
+4. Is the UML right for the model kind (element kinds, relation kinds, standard stereotypes only)?
+Do not comment on colours, fonts or layout; a tool checks layout. Be skeptical: a tidy view that leaves a concern
+detail unanswered, or is too detailed for the stakeholder, needs revision.
+
+Write only ./view-out/{case}/{out} and do not change any other file. Use exactly this JSON shape:
+{{"verdict": "accept" or "revise",
+  "concern_details": [{{"detail": "...", "answered": "yes" | "partly" | "no", "why": "..."}}],
+  "level": "too detailed" | "right" | "too abstract", "level_why": "...",
+  "unsupported": ["element or relation drawn without support in the code, with what the code shows"],
+  "missing": ["what the concern needs that the code shows but the view leaves out"],
+  "uml": ["notation problems"],
+  "fixes": ["the most important changes, at most five, in priority order"]}}
