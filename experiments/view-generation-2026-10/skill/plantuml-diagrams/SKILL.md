@@ -77,7 +77,7 @@ Arrow semantics: `->` same layer, `-->` next layer, each extra dash one more lay
 
 ## House style
 `puml-new` inlines it (Helvetica, slate text and lines, light fills, one blue `.accent` class, `polyline`, `nodesep 50`, `ranksep 60`,
-wrap at 180 px, `hide stereotype`). Apply `<<accent>>` (the one thing to look at), `<<alert>>` (gate / PII / risk) and `<<muted>>` (context, cross-diagram stubs) sparingly and explain them in a legend. Never set `LineColor`/`LineThickness` on `root` or `title`: it strips every element's border in the SVG. Keep one `<style>` block; skinparams only for
+wrap at 180 px, hides only the `accent`, `alert` and `muted` styling stereotypes, so UML keywords such as «device» and «include» stay visible). Apply `<<accent>>` (the one thing to look at), `<<alert>>` (gate / PII / risk) and `<<muted>>` (context, cross-diagram stubs) sparingly and explain them in a legend. Never set `LineColor`/`LineThickness` on `root` or `title`: it strips every element's border in the SVG. Keep one `<style>` block; skinparams only for
 layout knobs with no style form. The include form (`assets/lib/house.puml`) exists for projects with many diagrams; the inline form is
 portable to Kroki, VS Code server rendering and MCP renderers, which cannot see local includes.
 

@@ -29,7 +29,9 @@ sequenceDiagram { participant { Margin 0 12 } lifeLine { LineColor #94A3B8 } }
 activityDiagram { activity { MaximumWidth 200 } diamond { FontSize 12 } arrow { FontSize 12 } }
 .accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
 </style>
-hide stereotype
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
 ```
 **Bug (1.2026.8):** any `LineColor transparent`, and `title { LineThickness 0 }`, strips the stroke from EVERY element in description
 diagrams (the PNG rasterizer still draws faint borders, the SVG is borderless). Measured: 35 of 36 element shapes lost their stroke.
