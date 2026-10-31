@@ -13,15 +13,17 @@ nav{position:sticky;top:0;background:#fff;padding:6px 0;border-bottom:1px solid 
 <h1>View generation from 42010:2022 inputs</h1>
 <p>Central question: given the entity of interest, stakeholder, perspective, concern, aspect and viewpoint / model kind,
 can a view be generated that addresses the concern? The architecture is not given; one agent (Claude Sonnet 5.5)
-derives it from the repository and writes one view. Three conditions side by side: A the agent alone; B with the
-uml-view skill and its render, check and look loop; C as B plus a notes file per repository kept across cases.
-Layout issues are counted by puml-check (plantuml-diagrams skill). Judged by people.</p>
+derives it from the repository and writes one view. Conditions side by side: A the agent alone; B with the uml-view
+skill and its render, check and look loop; C as B plus a notes file per repository kept across cases; D with the
+revised skill (checked inventory, examples, no self-review) and a separate critic on a different model, one
+revision, better version kept. Layout issues are counted by puml-check, which B, C and D also used while working,
+so they favour those conditions; per node normalises for size. The judgement is the blind rating.</p>
 <nav><a href="#GR10-Q1">GR10-Q1</a> · <a href="#GR10-Q2">GR10-Q2</a> · <a href="#GR10-Q4">GR10-Q4</a> · <a href="#GR10-Q3">GR10-Q3</a> · <a href="#IS-reg-L1">IS-reg-L1</a> · <a href="#IS-reg-L2">IS-reg-L2</a> · <a href="#IS-reg-L3">IS-reg-L3</a> · <a href="#IS-seat-L1">IS-seat-L1</a> · <a href="#IS-seat-L2">IS-seat-L2</a> · <a href="#IS-seat-L3">IS-seat-L3</a></nav>
 <section id="GR10-Q1">
 <h2>GR10-Q1</h2>
 <p class="request">“I am a software architect, and I would like a high-level component view of the system.”</p><details><summary>original long request</summary><p>I am a software architect. I need to review the overall organization of the system before planning its future evolution. I want to understand the main architectural components, their responsibilities, how the system is decomposed into different layers or subsystems, and the main dependencies among them. I also need to identify how user-facing functionality, application logic, domain entities, and data persistence are separated and how these parts collaborate to provide the main system functionalities.</p></details>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>software architect</td></tr><tr><th>perspective</th><td>the whole system at a high level, before planning its evolution</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main architectural components and their responsibilities</li><li>decomposition into layers or subsystems</li><li>main dependencies among them</li><li>separation of user interface, application logic, domain entities and persistence, and how they collaborate</li></ul></td></tr><tr><th>aspect</th><td>structural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q1/view.png"><img src="outputs/GR10-Q1/view.png" alt="GR10-Q1 A: agent"></a><p class="check">layout issues: 6 (edge-through-text 2, label-on-border 2, edge-through-own-label 1, busy 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q1/view.png"><img src="outputs/GR10-Q1/view.png" alt="GR10-Q1 A: agent"></a><p class="check">15 nodes, 24 edges; layout issues 6, 0.40 per node (edge-through-text 2, label-on-border 2, edge-through-own-label 1, busy 1)</p>
 <details><summary>README</summary><pre># GR10-Q1 – Component view (UML component diagram)
 
 `view.puml` shows the high-level structure of the municipal problem-reporting desktop application (Java Swing + Hibernate/JPA + MySQL), derived from the packages in `src/main/java`.
@@ -42,7 +44,7 @@ Four layers, each matching a source package, plus the external MySQL database:
 ## Observation
 The domain services live in the `Entity` package and call `PersistenceService` directly, so the domain layer depends on persistence. This is not a clean separation and is worth noting before planning evolution.
 </pre></details>
-<p class="links"><a href="outputs/GR10-Q1/view.puml">view.puml</a> · <a href="outputs/GR10-Q1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q1/view.png"><img src="outputs-B/GR10-Q1/view.png" alt="GR10-Q1 B: + skill and feedback loop"></a><p class="check">layout issues: 0</p>
+<p class="links"><a href="outputs/GR10-Q1/view.puml">view.puml</a> · <a href="outputs/GR10-Q1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q1/view.png"><img src="outputs-B/GR10-Q1/view.png" alt="GR10-Q1 B: + skill and feedback loop"></a><p class="check">6 nodes, 6 edges; layout issues 0, 0.00 per node</p>
 <details><summary>README</summary><pre># Component view: Municipal Report Management desktop application
 
 **Takeaway:** a layered Boundary → Control → Entity services → Database desktop application, where the domain entities are shared by services and persistence, and the data lives in one MySQL database.
@@ -72,7 +74,7 @@ GUI-to-GUI navigation, individual controllers and GUIs, value classes (`Credenti
 ## Check result
 `puml-check`: 0 crossings, no overlaps, no tiny text; one advisory `aspect` warning (portrait ratio 0.79), which is accepted because the view is a layered chain. The first attempt (left-to-right, with interface lollipops) was too wide, and the second had edges through labels, so both were reverted. The image review found no further fixes.
 </pre></details>
-<p class="links"><a href="outputs-B/GR10-Q1/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q1/view.png"><img src="outputs-C/GR10-Q1/view.png" alt="GR10-Q1 C: + memory"></a><p class="check">layout issues: 0</p>
+<p class="links"><a href="outputs-B/GR10-Q1/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q1/view.png"><img src="outputs-C/GR10-Q1/view.png" alt="GR10-Q1 C: + memory"></a><p class="check">7 nodes, 9 edges; layout issues 0, 0.00 per node</p>
 <details><summary>README</summary><pre># Component view: municipal problem reporting desktop application
 
 **Takeaway:** a four-layer Boundary → Control → Entity → Database application: Swing screens call a controller facade, controllers drive domain services that manipulate JPA entities, and a persistence service stores them in MySQL.
@@ -114,7 +116,7 @@ Individual GUI screens and controllers, concrete entity subclasses (Citizen, Mun
 <h2>GR10-Q2</h2>
 <p class="request">“I am a DevOps engineer, and I would like a complete deployment view of the system.”</p><details><summary>original long request</summary><p>I am a DevOps engineer. I need to deploy and configure the system in a new execution environment. Before preparing the deployment, I need to understand which runtime environments and software artifacts are required, where the application and its data are executed and stored, and how the main runtime elements communicate with each other. I also need to identify the technologies and runtime dependencies involved in the communication between the application and the database.</p></details>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>DevOps engineer</td></tr><tr><th>perspective</th><td>runtime and operations; deploying the system in a new environment</td></tr><tr><th>concern</th><td>deployment, connectivity</td></tr><tr><th>concern details</th><td><ul><li>required runtime environments and software artifacts</li><li>where the application runs and where its data is stored</li><li>how the main runtime elements communicate</li><li>technologies and runtime dependencies between the application and the database</li></ul></td></tr><tr><th>aspect</th><td>structural (runtime)</td></tr><tr><th>viewpoint</th><td>deployment</td></tr><tr><th>model kind</th><td>UML deployment diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q2/view.png"><img src="outputs/GR10-Q2/view.png" alt="GR10-Q2 A: agent"></a><p class="check">layout issues: 6 (edge-crosses-nested-borders 2, edge-through-own-label 2, edge-through-cluster 1, busy 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q2/view.png"><img src="outputs/GR10-Q2/view.png" alt="GR10-Q2 A: agent"></a><p class="check">11 nodes, 12 edges; layout issues 6, 0.55 per node (edge-crosses-nested-borders 2, edge-through-own-label 2, edge-through-cluster 1, busy 1)</p>
 <details><summary>README</summary><pre># GR10-Q2 – Deployment view (UML deployment diagram)
 
 `view.puml` shows how the Municipal Report Management System is deployed and how its runtime elements connect. It was derived from `pom.xml`, `persistence.xml`, `Database/*`, the `main` methods in `Boundary/*`, and the README.
@@ -131,7 +133,7 @@ Individual GUI screens and controllers, concrete entity subclasses (Citizen, Mun
 - `pom.xml` has a typo (`configuretion`), so the compiler plugin settings are ignored. The JDK 23 requirement comes from the properties and README.
 - The black-box tests need a running MySQL instance and may open Swing dialogs.
 </pre></details>
-<p class="links"><a href="outputs/GR10-Q2/view.puml">view.puml</a> · <a href="outputs/GR10-Q2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q2/view.png"><img src="outputs-B/GR10-Q2/view.png" alt="GR10-Q2 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (busy 1)</p>
+<p class="links"><a href="outputs/GR10-Q2/view.puml">view.puml</a> · <a href="outputs/GR10-Q2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q2/view.png"><img src="outputs-B/GR10-Q2/view.png" alt="GR10-Q2 B: + skill and feedback loop"></a><p class="check">6 nodes, 6 edges; layout issues 1, 0.17 per node (busy 1)</p>
 <details><summary>README</summary><pre># Deployment view – Municipal Report Management System
 
 **Takeaway:** a Java 23 Swing desktop client (with Hibernate/JDBC embedded) runs on each user workstation and talks directly over JDBC/TCP 3306 to a MySQL server holding schema `reports_db`; there is no application server.
@@ -170,7 +172,7 @@ BCED layers (Boundary/Control/Entity/Database) and entity classes (component/cla
 ## Check result
 Final `puml-check`: OK, 0 warnings (one advisory &quot;busy&quot; info). Image review: an initial edge cut through the workstation boxes and was fixed by linking containers and moving the note; no other changes.
 </pre></details>
-<p class="links"><a href="outputs-B/GR10-Q2/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q2/view.png"><img src="outputs-C/GR10-Q2/view.png" alt="GR10-Q2 C: + memory"></a><p class="check">layout issues: 0</p>
+<p class="links"><a href="outputs-B/GR10-Q2/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q2/view.png"><img src="outputs-C/GR10-Q2/view.png" alt="GR10-Q2 C: + memory"></a><p class="check">6 nodes, 6 edges; layout issues 0, 0.00 per node</p>
 <details><summary>README</summary><pre># Deployment view — Municipal Report Management desktop application
 
 **Takeaway:** the application is a Java 23 Swing desktop program that runs in one JVM and reaches a MySQL schema `reports_db` through Hibernate/JDBC over TCP at 127.0.0.1:3306, so both must be installed on the same workstation.
@@ -208,7 +210,7 @@ puml-check: OK, 0 issues on the final run (first runs had label-on-border/edge-t
 <h2>GR10-Q4</h2>
 <p class="request">“I am a software analyst, and I would like a use case diagram showing the functionalities provided by the system.”</p><details><summary>original long request</summary><p>I am a business analyst. I need to understand at a high level how a system for reporting and managing problems in a municipal area is expected to work. I know that the application should allow people to report issues in the territory and support the municipality in managing them, but I do not yet know the specific user roles or the functionalities available to each of them. I need to identify the main types of users that interact with the system, the main goals they can achieve through it, and how the different functionalities are related to each other.</p></details>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>software analyst</td></tr><tr><th>perspective</th><td>what the system offers its users, without knowing the user roles yet</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main types of users that interact with the system</li><li>goals each of them can achieve through it</li><li>how the functionalities are related to each other</li></ul></td></tr><tr><th>aspect</th><td>functional</td></tr><tr><th>viewpoint</th><td>use case</td></tr><tr><th>model kind</th><td>UML use case diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q4/view.png"><img src="outputs/GR10-Q4/view.png" alt="GR10-Q4 A: agent"></a><p class="check">layout issues: 4 (edge-through-own-label 2, bundled-edges 1, busy 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q4/view.png"><img src="outputs/GR10-Q4/view.png" alt="GR10-Q4 A: agent"></a><p class="check">16 nodes, 18 edges; layout issues 4, 0.25 per node (edge-through-own-label 2, bundled-edges 1, busy 1)</p>
 <details><summary>README</summary><pre># Use case view - Municipal Report Management System
 
 **Viewpoint / model kind:** use case, UML use case diagram (`view.puml`). **Aspect:** functional.
@@ -228,7 +230,7 @@ The functionalities the desktop application offers, grouped by the actors that u
 - Login/registration are shown for the Visitor; Citizen and Operator inherit them. Log out is available to both roles.
 - Status update and internal notes are reached through the received-reports list in the code, hence the relations modelled on that use case.
 </pre></details>
-<p class="links"><a href="outputs/GR10-Q4/view.puml">view.puml</a> · <a href="outputs/GR10-Q4/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q4/view.png"><img src="outputs-B/GR10-Q4/view.png" alt="GR10-Q4 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (edge-through-text 1)</p>
+<p class="links"><a href="outputs/GR10-Q4/view.puml">view.puml</a> · <a href="outputs/GR10-Q4/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q4/view.png"><img src="outputs-B/GR10-Q4/view.png" alt="GR10-Q4 B: + skill and feedback loop"></a><p class="check">11 nodes, 13 edges; layout issues 1, 0.09 per node (edge-through-text 1)</p>
 <details><summary>README</summary><pre># Use case view: Municipal report management application
 
 **Takeaway:** a Citizen can register, log in, create reports and follow their own reports; a Municipal Operator can review all received reports, advance their status (with a citizen notification), add internal notes and monitor activity trends.
@@ -264,7 +266,7 @@ Log out, report details/history screens (folded into the two review use cases), 
 ## Check result
 Final `puml-check`: 2 warnings (aspect 2.6:1, too wide; one edge from Operator passing through the system boundary title), 1 crossing. The first layout (left to right) had 2 warnings too, but was too tall (1.19:1) and had the same title crossing. Two attempts to remove the title crossing (an edge direction hint and a note move) increased crossings (3 to 4, then 1 to 5), so I reverted to the best version. Image review: all inventory items are drawn, and no labels overlap.
 </pre></details>
-<p class="links"><a href="outputs-B/GR10-Q4/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q4/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q4/view.png"><img src="outputs-C/GR10-Q4/view.png" alt="GR10-Q4 C: + memory"></a><p class="check">layout issues: 1 (edge-through-text 1)</p>
+<p class="links"><a href="outputs-B/GR10-Q4/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q4/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q4/view.png"><img src="outputs-C/GR10-Q4/view.png" alt="GR10-Q4 C: + memory"></a><p class="check">12 nodes, 15 edges; layout issues 1, 0.08 per node (edge-through-text 1)</p>
 <details><summary>README</summary><pre># Use case view: Municipal Issue Reporting System
 
 **Takeaway:** the system lets any user register and log in, citizens report and follow municipal problems, and municipal operators review, process and monitor them.
@@ -305,7 +307,7 @@ Final `puml-check`: 1 warning (a Citizen edge passes through the system boundary
 <h2>GR10-Q3</h2>
 <p class="request">“I am a database engineer. I need to modify the persistence layer to support future changes to the management of municipal reports. Before modifying the database, I need to understand the main data entities stored by the system, the relationships among them, and which information must be persisted throughout the lifecycle of a report. In particular, I need to understand how users, reports, locations, categories, states, state changes, internal notes, and notifications are related, and which parts of the application depend on this persisted information.”</p>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>database engineer</td></tr><tr><th>perspective</th><td>the persistence layer, before changing how reports are managed</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main data entities stored and their relationships</li><li>information persisted throughout the lifecycle of a report</li><li>how users, reports, locations, categories, states, state changes, internal notes and notifications are related</li><li>which parts of the application depend on the persisted information</li></ul></td></tr><tr><th>aspect</th><td>informational</td></tr><tr><th>viewpoint</th><td>data model</td></tr><tr><th>model kind</th><td>UML class diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q3/view.png"><img src="outputs/GR10-Q3/view.png" alt="GR10-Q3 A: agent"></a><p class="check">layout issues: 15 (bundled-edges 6, edge-through-text 4, detached-label 2, edge-crosses-nested-borders 1, many-crossings 1, busy 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q3/view.png"><img src="outputs/GR10-Q3/view.png" alt="GR10-Q3 A: agent"></a><p class="check">37 nodes, 66 edges; layout issues 15, 0.41 per node (bundled-edges 6, edge-through-text 4, detached-label 2, edge-crosses-nested-borders 1, many-crossings 1, busy 1)</p>
 <details><summary>README</summary><pre># GR10-Q3 – Data model view (UML class diagram)
 
 **Viewpoint / model kind:** data model, UML class diagram. **Aspect:** informational.
@@ -335,7 +337,7 @@ Final `puml-check`: 1 warning (a Citizen edge passes through the system boundary
 - `reports.operator_id` is set at the first status update (`updateReportStatus` calls `assignOperator`).
 - Reports are loaded with eager notes and updates.
 </pre></details>
-<p class="links"><a href="outputs/GR10-Q3/view.puml">view.puml</a> · <a href="outputs/GR10-Q3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q3/view.png"><img src="outputs-B/GR10-Q3/view.png" alt="GR10-Q3 B: + skill and feedback loop"></a><p class="check">layout issues: 4 (edge-through-text 2, crowded-ends 1, busy 1)</p>
+<p class="links"><a href="outputs/GR10-Q3/view.puml">view.puml</a> · <a href="outputs/GR10-Q3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q3/view.png"><img src="outputs-B/GR10-Q3/view.png" alt="GR10-Q3 B: + skill and feedback loop"></a><p class="check">12 nodes, 20 edges; layout issues 4, 0.33 per node (edge-through-text 2, crowded-ends 1, busy 1)</p>
 <details><summary>README</summary><pre># Data model view – persistence of municipal reports (UML class diagram)
 
 **Takeaway:** every report is one row in `reports` (with location and category inline) owned by a citizen and optionally assigned to an operator; its lifecycle is persisted as child rows (status updates, internal notes) plus notifications, and only `ReportService`/`UserService` (via `PersistenceService`) touch them.
@@ -373,7 +375,7 @@ State classes (`Submitted`, `Assigned`, `InProgress`, `Resolved`, `ReportStatus`
 ## Check result
 Final `puml-check`: 3 warnings (two edge labels near a line, two crowded multiplicity ends at `MunicipalOperator`); first render had 13. Image review: moved the enum into a note and fixed a mis-rendered attribute; a variant with extra ranks was worse (13 warnings) and was reverted.
 </pre></details>
-<p class="links"><a href="outputs-B/GR10-Q3/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q3/view.png"><img src="outputs-C/GR10-Q3/view.png" alt="GR10-Q3 C: + memory"></a><p class="check">layout issues: 6 (edge-through-text 2, edge-through-node 2, bundled-edges 1, busy 1)</p>
+<p class="links"><a href="outputs-B/GR10-Q3/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q3/view.png"><img src="outputs-C/GR10-Q3/view.png" alt="GR10-Q3 C: + memory"></a><p class="check">14 nodes, 19 edges; layout issues 6, 0.43 per node (edge-through-text 2, edge-through-node 2, bundled-edges 1, busy 1)</p>
 <details><summary>README</summary><pre># Data model view: persisted entities of the municipal report system
 
 **Takeaway:** every report is one row in `reports` linked to the citizen who filed it, with its location and category stored inline and its history in child rows (status updates, internal notes, notifications). All access goes through `ReportService` and `UserService`.
@@ -420,7 +422,7 @@ Final `puml-check`: 4 warnings (edge-through-text and edge-through-node on long 
 <h2>IS-reg-L1</h2>
 <p class="request">“I am an integration tester, and I would like a dynamic view of the user registration functionality.”</p><details><summary>original long request</summary><p>I am an integration tester. I need to test the user registration functionality and understand which system components are involved and how they interact.</p></details>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>testing the user registration feature end to end</td></tr><tr><th>concern</th><td>control_flow</td></tr><tr><th>concern details</th><td><ul><li>system components involved in user registration</li><li>how they interact</li></ul></td></tr><tr><th>aspect</th><td>behavioural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L1/view.png"><img src="outputs/IS-reg-L1/view.png" alt="IS-reg-L1 A: agent"></a><p class="check">layout issues: 10 (group-label-on-lifeline 4, message-crosses-lifeline 3, group-label-crosses-lifeline 2, message-spans-lifelines 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L1/view.png"><img src="outputs/IS-reg-L1/view.png" alt="IS-reg-L1 A: agent"></a><p class="check">0 nodes, 0 edges; layout issues 10 (group-label-on-lifeline 4, message-crosses-lifeline 3, group-label-crosses-lifeline 2, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># View: User Registration - Dynamic View (UML sequence diagram)
 
 **Stakeholder:** integration tester. **Concern:** control flow of user registration: which components take part and how they interact. **Aspect/viewpoint:** behavioural / dynamic.
@@ -434,7 +436,7 @@ Final `puml-check`: 4 warnings (edge-through-text and edge-through-node on long 
 
 Scope note: login and other use cases are out of scope. The Swing client&#x27;s exception path is shown only as propagation to the UI error dialog.
 </pre></details>
-<p class="links"><a href="outputs/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs/IS-reg-L1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L1/view.png"><img src="outputs-B/IS-reg-L1/view.png" alt="IS-reg-L1 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (group-label-on-lifeline 1)</p>
+<p class="links"><a href="outputs/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs/IS-reg-L1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L1/view.png"><img src="outputs-B/IS-reg-L1/view.png" alt="IS-reg-L1 B: + skill and feedback loop"></a><p class="check">0 nodes, 0 edges; layout issues 1 (group-label-on-lifeline 1)</p>
 <details><summary>README</summary><pre># Sequence diagram: user registration
 
 **Takeaway:** a registration request travels Registration Form → Authentication Controller → Library Facade → User Manager, which validates, checks uniqueness through User Registry / Persistence Manager, builds a Student or Librarian and saves it; any rule violation comes back as an exception shown to the user as an error.
@@ -471,7 +473,7 @@ Database/JPA internals, entities, DTO fields, login and other use cases, individ
 ## Check result
 Final `puml-check`: 0 warnings other than `aspect` (sequence diagrams are tall; 866x976), plus 1 info. Image review changed the error path from a trailing `alt` to an `alt accepted / else rejected`, and collapsed repeated lookups to stay under the message budget.
 </pre></details>
-<p class="links"><a href="outputs-B/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L1/view.png"><img src="outputs-C/IS-reg-L1/view.png" alt="IS-reg-L1 C: + memory"></a><p class="check">layout issues: 4 (group-label-crosses-lifeline 1, message-crosses-lifeline 1, group-label-on-lifeline 1, message-spans-lifelines 1)</p>
+<p class="links"><a href="outputs-B/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L1/view.png"><img src="outputs-C/IS-reg-L1/view.png" alt="IS-reg-L1 C: + memory"></a><p class="check">0 nodes, 0 edges; layout issues 4 (group-label-crosses-lifeline 1, message-crosses-lifeline 1, group-label-on-lifeline 1, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># Sequence diagram – User registration (view.puml / view.png)
 
 **Takeaway:** a registration request travels Registration form → AuthenticationController → LibraryFacade → UserManager → UserRegistry → MySQL; UserManager validates, checks duplicates, creates the Student or Librarian through a factory and persists it, and returns a UserDTO or an error that is mapped to HTTP 400.
@@ -513,7 +515,7 @@ Final puml-check: 0 errors; 2 warnings (alt label and one error message cross a 
 <h2>IS-reg-L2</h2>
 <p class="request">“I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the main components involved in registration, their responsibilities, and how they interact when a new user creates an account. I also need to identify the main integration points that should be exercised during the tests.”</p>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>designing integration tests for user registration</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components involved in registration and their responsibilities</li><li>how they interact when a new user creates an account</li><li>main integration points to exercise in the tests</li></ul></td></tr><tr><th>aspect</th><td>behavioural, structural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L2/view.png"><img src="outputs/IS-reg-L2/view.png" alt="IS-reg-L2 A: agent"></a><p class="check">layout issues: 9 (group-label-on-lifeline 4, message-crosses-lifeline 3, group-label-crosses-lifeline 1, message-spans-lifelines 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L2/view.png"><img src="outputs/IS-reg-L2/view.png" alt="IS-reg-L2 A: agent"></a><p class="check">0 nodes, 0 edges; layout issues 9 (group-label-on-lifeline 4, message-crosses-lifeline 3, group-label-crosses-lifeline 1, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># View: User registration (UC1) - UML sequence diagram
 
 Viewpoint: dynamic. Model kind: UML sequence diagram. Stakeholder: integration tester.
@@ -546,7 +548,7 @@ form (web page or Swing client), through the REST controller (web only), the fac
   IllegalArgument/IllegalState/Security), so the response then depends on the framework default.
 - Passwords are stored and compared in plain form in the entity (no hashing in the registration path).
 </pre></details>
-<p class="links"><a href="outputs/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs/IS-reg-L2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L2/view.png"><img src="outputs-B/IS-reg-L2/view.png" alt="IS-reg-L2 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (group-label-on-lifeline 1)</p>
+<p class="links"><a href="outputs/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs/IS-reg-L2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L2/view.png"><img src="outputs-B/IS-reg-L2/view.png" alt="IS-reg-L2 B: + skill and feedback loop"></a><p class="check">0 nodes, 0 edges; layout issues 1 (group-label-on-lifeline 1)</p>
 <details><summary>README</summary><pre># Sequence diagram: new user registration
 
 **Takeaway:** a registration request passes through a fixed chain, UI → AuthenticationController → LibraryFacade → UserManager → UserRegistry → PersistenceManager → MySQL. All validation and the duplicate checks are in UserManager, so the tester can exercise each hop and each failure mode on that path.
@@ -594,7 +596,7 @@ Integration points (the numbering is mine, not from the code):
 - An earlier version had 5 lifeline-crossing warnings; routing the replies through the facade cleared them.
 - Image review: the diagram reads top to bottom with no overlaps. I merged the save-failure branch into one `alt` and added a note to explain it.
 </pre></details>
-<p class="links"><a href="outputs-B/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L2/view.png"><img src="outputs-C/IS-reg-L2/view.png" alt="IS-reg-L2 C: + memory"></a><p class="check">layout issues: 3 (group-label-on-lifeline 2, group-label-crosses-lifeline 1)</p>
+<p class="links"><a href="outputs-B/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L2/view.png"><img src="outputs-C/IS-reg-L2/view.png" alt="IS-reg-L2 C: + memory"></a><p class="check">0 nodes, 0 edges; layout issues 3 (group-label-on-lifeline 2, group-label-crosses-lifeline 1)</p>
 <details><summary>README</summary><pre># Registration sequence view (integration tester)
 
 **Takeaway:** a registration request travels form → AuthenticationController (REST) → LibraryFacade → UserManager (validate, duplicate checks, factory) → UserRegistry → PersistenceManager → MySQL, and every failure comes back as an exception that the REST layer maps to HTTP 400.
@@ -632,7 +634,7 @@ puml-check: no lifeline crossings, remaining output is info-level group-label no
 <h2>IS-reg-L3</h2>
 <p class="request">“I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the registration process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components handle the registration request, validate the user&#x27;s personal information and selected role, manage role-specific data such as the student ID or librarian identifier, verify the validity and uniqueness of the account, and persist the newly created user. I also need to understand how these components collaborate when invalid or already existing user data is provided, so that I can identify the main integration points and interactions that should be covered by the tests.”</p>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>designing integration tests for user registration, at the level of the architecture</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components in the registration process, their responsibilities, interactions and dependencies</li><li>which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness of the account, and persist the new user</li><li>how they collaborate when invalid or already existing data is provided</li><li>main integration points and interactions the tests should cover</li></ul></td></tr><tr><th>aspect</th><td>behavioural, structural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L3/view.png"><img src="outputs/IS-reg-L3/view.png" alt="IS-reg-L3 A: agent"></a><p class="check">layout issues: 12 (group-label-crosses-lifeline 5, group-label-on-lifeline 5, message-crosses-lifeline 1, message-spans-lifelines 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L3/view.png"><img src="outputs/IS-reg-L3/view.png" alt="IS-reg-L3 A: agent"></a><p class="check">0 nodes, 0 edges; layout issues 12 (group-label-crosses-lifeline 5, group-label-on-lifeline 5, message-crosses-lifeline 1, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># User registration – dynamic view (UML sequence diagram)
 
 `view.puml` shows the runtime control flow of user registration (UC1) for a Student or Librarian, derived from the code:
@@ -651,7 +653,7 @@ puml-check: no lifeline crossings, remaining output is info-level group-label no
 
 Notes: the Swing client blocks blank fields locally before calling the backend. Uniqueness is checked (email first, then identifier) before persisting; DB unique constraints are a second line of defense that surfaces as the persistence failure branch.
 </pre></details>
-<p class="links"><a href="outputs/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs/IS-reg-L3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L3/view.png"><img src="outputs-B/IS-reg-L3/view.png" alt="IS-reg-L3 B: + skill and feedback loop"></a><p class="check">layout issues: 2 (group-label-on-lifeline 1, message-spans-lifelines 1)</p>
+<p class="links"><a href="outputs/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs/IS-reg-L3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L3/view.png"><img src="outputs-B/IS-reg-L3/view.png" alt="IS-reg-L3 B: + skill and feedback loop"></a><p class="check">0 nodes, 0 edges; layout issues 2 (group-label-on-lifeline 1, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># Sequence view: user registration (Student / Librarian)
 
 **Takeaway:** A registration request goes Client → AuthenticationController → LibraryFacade → UserManager. UserManager validates the role and personal data, checks uniqueness through UserRegistry/PersistenceManager, builds the role-specific user with a factory, and persists it. Invalid or duplicate data ends in an `IllegalArgumentException` that RestExceptionHandler maps to HTTP 400.
@@ -695,7 +697,7 @@ UserDTO, User/Student/Librarian entities, JpaUtil, the database itself (shown as
 ## Check result
 `puml-check` ends with 1 warning (`aspect`: the diagram is tall, ratio 1.23 vs 1.78; kept because a sequence of 21 messages is inherently tall) and 2 info lines (lifeline-spanning messages). The `group-label-crosses-lifeline` warnings were fixed by shortening the alt labels. After viewing the PNG I made no further changes.
 </pre></details>
-<p class="links"><a href="outputs-B/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L3/view.png"><img src="outputs-C/IS-reg-L3/view.png" alt="IS-reg-L3 C: + memory"></a><p class="check">layout issues: 4 (group-label-on-lifeline 2, group-label-crosses-lifeline 1, message-spans-lifelines 1)</p>
+<p class="links"><a href="outputs-B/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L3/view.png"><img src="outputs-C/IS-reg-L3/view.png" alt="IS-reg-L3 C: + memory"></a><p class="check">0 nodes, 0 edges; layout issues 4 (group-label-on-lifeline 2, group-label-crosses-lifeline 1, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># Sequence view: user registration
 
 **Takeaway:** a registration request passes Controller -&gt; Facade -&gt; UserManager, which alone validates role-specific data and checks uniqueness through UserRegistry/PersistenceManager, then builds the user with a role factory and saves it; invalid or duplicate data ends as IllegalArgumentException (HTTP 400), a failed save as RuntimeException.
@@ -735,7 +737,7 @@ puml-check: 2 warns left (aspect: tall sequence; one alt-label crossing a lifeli
 <h2>IS-seat-L1</h2>
 <p class="request">“I am a software developer. I need to modify the seat booking functionality and understand the main system components involved and how they interact.”</p>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to modify the seat booking feature</td></tr><tr><th>concern</th><td>control_flow</td></tr><tr><th>concern details</th><td><ul><li>main system components involved in seat booking</li><li>how they interact</li></ul></td></tr><tr><th>aspect</th><td>structural, behavioural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L1/view.png"><img src="outputs/IS-seat-L1/view.png" alt="IS-seat-L1 A: agent"></a><p class="check">layout issues: 5 (edge-through-text 1, edge-through-cluster 1, edge-through-own-label 1, bundled-edges 1, busy 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L1/view.png"><img src="outputs/IS-seat-L1/view.png" alt="IS-seat-L1 A: agent"></a><p class="check">20 nodes, 24 edges; layout issues 5, 0.25 per node (edge-through-text 1, edge-through-cluster 1, edge-through-own-label 1, bundled-edges 1, busy 1)</p>
 <details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
 
 **Viewpoint/model kind:** component / UML component diagram. **Stakeholder:** developer about to modify seat booking. **Concern:** control flow.
@@ -754,7 +756,7 @@ The components on the path of a seat booking and the calls between them, derived
 
 Notes: the booking section is `synchronized` on `ReservationManager`; the notification is attached and fired after the reservation is saved. Not rendered/validated with PlantUML here.
 </pre></details>
-<p class="links"><a href="outputs/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs/IS-seat-L1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L1/view.png"><img src="outputs-B/IS-seat-L1/view.png" alt="IS-seat-L1 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (busy 1)</p>
+<p class="links"><a href="outputs/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs/IS-seat-L1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L1/view.png"><img src="outputs-B/IS-seat-L1/view.png" alt="IS-seat-L1 B: + skill and feedback loop"></a><p class="check">15 nodes, 16 edges; layout issues 1, 0.07 per node (busy 1)</p>
 <details><summary>README</summary><pre># Component view: seat booking (IS-seat-L1)
 
 Files: `view.puml` (source), `view.png` (render).
@@ -810,7 +812,7 @@ Files: `view.puml` (source), `view.png` (render).
   - Lightened the `ReservationManager` fill so its text is readable.
   - Gave the `ReservationManager` edges separate ranks so their labels don&#x27;t crowd.
 </pre></details>
-<p class="links"><a href="outputs-B/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L1/view.png"><img src="outputs-C/IS-seat-L1/view.png" alt="IS-seat-L1 C: + memory"></a><p class="check">layout issues: 1 (busy 1)</p>
+<p class="links"><a href="outputs-B/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L1/view.png"><img src="outputs-C/IS-seat-L1/view.png" alt="IS-seat-L1 C: + memory"></a><p class="check">15 nodes, 19 edges; layout issues 1, 0.07 per node (busy 1)</p>
 <details><summary>README</summary><pre># UML component diagram: seat booking (view.puml / view.png)
 
 **Takeaway:** a booking request from the web or Swing UI enters through `LibraryFacade`, is executed by `ReservationManager` (which uses the domain, the registries, a seat-assignment strategy and `NotificationManager`), and is persisted via `PersistenceManager` to MySQL.
@@ -853,7 +855,7 @@ puml-check: 0 crossings, 0 text overlaps; 1 `aspect` warning (ratio 1.26, tall) 
 <h2>IS-seat-L2</h2>
 <p class="request">“I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before changing the code, I need to understand the main components involved in this functionality, their responsibilities, and how they interact with each other. I also want to identify which parts of the system may be affected by the modification.”</p>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to add new booking rules to seat booking</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main components involved in seat booking and their responsibilities</li><li>how they interact with each other</li><li>which parts of the system may be affected by the modification</li></ul></td></tr><tr><th>aspect</th><td>structural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L2/view.png"><img src="outputs/IS-seat-L2/view.png" alt="IS-seat-L2 A: agent"></a><p class="check">layout issues: 12 (edge-through-text 6, bundled-edges 3, edge-through-own-label 1, label-on-border 1, busy 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L2/view.png"><img src="outputs/IS-seat-L2/view.png" alt="IS-seat-L2 A: agent"></a><p class="check">21 nodes, 29 edges; layout issues 12, 0.57 per node (edge-through-text 6, bundled-edges 3, edge-through-own-label 1, label-on-border 1, busy 1)</p>
 <details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
 
 **Stakeholder / concern:** a developer about to add new booking rules. Viewpoint: component; aspect: structural. Derived from `JavaProject/src/main/java/it/unina/reservations`.
@@ -876,7 +878,7 @@ Layers (Boundary, Control, Entity, Persistence) and the components on the seat-b
 
 Notes: the static HTML pages in `resources/static` contain no `/api/` calls, so they are omitted. The booking path is the Swing UI plus the REST API.
 </pre></details>
-<p class="links"><a href="outputs/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs/IS-seat-L2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L2/view.png"><img src="outputs-B/IS-seat-L2/view.png" alt="IS-seat-L2 B: + skill and feedback loop"></a><p class="check">layout issues: 3 (edge-through-text 2, bundled-edges 1)</p>
+<p class="links"><a href="outputs/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs/IS-seat-L2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L2/view.png"><img src="outputs-B/IS-seat-L2/view.png" alt="IS-seat-L2 B: + skill and feedback loop"></a><p class="check">13 nodes, 15 edges; layout issues 3, 0.23 per node (edge-through-text 2, bundled-edges 1)</p>
 <details><summary>README</summary><pre># Component view: seat booking and its dependencies
 
 **Takeaway:** a booking request flows from three entry points through `Library Facade` into `Reservation Manager`, which holds the booking rules (validation, seat selection) and delegates to the reservation domain, the registries and notifications. A new rule changes `Reservation Manager` first. It may also change the domain rules, `Seat Assignment Strategy` and the entry points&#x27; error handling.
@@ -917,7 +919,7 @@ DTOs, the user and room management paths (`UserManager`, factories, `StudyRoomMa
 ## Check result
 Final `puml-check`: 3 warnings, no text overlaps, 13 nodes, 15 edges. They are `aspect` (the diagram is tall, 0.80 ratio, because it is layered), and two edges that pass through package areas (`facade→roommgr`, `roommgr→dom`) plus bundled edges at Study Room Manager. The image review found a visible `«accent»`-style stereotype label, which is not a UML standard stereotype; I replaced it with inline colours and the legend. The first render was too wide and was switched to top-to-bottom. The facade→Notification Manager edge was dropped because it was off the booking path.
 </pre></details>
-<p class="links"><a href="outputs-B/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L2/view.png"><img src="outputs-C/IS-seat-L2/view.png" alt="IS-seat-L2 C: + memory"></a><p class="check">layout issues: 1 (busy 1)</p>
+<p class="links"><a href="outputs-B/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L2/view.png"><img src="outputs-C/IS-seat-L2/view.png" alt="IS-seat-L2 C: + memory"></a><p class="check">15 nodes, 20 edges; layout issues 1, 0.07 per node (busy 1)</p>
 <details><summary>README</summary><pre># Component view: seat booking
 
 **Takeaway:** every booking request, from web or Swing, funnels through `LibraryFacade` into `ReservationManager`. That class holds all booking rules and collaborates with the registries, the domain model, the seat-assignment strategy and the notification observer. New rules belong in `ReservationManager`, and possibly in the model classes it calls.
@@ -964,7 +966,7 @@ puml-check: OK, 0 crossings, 0 warnings (the `busy` note is info only, 20 edges)
 <h2>IS-seat-L3</h2>
 <p class="request">“I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes.”</p>
 <details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to add new booking rules; needs the architecture behind seat booking</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components in the booking process, their responsibilities, interactions and dependencies</li><li>which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications</li><li>which parts need to be modified and which other components may be affected</li></ul></td></tr><tr><th>aspect</th><td>structural, behavioural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
-<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L3/view.png"><img src="outputs/IS-seat-L3/view.png" alt="IS-seat-L3 A: agent"></a><p class="check">layout issues: 9 (edge-through-text 6, label-on-border 1, bundled-edges 1, busy 1)</p>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L3/view.png"><img src="outputs/IS-seat-L3/view.png" alt="IS-seat-L3 A: agent"></a><p class="check">28 nodes, 43 edges; layout issues 9, 0.32 per node (edge-through-text 6, label-on-border 1, bundled-edges 1, busy 1)</p>
 <details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
 
 Source: `view.puml`. Derived from `JavaProject/src/main/java/it/unina/reservations`.
@@ -979,7 +981,7 @@ Source: `view.puml`. Derived from `JavaProject/src/main/java/it/unina/reservatio
 - *External services:* `Reservation` notifies `NotificationManager` (Observer), which uses the `NotificationService` interface. `NotificationServiceAdapter` and `ExternalEmailGateway` (a stub) reach the email service. `NotificationConfiguration` wires the adapter at startup.
 - *Impact of changes:* a new rule mainly touches `ReservationManager` and possibly `Reservation` / `Student` / `Seat`. It may affect `ReservationRegistry` queries, the `ReservationRequestDTO` / `ReservationController` parameters, `RestExceptionHandler` and the UIs (error display), `NotificationManager` messages, and `NotificationScheduler`-driven expiry and reminders.
 </pre></details>
-<p class="links"><a href="outputs/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs/IS-seat-L3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L3/view.png"><img src="outputs-B/IS-seat-L3/view.png" alt="IS-seat-L3 B: + skill and feedback loop"></a><p class="check">layout issues: 8 (edge-through-text 3, label-on-border 2, edge-through-own-label 1, bundled-edges 1, busy 1)</p>
+<p class="links"><a href="outputs/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs/IS-seat-L3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L3/view.png"><img src="outputs-B/IS-seat-L3/view.png" alt="IS-seat-L3 B: + skill and feedback loop"></a><p class="check">15 nodes, 20 edges; layout issues 8, 0.53 per node (edge-through-text 3, label-on-border 2, edge-through-own-label 1, bundled-edges 1, busy 1)</p>
 <details><summary>README</summary><pre># Component view: seat booking (IS-seat-L3)
 
 **Takeaway:** every booking enters through `LibraryFacade`; `ReservationManager` validates the request and applies the booking rules, with seat availability checked in the domain entities and seat choice delegated to `AssignmentStrategy`. Reservations are stored through `ReservationRegistry` and `PersistenceManager` into MySQL, and `NotificationManager` sends notices through an adapter to an email gateway.
@@ -1021,7 +1023,7 @@ DTOs, User and Librarian components, the Observer and ReservationState classes (
 ## Check result
 `puml-check` reports 7 warnings: edges crossing package borders, one label on a border, and edges bundled out of Reservation Manager. The aspect ratio is 1.39 against the 1.78 target. A revision with a reordering and a hidden link also gave 7, so I reverted it. The single change after reading the image was replacing the in-diagram note with a legend, which went from 6 to 7 warnings. I kept the legend because the diagram reads the same either way and a legend is the proper notation. The warnings are layout issues, not content issues.
 </pre></details>
-<p class="links"><a href="outputs-B/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L3/view.png"><img src="outputs-C/IS-seat-L3/view.png" alt="IS-seat-L3 C: + memory"></a><p class="check">layout issues: 7 (bundled-edges 3, edge-through-text 2, label-on-border 1, busy 1)</p>
+<p class="links"><a href="outputs-B/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L3/view.png"><img src="outputs-C/IS-seat-L3/view.png" alt="IS-seat-L3 C: + memory"></a><p class="check">16 nodes, 19 edges; layout issues 7, 0.44 per node (bundled-edges 3, edge-through-text 2, label-on-border 1, busy 1)</p>
 <details><summary>README</summary><pre># Component view: seat booking and notification (IS-seat-L3)
 
 **Takeaway:** every booking request enters through LibraryFacade and is handled, validated and stored by ReservationManager, so new booking rules belong in ReservationManager (plus the entity availability queries and AssignmentStrategy). Notifications are a side effect triggered by Reservation state changes.
