@@ -28,7 +28,7 @@ BUDGET = {  # uml-view SKILL.md §1.3: (overview, balanced, detailed); None = no
 }
 DECL = re.compile(r'^\s*(?:component|node|artifact|participant|actor|usecase|class|interface|enum|entity|'
                   r'boundary|control|database|collections|queue|package|frame|rectangle|abstract(?:\s+class)?)'
-                  r'\s+("[^"]*"|[\w.:]+)(?:\s+as\s+([\w.]+))?', re.I)
+                  r'\s+("[^"]*"|[\w.:]+)(?:\s+<<[^>]*>>)?(?:\s+as\s+([\w.]+))?', re.I)
 BRACKET = re.compile(r'^\s*\[([^\]]+)\]\s+as\s+([\w.]+)')
 PAREN = re.compile(r'^\s*\(([^)]+)\)\s+as\s+([\w.]+)')
 ARROW = re.compile(r'^\s*"?([\w.]+)"?\s*(?:"[^"]*"\s*)?([<o*|x}]*[-.]+(?:\[[^\]]*\])?(?:up|down|left|right)?[-.]*[>o*|x{]*)'
@@ -97,7 +97,7 @@ def main() -> int:
     drawn_el, drawn_rel = drawn(puml)
     for a in sorted(drawn_el - set(elements)):
         issues.append(("two-way", f"{a} is drawn but not in the inventory"))
-    for a in sorted(set(elements) - drawn_el):
+    for a in sorted({a for a, e in elements.items() if e.get("kind") != "message"} - drawn_el):
         issues.append(("two-way", f"{a} is in the inventory but not drawn"))
     inv_rel = {(r.get("from"), r.get("to")) for r in inv.get("relations", [])}
     undirected = lambda s: {frozenset(p) for p in s}
