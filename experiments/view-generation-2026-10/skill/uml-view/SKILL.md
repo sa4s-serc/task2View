@@ -68,8 +68,9 @@ tags; the tags are explained in `DERIVATION.md`. Where this skill and `plantuml-
   «deploy», «manifest», «include», «extend», «create», «use», «call», «interface», «enumeration») or a profile
   you declare in a note. No invented stereotypes such as «factory», «tables», «REST», «docker». (Rejects UMCP, SW,
   REL #52.)
-- Do not use `hide stereotype` or stereotypes for styling (rejects GD house style #53); if you need emphasis,
-  use colour with a legend.
+- Do not use a bare `hide stereotype`: it also hides UML keywords. The vendored templates hide only the
+  `<<accent>>`, `<<alert>>` and `<<muted>>` styling stereotypes; use those for emphasis, with a legend. (Amends
+  GD house style #53.)
 - Deployment elements are `node`, `node <<device>>`, `node <<executionEnvironment>>`, `artifact`; no `cloud`,
   `queue`, `rectangle` or `database` as UML elements (rejects A365, JAB, REL #54). `artifact ..> node : <<deploy>>`.
 - Keep the «component» notation: no `skinparam componentStyle rectangle` (rejects REL, NII #55).
@@ -89,6 +90,18 @@ tags; the tags are explained in `DERIVATION.md`. Where this skill and `plantuml-
 3. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
    [GD, DIO, YH]
 4. No renderer, no claim: if it did not render or you could not view it, say so. [GD, A365]
+
+## Tooling notes
+Written up from what the agent had to rediscover in earlier runs (they hold for any repository):
+- Run the scripts as `python3 -I .claude/skills/plantuml-diagrams/scripts/puml-check FILE.puml` (and `puml-new`).
+- Start the file with a bare `@startuml`; a name after it changes the output file name and `puml-check` then
+  finds no SVG.
+- Inside a `note`, `\n` is printed literally; use real line breaks.
+- Class diagrams: declare `class "Display name" as alias`; to lay out rows, keep top-to-bottom and add
+  `-[hidden]->` links rather than switching direction.
+- A `label-on-border` warning usually goes away with a longer edge (`----->`), which moves the label off the
+  container border.
+- On macOS, `sed -i` needs an empty suffix argument (`sed -i '' ...`).
 
 ## 6. README (next to view.puml)
 - The takeaway sentence, the stakeholder, and the detail level chosen and why.
