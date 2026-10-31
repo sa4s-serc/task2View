@@ -1,0 +1,49 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+title UML deployment diagram: Municipal Report Management System (desktop client + MySQL)
+
+node "Workstation\n(operator or citizen PC)" as ws <<device>> {
+  node "Java 23 JVM" as jvm <<executionEnvironment>> {
+    artifact "municipal-report-management\n-1.0-SNAPSHOT (Maven build)" as app
+    artifact "Hibernate ORM 6.6.50 +\nMySQL Connector/J 9.4.0" as libs
+    artifact "persistence.xml\n(unit Municipal_Report_Management_System)" as pxml
+  }
+}
+
+node "Database host\n(127.0.0.1 by default)" as dbhost <<device>> {
+  node "MySQL server\n(port 3306)" as mysql <<executionEnvironment>> {
+    artifact "Schema reports_db\n(user reports_user)" as schema
+  }
+}
+
+app ...> libs : uses (JPA)
+libs ...> pxml : reads config
+jvm --> mysql : JDBC over TCP :3306
+
+note bottom of dbhost
+  Tables are created or updated by the app
+  (hbm2ddl.auto=update); the database
+  and its user are created manually.
+end note
+@enduml

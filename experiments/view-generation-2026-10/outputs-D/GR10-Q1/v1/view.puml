@@ -1,0 +1,23 @@
+@startuml
+title Municipal Report Management System: component view (overview)
+skinparam nodesep 50
+skinparam ranksep 60
+
+[Presentation layer\nSwing GUI screens] as ui
+[Application layer\nServices facade] as facade
+[Application layer\nUse-case controllers] as ctrl
+[Domain layer\nDomain services] as dsvc
+[Domain layer\nDomain entities] as model
+[Persistence layer\nPersistence service] as persist
+[MySQL database reports_db] as db
+
+ui --> facade : request operations
+ui --> ctrl : log in
+ui ..> model : use ReportCategory
+facade --> ctrl : delegate use cases
+ctrl --> dsvc : invoke business logic
+dsvc --> model : create and modify
+dsvc --> persist : save, update, query
+persist ..> model : map (JPA)
+persist --> db : JDBC (MySQL)
+@enduml

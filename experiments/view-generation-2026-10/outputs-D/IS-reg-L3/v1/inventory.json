@@ -1,0 +1,252 @@
+{
+ "model_kind": "UML sequence diagram",
+ "detail_level": "detailed",
+ "elements": [
+  {
+   "alias": "ui",
+   "name": "Registration form (web page or Swing)",
+   "responsibility": "Collects role, names, email, password, identifier; sends the request and shows the error or success",
+   "evidence": [
+    "JavaProject/src/main/resources/static/registration.html:53-70",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:116-139"
+   ]
+  },
+  {
+   "alias": "ctl",
+   "name": "AuthenticationController (+ RestExceptionHandler)",
+   "responsibility": "Receives POST /api/auth/register; maps IllegalArgumentException to HTTP 400 with an error message",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19-22"
+   ]
+  },
+  {
+   "alias": "fac",
+   "name": "LibraryFacade",
+   "responsibility": "Single entry point that delegates registration to UserManager",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-40"
+   ]
+  },
+  {
+   "alias": "um",
+   "name": "UserManager",
+   "responsibility": "Validates role, personal data and identifier format; checks email and identifier uniqueness; creates and saves the user",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:52-58",
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97",
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:173-221"
+   ]
+  },
+  {
+   "alias": "reg",
+   "name": "UserRegistry",
+   "responsibility": "Lookup of users by email, student number or librarian code; saves a new user",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-28",
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:44-67"
+   ]
+  },
+  {
+   "alias": "pm",
+   "name": "PersistenceManager (JPA, database)",
+   "responsibility": "Queries and persists entities in a JPA transaction; returns false on failure",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-42",
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:172-182"
+   ]
+  },
+  {
+   "alias": "fct",
+   "name": "StudentFactory / LibrarianFactory",
+   "responsibility": "Builds a Student (studentNumber) or Librarian (internalIdentifierCode) from the validated data",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java:8-18",
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/LibrarianFactory.java:8-19"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "ui",
+   "to": "ctl",
+   "label": "POST register",
+   "evidence": [
+    "JavaProject/src/main/resources/static/registration.html:57"
+   ]
+  },
+  {
+   "from": "ctl",
+   "to": "fac",
+   "label": "register(...)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:29-30"
+   ]
+  },
+  {
+   "from": "fac",
+   "to": "um",
+   "label": "register(...)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "ctl",
+   "label": "exception on invalid data or duplicate",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:47",
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:77-86"
+   ]
+  },
+  {
+   "from": "ctl",
+   "to": "ui",
+   "label": "400 error message",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:21"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "reg",
+   "label": "check email and identifier",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:77-83"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "pm",
+   "label": "findFirstByFields x2",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:38",
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:45"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "fct",
+   "label": "createUser",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:89-90"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "reg",
+   "label": "registerUser(newUser)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:92"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "pm",
+   "label": "save(newUser)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:27"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "ctl",
+   "label": "exception when not saved",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:93-95"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "fac",
+   "label": "UserDTO",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:96"
+   ]
+  },
+  {
+   "from": "ctl",
+   "to": "ui",
+   "label": "200 UserDTO",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:29"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "which component handles the registration request",
+   "answered_by": [
+    "ctl",
+    "fac"
+   ]
+  },
+  {
+   "detail": "which component validates personal data and role",
+   "answered_by": [
+    "um"
+   ]
+  },
+  {
+   "detail": "which component manages role-specific data (student ID, librarian identifier)",
+   "answered_by": [
+    "um",
+    "fct"
+   ]
+  },
+  {
+   "detail": "which component checks validity and uniqueness of the account",
+   "answered_by": [
+    "um",
+    "reg",
+    "pm"
+   ]
+  },
+  {
+   "detail": "which component persists the new user",
+   "answered_by": [
+    "reg",
+    "pm"
+   ]
+  },
+  {
+   "detail": "collaboration with invalid or already existing data",
+   "answered_by": [
+    "um",
+    "ctl",
+    "ui"
+   ]
+  },
+  {
+   "detail": "main integration points and interactions to test",
+   "answered_by": [
+    "ui",
+    "ctl",
+    "fac",
+    "um",
+    "reg",
+    "pm",
+    "fct"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Entities User/Student/Librarian, UserDTO, JpaUtil",
+   "reason": "data classes and infrastructure, not roles in the control flow"
+  },
+  {
+   "name": "Login / authenticate flow",
+   "reason": "separate use case"
+  },
+  {
+   "name": "Swing form calling LibraryFacade directly",
+   "reason": "alternative entry shown folded into the form lifeline; it bypasses the controller"
+  },
+  {
+   "name": "um self-call: validate role, names, email, password, identifier format",
+   "reason": "drawn as a self-message; the checker does not track self-relations. Evidence: UserManager.java:67-75"
+  }
+ ]
+}

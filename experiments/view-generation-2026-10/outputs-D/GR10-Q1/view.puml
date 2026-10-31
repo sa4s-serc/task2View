@@ -1,0 +1,45 @@
+@startuml
+title Municipal Report Management System: component view (layers and dependencies)
+skinparam nodesep 50
+skinparam ranksep 60
+
+package "Boundary package (presentation)" as boundary {
+  [Swing GUI screens\nshow forms and results] as ui
+}
+package "Control package (application logic)" as control {
+  [Services facade\nGUI entry point] as facade
+  interface "Services API" as api
+  [Use-case controllers\none controller per use case] as ctrl
+}
+package "Entity package (domain and domain services)" as entity {
+  [Report and user services\nbusiness rules, return Maps] as dsvc
+  [Domain entities\nreports, users, statuses, notes] as model
+}
+package "Database package (persistence)" as database {
+  [Persistence service\ngeneric save, update, find] as persist
+}
+[MySQL reports_db\nexternal system] as db
+
+ui ..> api : <<use>> request
+api - facade
+ui ..> ctrl : <<use>> log in
+ui ..> model : <<use>> enum
+facade ..> ctrl : <<use>> delegate
+ctrl ...> dsvc : <<use>> call rules
+ctrl ..> model : <<use>> enum
+dsvc ..> model : <<use>> create, modify
+dsvc ...> persist : <<use>> save, query
+persist ..> model : mapped by config
+persist ..> db : <<use>> JDBC, Hibernate
+
+note right of facade
+  Data crosses layers as
+  Map of String to Object,
+  not as entities
+end note
+note right of dsvc
+  Domain services depend on
+  persistence: the domain is
+  not persistence-ignorant
+end note
+@enduml

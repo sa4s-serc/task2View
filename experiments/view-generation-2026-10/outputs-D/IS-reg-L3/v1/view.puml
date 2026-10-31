@@ -1,0 +1,68 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+
+title UML sequence diagram: user registration (POST /api/auth/register)
+hide footbox
+autonumber "<b>00"
+
+actor       "Registration form\n(web page or Swing)" as ui
+participant "AuthenticationController\n(+ RestExceptionHandler)" as ctl
+participant "LibraryFacade"     as fac
+participant "UserManager"       as um
+participant "UserRegistry"      as reg
+participant "PersistenceManager\n(JPA, database)" as pm
+participant "StudentFactory /\nLibrarianFactory" as fct
+
+ui -> ctl ++ : POST register\n(role, name, surname, email,\npassword, identifier)
+ctl -> fac ++ : register(...)
+fac -> um ++ : register(...)
+um -> um : validate role, names, email,\npassword, identifier format
+alt invalid data
+  um --> ctl : exception
+  ctl --> ui : 400 {"error": message}
+else valid
+  um -> reg ++ : check email and identifier
+  reg -> pm ++ : findFirstByFields(...) x2
+  pm --> reg -- : existing user or null
+  reg --> um -- : lookup results
+  alt already used
+    um --> ctl : exception
+    ctl --> ui : 400 {"error": message}
+  else new
+    um -> fct ++ : createUser(name, surname,\nemail, password, identifier)
+    fct --> um -- : Student or Librarian
+    um -> reg ++ : registerUser(newUser)
+    reg -> pm ++ : save(newUser) : persist
+    pm --> reg -- : true or false
+    reg --> um -- : success flag
+    alt not saved
+      um --> ctl : exception
+      ctl --> ui : error response
+    else saved
+      um --> fac -- : UserDTO
+      fac --> ctl -- : UserDTO
+      ctl --> ui -- : 200 UserDTO
+    end
+  end
+end
+@enduml

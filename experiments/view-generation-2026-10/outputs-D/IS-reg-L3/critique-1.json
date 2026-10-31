@@ -1,0 +1,54 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main components in the registration process, their responsibilities, interactions and dependencies",
+      "answered": "partly",
+      "why": "The chain AuthenticationController -> LibraryFacade -> UserManager -> UserRegistry -> PersistenceManager plus the factories is correct and matches the code. But two lifelines each merge two separate classes ('AuthenticationController (+ RestExceptionHandler)', 'StudentFactory / LibrarianFactory'), so the tester cannot see that the error-to-HTTP mapping is a separate @RestControllerAdvice component or that the factory is chosen by role. The view also gives no responsibilities beyond the message labels."
+    },
+    {
+      "detail": "which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness, and persist the new user",
+      "answered": "partly",
+      "why": "Request handling, validation (msg 04), the uniqueness check (07-10) and persistence (15-18) are all placed correctly. Role-specific handling is not shown, although the code branches on role in three places. UserManager.register:70-75 calls validateStudent, which requires the regex [A-Z]\\d{8}, or validateLibrarian, which only requires alphanumeric characters. UserManager:81-83 calls findStudentByStudentNumber or findLibrarianByCode. UserManager:89 creates a StudentFactory or a LibrarianFactory. The view collapses all three into one generic 'identifier' path with no role branch, so the tester cannot tell that student and librarian registration take different paths that each need a test."
+    },
+    {
+      "detail": "how the components collaborate when invalid or already existing data is provided",
+      "answered": "partly",
+      "why": "The three nested alt fragments cover invalid data, duplicates and save failure. The duplicate check is drawn wrongly, though. The code checks the email first (institutionalEmailExists, UserRegistry:65 -> one findFirstByFields on User) and throws 'Email is already associated with an account.' before any identifier lookup. Only when the email is free does it run the role-specific identifier lookup and throw 'Identifier is already in use.' (UserManager:77-86). The view draws 'findFirstByFields x2' followed by a single [already used] branch, which hides these two separate failure points. The save-failure branch ends in 'error response', but the code shows that RestExceptionHandler does not map RuntimeException, so the response is Spring's default 500 and not the JSON {error}. The view also hides that a duplicate which gets past the code check (a race) fails at the unique DB constraints (User.java:21, Student.java:19, Librarian.java:13) and ends in the same not-saved path."
+    },
+    {
+      "detail": "main integration points and interactions the tests should cover",
+      "answered": "partly",
+      "why": "The seams are visible as messages between lifelines. However, the Swing entry point (Registration.java:134) calls LibraryFacade.register directly, bypassing HTTP and RestExceptionHandler, and the view hides this by merging it into the HTTP actor. That is a separate integration point with a different error contract: a RuntimeException message shown in a dialog. The web client's api() (app.js:22) drops empty fields, so a missing @RequestParam is rejected by Spring before AuthenticationController runs. That is a client-side or framework-level failure that never reaches UserManager and is not shown. The Swing form also checks blank fields itself (Registration.java:126-130)."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines (from the HTTP boundary down to persistence) is the right granularity for an integration tester, because each lifeline boundary is a testable seam. The view does not need more lifelines. It needs more precise branches: a role alt and separate email and identifier duplicate checks. Some lifelines also need to be split. RestExceptionHandler should be its own participant (or its role should be stated in a note) because it is the component that turns exceptions into status codes. The two concrete factories should be shown through the UserFactory interface, with the role decided in an alt.",
+  "unsupported": [
+    "Actor 'Registration form (web page or Swing)' sending 'POST register' to AuthenticationController: only registration.html does this (via app.js api(), form-urlencoded). The Swing Registration form calls LibraryFacade.register directly (Registration.java:134) and never sends an HTTP request.",
+    "Msg 08 'findFirstByFields(...) x2' followed by a single [already used] decision: the code makes the email lookup, throws immediately if the email exists, and only then makes the identifier lookup (UserManager:77-86). The two lookups are not performed together and evaluated as one result.",
+    "Msg 20 'error response' within the same pattern as the 400 branches: RuntimeException('Server error...') at UserManager:94 is not handled by RestExceptionHandler (which handles only IllegalArgumentException/IllegalStateException/SecurityException), so it is not the {error} JSON body.",
+    "Msgs 05, 11 and 19 drawn as reply arrows from UserManager straight to AuthenticationController: in the code the exception propagates back through LibraryFacade and is turned into a response by RestExceptionHandler, not by the controller."
+  ],
+  "missing": [
+    "Role branch (alt [role = Student] / [role = Librarian]): student-number regex [A-Z]\\d{8} vs alphanumeric librarian code (UserManager:173-187); findStudentByStudentNumber vs findLibrarianByCode (UserRegistry:44-60); StudentFactory vs LibrarianFactory (UserManager:89).",
+    "Separate duplicate-email and duplicate-identifier branches, each with its own message, and the order of the checks (email first).",
+    "The Swing path as a separate entry point that calls LibraryFacade directly, with no HTTP status mapping.",
+    "RestExceptionHandler as the component that maps IllegalArgumentException to 400 {error}, and the unmapped save-failure RuntimeException (default 500).",
+    "The unique constraints in the database as a second line of uniqueness checking, which surfaces as save() returning false after a rollback (PersistenceManager:31-38)."
+  ],
+  "uml": [
+    "A software form is modelled as an actor. In UML, an actor is an external role (the user). The form should be a participant (optionally with the standard «boundary» stereotype), with the Student/Librarian user as the actor.",
+    "One lifeline must represent one connectable element. 'AuthenticationController (+ RestExceptionHandler)' and 'StudentFactory / LibrarianFactory' each combine two classes. Use a ':UserFactory' lifeline (the interface) and a separate RestExceptionHandler lifeline.",
+    "Exceptions are drawn as ordinary dashed reply messages that skip LibraryFacade, and UserManager's activation continues after them. Show exception propagation as replies along the call stack, ending the activations, or as a reply labelled with the exception type (e.g. 'IllegalArgumentException') to the caller.",
+    "Msg 16 label 'save(newUser) : persist' uses the ': type' return-value syntax for something that is not a return value. It should be 'save(newUser)', with the return 'true/false' on the reply (already msg 17).",
+    "Msg 08 'x2' is not UML notation for repetition. Use a loop fragment or, better, two separate messages, since the lookups are conditional."
+  ],
+  "fixes": [
+    "Split the duplicate check into two consecutive checks that match UserManager:77-86: email lookup -> alt [email exists] 400 'Email is already associated...'; then the role-specific identifier lookup -> alt [identifier used] 400 'Identifier is already in use.'",
+    "Add an alt on role (Student / Librarian) that shows the role-specific format rule, the role-specific registry lookup and the concrete factory, with the factories behind a single ':UserFactory' lifeline.",
+    "Separate the entry points: draw the user as the actor, the web page as a participant that calls AuthenticationController over HTTP, and the Swing Registration as a second participant that calls LibraryFacade directly (or add a note that names it as an additional integration point without HTTP).",
+    "Add RestExceptionHandler as its own lifeline and correct the error responses: IllegalArgumentException -> 400 {error}; the save-failure RuntimeException is unmapped (default 500). Make exceptions propagate back through LibraryFacade.",
+    "Add a note on the save step that the unique DB constraints and the rollback in PersistenceManager.save make a concurrent duplicate end in the not-saved branch."
+  ]
+}

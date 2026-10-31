@@ -1,0 +1,143 @@
+@startuml
+' ---- house style (print) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 360 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+classDiagram {
+  class { BackgroundColor #F8FAFC }
+}
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+left to right direction
+title UML class diagram: persisted data of the municipal report system (JPA entities and their users)
+hide empty members
+skinparam classAttributeIconSize 0
+
+class "User" as User <<accent>> {
+  userId: Long {PK}
+  name: String
+  lastName: String
+  phoneNumber: String
+  role: String {discriminator}
+}
+class "Citizen" as Citizen
+class "MunicipalOperator" as Operator
+class "Credentials" as Credentials <<muted>> {
+  email: String {unique}
+  password: String
+}
+class "Report" as Report <<accent>> {
+  reportId: Long {PK}
+  title: String {≤ 50}
+  description: String {≤ 1000}
+  category: ReportCategory {enum, 5 values}
+  dateReport: Date
+  imageAttached: String
+  currentStatusName: String
+  citizenEditable: boolean
+}
+class "Location" as Location <<muted>> {
+  city
+  cap
+  street
+  streetNumber
+  municipalArea
+}
+class "StatusUpdate" as StatusUpdate {
+  updateId: Long {PK}
+  updateDate: Date
+  newStatus: String
+}
+class "InternalNote" as Note {
+  noteId: Long {PK}
+  text: String {≤ 1000}
+  dateEntry: Date
+}
+class "Notification" as Notification {
+  notificationId: Long {PK}
+  sentDate: Date
+  message: String {≤ 1000}
+  notifiedStatus: String
+}
+class "ReportService" as ReportService <<alert>> {
+  registerNewReport()
+  updateReportStatus()
+  registerInternalNote()
+  generateStatusChangeNotification()
+}
+class "UserService" as UserService <<alert>> {
+  registerUser()
+}
+class "PersistenceService" as Persistence <<alert>> {
+  save(object)
+  update(object)
+  findById(class, id)
+  findByFields(class, filters)
+}
+
+User <|-- Citizen
+User <|-- Operator
+User *-- "1" Credentials
+Report *-- "1" Location
+Citizen "1" <-- "0..*" Report : citizenReporting
+Operator "0..1" <--- "0..*" Report : operator
+Report "1" *-- "0..*" StatusUpdate
+Report "1" *-- "0..*" Note
+Operator "1" <-- "0..*" StatusUpdate : operator
+Operator "1" <-- "0..*" Note : operator
+Citizen "1" <-- "0..*" Notification : destinatario
+Report "1" <-- "0..*" Notification : report
+
+ReportService ..> Persistence : persists via
+UserService ..> Persistence : persists via
+
+
+note bottom of Report
+  Categories: BROKEN_STREETLIGHT, DAMAGED_ROAD, ABANDONED_WASTE,
+  GENERAL_HAZARD, DAMAGED_STREET_FURNITURE (stored as text).
+  Table reports; StatusUpdate and InternalNote cascade ALL
+  with orphan removal. The ReportStatus state objects
+  (Submitted, Assigned, InProgress, Resolved) are not
+  persisted: they are rebuilt from currentStatusName.
+end note
+note bottom of User
+  Single table users; role = CITIZEN or MUNICIPAL_OPERATOR.
+  Location and Credentials are embedded columns.
+end note
+note bottom of UserService
+  Used by 8 controllers: UserLogin, UserRegistration,
+  ReportCreation, ReportReview, ReportDetails,
+  ReportStatusUpdate, InternalNote, ActivityMonitoring.
+end note
+note bottom of ReportService
+  Used by 7 controllers: ReportCreation, ReportReview,
+  ReportDetails, ReportStatusUpdate, InternalNote,
+  ActivityMonitoring, Notification.
+end note
+legend right
+  Blue: core entities. Grey: embedded or value types (no own table).
+  Red: persistence access classes that depend on the entities.
+  Solid diamond: lifecycle-owned, cascade ALL. Open arrow: foreign key.
+end legend
+@enduml

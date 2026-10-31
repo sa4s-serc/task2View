@@ -1,0 +1,286 @@
+{
+ "model_kind": "UML component diagram",
+ "detail_level": "balanced",
+ "elements": [
+  {
+   "alias": "ui",
+   "name": "Swing GUI screens",
+   "responsibility": "Ten Swing windows (home, login, registration, dashboard, report creation, report lists, status update, internal notes, monitoring); collect input and show results",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75-78",
+    "src/main/java/Boundary/UserDashboardGUI.java:455-575",
+    "src/main/java/Boundary/ReportCreationGUI.java:57-70"
+   ]
+  },
+  {
+   "alias": "facade",
+   "name": "Services facade",
+   "responsibility": "SystemServicesController: single entry point for the GUIs, creates and delegates to the use-case controllers, turns exceptions into boolean results",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:9-31",
+    "src/main/java/Control/SystemServicesController.java:33-50"
+   ]
+  },
+  {
+   "alias": "ctrl",
+   "name": "Use-case controllers",
+   "responsibility": "One controller per use case (registration, login, report creation, review, details, status update, internal note, monitoring, notification)",
+   "evidence": [
+    "src/main/java/Control/ReportStatusUpdateController.java:13-21",
+    "src/main/java/Control/ReportCreationController.java:21-22",
+    "src/main/java/Control/UserLoginController.java:10-12"
+   ]
+  },
+  {
+   "alias": "dsvc",
+   "name": "Report and user services",
+   "responsibility": "ReportService and UserService: business rules for reports, users, status changes, notes, notifications and monitoring; return data as maps",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:14-22",
+    "src/main/java/Entity/UserService.java:12",
+    "src/main/java/Entity/ReportService.java:113",
+    "src/main/java/Entity/ReportService.java:298"
+   ]
+  },
+  {
+   "alias": "model",
+   "name": "Domain entities",
+   "responsibility": "User (Citizen, MunicipalOperator), Report with state classes, Location, StatusUpdate, InternalNote, Notification, Credentials, ReportCategory; JPA-annotated",
+   "evidence": [
+    "src/main/java/Entity/User.java:20-28",
+    "src/main/java/Entity/Report.java:29-31",
+    "src/main/java/Entity/ReportStatus.java:6",
+    "src/main/java/Entity/Citizen.java:11"
+   ]
+  },
+  {
+   "alias": "persist",
+   "name": "Persistence service",
+   "responsibility": "PersistenceService (generic save, update, find-by-attribute) over JpaUtil, which owns the JPA EntityManagerFactory (Hibernate)",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13-30",
+    "src/main/java/Database/JpaUtil.java:11-18",
+    "src/main/resources/META-INF/persistence.xml:12-20"
+   ]
+  },
+  {
+   "alias": "db",
+   "name": "MySQL reports_db",
+   "responsibility": "External relational store reached over JDBC through Hibernate",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:23-35",
+    "pom.xml:43"
+   ]
+  },
+  {
+   "alias": "boundary",
+   "name": "Boundary package (presentation)",
+   "responsibility": "Java package holding the Swing GUI screens",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:1"
+   ]
+  },
+  {
+   "alias": "control",
+   "name": "Control package (application logic)",
+   "responsibility": "Java package holding the facade and use-case controllers",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:1"
+   ]
+  },
+  {
+   "alias": "entity",
+   "name": "Entity package (domain and domain services)",
+   "responsibility": "Java package holding entities and also ReportService/UserService",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:1",
+    "src/main/java/Entity/Report.java:1"
+   ]
+  },
+  {
+   "alias": "database",
+   "name": "Database package (persistence)",
+   "responsibility": "Java package holding PersistenceService and JpaUtil",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:1"
+   ]
+  },
+  {
+   "alias": "api",
+   "name": "Services API",
+   "responsibility": "Public operations of SystemServicesController (register, create, review, details, status update, note, monitoring); data passed as Map<String,Object>",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:35",
+    "src/main/java/Control/SystemServicesController.java:59",
+    "src/main/java/Control/SystemServicesController.java:85"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "ui",
+   "to": "api",
+   "label": "request",
+   "evidence": [
+    "src/main/java/Boundary/ReportCreationGUI.java:70",
+    "src/main/java/Boundary/ReceivedReportsGUI.java:3"
+   ]
+  },
+  {
+   "from": "ui",
+   "to": "ctrl",
+   "label": "log in",
+   "evidence": [
+    "src/main/java/Boundary/UserLoginGUI.java:111"
+   ]
+  },
+  {
+   "from": "ui",
+   "to": "model",
+   "label": "enum",
+   "evidence": [
+    "src/main/java/Boundary/ReceivedReportsGUI.java:4",
+    "src/main/java/Boundary/ReportCreationGUI.java:4"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "ctrl",
+   "label": "delegate",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:23-31"
+   ]
+  },
+  {
+   "from": "ctrl",
+   "to": "dsvc",
+   "label": "call rules",
+   "evidence": [
+    "src/main/java/Control/ReportCreationController.java:21-22",
+    "src/main/java/Control/UserLoginController.java:3"
+   ]
+  },
+  {
+   "from": "dsvc",
+   "to": "model",
+   "label": "create and modify",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:82",
+    "src/main/java/Entity/UserService.java:205"
+   ]
+  },
+  {
+   "from": "dsvc",
+   "to": "persist",
+   "label": "save, query",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:3",
+    "src/main/java/Entity/ReportService.java:22",
+    "src/main/java/Entity/ReportService.java:113"
+   ]
+  },
+  {
+   "from": "persist",
+   "to": "model",
+   "label": "mapped by config",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:12-18"
+   ]
+  },
+  {
+   "from": "persist",
+   "to": "db",
+   "label": "JDBC, Hibernate",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:23-29"
+   ]
+  },
+  {
+   "from": "ctrl",
+   "to": "model",
+   "label": "enum",
+   "evidence": [
+    "src/main/java/Control/ReportCreationController.java:3"
+   ]
+  },
+  {
+   "from": "api",
+   "to": "facade",
+   "label": "provided by",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:9"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main architectural components and their responsibilities",
+   "answered_by": [
+    "ui",
+    "facade",
+    "ctrl",
+    "dsvc",
+    "model",
+    "persist",
+    "db"
+   ]
+  },
+  {
+   "detail": "decomposition into layers or subsystems",
+   "answered_by": [
+    "ui",
+    "facade",
+    "ctrl",
+    "dsvc",
+    "model",
+    "persist",
+    "boundary",
+    "control",
+    "entity",
+    "database"
+   ]
+  },
+  {
+   "detail": "main dependencies among them",
+   "answered_by": [
+    "ui",
+    "facade",
+    "ctrl",
+    "dsvc",
+    "model",
+    "persist",
+    "db"
+   ]
+  },
+  {
+   "detail": "separation of UI, application logic, domain entities and persistence, and how they collaborate",
+   "answered_by": [
+    "ui",
+    "ctrl",
+    "model",
+    "persist",
+    "api",
+    "facade",
+    "dsvc"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Individual GUI classes, controllers and entity classes",
+   "reason": "overview level; merged into one component per role"
+  },
+  {
+   "name": "Swing, Hibernate, forms_rt libraries",
+   "reason": "shown as technology labels, not boxes"
+  },
+  {
+   "name": "Test classes (black/white box)",
+   "reason": "not part of the runtime structure"
+  },
+  {
+   "name": "Persistence API interface",
+   "reason": "PersistenceService is a concrete class with no interface in the code; drawing one would be invented and would exceed the budget"
+  }
+ ]
+}

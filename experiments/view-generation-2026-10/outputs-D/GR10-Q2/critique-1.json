@@ -1,0 +1,41 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "required runtime environments and software artifacts",
+     "answered": "partly",
+     "why": "The view shows the Java 23 JVM, the Maven artifact, Hibernate 6.6.50 + Connector/J 9.4.0, persistence.xml and MySQL. It leaves out com.intellij:forms_rt 7.0.3, which is a compile/runtime dependency in pom.xml and which the Swing GUIs need on the classpath. It also does not say how the application is launched. pom.xml has jar packaging, but no shade/assembly plugin and no Main-Class, so the built jar cannot run alone: the dependency jars have to be on the classpath and the main class is Boundary.HomePageGUI. A DevOps engineer cannot deploy from the diagram without that."},
+    {"detail": "where the application runs and where its data is stored",
+     "answered": "partly",
+     "why": "The client on a workstation and the data in schema reports_db are both shown. The diagram draws the database on a separate <<device>>, but the code configures jdbc:mysql://127.0.0.1:3306/reports_db, and the README creates 'reports_user'@'localhost'. So the only configuration the code supports puts MySQL on the same machine as the client. A separate host would need persistence.xml edited, the jar rebuilt and the MySQL user re-granted. The diagram hides that and shows a topology the code does not support as-is."},
+    {"detail": "how the main runtime elements communicate",
+     "answered": "yes",
+     "why": "A single JDBC/TCP 3306 path from the JVM to MySQL is drawn, and there is no other runtime communication in the code (one process, no server tier). It also needs to state that with the default configuration this path is a loopback connection to localhost."},
+    {"detail": "technologies and runtime dependencies between the application and the database",
+     "answered": "partly",
+     "why": "JPA/Hibernate, Connector/J, the persistence unit and hbm2ddl.auto=update are shown. Missing: the credentials (reports_user/reports_password) are hard-coded in persistence.xml, which is packaged inside the jar (src/main/resources/META-INF), so changing the DB host or password means a rebuild. The diagram draws persistence.xml as a separate deployable artifact, which hides this. The required GRANT (ALL on reports_db.* to reports_user@localhost) is only implied by the note, and the MySQL version requirement is not stated (the code does not give one, and the view should say so)."}
+  ],
+  "level": "right",
+  "level_why": "The view keeps to nodes, execution environments, artifacts and one communication path, which fits a DevOps deployment perspective. Merging Hibernate and Connector/J into one artifact is fine. The problems are with accuracy and a few missing deployment facts, not with granularity. The only element to change is persistence.xml: nest it in the application artifact or mark it as packaged inside it, instead of drawing it as a separate peer artifact.",
+  "unsupported": [
+    "The 'Database host' is drawn as a separate <<device>> from the Workstation. The code has jdbc:mysql://127.0.0.1:3306 (persistence.xml) and the README grants reports_user@'localhost' only, so the database runs on the same machine as the client. A remote DB host is not supported without changing the config and the grants.",
+    "persistence.xml is drawn as an independently deployed artifact next to the app. In the code it is src/main/resources/META-INF/persistence.xml, which is bundled inside the application jar, not deployed separately."
+  ],
+  "missing": [
+    "The forms_rt 7.0.3 runtime library (pom.xml), which the Swing GUI forms need at runtime.",
+    "How the app is started: a non-executable jar plus its dependency classpath, with entry point Boundary.HomePageGUI (UserLoginGUI and UserRegistrationGUI also have a main).",
+    "DB credentials and grants: user reports_user with a hard-coded password in persistence.xml, the database and user created manually with GRANT ALL on reports_db.* to 'reports_user'@'localhost'.",
+    "That with the default configuration the JDBC connection is local (loopback), and that changing the host or password means editing persistence.xml and rebuilding."
+  ],
+  "uml": [
+    "The JDBC link is drawn as a directed solid arrow (-->). A UML communication path is an undirected association between nodes; draw it without an arrowhead (--).",
+    "Dependencies 'uses (JPA)' and 'reads config' use free-text labels. Use standard dependency keywords (e.g. «use») if a keyword is wanted, or plain dependencies.",
+    "persistence.xml is shown as a peer artifact. Show it nested in, or with a «manifest»/containment relation to, the application artifact, so the packaging is correct.",
+    "The note attached to dbhost talks about schema creation by the app. Attach it to the schema artifact or the communication path so its subject is clear."
+  ],
+  "fixes": [
+    "Put MySQL on the workstation device (the default 127.0.0.1 and reports_user@'localhost' setup), or show both and say clearly that a separate DB host needs persistence.xml edited, the jar rebuilt and the MySQL grant changed.",
+    "Show persistence.xml (with its URL, user and hbm2ddl=update) as packaged inside the application jar, not as a separate deployed artifact.",
+    "Add forms_rt 7.0.3 to the runtime library artifact(s), and add a note on launching: a plain jar with no Main-Class, so run with the dependency classpath and main class Boundary.HomePageGUI.",
+    "Add the manual DB preparation to the note: CREATE DATABASE reports_db, CREATE USER reports_user@localhost, GRANT ALL on reports_db.*, and the hard-coded default password.",
+    "Make the JDBC communication path undirected and replace the free-text dependency labels with standard «use» dependencies."
+  ]
+}

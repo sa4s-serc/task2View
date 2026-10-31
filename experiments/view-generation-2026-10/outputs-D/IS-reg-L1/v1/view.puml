@@ -1,0 +1,64 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+
+title UML sequence diagram: user registration (student or librarian)
+hide footbox
+autonumber "<b>00"
+
+actor       "Integration tester\n(or end user)"                 as tester
+participant "Registration form\n(registration.html + app.js)"   as form
+participant "AuthenticationController\n(REST /api/auth)"        as api
+participant "LibraryFacade"                                     as facade
+participant "UserManager"                                       as mgr
+participant "UserRegistry\n(PersistenceManager)"                as reg
+participant "Database\n(JPA)"                                   as db
+
+tester -> form ++ : fill and submit form
+form -> api ++ : POST /api/auth/register\n(role, name, surname, email,\npassword, identifier)
+api -> facade ++ : register(...)
+facade -> mgr ++ : register(...)
+mgr -> mgr : validate role, names, email,\npassword, identifier format
+mgr -> reg ++ : check email and identifier\nnot already used
+reg -> db : SELECT by email,\nidentifier
+reg --> mgr -- : not found
+alt all checks pass
+  mgr -> mgr : create Student or Librarian\n(StudentFactory / LibrarianFactory)
+  mgr -> reg ++ : registerUser(newUser)
+  reg -> db : INSERT (persist, commit)
+  reg --> mgr -- : true
+  mgr --> facade : UserDTO
+  facade --> api : UserDTO
+  api --> form : 200 UserDTO
+  form --> tester : "Registration complete",\nredirect to index.html
+else invalid / duplicate
+  mgr --> facade : IllegalArgumentException
+  facade --> api : (propagated)
+  api --> form : 400 {"error": message}\n(via RestExceptionHandler)
+  form --> tester -- : error message shown
+end
+note over facade
+  Swing client (Registration.java) calls
+  LibraryFacade directly, skipping REST.
+end note
+@enduml

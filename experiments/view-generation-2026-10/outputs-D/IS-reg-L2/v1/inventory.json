@@ -1,0 +1,185 @@
+{
+  "model_kind": "UML sequence diagram",
+  "detail_level": "balanced",
+  "takeaway": "Registration is one synchronous call chain page -> AuthenticationController -> LibraryFacade -> UserManager -> UserRegistry -> MySQL, where UserManager validates, checks uniqueness, builds the user and persists it, and failures come back as exceptions mapped to HTTP 400.",
+  "elements": [
+    {
+      "alias": "page",
+      "name": "Registration page (registration.html)",
+      "responsibility": "Collects the form fields and POSTs them; also the Swing Registration form is an alternative entry (see note)",
+      "evidence": [
+        "JavaProject/src/main/resources/static/registration.html:53-67",
+        "JavaProject/src/main/resources/static/app.js:41",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:116-141"
+      ]
+    },
+    {
+      "alias": "ctl",
+      "name": "AuthenticationController (Spring REST)",
+      "responsibility": "Exposes POST /api/auth/register and delegates to the facade",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31"
+      ]
+    },
+    {
+      "alias": "facade",
+      "name": "LibraryFacade",
+      "responsibility": "Single entry point of the controller layer; delegates register to UserManager",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-40"
+      ]
+    },
+    {
+      "alias": "mgr",
+      "name": "UserManager",
+      "responsibility": "Validates input, checks email/identifier uniqueness, creates Student or Librarian through factories, persists, returns UserDTO",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:173-221"
+      ]
+    },
+    {
+      "alias": "reg",
+      "name": "UserRegistry (+ PersistenceManager, JPA)",
+      "responsibility": "Lookups by email/studentNumber/code and persist of the new user",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-28",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:44-46",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:58-67",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-43",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:172-182"
+      ]
+    },
+    {
+      "alias": "db",
+      "name": "MySQL reservationsdb",
+      "responsibility": "Stores users (JOINED inheritance)",
+      "evidence": [
+        "JavaProject/src/main/resources/META-INF/persistence.xml:21",
+        "JavaProject/src/main/java/it/unina/reservations/entity/User.java:11-12"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "page",
+      "to": "ctl",
+      "label": "POST register",
+      "evidence": [
+        "JavaProject/src/main/resources/static/registration.html:57",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-28"
+      ]
+    },
+    {
+      "from": "ctl",
+      "to": "facade",
+      "label": "register",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:29-30"
+      ]
+    },
+    {
+      "from": "facade",
+      "to": "mgr",
+      "label": "register",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39"
+      ]
+    },
+    {
+      "from": "mgr",
+      "to": "reg",
+      "label": "check / persist",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:77-83",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:92"
+      ]
+    },
+    {
+      "from": "reg",
+      "to": "db",
+      "label": "SELECT / INSERT",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:25-27",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:172-175"
+      ]
+    },
+    {
+      "from": "mgr",
+      "to": "facade",
+      "label": "UserDTO or exception",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:78-96"
+      ]
+    },
+    {
+      "from": "facade",
+      "to": "ctl",
+      "label": "UserDTO or exception",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39"
+      ]
+    },
+    {
+      "from": "ctl",
+      "to": "page",
+      "label": "200 UserDTO / 400 error",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19-22",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:23"
+      ]
+    }
+  ],
+  "concern_details": [
+    {
+      "detail": "main components involved in registration and their responsibilities",
+      "answered_by": [
+        "page",
+        "ctl",
+        "facade",
+        "mgr",
+        "reg",
+        "db"
+      ]
+    },
+    {
+      "detail": "how they interact when a new user creates an account",
+      "answered_by": [
+        "page",
+        "ctl",
+        "facade",
+        "mgr",
+        "reg",
+        "db"
+      ]
+    },
+    {
+      "detail": "main integration points to exercise in the tests",
+      "answered_by": [
+        "ctl",
+        "facade",
+        "mgr",
+        "reg",
+        "db"
+      ]
+    }
+  ],
+  "omitted": [
+    {
+      "name": "UserFactory, StudentFactory, LibrarianFactory",
+      "reason": "collapsed into a self-message of UserManager"
+    },
+    {
+      "name": "UserDTO, entities, JpaUtil",
+      "reason": "data/helper classes"
+    },
+    {
+      "name": "Swing Registration form",
+      "reason": "alternative entry shown as a note"
+    },
+    {
+      "name": "Login/authenticate",
+      "reason": "outside registration"
+    }
+  ]
+}

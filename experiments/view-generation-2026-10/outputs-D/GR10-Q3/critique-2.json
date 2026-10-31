@@ -1,0 +1,38 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "main data entities stored and their relationships",
+     "answered": "yes",
+     "why": "All five entity tables (users with the Citizen/MunicipalOperator single-table hierarchy, reports, status_updates, internal_notes, notifications) and the two embeddables are drawn. Multiplicities, FK join columns and NOT NULL on associations match the JPA mappings (Report.java:87-113, StatusUpdate.java:45-54, InternalNote.java:45-54, Notification.java:48-54). The composition/cascade difference between notes and updates on one side and Notification on the other is shown and explained."},
+    {"detail": "information persisted throughout the lifecycle of a report",
+     "answered": "partly",
+     "why": "The stored status values, citizenEditable, the operator assignment at a status update, the StatusUpdate history row and the assigned/resolved notification rule are all stated and match Report.java:32-36, 188-215, 405-436, ReportService.java:289 and Notification.java:151-158. Missing: attributes carry Java names, not the column names a database engineer changes (report_date, attached_image, current_status, created_date, phone_number, street_number, municipal_area), and per-column nullability is missing (everything is NOT NULL except report_date, attached_image and reports.operator_id). Also missing: a status change requires an operator already assigned (Report.updateStatus throws otherwise)."},
+    {"detail": "how users, reports, locations, categories, states, state changes, internal notes and notifications are related",
+     "answered": "yes",
+     "why": "Each listed concept is shown with its link. Location is an embedded value of Report. Category is an enumeration stored by name. State is a String column with the values in a note, and the non-persisted state classes are named. State changes are StatusUpdate rows owned by Report and authored by an operator. Notes are owned by a report and written by an operator. Notifications point to a citizen and a report."},
+    {"detail": "which parts of the application depend on the persisted information",
+     "answered": "yes",
+     "why": "ReportService and UserService are shown with «use» to the entities and «call» to PersistenceService. The notes list the controllers that hold them (checked: 7 for ReportService and 8 for UserService, both correct). They also warn that string attribute paths in findByFields queries break when a mapped attribute is renamed (ReportService.java:140-248, UserService.java:123,167). That warning is the most useful dependency fact for this stakeholder."}
+  ],
+  "level": "right",
+  "level_why": "The view has 13 elements, all in the persistence area. Controllers and GUI appear by name only, and the state classes, JpaUtil and accessors are left out on purpose, which fits a database engineer. The service operation compartments could go, because the «use» edges and notes already carry the dependency. Some physical detail is still too thin for this stakeholder: column names and nullability (see missing).",
+  "unsupported": [],
+  "missing": [
+    "Physical column names where they differ from the attribute names: Report.dateReport->report_date, imageAttached->attached_image, currentStatusName->current_status; InternalNote.dateEntry->created_date; User.phoneNumber->phone_number, userId->user_id; Location.streetNumber->street_number, municipalArea->municipal_area. Primary key columns too: report_id, update_id, note_id, notification_id.",
+    "Column nullability and lengths beyond title, description, text and message: most columns are nullable=false with lengths (for example category 50, current_status 30, email 100 unique, cap 5). report_date and attached_image are nullable.",
+    "Lifecycle precondition: Report.updateStatus() refuses to change state unless an operator is set (Report.java:200-206), so reports.operator_id is always set once the status leaves submitted.",
+    "Temporal precision: report_date is DATE, while update_date, created_date and sent_date are TIMESTAMP.",
+    "PersistenceService.findByAttribute (PersistenceService.java:78) is not listed. It is minor, but the operation list claims to show the access API."
+  ],
+  "uml": [
+    "Association names are FK column names with 'NOT NULL' (for example 'citizen_id NOT NULL'), which is ER/physical notation on UML associations. Use role names on the association ends (citizenReporting, operator, destinatario, report) and give column/nullability as a constraint such as {column=citizen_id, not null} or in a note.",
+    "Report shows category twice: once as the attribute 'category: ReportCategory' and again as an association to ReportCategory with the same name. Keep one of them; for an enumeration, the typed attribute is enough.",
+    "Constraints such as {PK}, {discriminator} and {max 50} are not UML-standard. They are tolerable as informal property strings, but {id} is the UML 2.5 property modifier for identifiers, so prefer {id} over {PK}.",
+    "Notification -> Report and Notification -> Citizen are drawn as plain navigable associations, which is right. No issues with the generalizations, compositions, «dataType», «use» or «call»."
+  ],
+  "fixes": [
+    "Show the physical column name for each attribute whose name differs (for example 'dateReport: Date {column=report_date}'), or add a column-mapping note, and mark nullable columns.",
+    "Replace the FK-column association names with role names on the association ends, and move 'citizen_id NOT NULL' and similar into constraints.",
+    "Remove the duplicate Report -> ReportCategory association, or the category attribute.",
+    "Add to the Report lifecycle note: a status update requires an assigned operator, so operator_id is null only while the report is submitted.",
+    "Drop the operation compartments of ReportService and UserService, or complete PersistenceService with findByAttribute, so the dependency classes stay minimal."
+  ]}

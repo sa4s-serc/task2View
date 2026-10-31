@@ -1,0 +1,32 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main types of users that interact with the system", "answered": "yes",
+     "why": "Citizen and Municipal operator match the two persisted roles (Entity/Citizen.java, Entity/MunicipalOperator.java, role choice in UserRegistrationGUI.java:183), and Visitor stands for the unauthenticated home-page user. Weakness: Visitor, Citizen and Operator look like three unrelated people. In fact a Citizen or Operator is a Visitor who has registered and logged in. Only a note says this, and the diagram does not show it."},
+    {"detail": "goals each of them can achieve through it", "answered": "partly",
+     "why": "Most goals are there, but the citizen's goal of following what happened to their report is under-shown. The citizen can view notifications sent for each report ('View Notifications' in SubmittedReportsGUI.java:239-260, built by NotificationController.sendNotificationToCitizen), plus history and the attached image. Notification shows up only as a side effect inside the operator's 'Update report status and notify citizen'. The view also never shows that citizens and operators must log in, because only Visitor is linked to 'Register and log in'."},
+    {"detail": "how the functionalities are related to each other", "answered": "partly",
+     "why": "Relations are drawn, but two of them have the wrong kind. Details are shown only when the user picks a report and asks for them (SubmittedReportsGUI.java:156-176, ReceivedReportsGUI.java:246-265 'Select a report ... before viewing details'). Reviewing a list does not always include viewing details, so this is an optional extension, not an «include». The view also does not show that 'Update report status' has its own dashboard entry point, which opens ReceivedReportsGUI in status-update mode (UserDashboardGUI updateStatusButton, new ReceivedReportsGUI(userSessionData, true)). The view is also silent on how notification relates to status update: the citizen is notified when the new status is notifiable (NotificationController.verifyNotifiableStatus)."}
+  ],
+  "level": "right",
+  "level_why": "Eight user-goal use cases in domain terms with no technology names suit an analyst who wants an overview of what the system offers. 'Update report status and notify citizen' merges two concerns into one name. It would read better as the goal 'Update report status', with the notification shown as a separate system-side result or as a citizen goal 'View notifications'. Nothing needs dropping.",
+  "unsupported": [
+    "«include» from 'Review my submitted reports' and 'Review received reports' to 'View report details and status history': in the code, details are shown only when the user selects a report and asks for them, so the behaviour is optional (an «extend», or a separate use case the actor starts), not an «include».",
+    "'Visitor' shown as a separate kind of user with no tie to Citizen or Operator: the code has only the User entity with Citizen and MunicipalOperator subtypes. The unauthenticated user is the same person before login, which the diagram does not express."
+  ],
+  "missing": [
+    "Citizen goal 'View notifications on my reports' (SubmittedReportsGUI.java:239-260, 743-792, fed by NotificationController). This could be an extension of viewing report details for the citizen.",
+    "A link showing that Citizen and Municipal operator also log in. For example, actor generalisation Citizen --|> Visitor and Municipal operator --|> Visitor (or a general 'User' actor), so the login use case applies to both roles.",
+    "The separate dashboard entry for 'Update report status' (UserDashboardGUI updateStatusButton opens ReceivedReportsGUI in status-update mode). This makes it a top-level operator goal, not only an extension of reviewing."
+  ],
+  "uml": [
+    "«include» is used for behaviour that is optional and starts on request (viewing details). Use «extend» toward the base use case, or keep it as a separate use case.",
+    "The «extend» relations have no extension points or conditions. That is acceptable at this level, but adding 'report selected' as the condition would make the optional nature clear.",
+    "The relationship between actors is given only in a note attached to Visitor. UML expresses this with actor generalisation (hollow-triangle arrow), not a comment.",
+    "The use case name 'Update report status and notify citizen' joins two behaviours with 'and'. A use case should name a single goal."
+  ],
+  "fixes": [
+    "Change the two «include» relations to optional «extend» relations: 'View report details and status history' extends each review use case, with the condition that a report is selected.",
+    "Add the citizen goal 'View notifications' (for example extending 'View report details' or linked to Citizen), and rename the operator use case to 'Update report status', stating that a notifiable status sends a notification to the citizen.",
+    "Relate the actors with generalisation (Citizen and Municipal operator specialise Visitor or a general User), so login visibly applies to both roles. Then remove the explanatory note.",
+    "Show that 'Update report status' can also be started from the dashboard. Keep the direct Operator association, and drop or justify the «extend» to 'Review received reports'."
+  ]}

@@ -1,0 +1,37 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main system components involved in seat booking",
+     "answered": "yes",
+     "why": "The booking path is all there and matches the code: web client to REST controllers (ReservationController POST /api/reservations/create), the Swing client (ReservationSummary.java:100), LibraryFacade, ReservationManager, StudyRoomManager, AssignmentStrategy, the registries, NotificationManager, the email adapter and the database. ReservationManager is correctly marked as the place where the booking rules live. One component a developer would touch is missing: RestExceptionHandler, which turns every IllegalArgumentException or IllegalStateException that makeReservation throws into HTTP 400."},
+    {"detail": "how they interact",
+     "answered": "partly",
+     "why": "The edges show who calls whom, but not the order or the interfaces the calls go through. The order is only in a note, and the note is attached to LibraryFacade although it describes ReservationManager.makeReservation (LibraryFacade.java:119 just delegates). Notification is drawn as a direct ReservationManager to NotificationManager call. In the code, ReservationManager attaches NotificationManager as an Observer to the Reservation, and Reservation.notifyObservers() calls NotificationManager.update() (Reservation extends Subject; Reservation.java:181). Neither the Observer nor the NotificationService interface is shown. The error path is also missing: validation exceptions go back to the client as 400 responses through RestExceptionHandler. The REST endpoint (POST /api/reservations/create) is not named; the edge only says 'HTTP /api'."}
+  ],
+  "level": "right",
+  "level_why": "About 12 components fit a developer who is about to change one feature. Two changes would help. Drop the Librarian actor and its 'creates rooms' edge: creating rooms is a different use case and does not take part in the booking control flow. Split the merged 'AssignmentStrategy (FirstAvailableAssignment)' box into the interface and its implementation, because the strategy is the extension point a developer changing booking is most likely to use (ReservationManager.setAssignmentStrategy). What is missing is interaction detail (interfaces, the observer path, the error path), not more boxes.",
+  "unsupported": [
+    "ReservationManager --> NotificationManager 'attach, notify' drawn as a direct call: the code only calls reservation.attach(NotificationManager.getInstance()) and reservation.notifyObservers() (ReservationManager.notifyReservation). NotificationManager.update() is called back by Reservation (Subject/Observer), so the notify dependency runs Reservation -> Observer, not ReservationManager -> NotificationManager.",
+    "The note attached to LibraryFacade describes the makeReservation logic. LibraryFacade.makeReservation only delegates; the validation, the synchronized block and seatId 0 handling are all in ReservationManager.makeReservation (ReservationManager.java:65-102).",
+    "Librarian --> Web client 'creates rooms' is backed by create-room.html, but it is not part of the seat-booking flow the view's title claims to show."
+  ],
+  "missing": [
+    "RestExceptionHandler (@RestControllerAdvice): maps IllegalArgumentException and IllegalStateException from makeReservation to HTTP 400 and SecurityException to 401. Any new validation rule depends on it.",
+    "The NotificationService interface (in the controller package) that NotificationServiceAdapter implements, and NotificationConfiguration, which plugs the adapter in at Spring startup (NotificationManager.setNotificationService). Without the configuration, notifications are discarded.",
+    "The Observer/Subject interfaces: Reservation (Subject) notifies NotificationManager (Observer). Reservation.java:88 also calls notifyObservers on every state change, which matters if a developer changes reservation states.",
+    "The AssignmentStrategy interface as a separate, required interface of ReservationManager, with FirstAvailableAssignment as the component that provides it (default set in ReservationManager.getInstance()).",
+    "The concrete endpoint POST /api/reservations/create on ReservationController, plus the StudyRoomController endpoints that serve the room, slot and seat wizard steps; the edges only say 'HTTP /api'."
+  ],
+  "uml": [
+    "Every relation is a solid arrow (-->), which reads as a directed association. Call and use relations between components should be dashed dependencies (..>), optionally with «use», or assembly connectors between required and provided interfaces.",
+    "There are no interfaces (lollipop or socket) although the code has real ones that the concern turns on: AssignmentStrategy, NotificationService, Observer. A UML component diagram should show them as provided and required interfaces.",
+    "'AssignmentStrategy (FirstAvailableAssignment)' merges an interface and its realizing class into one component. Show the interface separately, with a realization or provided-interface link from FirstAvailableAssignment.",
+    "The note on LibraryFacade documents behaviour of a different element (ReservationManager). Anchor it to ReservationManager.",
+    "The MySQL database is a plain component. It is an external store, so use a «database»-shaped node or a component outside the system boundary; there is no system boundary either. Optional: mark Registries and Domain entities, which are classes, with no stereotype or «entity» consistently."
+  ],
+  "fixes": [
+    "Model the real interaction mechanisms as UML interfaces: AssignmentStrategy (required by ReservationManager, provided by FirstAvailableAssignment), Observer (provided by NotificationManager, notified by the Reservation entity rather than directly by ReservationManager) and NotificationService (required by NotificationManager, provided by NotificationServiceAdapter, wired by NotificationConfiguration).",
+    "Add RestExceptionHandler beside the REST controllers with a dependency for the error path (validation exceptions -> HTTP 400), and name the booking endpoint POST /api/reservations/create on the web -> REST edge.",
+    "Move the makeReservation note to ReservationManager, and number the main edges (1 validate via registries, 2 uniqueness and availability via entities, 3 pick seat, 4 save, 5 notify) so the order is visible in the diagram.",
+    "Replace the solid --> arrows with dashed dependencies (..>) or assembly connectors, and draw a system boundary with the database outside it.",
+    "Drop the Librarian actor and its 'creates rooms' edge, which are not part of the booking control flow."
+  ]}

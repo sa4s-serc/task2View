@@ -1,0 +1,247 @@
+{
+ "model_kind": "UML use case diagram",
+ "detail_level": "overview",
+ "takeaway": "Visitors register and log in; citizens report problems and follow their reports; municipal operators review received reports, update status, annotate and monitor activity.",
+ "elements": [
+  {
+   "alias": "visitor",
+   "name": "Visitor",
+   "responsibility": "Unauthenticated person on the home page who can register or log in",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:130",
+    "src/main/java/Boundary/HomePageGUI.java:155"
+   ]
+  },
+  {
+   "alias": "citizen",
+   "name": "Citizen",
+   "responsibility": "Role that files and follows own reports",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:316-333",
+    "src/main/java/Control/ReportCreationController.java:155"
+   ]
+  },
+  {
+   "alias": "operator",
+   "name": "Municipal operator",
+   "responsibility": "Role that handles received reports and monitors activity",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:335-352",
+    "src/main/java/Control/ActivityMonitoringController.java:61-67"
+   ]
+  },
+  {
+   "alias": "sys",
+   "name": "Municipal problem reporting application",
+   "responsibility": "System boundary",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:22"
+   ]
+  },
+  {
+   "alias": "ucAccess",
+   "name": "Register and log in",
+   "responsibility": "Create account with role, authenticate with credentials",
+   "evidence": [
+    "src/main/java/Control/UserRegistrationController.java:23-37",
+    "src/main/java/Control/UserLoginController.java:24-35",
+    "src/main/java/Boundary/UserRegistrationGUI.java:183"
+   ]
+  },
+  {
+   "alias": "ucCreate",
+   "name": "Report a problem",
+   "responsibility": "Citizen files a report (category, location)",
+   "evidence": [
+    "src/main/java/Control/ReportCreationController.java:146-168",
+    "src/main/java/Entity/ReportCategory.java:8-11"
+   ]
+  },
+  {
+   "alias": "ucSubmitted",
+   "name": "Review my submitted reports",
+   "responsibility": "Citizen lists own reports",
+   "evidence": [
+    "src/main/java/Control/ReportReviewController.java:28-41",
+    "src/main/java/Boundary/SubmittedReportsGUI.java:164"
+   ]
+  },
+  {
+   "alias": "ucReceived",
+   "name": "Review received reports",
+   "responsibility": "Operator lists/filters all received reports",
+   "evidence": [
+    "src/main/java/Control/ReportReviewController.java:44-61",
+    "src/main/java/Boundary/ReceivedReportsGUI.java:254"
+   ]
+  },
+  {
+   "alias": "ucDetails",
+   "name": "View report details and status history",
+   "responsibility": "Details and history, only owner citizen or operator",
+   "evidence": [
+    "src/main/java/Control/ReportDetailsController.java:23-90"
+   ]
+  },
+  {
+   "alias": "ucStatus",
+   "name": "Update report status and notify citizen",
+   "responsibility": "Operator changes status (not if resolved); notifiable statuses notify citizen",
+   "evidence": [
+    "src/main/java/Control/ReportStatusUpdateController.java:27-75",
+    "src/main/java/Control/NotificationController.java:22-60",
+    "src/main/java/Boundary/ReceivedReportsGUI.java:1122"
+   ]
+  },
+  {
+   "alias": "ucNote",
+   "name": "Add internal note",
+   "responsibility": "Operator adds internal note to a report",
+   "evidence": [
+    "src/main/java/Control/InternalNoteController.java:25-60",
+    "src/main/java/Boundary/ReceivedReportsGUI.java:790"
+   ]
+  },
+  {
+   "alias": "ucMonitor",
+   "name": "Monitor activity trends",
+   "responsibility": "Operator views general, in-progress or area summary monitoring",
+   "evidence": [
+    "src/main/java/Control/ActivityMonitoringController.java:28-59",
+    "src/main/java/Boundary/UserDashboardGUI.java:545"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "visitor",
+   "to": "ucAccess",
+   "label": "",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:130",
+    "src/main/java/Boundary/HomePageGUI.java:155"
+   ]
+  },
+  {
+   "from": "citizen",
+   "to": "ucCreate",
+   "label": "",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:455"
+   ]
+  },
+  {
+   "from": "citizen",
+   "to": "ucSubmitted",
+   "label": "",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:484"
+   ]
+  },
+  {
+   "from": "operator",
+   "to": "ucReceived",
+   "label": "",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:515"
+   ]
+  },
+  {
+   "from": "operator",
+   "to": "ucStatus",
+   "label": "",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:575"
+   ]
+  },
+  {
+   "from": "operator",
+   "to": "ucNote",
+   "label": "",
+   "evidence": [
+    "src/main/java/Control/InternalNoteController.java:62"
+   ]
+  },
+  {
+   "from": "operator",
+   "to": "ucMonitor",
+   "label": "",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:545"
+   ]
+  },
+  {
+   "from": "ucSubmitted",
+   "to": "ucDetails",
+   "label": "<<include>>",
+   "evidence": [
+    "src/main/java/Boundary/SubmittedReportsGUI.java:164"
+   ]
+  },
+  {
+   "from": "ucReceived",
+   "to": "ucDetails",
+   "label": "<<include>>",
+   "evidence": [
+    "src/main/java/Boundary/ReceivedReportsGUI.java:254"
+   ]
+  },
+  {
+   "from": "ucStatus",
+   "to": "ucReceived",
+   "label": "<<extend>>",
+   "evidence": [
+    "src/main/java/Boundary/ReceivedReportsGUI.java:1122"
+   ]
+  },
+  {
+   "from": "ucNote",
+   "to": "ucReceived",
+   "label": "<<extend>>",
+   "evidence": [
+    "src/main/java/Boundary/ReceivedReportsGUI.java:790"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main types of users",
+   "answered_by": [
+    "visitor",
+    "citizen",
+    "operator"
+   ]
+  },
+  {
+   "detail": "goals each can achieve",
+   "answered_by": [
+    "ucAccess",
+    "ucCreate",
+    "ucSubmitted",
+    "ucReceived",
+    "ucStatus",
+    "ucNote",
+    "ucMonitor"
+   ]
+  },
+  {
+   "detail": "how functionalities are related",
+   "answered_by": [
+    "ucDetails",
+    "ucReceived",
+    "ucStatus",
+    "ucNote"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Logout, dashboard navigation",
+   "reason": "navigation, not a goal"
+  },
+  {
+   "name": "Persistence and entity classes",
+   "reason": "internal, not user-visible"
+  }
+ ]
+}

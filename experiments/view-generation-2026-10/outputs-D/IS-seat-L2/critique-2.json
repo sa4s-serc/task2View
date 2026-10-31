@@ -1,0 +1,38 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components involved in seat booking and their responsibilities",
+     "answered": "yes",
+     "why": "The booking path (Web/Swing -> REST -> LibraryFacade -> ReservationManager) and the rule-bearing domain parts (StudyRoom/TimeSlot, Seat/Area, Student, Reservation+states, Registries with occupiesSlot) each have a box with a short responsibility, and these match the code. One small gap: ReservationManager's label lists resolveRoom, resolveTimeSlot, validateSeatInArea and createAndSave, but leaves out validateUniqueness, availableSeats and selectSeat (ReservationManager.java:84-92). These are also rule steps, and they are the ones a developer adding a rule is most likely to edit."},
+    {"detail": "how they interact with each other",
+     "answered": "yes",
+     "why": "Labelled «use» dependencies show the call chain and which part each rule check goes to. The AssignmentStrategy and Observer seams are drawn, and so are the wizard's room queries through StudyRoomManager. All of these match the code (Seat.isAvailable -> ReservationRegistry, Area.getAvailableSeats -> StudyRoomRegistry, Student -> ReservationRegistry.findActiveReservations, StudyRoomManager.countAvailableSeats -> Area.getAvailableSeats). Minor point: ReservationManager does not depend only on the Observer interface. notifyReservation calls reservation.attach(NotificationManager.getInstance()) (ReservationManager.java:107-110), which is a direct dependency on the concrete NotificationManager, and the view hides it."},
+    {"detail": "which parts of the system may be affected by the modification",
+     "answered": "partly",
+     "why": "Edit points and the availability ripple into StudyRoomManager are marked, and the note names the DTO, controller and UI parts that change only if a rule needs new input, plus MakeReservationTest. Three problems remain. (a) The legend says 'Other = unchanged by rule changes', which contradicts the note: Web pages, Swing UI and REST controllers are grey but may change. (b) StudyRoomManager is affected for a bigger reason than the one given. It does not only reuse availability rules; it has its own copies of the date and slot rules: validateQueryDate checks for a past date and a weekend (StudyRoomManager.java:214-221), and getAvailableTimeSlots filters slots by working hours itself instead of calling StudyRoom.getScheduledTimeSlots, and it has no started-slot check (StudyRoomManager.java:225-257). So a new date or slot rule has to be mirrored there, or the wizard will offer slots that booking then rejects. (c) AvailableStudyRoomsQueryTest covers these query paths and is not listed with MakeReservationTest."}
+  ],
+  "level": "right",
+  "level_why": "The view has 15 elements plus a boundary. That is detailed but suits a developer who is about to edit this area: each domain box holds a different rule, and the peripheral parts (scheduler, email adapter, DB, factories) have been cut. Nothing needs to be dropped. Web pages and Swing UI could be merged into one 'UIs' component, but keeping them separate is useful because the note names a file in each of them.",
+  "unsupported": [
+    "Legend claim 'Other = unchanged by rule changes on availability and eligibility' for Web pages, Swing UI and REST controllers: reservation.html, ReservationSummary and ReservationController change whenever a rule needs new input (the note says so itself). The UIs also show availability that StudyRoomManager computes, so their displayed results change.",
+    "ResMgr ..> Observer 'attaches observer' as the only notification dependency: the code attaches the concrete NotificationManager singleton (ReservationManager.java:108), so ReservationManager also depends on NotificationManager directly."
+  ],
+  "missing": [
+    "The duplicated query-side rules in StudyRoomManager: validateQueryDate (past date, weekend; StudyRoomManager.java:214-221) and the working-hours slot filter in getAvailableTimeSlots (StudyRoomManager.java:225-257). A new date or slot rule must also go here, so StudyRoomManager is an edit point and not only a ripple target.",
+    "AvailableStudyRoomsQueryTest, the test for the StudyRoomManager query paths that availability and date rules ripple into.",
+    "validateUniqueness, availableSeats and selectSeat as named rule steps of ReservationManager (ReservationManager.java:84-92, 378ff).",
+    "Other users of occupiesSlot: StudyRoomManager's room deactivation (StudyRoomManager.java:167-175) and the cancel, check-in and end flows that change reservation state. A rule that changes which states block a seat affects these. The README admits this, but the view does not say it."
+  ],
+  "uml": [
+    "<<accent>> is a non-standard styling stereotype on model elements. It is hidden in the render, but the 'affected' meaning still depends on colour. Drop it from the model, or replace it with text in the note, which already names the affected parts.",
+    "The system boundary is a UML package. In a component diagram the application should be an enclosing component (or a «subsystem» component) so it reads as a runtime unit, not a namespace.",
+    "Domain entity classes (Student, Seat/Area, StudyRoom/TimeSlot, Reservation) are drawn as components. In a component diagram it would be cleaner to group them as one 'Domain model' component with these parts nested inside, or to state that each box stands for a group of entity classes. This is acceptable but loose.",
+    "AssignmentStrategy and Observer are attached with plain lines (lollipop provided interface) and used through «use» dependency arrows instead of sockets (required interfaces). This is valid UML and acceptable."
+  ],
+  "fixes": [
+    "Fix the legend so it no longer contradicts the note. Say the grey UI and REST parts change only if a rule needs new input, or remove the 'unchanged' line and the colour meaning, and state the affected parts in the note.",
+    "Mark StudyRoomManager as an edit point for date and slot rules, not only a ripple target, naming validateQueryDate and getAvailableTimeSlots, because they reimplement the booking date and slot checks.",
+    "Add AvailableStudyRoomsQueryTest to the tests to update.",
+    "Add validateUniqueness and selectSeat (and availableSeats) to ReservationManager's rule steps, and draw ReservationManager ..> NotificationManager (attach), or note it.",
+    "Remove the non-standard <<accent>> stereotype from the model, and use a component (or «subsystem») instead of a package as the boundary."
+  ]
+}

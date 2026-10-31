@@ -1,0 +1,97 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+
+title UML sequence diagram: user registration (web path, POST /api/auth/register)
+hide footbox
+autonumber "<b>00"
+
+participant "Web registration\npage (registration.html)" as ui
+participant "RestException\nHandler" as eh
+participant "Authentication\nController" as ctl
+participant "UserManager" as um
+participant "UserRegistry" as reg
+participant "PersistenceManager\n(JPA, database)" as pm
+participant ":UserFactory\n(Student / Librarian)" as fct
+
+ui -> ctl ++ : POST register\n(6 form fields)
+note right of ui
+  Empty fields are dropped by the page (api()),
+  so a missing request parameter is rejected by
+  Spring before the controller runs.
+end note
+ctl -> um ++ : register(...)\nvia LibraryFacade
+um -> um : validate role and password
+alt role = Student
+  um -> um : validateStudent: names,\nemail, ID = letter + 8 digits
+else role = Librarian
+  um -> um : validateLibrarian: names,\nemail, code = letters/digits
+end
+alt invalid data
+  um --> ctl : IllegalArgumentException
+  ctl -> eh ++ : handle
+  eh --> ui -- : 400 {"error": message}
+else valid
+  um -> reg ++ : institutionalEmailExists(email)
+  reg --> um -- : found / not found
+  alt email exists
+    um --> ctl : IllegalArgumentException\n"Email already associated"
+    note right of ctl : handler returns 400 {"error"}
+  else free
+    alt role = Student
+      um -> reg ++ : findStudentByStudentNumber(id)
+    else role = Librarian
+      um -> reg : findLibrarianByCode(code)
+    end
+    reg --> um -- : found / not found
+    alt id used
+      um --> ctl : IllegalArgumentException\n"Identifier already in use"
+      note right of ctl : handler returns 400 {"error"}
+    else free
+      um -> fct ++ : createUser(...)\nStudentFactory or LibrarianFactory
+      fct --> um -- : Student or Librarian
+      um -> reg ++ : registerUser(newUser)
+      reg -> pm ++ : save(newUser)
+      note right of pm
+        Unique columns (email, student number,
+        librarian code) also reject a concurrent
+        duplicate: rollback, save returns false.
+      end note
+      pm --> reg -- : true / false
+      reg --> um -- : success flag
+      alt not saved
+        um --> ctl : RuntimeException
+        ctl --> ui : 500 (default, unmapped)
+      else saved
+        um --> ctl -- : UserDTO
+        ctl --> ui -- : 200 UserDTO
+      end
+    end
+  end
+end
+note over ui, ctl
+  Swing Registration form: separate entry point, calls
+  LibraryFacade.register directly (no HTTP, no handler);
+  it checks blank fields itself and shows exception
+  messages in a dialog.
+end note
+@enduml

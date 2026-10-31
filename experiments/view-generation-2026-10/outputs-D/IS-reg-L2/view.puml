@@ -1,0 +1,98 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+
+title UML sequence diagram: user registration (POST /api/auth/register)
+hide footbox
+autonumber "<b>00"
+
+participant "page : registration.html" as page
+participant "handler : RestExceptionHandler" as handler
+participant "ctl : AuthenticationController" as ctl
+participant "facade : LibraryFacade" as facade
+participant "mgr : UserManager" as mgr
+participant "reg : UserRegistry" as reg
+participant "db : MySQL" as db
+
+page -> ctl ++ : POST /api/auth/register\n(form-encoded role, name, surname,\nemail, password, identifier)
+note right of page : IP1 form-encoded @RequestParam contract
+ctl -> facade ++ : register(role, name, surname,\nemail, password, identifier)
+note right of facade : IP2 facade boundary,\nalso used by the Swing form
+facade -> mgr ++ : register(...)
+mgr -> mgr : validate(role, name, password),\nvalidateStudent / validateLibrarian
+break invalid input
+  mgr --> facade : throw IllegalArgumentException
+end
+mgr -> reg ++ : institutionalEmailExists(email)
+reg -> db : SELECT user WHERE institutionalEmail
+reg --> mgr -- : boolean
+break email exists
+  mgr --> facade : throw IllegalArgumentException
+end
+mgr -> reg ++ : findStudentByStudentNumber(id)\nor findLibrarianByCode(id)
+reg -> db : SELECT by studentNumber / code
+reg --> mgr -- : User or null
+note right of reg : IP3 uniqueness lookups
+break identifier in use
+  mgr --> facade : throw IllegalArgumentException
+end
+mgr -> reg ++ : registerUser(newUser)
+reg -> db : INSERT in transaction
+note right of db : IP4 transactional persist\n(tests: reservationsdb_test)
+reg --> mgr -- : boolean
+break save failed
+  mgr --> facade : throw RuntimeException
+end
+mgr --> facade -- : UserDTO
+facade --> ctl -- : UserDTO
+ctl --> page -- : 200 UserDTO
+
+group exception exit, after any break above
+  facade --> ctl : exception propagates
+  alt IllegalArgumentException
+    ctl -> handler : handleInvalidRequest(e)
+    note left of handler : IP5 exception to HTTP mapping
+    handler --> page : 400 {"error": message}
+  else RuntimeException
+    ctl --> page : 500 (Spring default,\nnot mapped by handler)
+  end
+end
+
+legend left
+  |= Lifeline |= Responsibility |
+  | page | posts the form (app.js fetch) |
+  | handler | maps exceptions to HTTP (400, 401) |
+  | ctl | REST endpoint, delegates to facade |
+  | facade | single entry to the controller layer |
+  | mgr | validates, checks uniqueness, builds user |
+  | reg | lookups and persist (PersistenceManager, JPA) |
+  | db | stores users |
+endlegend
+@enduml

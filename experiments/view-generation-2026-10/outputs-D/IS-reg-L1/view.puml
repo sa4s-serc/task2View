@@ -1,0 +1,80 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+
+title UML sequence diagram: user registration (student or librarian)
+hide footbox
+autonumber "<b>00"
+
+actor       "User\n(Student / Librarian)"                       as user
+participant "Registration form\n(registration.html + app.js)"   as form
+participant "AuthenticationController\n(REST /api/auth)"        as api
+participant "LibraryFacade"                                     as facade
+participant "UserManager"                                       as mgr
+participant "UserRegistry\n(PersistenceManager)"                as reg
+participant "Database\n(JPA)"                                   as db
+
+user -> form : fill and submit form
+form -> api : POST /api/auth/register\n(role, name, surname, email,\npassword, identifier)
+api -> facade : register(...)
+facade -> mgr : register(...)
+mgr -> mgr : validate fields\n(Student: validateStudent,\nLibrarian: validateLibrarian)
+break invalid input
+  mgr --> form : 400 {"error": message}
+end
+mgr -> reg : institutionalEmailExists(email)
+reg -> db : SELECT user by email
+db --> reg : user or null
+reg --> mgr : exists?
+break email used
+  mgr --> form : 400 "Email is already\nassociated with an account."
+end
+mgr -> reg : Student: findStudentByStudentNumber\nLibrarian: findLibrarianByCode
+reg --> mgr : entity or null (SELECT as above)
+break id used
+  mgr --> form : 400 "Identifier is already in use."
+end
+mgr -> mgr : create user\n(StudentFactory / LibrarianFactory)
+mgr -> reg : registerUser(newUser)
+reg -> db : INSERT (persist, commit)
+db --> reg : committed or rolled back
+reg --> mgr : true / false
+alt saved
+  mgr --> form : UserDTO, shown as 200
+  form --> user : "Registration complete",\nredirect to index.html
+else not saved
+  mgr --> form : unhandled error\n(RuntimeException, not 400)
+end
+note over facade
+  RegistrationTest and the Swing client
+  (Registration.java) enter at
+  LibraryFacade.register (message 3),
+  skipping the form and the controller.
+end note
+note over mgr
+  Replies from UserManager pass through
+  LibraryFacade and AuthenticationController
+  unchanged (collapsed). RestExceptionHandler
+  maps IllegalArgumentException to 400.
+end note
+@enduml

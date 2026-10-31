@@ -1,0 +1,26 @@
+{"model_kind": "UML deployment diagram", "detail_level": "balanced",
+ "elements": [
+  {"alias": "ws", "name": "Workstation", "responsibility": "Single machine hosting both the Swing client and, with the shipped configuration, MySQL", "evidence": ["src/main/resources/META-INF/persistence.xml:25-26", "README.md:29-34"]},
+  {"alias": "jvm", "name": "Java 23 JVM", "responsibility": "Runtime for the Swing application, started with dependency jars on the classpath and entry point Boundary.HomePageGUI", "evidence": ["pom.xml:13-14", "README.md:21", "src/main/java/Boundary/HomePageGUI.java:75"]},
+  {"alias": "app", "name": "municipal-report-management-1.0-SNAPSHOT.jar", "responsibility": "Maven-built application jar (no Main-Class, no shade/assembly plugin)", "evidence": ["pom.xml:9-11", "pom.xml:58-70"]},
+  {"alias": "pxml", "name": "persistence.xml", "responsibility": "JPA persistence unit packaged in the jar from src/main/resources: JDBC URL, user, password, hbm2ddl=update", "evidence": ["src/main/resources/META-INF/persistence.xml:11-40"]},
+  {"alias": "libs", "name": "Hibernate ORM, Connector/J, forms_rt dependency jars", "responsibility": "JPA provider, JDBC driver and Swing form layout runtime", "evidence": ["pom.xml:34-52", "src/main/java/Boundary/HomePageGUI.java:3"]},
+  {"alias": "mysql", "name": "MySQL server", "responsibility": "Relational DBMS on 127.0.0.1:3306; version not specified in code", "evidence": ["src/main/resources/META-INF/persistence.xml:25-26", "README.md:23"]},
+  {"alias": "schema", "name": "Schema reports_db", "responsibility": "Stores users, reports, notes, status updates, notifications; accessed as reports_user@localhost", "evidence": ["README.md:29-34", "src/main/resources/META-INF/persistence.xml:13-19"]}
+ ],
+ "relations": [
+  {"from": "app", "to": "libs", "label": "use", "evidence": ["src/main/java/Database/JpaUtil.java:13-17", "pom.xml:34-52"]},
+  {"from": "app", "to": "pxml", "label": "use", "evidence": ["src/main/java/Database/JpaUtil.java:13-17", "src/main/resources/META-INF/persistence.xml:9"]},
+  {"from": "jvm", "to": "mysql", "label": "JDBC over TCP :3306", "evidence": ["src/main/resources/META-INF/persistence.xml:21-26", "src/main/java/Database/PersistenceService.java:27-36"]}
+ ],
+ "concern_details": [
+  {"detail": "required runtime environments and software artifacts", "answered_by": ["jvm", "app", "libs", "pxml", "mysql"]},
+  {"detail": "where the application runs and where its data is stored", "answered_by": ["ws", "mysql", "schema"]},
+  {"detail": "how the main runtime elements communicate", "answered_by": ["jvm", "mysql"]},
+  {"detail": "technologies and runtime dependencies between the application and the database", "answered_by": ["libs", "pxml", "mysql", "schema"]}
+ ],
+ "omitted": [
+  {"name": "Boundary/Control/Entity layers", "reason": "internal structure belongs in a component view"},
+  {"name": "JUnit tests", "reason": "test scope only, not deployed"},
+  {"name": "Remote database host", "reason": "not supported by the shipped configuration; described in a note instead"}
+ ]}

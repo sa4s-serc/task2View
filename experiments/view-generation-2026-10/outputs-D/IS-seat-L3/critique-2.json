@@ -1,0 +1,51 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components in the booking process, their responsibilities, interactions and dependencies",
+     "answered": "yes",
+     "why": "Revision 1 adds the dependencies critique 1 asked for, and they check out against the code: ReservationManager -> UserRegistry (ReservationManager.java:30,52), Area -> StudyRoomRegistry (Area.java:51), Seat/Student -> ReservationRegistry (Seat.java:45, Student.java:43), and StudyRoomManager -> ReservationRegistry (StudyRoomManager.java:22). The path from request to storage can be traced from end to end. Two dependencies are still missing. NotificationManager -> ReservationRegistry exists because sendReminders reads and updates reservations (NotificationManager.java:18,74,82). StudyRoomManager -> NotificationManager exists because room deletion cancels bookings and notifies the students (StudyRoomManager.java:180,188)."},
+    {"detail": "which components handle booking requests",
+     "answered": "yes",
+     "why": "The view shows Web UI -> ReservationController/StudyRoomController -> LibraryFacade, Swing -> LibraryFacade, NotificationScheduler -> LibraryFacade, and RestExceptionHandler, which is how a rule rejection becomes an HTTP 400. All of these match the code. The one problem is the direction of exh ..> rest (see unsupported)."},
+    {"detail": "which components check seat availability",
+     "answered": "yes",
+     "why": "ReservationManager -> Domain entities 'availability' and Domain entities -> ReservationRegistry (occupiesSlot) / StudyRoomRegistry match Seat.isAvailable and Area.getAvailableSeats. StudyRoomManager is shown as a second consumer of the same check."},
+    {"detail": "which components apply booking rules",
+     "answered": "partly",
+     "why": "The view names ReservationManager and the merged Domain entities. In the code, the cancel, check-in and end-of-slot rules sit in the Reservation state machine. Reservation.cancelReservation calls validateCancellationWindow and then getState().cancel(). performCheckIn delegates to ActiveState/ConfirmedState etc. validateActiveReservationForCurrentDate applies CHECK_IN_TOLERANCE_MINUTES (Reservation.java:19,101-117,140-162; entity/state/*State.java). The README says the state classes were 'omitted on purpose', and the merged 'Domain entities' box gives no hint that these rules live there. A developer adding a rule about cancellation or check-in would not know to look at ReservationState and its implementations. The rule placement inside ReservationManager is also stated only in a label. The view does not say that the creation rules (resolveRoom, resolveTimeSlot, validateSeatInArea, validateUniqueness) are private steps of makeReservation, which is where a new creation rule would be added."},
+    {"detail": "which components manage and store reservations",
+     "answered": "yes",
+     "why": "ReservationRegistry, StudyRoomRegistry, UserRegistry and PersistenceManager (JPA, MySQL) are shown with their persist dependencies, which match the code. The note explains that the registries are singletons."},
+    {"detail": "which components interact with external services such as notifications",
+     "answered": "partly",
+     "why": "NotificationService is now a UML interface, required by NotificationManager and realized by the adapter and stub, and the Observer route is shown. But the README claims notification is 'one mechanism: attach observer, notify observers', and the code does not support this. cancelReservation calls NotificationManager.sendNotification directly (ReservationManager.java:218-222), and StudyRoomManager.deleteStudyRoom also calls it directly. So the resmgr -> notif edge labelled only 'attach observer' leaves out the direct call. A developer changing notifications for a new rule would miss these paths. Reminder sending (NotificationManager reads and updates ReservationRegistry) is also not shown."},
+    {"detail": "which parts need to be modified and which other components may be affected",
+     "answered": "partly",
+     "why": "The diagram now marks the components to change (accent) and the affected ones (alert), which is the main improvement. But it does this with non-standard stereotypes that are hidden and only show up as colour. The README admits that RestExceptionHandler and the REST/Swing clients are affected but not marked. The Reservation state classes, which a cancellation or check-in rule would change, are not drawn at all. NotificationScheduler/LibraryFacade are not marked, even though end-of-slot handling (manageReservationEnd) depends on the state rules."}
+  ],
+  "level": "right",
+  "level_why": "Components at the level of manager, registry and facade suit a developer who is about to change booking rules, and 20 elements is at the upper limit but still readable. Nothing needs to be dropped. One thing needs splitting: the single 'Domain entities' box hides that the rules are spread over Seat/Area (availability), Student (uniqueness) and Reservation plus its State classes (cancel window, check-in tolerance, lifecycle). Showing 'Reservation + ReservationState' as its own component would add one element and answer the rules concern. If you need room for it, the Web UI and Swing UI could be merged into one 'Clients' component, because both reach the facade the same way.",
+  "unsupported": [
+    "resmgr ..> notif labelled only 'attach observer', with the README's claim that notification is one Observer mechanism. The code shows that cancelReservation calls NotificationManager.getInstance().sendNotification directly (ReservationManager.java:218-222), which is not done through the Observer.",
+    "exh ..> rest 'maps exceptions': RestExceptionHandler has no reference to ReservationController. It is a @RestControllerAdvice that handles IllegalArgumentException/IllegalStateException thrown under any controller (RestExceptionHandler.java:15-25). A use dependency from the handler to ReservationController is not in the code. Show it as attached to the REST controllers with a note, or as a dependency on the rule exceptions.",
+    "StudyRoomManager inside the 'Booking logic' package and labelled 'availability queries for UI' leaves out that it also cancels reservations and notifies students when a room is deleted (StudyRoomManager.java:148-190). This is a second place that changes reservation state outside ReservationManager."
+  ],
+  "missing": [
+    "The Reservation state machine (ReservationState with ActiveState, ConfirmedState, CancelledState, ExpiredState, CompletedState in entity/state). Reservation.cancelReservation/performCheckIn/manageEnd delegate to it, and it decides whether cancel or check-in is allowed. This is where cancellation and check-in booking rules live.",
+    "NotificationManager -> ReservationRegistry: sendReminders reads ending reservations and updates reminderSent (NotificationManager.java:18,74-82).",
+    "StudyRoomManager -> NotificationManager: room deletion cancels occupying reservations and notifies the students (StudyRoomManager.java:167-190).",
+    "Direct ReservationManager -> NotificationManager sendNotification on cancel (ReservationManager.java:218-222), next to the observer attachment used for create, check-in and end of slot.",
+    "Marking RestExceptionHandler, and the Reservation state classes once they are added, as affected/to-modify in the diagram, not only in the README."
+  ],
+  "uml": [
+    "The stereotypes «accent» and «alert» are not standard UML. They carry semantic meaning (to modify / affected) explained in the legend, and they are hidden, so the meaning is carried by colour alone. Use a note or comment attached to the elements, or label the elements, instead of custom stereotypes.",
+    "Interfaces are drawn as lollipop circles but connected with realization (..|>) arrows from the provider and plain dependencies from the consumer. That mixes the two notations. Either use the full interface rectangle with «interface» and realization/«use», or use ball-and-socket (provided lollipop, required socket). The required side should be «use», which is now unlabelled ('send', 'notify observers').",
+    "exh ..> rest is a use dependency for what is an exception-handling advice that applies to all controllers. That is not a dependency the handler has on the controller (see unsupported).",
+    "Components with code-level responsibilities in parentheses (e.g. '(occupiesSlot)', '(FirstAvailableAssignment)') are fine as names, but 'Domain entities' is a group of classes shown as a component. The note covers this, so it is acceptable."
+  ],
+  "fixes": [
+    "Show where cancel/check-in/lifecycle rules live: split 'Reservation + ReservationState (Active/Confirmed/Cancelled/Expired/Completed)' out of Domain entities, with ReservationManager and NotificationScheduler (via the facade) depending on it, and mark it as to-modify.",
+    "Correct the notification paths: relabel resmgr -> NotificationManager to 'attach observer; sendNotification on cancel', add NotificationManager -> ReservationRegistry (reminders) and StudyRoomManager -> NotificationManager (room deletion cancels bookings), and drop the 'one mechanism' claim in the README.",
+    "Replace the custom «accent»/«alert» stereotypes with standard notation: notes attached to the elements to modify and the affected elements. Include RestExceptionHandler and the state classes in those notes.",
+    "Fix RestExceptionHandler: remove the use dependency on ReservationController and attach a note that it maps IllegalArgument/IllegalState exceptions from any controller to HTTP 400.",
+    "Make interface notation consistent (ball-and-socket, or «interface» boxes with realization and «use»). Optionally merge Web UI and Swing into one Clients component to keep the element count down."
+  ]}

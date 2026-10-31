@@ -1,0 +1,372 @@
+{
+ "model_kind": "UML component diagram",
+ "detail_level": "detailed",
+ "elements": [
+  {
+   "alias": "student",
+   "name": "Student",
+   "responsibility": "Books seats via web or desktop UI",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/Student.java:1"
+   ]
+  },
+  {
+   "alias": "web",
+   "name": "Web client (static HTML + app.js)",
+   "responsibility": "Booking wizard calling REST API",
+   "evidence": [
+    "JavaProject/src/main/resources/static/reservation.html:385",
+    "JavaProject/src/main/resources/static/app.js:41"
+   ]
+  },
+  {
+   "alias": "swing",
+   "name": "Desktop client (Swing)",
+   "responsibility": "Desktop booking screens calling the facade",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java:100"
+   ]
+  },
+  {
+   "alias": "rest",
+   "name": "REST controllers (Spring MVC)",
+   "responsibility": "Expose /api/reservations and /api/rooms",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:14-32",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/StudyRoomController.java:40-60"
+   ]
+  },
+  {
+   "alias": "facade",
+   "name": "LibraryFacade",
+   "responsibility": "Single entry point delegating to managers",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:114-120"
+   ]
+  },
+  {
+   "alias": "resmgr",
+   "name": "ReservationManager",
+   "responsibility": "makeReservation: validation, seat selection, save, notify",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:65-102"
+   ]
+  },
+  {
+   "alias": "roommgr",
+   "name": "StudyRoomManager",
+   "responsibility": "Lists rooms, time slots, seat availability for booking steps",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:196",
+    "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:225",
+    "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:263"
+   ]
+  },
+  {
+   "alias": "entities",
+   "name": "Domain entities (Reservation, Seat, Area, ...)",
+   "responsibility": "Availability rules, reservation state, observer subject",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/Area.java:49",
+    "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java:44",
+    "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java:181"
+   ]
+  },
+  {
+   "alias": "registries",
+   "name": "Registries (Reservation, StudyRoom, User)",
+   "responsibility": "Lookup and persistence of entities",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java:14",
+    "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:14",
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:10"
+   ]
+  },
+  {
+   "alias": "notifmgr",
+   "name": "NotificationManager",
+   "responsibility": "Observer; sends confirmation messages",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java:19-60"
+   ]
+  },
+  {
+   "alias": "adapter",
+   "name": "Email adapter (NotificationServiceAdapter)",
+   "responsibility": "Implements NotificationService, calls stub email gateway",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java:13-25",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/ExternalEmailGateway.java:10"
+   ]
+  },
+  {
+   "alias": "db",
+   "name": "MySQL database (JPA / Hibernate)",
+   "responsibility": "Persistent store",
+   "evidence": [
+    "JavaProject/src/main/resources/META-INF/persistence.xml:21",
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:18-30"
+   ]
+  },
+  {
+   "alias": "exh",
+   "name": "RestExceptionHandler",
+   "responsibility": "Maps IllegalArgument/IllegalState exceptions to HTTP 400",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19-22"
+   ]
+  },
+  {
+   "alias": "first",
+   "name": "FirstAvailableAssignment",
+   "responsibility": "Default seat assignment: first available seat",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java:13-18",
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:39"
+   ]
+  },
+  {
+   "alias": "nconf",
+   "name": "NotificationConfiguration",
+   "responsibility": "At startup plugs the email adapter into NotificationManager",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationConfiguration.java:15-17"
+   ]
+  },
+  {
+   "alias": "IStrategy",
+   "name": "AssignmentStrategy (interface)",
+   "responsibility": "Seat selection extension point",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/strategy/AssignmentStrategy.java:10"
+   ]
+  },
+  {
+   "alias": "IObserver",
+   "name": "Observer (interface)",
+   "responsibility": "Callback for reservation changes",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/Observer.java:9"
+   ]
+  },
+  {
+   "alias": "INotif",
+   "name": "NotificationService (interface)",
+   "responsibility": "Message delivery port",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/NotificationService.java:11"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "student",
+   "to": "web",
+   "label": "books seat",
+   "evidence": [
+    "JavaProject/src/main/resources/static/reservation.html:385"
+   ]
+  },
+  {
+   "from": "student",
+   "to": "swing",
+   "label": "books seat",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java:100"
+   ]
+  },
+  {
+   "from": "web",
+   "to": "rest",
+   "label": "POST /api/reservations/create",
+   "evidence": [
+    "JavaProject/src/main/resources/static/app.js:41"
+   ]
+  },
+  {
+   "from": "swing",
+   "to": "facade",
+   "label": "makeReservation",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java:100"
+   ]
+  },
+  {
+   "from": "rest",
+   "to": "facade",
+   "label": "makeReservation",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:27"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "resmgr",
+   "label": "makeReservation",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:119"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "roommgr",
+   "label": "list rooms, slots, seats",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:81-100"
+   ]
+  },
+  {
+   "from": "resmgr",
+   "to": "registries",
+   "label": "1 resolve, 4 save",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:52",
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:134"
+   ]
+  },
+  {
+   "from": "resmgr",
+   "to": "entities",
+   "label": "2 check availability",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:144"
+   ]
+  },
+  {
+   "from": "roommgr",
+   "to": "registries",
+   "label": "read rooms",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/StudyRoomManager.java:196-230"
+   ]
+  },
+  {
+   "from": "registries",
+   "to": "db",
+   "label": "persists",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java:17-20"
+   ]
+  },
+  {
+   "from": "rest",
+   "to": "exh",
+   "label": "errors -> HTTP 400",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19"
+   ]
+  },
+  {
+   "from": "resmgr",
+   "to": "IStrategy",
+   "label": "3 pick seat",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:400"
+   ]
+  },
+  {
+   "from": "first",
+   "to": "IStrategy",
+   "label": "realizes",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/strategy/FirstAvailableAssignment.java:5"
+   ]
+  },
+  {
+   "from": "resmgr",
+   "to": "entities",
+   "label": "5 attach observer",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:121-122"
+   ]
+  },
+  {
+   "from": "entities",
+   "to": "IObserver",
+   "label": "notifies",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/Reservation.java:181-184"
+   ]
+  },
+  {
+   "from": "notifmgr",
+   "to": "IObserver",
+   "label": "realizes",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java:19"
+   ]
+  },
+  {
+   "from": "notifmgr",
+   "to": "INotif",
+   "label": "send message",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java:75"
+   ]
+  },
+  {
+   "from": "adapter",
+   "to": "INotif",
+   "label": "realizes",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationServiceAdapter.java:13"
+   ]
+  },
+  {
+   "from": "nconf",
+   "to": "notifmgr",
+   "label": "sets service",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/NotificationConfiguration.java:16"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main system components involved in seat booking",
+   "answered_by": [
+    "web",
+    "swing",
+    "rest",
+    "exh",
+    "facade",
+    "resmgr",
+    "roommgr",
+    "IStrategy",
+    "first",
+    "entities",
+    "registries",
+    "notifmgr",
+    "INotif",
+    "adapter",
+    "nconf",
+    "db"
+   ]
+  },
+  {
+   "detail": "how they interact",
+   "answered_by": [
+    "facade",
+    "resmgr",
+    "IObserver",
+    "entities",
+    "exh",
+    "registries"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Librarian / room creation",
+   "reason": "Different use case, not part of booking control flow"
+  },
+  {
+   "name": "NotificationScheduler",
+   "reason": "Drives reminders/expiry, not booking creation"
+  },
+  {
+   "name": "UserManager, factories, DTOs, state classes, cancel/check-in flows",
+   "reason": "Outside seat booking"
+  }
+ ]
+}

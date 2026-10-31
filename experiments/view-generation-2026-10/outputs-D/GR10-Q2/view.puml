@@ -1,0 +1,48 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+title UML deployment diagram: Municipal Report Management System (desktop client + MySQL, default configuration)
+
+node "Workstation\n(operator/citizen PC)" as ws <<device>> {
+  node "Java 23 JVM\n(classpath launch)" as jvm <<executionEnvironment>> {
+    artifact "municipal-report-management\n-1.0-SNAPSHOT.jar" as app
+    artifact "persistence.xml\n(packaged in jar: URL, user,\npassword, hbm2ddl=update)" as pxml
+    artifact "Hibernate ORM 6.6.50, Connector/J 9.4.0,\nforms_rt 7.0.3 (dependency jars)" as libs
+  }
+  node "MySQL server\n(127.0.0.1:3306, version not specified)" as mysql <<executionEnvironment>> {
+    artifact "Schema reports_db\n(user reports_user@localhost)" as schema
+  }
+}
+
+app ..> libs : <<use>>
+app ..> pxml : <<use>>
+jvm -- mysql : JDBC over TCP :3306\n(loopback by default)
+
+note right of jvm
+  Launch: the jar has no Main-Class and no shaded dependencies; run it with the dependency jars on the classpath, main class Boundary.HomePageGUI. A remote DB host needs persistence.xml edited, the jar rebuilt and the MySQL grant changed.
+end note
+
+note right of schema
+  Manual preparation: CREATE DATABASE reports_db; CREATE USER reports_user@localhost (default password reports_password); GRANT ALL on reports_db.*. Tables are then created or updated by the app (hbm2ddl.auto=update).
+end note
+@enduml

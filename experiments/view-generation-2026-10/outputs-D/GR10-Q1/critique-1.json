@@ -1,0 +1,33 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main architectural components and their responsibilities", "answered": "partly", "why": "The seven components are the right ones and match the code (Boundary GUIs, SystemServicesController, the Control use-case controllers, ReportService/UserService, the entity classes, PersistenceService+JpaUtil, MySQL). But the diagram only gives role names ('Services facade', 'Domain services'). The responsibilities exist only in inventory.json. The architect cannot see from the view that the facade is the single GUI entry point that turns exceptions into booleans, that there is one controller per use case, or that the domain services hold the business rules and return Maps instead of entities."},
+    {"detail": "decomposition into layers or subsystems", "answered": "partly", "why": "The layers are shown only as text prefixes inside component names ('Application layer\\n...'), not as containing elements. The layer membership is therefore not a model fact. The view does not show that 'Domain services' (ReportService, UserService) are physically in the Entity package beside the entities, or that the four layers map to the packages Boundary/Control/Entity/Database. Those are the facts an architect planning evolution needs. The README admits both points, but the diagram does not show them."},
+    {"detail": "main dependencies among them", "answered": "partly", "why": "Most arrows are supported: GUIs→SystemServicesController, UserLoginGUI→UserLoginController (the facade bypass), facade→controllers, controllers→ReportService/UserService, services→PersistenceService. The controller→entity dependency is missing (ReportCreationController imports Entity.ReportCategory). 'persist ..> model : map (JPA)' is a configuration link (persistence.xml lists the classes). It is not a code dependency, because PersistenceService is generic (<T>) and imports nothing from Entity. The view draws it the same way as the code dependencies."},
+    {"detail": "separation of user interface, application logic, domain entities and persistence, and how they collaborate", "answered": "partly", "why": "The view shows that the UI never reaches persistence and that ReportCategory leaks into the UI. It does not make the main separation issue visible: the domain layer depends on persistence (Entity.ReportService and Entity.UserService import Database.PersistenceService), so the dependency points the opposite way from a persistence-ignorant domain. 'How they collaborate' is reduced to short verb labels. Nothing shows that data crosses the layer boundaries as Map<String,Object> and not as entities, which is the actual contract between the GUI, controller and service layers."}
+  ],
+  "level": "right",
+  "level_why": "Seven components, one per role and not one per class, suit an architect who wants the whole system before planning its evolution. Nothing needs to be dropped. Keeping the facade separate from the controllers is justified because the login bypass is architecturally relevant. The view is not too abstract in element count. It is too thin in what each element states: no responsibilities and no interfaces. Element granularity is not the problem.",
+  "unsupported": [
+    "persist ..> model 'map (JPA)': Database.PersistenceService and JpaUtil import no Entity classes, and PersistenceService works on generic <T>. The link exists only in META-INF/persistence.xml, which lists the entity classes. Draw it as a configuration/mapping dependency, or explain it, and do not present it as a code dependency.",
+    "Layer membership of 'Domain services' shown as 'Domain layer' without qualification: in the code, ReportService and UserService are application/data services in the Entity package that import Database.PersistenceService and return Maps. Calling them domain-layer services next to the entities hides the fact that the domain package depends on persistence."
+  ],
+  "missing": [
+    "Dependency 'Use-case controllers' ..> 'Domain entities' (Control/ReportCreationController.java:3 imports Entity.ReportCategory).",
+    "Layer/package containment: the four layers drawn as enclosing packages or subsystems (Boundary, Control, Entity, Database), with ReportService/UserService visibly inside the Entity package.",
+    "The facade's provided interface: SystemServicesController is the GUI's single entry point for registration, creation, review, details, status update, internal note and monitoring. UserLoginGUI bypasses it to use UserLoginController directly. Without an interface, the bypass reads as just another arrow.",
+    "A short responsibility for each component in the diagram (e.g. a note or a second label line). The README/inventory has them, but the stakeholder reads the view.",
+    "The Map<String,Object> data contract between the GUI, controller and service layers (entities are not passed to the UI, except ReportCategory). This answers 'how they collaborate'."
+  ],
+  "uml": [
+    "Dependencies between components are drawn as solid arrows. In UML, a solid line with an open arrowhead is a navigable association, which is not a dependency. Use dashed «use» dependencies (or required/provided interfaces) throughout. The current mix of solid and dashed arrows has no defined meaning.",
+    "Layers are encoded in the element names and not modelled. Use packages or «subsystem» components that contain the components.",
+    "The MySQL database is drawn as a plain component, and it is external to the system. Mark it as an external component and keep it outside the system boundary. Do not draw it as a peer of the internal components.",
+    "No provided/required interfaces or ports are shown. A UML component diagram for this concern should at least show the facade's provided interface and the PersistenceService interface that the services require."
+  ],
+  "fixes": [
+    "Model the layers as packages/subsystems (Boundary, Control, Entity, Database) that contain the components. Make it visible that ReportService/UserService sit in Entity and depend on Database, so the domain layer is not persistence-ignorant.",
+    "Replace the solid arrows with dashed «use» dependencies, and add the facade's provided interface (with UserLoginGUI shown bypassing it) and the PersistenceService provided interface.",
+    "Add a one-line responsibility to each component in the diagram, including the Map-based data contract across the GUI/controller/service boundaries.",
+    "Add the missing Use-case controllers ..> Domain entities dependency (ReportCategory). Relabel or annotate persist ..> model as a persistence.xml mapping, not a code dependency.",
+    "Show MySQL reports_db as external to the system boundary, with JDBC/Hibernate as the connector."
+  ]}

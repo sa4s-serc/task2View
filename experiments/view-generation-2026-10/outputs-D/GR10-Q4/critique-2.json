@@ -1,0 +1,29 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main types of users that interact with the system", "answered": "yes",
+     "why": "User generalised into Citizen and Municipal operator matches Entity/User.java with the Citizen and MunicipalOperator subtypes and the role-based dashboards (UserDashboardGUI.java:316-352). Because of the generalisation, 'Register and log in' now visibly applies to both roles. This is enough for an analyst who does not yet know the roles."},
+    {"detail": "goals each of them can achieve through it", "answered": "partly",
+     "why": "The citizen goals (report, review own reports, details/history, notifications) and the operator goals (review received, update status, add note, monitor) are present and supported. One operator goal is missing: 'View Internal Notes' is a separate option in the operator's details dialog (ReceivedReportsGUI.java:329-361, displayInternalNotesFromDetails). Only adding notes is shown, so the reader cannot tell that the notes are ever read back. Also, the diagram lets an operator reach 'View notifications on my report', because it extends the shared details use case. The code offers that option only in the citizen dialog (SubmittedReportsGUI.java:237-262), not the operator one (ReceivedReportsGUI.java:329-335)."},
+    {"detail": "how the functionalities are related to each other", "answered": "partly",
+     "why": "The «extend» from details to the two review use cases is now correct. But 'Add internal note' extends the wrong base: it is an option inside the operator's Report Details dialog (ReceivedReportsGUI.java:333 and 359-361 call openInternalNoteGUIFromDetails), not of the report list, so it extends 'View report details and status history'. Also, 'Update report status' is drawn as fully separate. In the code, the dashboard entry opens the received-reports list in status-update mode, where the operator selects a report (UserDashboardGUI.java:575-583, ReceivedReportsGUI.java:705-708 modeStatusUpdate). So it depends on selecting a received report, and the view does not show that link. The note gives one condition for all extends but is attached to a use case, not to the extend relations."}
+  ],
+  "level": "right",
+  "level_why": "Nine goal-level use cases in domain terms, with no screens or technology, suit an analyst's overview of what the system offers. Logout, navigation, filters and the image viewer are rightly left out. Adding 'View internal notes' (or merging it with adding into 'Manage internal notes') keeps the count about the same. Nothing should be dropped.",
+  "unsupported": [
+    "'Add internal note' «extend» 'Review received reports': the code offers 'Add Internal Note' only from the selected report's details dialog (ReceivedReportsGUI.java:329-361 → openInternalNoteGUIFromDetails at :770). The base is the details use case, not the list review.",
+    "'View notifications on my report' reachable by the Municipal operator: it extends the details use case, which both review use cases share. But only the citizen dialog has 'View Notifications' (SubmittedReportsGUI.java:237-258); the operator dialog has View History / View Image / View Internal Notes / Add Internal Note (ReceivedReportsGUI.java:329-335)."
+  ],
+  "missing": [
+    "Operator goal 'View internal notes' on a report (ReceivedReportsGUI.java:331-332, 355-357 displayInternalNotesFromDetails).",
+    "Relation of 'Update report status' to selecting a received report: the dashboard button opens ReceivedReportsGUI(userSessionData, true), and the operator picks the report there before the status form opens (UserDashboardGUI.java:575-583, ReceivedReportsGUI.java:705-708, openStatusUpdateGUIFromSelection)."
+  ],
+  "uml": [
+    "The extension condition is in a note anchored to the extending use case 'View report details...', while the same condition is meant to apply to several «extend» relations. In UML the condition belongs to each Extend relation (a note attached to the dashed arrow, or a condition with an extension point on the base use case). As drawn, the reader cannot tell which extends the note covers, or whether it also covers 'View notifications' and 'Add internal note'.",
+    "Extending an extension ('View notifications' «extend» 'View report details', which itself extends two bases) leaves the role restriction implicit. Give the notification extension a condition [citizen is owner], or split the details use case per actor, so the model does not allow operator access."
+  ],
+  "fixes": [
+    "Re-target 'Add internal note' to «extend» 'View report details and status history' (the selected report's dialog) instead of 'Review received reports', and add the operator goal 'View internal notes' the same way (or merge both into 'Manage internal notes').",
+    "Restrict 'View notifications on my report' to the citizen: attach the condition [requested by owning citizen] to its «extend», or model citizen and operator report details as separate use cases.",
+    "Show how 'Update report status' relates to selecting a received report, for example «include» a 'Select received report' step or note it on the association. Keep it as a top-level operator goal.",
+    "Attach the 'a report is selected' condition to the «extend» arrows it applies to, not to the use case."
+  ]}

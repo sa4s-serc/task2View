@@ -1,0 +1,49 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main components involved in registration and their responsibilities",
+      "answered": "partly",
+      "why": "All six components on the registration path are lifelines and match the code (registration.html/app.js, AuthenticationController, LibraryFacade, UserManager, UserRegistry+PersistenceManager, MySQL). Their responsibilities can only be guessed from the message labels; they are written down only in inventory.json and README, not in the view. RestExceptionHandler, which produces the 400 response, has no lifeline, so the component that owns the error mapping cannot be seen."
+    },
+    {
+      "detail": "how they interact when a new user creates an account",
+      "answered": "partly",
+      "why": "The success path (01-12) is correct and in the right order. The failure behaviour is drawn wrongly. In the code, validation failures (UserManager.register -> validate/validateStudent/validateLibrarian) throw before any lookup. The two uniqueness checks are separate and run in sequence (institutionalEmailExists, then findStudentByStudentNumber or findLibrarianByCode), and each one can throw. The view puts one alt after both validation and the lookups, so it suggests every request reaches the DB SELECT. It also leaves out the third outcome: PersistenceManager.save catches the exception, rolls back and returns false, and UserManager then throws RuntimeException (UserManager.java:92-94). RestExceptionHandler does not map that exception, so the client gets a 500, not a 400."
+    },
+    {
+      "detail": "main integration points to exercise in the tests",
+      "answered": "partly",
+      "why": "The view does not mark any integration points. The README lists five, but a reader of the diagram has to infer them. Missing from the drawing: the RestExceptionHandler exception-to-HTTP mapping (400 and the unmapped 500), the form-encoded @RequestParam contract (app.js sets application/x-www-form-urlencoded), and the persistence boundary with its transaction/rollback. The Swing entry into LibraryFacade appears only as a note attached to the wrong lifeline."
+    }
+  ],
+  "level": "right",
+  "level_why": "Six lifelines and about 15 messages is a good size for an integration tester working on one feature. Merging PersistenceManager/JPA into UserRegistry and folding the factories into a self-message are sensible choices. The problem is not the amount of detail but which details are chosen: the factory self-message (07) adds little for a tester, while the outcome branches the tests must cover (validation error, duplicate email, duplicate identifier, save failure) are merged or missing. Exactly one element should be added: a RestExceptionHandler lifeline, or an explicit mapping step.",
+  "unsupported": [
+    "The single alt guard placement (after 05-06) together with '[invalid / duplicate]' implies validation failures also run the SELECT lookups. In the code, validate()/validateStudent()/validateLibrarian() throw IllegalArgumentException before userRegistry is called (UserManager.java:65-75).",
+    "Message 06 'SELECT user by email, then by studentNumber / code' is shown as one call/one result, and the lookups are unconditional. In the code the email check throws 'Email is already associated with an account.' before the identifier lookup runs (UserManager.java:77-79). Only one of studentNumber or code is queried, depending on the role.",
+    "Message 15 '400 {\"error\": message}' is drawn as sent by AuthenticationController. In the code the 400 body is built by RestExceptionHandler (@RestControllerAdvice, RestExceptionHandler.java:19-22), not by the controller."
+  ],
+  "missing": [
+    "The save-failure outcome: PersistenceManager.save catches the RuntimeException, rolls back and returns false (PersistenceManager.java:19-43). UserManager then throws RuntimeException('Server error...') (UserManager.java:92-94). RestExceptionHandler does not handle it, so Spring's default 500 is returned. This is a distinct integration test case.",
+    "RestExceptionHandler as the component that maps IllegalArgumentException/IllegalStateException to 400 {error} (and SecurityException to 401). It is the integration point between the domain exceptions and the HTTP contract.",
+    "Separate failure exits for validation error vs duplicate email vs duplicate identifier. Each is its own test case with its own message and its own DB precondition.",
+    "Return messages from UserRegistry to UserManager (found/not found, true/false from registerUser). The alt guards depend on these values, but no reply is drawn.",
+    "Integration points are not identified in the view itself (for example, numbered notes on the REST boundary, the facade boundary used by both REST and Swing, the registry/DB lookups, the transactional persist, and the exception mapping).",
+    "The test DB target: src/test/resources/META-INF/persistence.xml points at the MySQL reservationsdb_test schema, not reservationsdb. A tester needs to know this."
+  ],
+  "uml": [
+    "Messages 13-14 are drawn as dashed reply arrows labelled with an exception name. UML sequence diagrams have no exception arrow, so this should be stated as a reply that carries the exception (for example 'register(): IllegalArgumentException' or 'throw IllegalArgumentException'), and the UserManager/LibraryFacade activations should end on that branch as well. At present they end only in the success branch.",
+    "The synchronous calls 05 and 08 to UserRegistry, and 06/09 to the database, have no reply messages, yet their results drive the alt guards. Add the replies, or at least give the call messages return values (e.g. '05 institutionalEmailExists(email): boolean').",
+    "Message 05 is a natural-language summary ('check email and identifier are unused (2 lookups)') rather than an operation. Use the real operation names (institutionalEmailExists, findStudentByStudentNumber / findLibrarianByCode, registerUser) so testers can map messages to code.",
+    "Lifeline names mix a class name with technology notes in parentheses ('(Spring REST)', '(+ PersistenceManager, JPA)'). Prefer 'name : Type' lifelines and put the technology in a standard keyword or a note. The MySQL lifeline is a database, not an object, so it could be modelled as a participant typed by a «component» or as a note-marked external system. Do not use a non-standard stereotype.",
+    "The Swing note is attached over the registration page lifeline, but it describes an entry into LibraryFacade. Either attach it to LibraryFacade or model the alternative entry as a separate actor/lifeline in an alt/ref fragment."
+  ],
+  "fixes": [
+    "Restructure the control flow to follow UserManager.register. After the validation self-call, add an alt/break [invalid input] that returns 400 before any DB access. Then add the email lookup with a break [email exists], then the role-dependent identifier lookup with a break [identifier in use], then the persist. Show the replies from UserRegistry on each step.",
+    "Add the save-failure branch: registerUser returns false (rollback in PersistenceManager.save), UserManager throws RuntimeException, RestExceptionHandler does not map it, and the HTTP status is 500 (the default).",
+    "Add a RestExceptionHandler lifeline and have it produce the 400 {\"error\"} response, so the exception-to-HTTP mapping becomes a visible integration point.",
+    "Mark the integration points in the view itself with short numbered notes: REST form-encoded contract, facade boundary shared with the Swing entry, uniqueness lookups, transactional INSERT against reservationsdb_test, and error mapping. Write each component's one-line responsibility in its lifeline or in a legend.",
+    "Fix the notation: use real operation names with return values on the calls, model exception exits as replies or breaks that end the activations, attach the Swing note to LibraryFacade, and drop the factory self-message (07) or reduce it to 'createUser(...)'."
+  ]
+}

@@ -1,0 +1,85 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+
+' ---- body ----
+title UML component diagram: seat booking in the study-room reservation application
+
+package "Clients" {
+  [Web UI\n(static pages, app.js)] as web
+  [Swing desktop UI] as swing
+  [NotificationScheduler\n(every 60 s)] as sched
+}
+package "Booking request handling" {
+  [ReservationController\n(REST /api/reservations)] as rest
+  [LibraryFacade] as facade
+}
+package "Booking logic" {
+  [ReservationManager\n(booking rules, orchestration)] as resmgr
+  [StudyRoomManager\n(room and slot availability queries)] as roommgr
+  [AssignmentStrategy\n(FirstAvailableAssignment)] as strat
+  [Domain entities\n(Area, Seat, Student, Reservation)] as dom
+}
+package "Storage" {
+  [ReservationRegistry] as resreg
+  [StudyRoomRegistry] as roomreg
+  [PersistenceManager\n(JPA)] as pm
+  [MySQL reservationsdb] as db <<muted>>
+}
+package "Notification" {
+  [NotificationManager] as notif
+  [NotificationServiceAdapter\n+ ExternalEmailGateway stub] as adapter <<muted>>
+}
+
+web --> rest : HTTP/JSON
+swing --> facade : direct call
+sched --> facade : end-of-slot, reminders
+rest --> facade : makeReservation
+facade --> resmgr : makeReservation
+facade --> roommgr : availability queries
+facade --> notif : sendReminders
+resmgr --> roomreg : resolve room, area, seat
+resmgr --> dom : check availability, uniqueness
+resmgr ---> strat : pick seat
+resmgr --> resreg : save reservation
+resmgr --> notif : notify booking
+roommgr --> roomreg : read rooms
+dom --> resreg : find seat bookings
+dom --> notif : notify state change
+resreg --> pm : persist
+roomreg --> pm : persist
+pm --> db : JDBC
+notif ---> adapter : NotificationService
+
+legend right
+  <<muted>> = persistence or external boundary.
+  Booking rules live in ReservationManager and Domain entities.
+endlegend
+@enduml
