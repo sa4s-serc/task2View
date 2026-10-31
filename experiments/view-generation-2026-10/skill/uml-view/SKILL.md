@@ -38,6 +38,15 @@ tags; the tags are explained in `DERIVATION.md`. Where this skill and `plantuml-
    only; code wins when they disagree). [MP, MEL, NIL, YER]
 2. Build an **inventory before drawing**: each candidate element and relation with `file:line` evidence and a
    one-line responsibility. Anything you cannot point to is `unknown`, not guessed. [MP, DW, MEL, MSC]
+   Write it as `inventory.json` next to `view.puml`, in this shape (aliases are the ones used in the PlantUML):
+   ```json
+   {"model_kind": "UML component diagram", "detail_level": "overview | balanced | detailed",
+    "elements":  [{"alias": "orders", "name": "Order service", "responsibility": "...", "evidence": ["src/a/B.java:12-40"]}],
+    "relations": [{"from": "web", "to": "orders", "label": "places order", "evidence": ["src/web/C.java:88"]}],
+    "concern_details": [{"detail": "...", "answered_by": ["orders"]}, {"detail": "...", "not_answered": "why, and which view would"}],
+    "omitted": [{"name": "...", "reason": "..."}]}
+   ```
+   Evidence is a list of `path:line` or `path:start-end` relative to the repository root, or `"unknown"`.
 3. Draw an edge only when code, config or docs show the interaction. If two classifications are plausible or the
    evidence is missing, mark the item "(unconfirmed)" and record it under Assumptions. [MSC, GD, CH]
 
@@ -87,9 +96,12 @@ tags; the tags are explained in `DERIVATION.md`. Where this skill and `plantuml-
    - reading order, crowding, labels next to their edge.
    At most two rounds of fixes from the image. Fix by changing the graph (direction, grouping, splitting,
    dropping), never by adding elements that are not in the inventory. [GD, DIO, YH]
-3. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
+3. Run `python3 -I .claude/skills/uml-view/scripts/check_inventory.py view-out/<case>/inventory.json` and fix
+   what it reports: evidence that does not exist, elements or relations drawn but not in the inventory (or the
+   reverse), concern details with no answer, and elements over the budget. Exit 0 means clean.
+4. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
    [GD, DIO, YH]
-4. No renderer, no claim: if it did not render or you could not view it, say so. [GD, A365]
+5. No renderer, no claim: if it did not render or you could not view it, say so. [GD, A365]
 
 ## Tooling notes
 Written up from what the agent had to rediscover in earlier runs (they hold for any repository):
@@ -106,7 +118,7 @@ Written up from what the agent had to rediscover in earlier runs (they hold for 
 ## 6. README (next to view.puml)
 - The takeaway sentence, the stakeholder, and the detail level chosen and why.
 - For each concern detail: where the view answers it, or why it does not (and which other view would).
-- Inventory: element → `file:line` evidence.
+- A pointer to `inventory.json` (do not repeat it) and the final `check_inventory.py` result.
 - Omitted on purpose (what was left out to stay within budget or level).
 - Assumptions and "(unconfirmed)" items. [CH, DW, MP]
 - Check result: final puml-check issue count and what the image review changed.
