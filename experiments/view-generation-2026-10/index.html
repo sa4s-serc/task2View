@@ -1,0 +1,1063 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>View generation from 42010 inputs</title>
+<style>
+body{font:15px/1.5 system-ui,sans-serif;margin:0 auto;max-width:1300px;padding:16px;color:#222;background:#fff}
+h2{margin-top:2.5em;border-top:1px solid #ddd;padding-top:1em} .request{font-style:italic}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start}
+.check{font-size:13px;color:#555}
+table{border-collapse:collapse;width:100%} th,td{text-align:left;vertical-align:top;padding:4px 6px;border-bottom:1px solid #eee}
+th{width:9em;color:#555;font-weight:600} ul{margin:0;padding-left:1.1em}
+img{max-width:100%;border:1px solid #ddd} pre{white-space:pre-wrap;font-size:13px;background:#f6f6f6;padding:8px}
+nav{position:sticky;top:0;background:#fff;padding:6px 0;border-bottom:1px solid #ddd}
+</style></head><body>
+<h1>View generation from 42010:2022 inputs</h1>
+<p>Central question: given the entity of interest, stakeholder, perspective, concern, aspect and viewpoint / model kind,
+can a view be generated that addresses the concern? The architecture is not given; one agent (Claude Sonnet 5.5)
+derives it from the repository and writes one view. Three conditions side by side: A the agent alone; B with the
+uml-view skill and its render, check and look loop; C as B plus a notes file per repository kept across cases.
+Layout issues are counted by puml-check (plantuml-diagrams skill). Judged by people.</p>
+<nav><a href="#GR10-Q1">GR10-Q1</a> · <a href="#GR10-Q2">GR10-Q2</a> · <a href="#GR10-Q4">GR10-Q4</a> · <a href="#GR10-Q3">GR10-Q3</a> · <a href="#IS-reg-L1">IS-reg-L1</a> · <a href="#IS-reg-L2">IS-reg-L2</a> · <a href="#IS-reg-L3">IS-reg-L3</a> · <a href="#IS-seat-L1">IS-seat-L1</a> · <a href="#IS-seat-L2">IS-seat-L2</a> · <a href="#IS-seat-L3">IS-seat-L3</a></nav>
+<section id="GR10-Q1">
+<h2>GR10-Q1</h2>
+<p class="request">“I am a software architect, and I would like a high-level component view of the system.”</p><details><summary>original long request</summary><p>I am a software architect. I need to review the overall organization of the system before planning its future evolution. I want to understand the main architectural components, their responsibilities, how the system is decomposed into different layers or subsystems, and the main dependencies among them. I also need to identify how user-facing functionality, application logic, domain entities, and data persistence are separated and how these parts collaborate to provide the main system functionalities.</p></details>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>software architect</td></tr><tr><th>perspective</th><td>the whole system at a high level, before planning its evolution</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main architectural components and their responsibilities</li><li>decomposition into layers or subsystems</li><li>main dependencies among them</li><li>separation of user interface, application logic, domain entities and persistence, and how they collaborate</li></ul></td></tr><tr><th>aspect</th><td>structural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q1/view.png"><img src="outputs/GR10-Q1/view.png" alt="GR10-Q1 A: agent"></a><p class="check">layout issues: 6 (edge-through-text 2, label-on-border 2, edge-through-own-label 1, busy 1)</p>
+<details><summary>README</summary><pre># GR10-Q1 – Component view (UML component diagram)
+
+`view.puml` shows the high-level structure of the municipal problem-reporting desktop application (Java Swing + Hibernate/JPA + MySQL), derived from the packages in `src/main/java`.
+
+## What it shows
+Four layers, each matching a source package, plus the external MySQL database:
+- **Presentation (`Boundary`)**: Swing GUIs, grouped into access/registration, dashboard, citizen report screens and operator screens.
+- **Application logic (`Control`)**: `SystemServicesController` is a facade that delegates to one controller per use case; `UserLoginController` is called directly by the login GUI; `NotificationController` is used by the status-update controller.
+- **Domain (`Entity`)**: JPA entities (users, reports, notes, notifications, ...), the status-state classes behind the `ReportStatus` interface, and the domain services `UserService` / `ReportService`, which hold the business rules.
+- **Persistence (`Database`)**: `PersistenceService` (generic save/update/find) over `JpaUtil` (EntityManagerFactory, unit defined in `persistence.xml`), connected to MySQL `reports_db`.
+
+## How it addresses the concern
+- **Main components and responsibilities**: each component is labelled with its role and key classes.
+- **Layers/subsystems**: the four packages above.
+- **Main dependencies**: arrows go strictly downward (GUI -&gt; controllers -&gt; domain services -&gt; persistence -&gt; DB). Dotted arrows are GUI-to-GUI navigation and the JPA mapping of entities.
+- **Separation of UI, logic, domain, persistence**: the GUIs only talk to controllers and exchange `Map&lt;String,Object&gt;` data rather than entities. Controllers orchestrate use cases through the domain services. Only the domain services access persistence, and only `JpaUtil` touches the database.
+
+## Observation
+The domain services live in the `Entity` package and call `PersistenceService` directly, so the domain layer depends on persistence. This is not a clean separation and is worth noting before planning evolution.
+</pre></details>
+<p class="links"><a href="outputs/GR10-Q1/view.puml">view.puml</a> · <a href="outputs/GR10-Q1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q1/view.png"><img src="outputs-B/GR10-Q1/view.png" alt="GR10-Q1 B: + skill and feedback loop"></a><p class="check">layout issues: 0</p>
+<details><summary>README</summary><pre># Component view: Municipal Report Management desktop application
+
+**Takeaway:** a layered Boundary → Control → Entity services → Database desktop application, where the domain entities are shared by services and persistence, and the data lives in one MySQL database.
+**Stakeholder:** software architect. **Detail level:** overview (6 components, budget ≤ 7), as the perspective is the whole system before planning evolution.
+
+## How the view addresses the concern
+- **Main components and responsibilities:** Boundary = GUI screens (login, registration, dashboard, report creation, submitted/received reports, status update, internal notes, activity monitoring). Control = `SystemServicesController` facade plus one controller per use case, which checks roles and delegates. Entity services = `UserService`, `ReportService`, which hold the business operations. Domain entities = the JPA classes. Database = `PersistenceService` (save/update/find) and `JpaUtil` (EntityManagerFactory).
+- **Layers/subsystems:** the four packages `Boundary`, `Control`, `Entity`, `Database`; `Entity` is split into services and domain entities because they play different roles.
+- **Main dependencies:** arrows point from dependent to dependency (see the diagram labels).
+- **Separation UI / logic / domain / persistence:** UI only talks to Control, never to services or the database; persistence is reached only through the Entity services.
+
+## Inventory (element → evidence)
+- Boundary: `src/main/java/Boundary/*GUI.java`; the GUIs create `SystemServicesController` (e.g. `ReportCreationGUI.java:70`); `UserLoginGUI.java:111` uses `UserLoginController` directly. Swing is inferred from the `.form` files (IntelliJ forms_rt, `pom.xml`).
+- Control: `Control/SystemServicesController.java:23-29` (creates the 7 use-case controllers); controllers create `UserService`/`ReportService` (e.g. `ReportReviewController.java:21-22`).
+- Entity services: `Entity/UserService.java:20`, `Entity/ReportService.java:22` (use `PersistenceService`).
+- Domain entities: `Entity/User.java:28`, `Citizen.java:11`, `MunicipalOperator.java:11`, `Report.java:31`, `Submitted/Assigned/InProgress/Resolved` implementing `ReportStatus`, `InternalNote`, `StatusUpdate`, `Notification`.
+- Database: `Database/PersistenceService.java`, `Database/JpaUtil.java:11`; entity mapping in `resources/META-INF/persistence.xml` (Hibernate, JDBC MySQL `127.0.0.1:3306/reports_db`).
+
+## Omitted on purpose
+GUI-to-GUI navigation, individual controllers and GUIs, value classes (`Credentials`, `Location`, `ReportCategory`), tests, and class-level detail.
+
+## Assumptions
+- `ReportStatusUpdateController` also uses `NotificationController`; shown only inside the merged Control component.
+- `Boundary` imports `Entity.ReportCategory` (`ReportCreationGUI.java:4`, `ReceivedReportsGUI.java:4`), a minor shortcut past Control that is not drawn.
+- The MySQL server is drawn as a component (an external system), not as a deployment node.
+
+## Check result
+`puml-check`: 0 crossings, no overlaps, no tiny text; one advisory `aspect` warning (portrait ratio 0.79), which is accepted because the view is a layered chain. The first attempt (left-to-right, with interface lollipops) was too wide, and the second had edges through labels, so both were reverted. The image review found no further fixes.
+</pre></details>
+<p class="links"><a href="outputs-B/GR10-Q1/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q1/view.png"><img src="outputs-C/GR10-Q1/view.png" alt="GR10-Q1 C: + memory"></a><p class="check">layout issues: 0</p>
+<details><summary>README</summary><pre># Component view: municipal problem reporting desktop application
+
+**Takeaway:** a four-layer Boundary → Control → Entity → Database application: Swing screens call a controller facade, controllers drive domain services that manipulate JPA entities, and a persistence service stores them in MySQL.
+**Stakeholder:** software architect. **Detail:** overview (7 elements), because the perspective is the whole system before planning evolution. Wording is technical (Swing, JPA/Hibernate, JDBC).
+
+## How the concern is addressed
+- **Components and responsibilities:** one box per role (see inventory).
+- **Layers/subsystems:** the four packages mirror the source packages `Boundary`, `Control`, `Entity`, `Database`.
+- **Main dependencies:** the arrows; GUI → controllers → domain services → persistence → MySQL.
+- **UI / logic / domain / persistence separation:** Swing GUIs only call controllers; use-case logic lives in `Control`; entities are JPA-annotated classes; all `EntityManager` access is in `Database`.
+
+## Inventory
+| Element | Evidence |
+|---|---|
+| Swing GUI Screens (10 `*GUI` classes) | `src/main/java/Boundary/HomePageGUI.java:6,75` (javax.swing, main) |
+| System Services Controller (facade) | `Control/SystemServicesController.java:22-29` creates the 7 use-case controllers; GUIs create it e.g. `Boundary/ReportCreationGUI.java:70` |
+| Use-case Controllers (incl. NotificationController) | `Control/ReportStatusUpdateController.java:21` |
+| Domain Services (ReportService, UserService) | `Entity/ReportService.java:22`, `Entity/UserService.java:20` |
+| Domain Entities | `Entity/User.java:28`, `Entity/Report.java:31`, `resources/META-INF/persistence.xml:14-20` |
+| Persistence Service (PersistenceService + JpaUtil) | `Database/PersistenceService.java:18`, `Database/JpaUtil.java:17` |
+| MySQL reports_db | `persistence.xml:26-27`, `pom.xml:43` |
+| Edge GUI → Use-case Controllers (log in) | `Boundary/UserLoginGUI.java:111` |
+| Edge GUI ⇢ Entities | `Boundary/ReceivedReportsGUI.java:4` imports `Entity.ReportCategory` |
+| Edge Persistence ⇢ Entities | JPA entities listed in `persistence.xml:14-20` |
+
+## Omitted on purpose
+Individual GUI screens and controllers, concrete entity subclasses (Citizen, MunicipalOperator, statuses), Hibernate/JDBC driver as boxes (technology labels), tests.
+
+## Assumptions
+- Layer names are the source package names; &quot;Entity&quot; holds both domain services and entities.
+- MySQL is shown as a database element, not a deployment node; it is external to the app.
+- Separation is by convention: the facade returns `Map&lt;String,Object&gt;` data (`SystemServicesController.java:35,85`), but one GUI imports an entity enum.
+
+## Check result
+`puml-check`: 1 warning (aspect ratio 1.16 vs 1.78, tall because the layers are chained; left-to-right was worse at 3.87), 0 label/overlap issues, 1 edge crossing. Image review: all edges and labels readable; no change needed. Rendered with the plantuml-diagrams checker.
+</pre></details>
+<p class="links"><a href="outputs-C/GR10-Q1/view.puml">view.puml</a> · <a href="outputs-C/GR10-Q1/prompt.txt">prompt</a></p></div></div></section>
+<section id="GR10-Q2">
+<h2>GR10-Q2</h2>
+<p class="request">“I am a DevOps engineer, and I would like a complete deployment view of the system.”</p><details><summary>original long request</summary><p>I am a DevOps engineer. I need to deploy and configure the system in a new execution environment. Before preparing the deployment, I need to understand which runtime environments and software artifacts are required, where the application and its data are executed and stored, and how the main runtime elements communicate with each other. I also need to identify the technologies and runtime dependencies involved in the communication between the application and the database.</p></details>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>DevOps engineer</td></tr><tr><th>perspective</th><td>runtime and operations; deploying the system in a new environment</td></tr><tr><th>concern</th><td>deployment, connectivity</td></tr><tr><th>concern details</th><td><ul><li>required runtime environments and software artifacts</li><li>where the application runs and where its data is stored</li><li>how the main runtime elements communicate</li><li>technologies and runtime dependencies between the application and the database</li></ul></td></tr><tr><th>aspect</th><td>structural (runtime)</td></tr><tr><th>viewpoint</th><td>deployment</td></tr><tr><th>model kind</th><td>UML deployment diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q2/view.png"><img src="outputs/GR10-Q2/view.png" alt="GR10-Q2 A: agent"></a><p class="check">layout issues: 6 (edge-crosses-nested-borders 2, edge-through-own-label 2, edge-through-cluster 1, busy 1)</p>
+<details><summary>README</summary><pre># GR10-Q2 – Deployment view (UML deployment diagram)
+
+`view.puml` shows how the Municipal Report Management System is deployed and how its runtime elements connect. It was derived from `pom.xml`, `persistence.xml`, `Database/*`, the `main` methods in `Boundary/*`, and the README.
+
+## How it addresses the concern
+- **Required runtime environments and artifacts:** Client workstation runs a Java 23 JVM with the application classes, `persistence.xml`, the logo resource, and the libraries hibernate-core 6.6.50.Final, mysql-connector-j 9.4.0 and forms_rt 7.0.3. A MySQL server is the second environment. A build host (JDK 23 + Maven) produces the artifact and resolves dependencies from Maven Central.
+- **Where the application runs and where data is stored:** The whole application (Swing GUI, controllers, entities, persistence) is one desktop process on the client. Data lives only in the MySQL schema `reports_db` (tables `users`, `reports`, `internal_notes`, `status_updates`, `notifications`). By default MySQL is on `127.0.0.1`, i.e. the same machine.
+- **How the main elements communicate:** The only runtime link is JDBC over TCP (port 3306) from the client JVM to MySQL, via JPA/Hibernate. Maven Central access is build-time only. The code has no application server, web service or e-mail integration.
+- **Technologies and runtime dependencies between app and DB:** JPA (Hibernate, `RESOURCE_LOCAL` transactions) → MySQL Connector/J (`com.mysql.cj.jdbc.Driver`) → MySQL. The database, user `reports_user` and grants must exist before first run; Hibernate then creates/updates the tables (`hbm2ddl.auto=update`).
+
+## Deployment notes
+- Credentials and the JDBC URL are hard-coded in `persistence.xml`; to use a remote DB, change the URL, user and password there, and open port 3306.
+- The repository defines no packaging (no jar/shade plugin, no manifest), so the &quot;deploy&quot; step shown (jar + dependencies on the classpath) is an inference; start from a `main` class such as `Boundary.HomePageGUI`.
+- `pom.xml` has a typo (`configuretion`), so the compiler plugin settings are ignored. The JDK 23 requirement comes from the properties and README.
+- The black-box tests need a running MySQL instance and may open Swing dialogs.
+</pre></details>
+<p class="links"><a href="outputs/GR10-Q2/view.puml">view.puml</a> · <a href="outputs/GR10-Q2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q2/view.png"><img src="outputs-B/GR10-Q2/view.png" alt="GR10-Q2 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (busy 1)</p>
+<details><summary>README</summary><pre># Deployment view – Municipal Report Management System
+
+**Takeaway:** a Java 23 Swing desktop client (with Hibernate/JDBC embedded) runs on each user workstation and talks directly over JDBC/TCP 3306 to a MySQL server holding schema `reports_db`; there is no application server.
+
+**Stakeholder:** DevOps engineer, deploying to a new environment. **Detail:** overview (whole system; 6 nodes, 7 artifacts), engineering wording (technologies and protocols named).
+
+Files: `view.puml` (source), `view.png` (render).
+
+## How the view addresses the concern
+- **Required runtime environments and artifacts:** JVM (Java 23) on the workstation; MySQL server on the database host; app artifact, `persistence.xml`, and library jars (hibernate-core, mysql-connector-j, forms_rt); JDK 23 + Maven on the build machine.
+- **Where the app runs / where data is stored:** app on the user workstation inside the JVM; data in the `reports_db` schema on the MySQL server (default host 127.0.0.1, i.e. same machine unless the URL is changed).
+- **How runtime elements communicate:** workstation → DB host via JPA/Hibernate over JDBC, TCP 3306; build machine → Maven Central over HTTPS (build time only).
+- **Technologies and dependencies app ↔ database:** Hibernate 6.6.50 (JPA, `RESOURCE_LOCAL`), MySQL Connector/J 9.4.0 driver `com.mysql.cj.jdbc.Driver`, persistence unit `Municipal_Report_Management_System`, DB user `reports_user`; note records that Hibernate creates/updates tables (`hbm2ddl.auto=update`) while the database and user are created manually.
+
+## Inventory (element → evidence)
+| Element | Evidence |
+|---|---|
+| JVM Java 23 | `pom.xml:13-14` |
+| App artifact `municipal-report-management 1.0-SNAPSHOT`, entry `HomePageGUI.main` | `pom.xml:8-10`, `src/main/java/Boundary/HomePageGUI.java:75` |
+| Library jars | `pom.xml:34-52` |
+| `persistence.xml`, unit name | `src/main/resources/META-INF/persistence.xml:10` |
+| JDBC driver, URL (127.0.0.1:3306/reports_db), user | `persistence.xml:23-33` |
+| `hbm2ddl.auto=update` | `persistence.xml:35-36` |
+| Unit loaded by app | `src/main/java/Database/JpaUtil.java:17` |
+| MySQL server, DB/user creation | `README.md` &quot;MySQL setup&quot; |
+| Maven Central | `pom.xml:18-22` |
+
+## Omitted on purpose
+BCED layers (Boundary/Control/Entity/Database) and entity classes (component/class concerns), tests and JUnit, Hibernate properties for SQL logging, the three alternative `main` methods (login, registration, home).
+
+## Assumptions / unconfirmed
+- Distribution form of the app (jar, launch script) is not defined: no packaging/shade/manifest config in `pom.xml`; &quot;app jar&quot; is the default Maven output (unconfirmed). Also `pom.xml:64` has a typo `configuretion`, so compiler settings fall to the properties.
+- Workstation and DB host are separate nodes in the diagram; the code defaults make them the same machine (127.0.0.1). A remote DB requires editing `persistence.xml`.
+- Build machine and &quot;deploy&quot; edge reflect the Maven workflow, not a CI/CD pipeline (none in the repo). Credentials are hardcoded in `persistence.xml`.
+
+## Check result
+Final `puml-check`: OK, 0 warnings (one advisory &quot;busy&quot; info). Image review: an initial edge cut through the workstation boxes and was fixed by linking containers and moving the note; no other changes.
+</pre></details>
+<p class="links"><a href="outputs-B/GR10-Q2/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q2/view.png"><img src="outputs-C/GR10-Q2/view.png" alt="GR10-Q2 C: + memory"></a><p class="check">layout issues: 0</p>
+<details><summary>README</summary><pre># Deployment view — Municipal Report Management desktop application
+
+**Takeaway:** the application is a Java 23 Swing desktop program that runs in one JVM and reaches a MySQL schema `reports_db` through Hibernate/JDBC over TCP at 127.0.0.1:3306, so both must be installed on the same workstation.
+**Stakeholder:** DevOps engineer. **Detail:** overview (whole-system deployment, 6 nodes/artifacts-level elements).
+
+## How the concern is addressed
+- **Runtime environments and artifacts:** JVM (Java 23) and MySQL server nodes; artifacts: application (artifactId/version), hibernate-core, mysql-connector-j, forms_rt, persistence.xml, schema reports_db.
+- **Where it runs / where data lives:** the application runs in the JVM on the workstation; data lives in the `reports_db` schema in the MySQL server, created/updated by Hibernate (`hbm2ddl.auto=update`).
+- **Communication:** one communication path, JDBC over TCP, port 3306; internal dependencies between artifacts are `«use»`. No other network link exists in the code (no HTTP/mail/socket usage found).
+- **Technologies and dependencies app↔DB:** Hibernate 6.6.50 (JPA, RESOURCE_LOCAL) → MySQL Connector/J 9.4.0 → MySQL; credentials/URL come from persistence.xml.
+
+## Inventory (element → evidence)
+- Workstation, JVM Java 23: pom.xml:13-14; README.md &quot;Requirements&quot;; Swing entry points `main` at Boundary/HomePageGUI.java:75, UserLoginGUI.java:91, UserRegistrationGUI.java:145.
+- Application artifact: pom.xml:8-10.
+- hibernate-core: pom.xml:48-52; forms_rt: pom.xml:35-38; mysql-connector-j: pom.xml:42-45.
+- persistence.xml (unit, provider): src/main/resources/META-INF/persistence.xml:10,12.
+- JDBC driver/URL/user: persistence.xml:23-33; schema auto-update: :35-36.
+- JpaUtil creates the EntityManagerFactory: Database/JpaUtil.java:17.
+- MySQL server / reports_db: persistence.xml:27; README.md &quot;MySQL setup&quot;.
+
+## Omitted on purpose
+Classes/packages (component-level concern), tests, Maven Central build-time repository (pom.xml:18-22), IDE files.
+
+## Assumptions / unconfirmed
+- Same host for app and MySQL is derived from the 127.0.0.1 URL; a remote DB would need that URL changed.
+- &quot;Operator / citizen workstation&quot; is a generic device; code names no OS or hardware.
+- (unconfirmed) How the application is packaged/launched: pom.xml has no jar/shade/main-class setup, and the compiler plugin block uses the misspelled `&lt;configuretion&gt;` (pom.xml:64), so it is ignored; the artifact is shown by its Maven coordinates.
+- Credentials are in plain text in persistence.xml (README advises changing them).
+
+## Check result
+puml-check: OK, 0 issues on the final run (first runs had label-on-border/edge-through-label warnings, fixed by shortening labels and lengthening the edge). Image review: readable, no changes needed.
+</pre></details>
+<p class="links"><a href="outputs-C/GR10-Q2/view.puml">view.puml</a> · <a href="outputs-C/GR10-Q2/prompt.txt">prompt</a></p></div></div></section>
+<section id="GR10-Q4">
+<h2>GR10-Q4</h2>
+<p class="request">“I am a software analyst, and I would like a use case diagram showing the functionalities provided by the system.”</p><details><summary>original long request</summary><p>I am a business analyst. I need to understand at a high level how a system for reporting and managing problems in a municipal area is expected to work. I know that the application should allow people to report issues in the territory and support the municipality in managing them, but I do not yet know the specific user roles or the functionalities available to each of them. I need to identify the main types of users that interact with the system, the main goals they can achieve through it, and how the different functionalities are related to each other.</p></details>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>software analyst</td></tr><tr><th>perspective</th><td>what the system offers its users, without knowing the user roles yet</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main types of users that interact with the system</li><li>goals each of them can achieve through it</li><li>how the functionalities are related to each other</li></ul></td></tr><tr><th>aspect</th><td>functional</td></tr><tr><th>viewpoint</th><td>use case</td></tr><tr><th>model kind</th><td>UML use case diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q4/view.png"><img src="outputs/GR10-Q4/view.png" alt="GR10-Q4 A: agent"></a><p class="check">layout issues: 4 (edge-through-own-label 2, bundled-edges 1, busy 1)</p>
+<details><summary>README</summary><pre># Use case view - Municipal Report Management System
+
+**Viewpoint / model kind:** use case, UML use case diagram (`view.puml`). **Aspect:** functional.
+
+## What it shows
+The functionalities the desktop application offers, grouped by the actors that use them, and the relations among the functionalities. Derived from `Boundary/UserDashboardGUI` (role-dependent buttons), `Boundary/HomePageGUI`, the `Control/*Controller` classes (role checks via `UserService`) and `Boundary/ReceivedReportsGUI` / `SubmittedReportsGUI`.
+
+## How it addresses the concern
+- **Main types of users:** *Visitor* (not logged in; home page offers Register and Log in), and its two specializations *Citizen* and *Municipal Operator*. The dashboard shows different functions per role, and controllers reject the wrong role (e.g. &quot;Only citizens can create reports&quot;, &quot;Only an operator can update the status&quot;).
+- **Goals of each user:**
+  - Visitor: register, log in.
+  - Citizen: create a report, view own submitted reports (with details/history and notifications), log out.
+  - Operator: view received reports (filter them, add internal notes), update report status (Submitted -&gt; Assigned -&gt; In Progress -&gt; Resolved), monitor activity trends, log out.
+- **Relations between functionalities:** `include` for behaviour always performed (viewing either report list shows report details/history; a status update always triggers the notification step, which sends a citizen notification only when the new status is notifiable); `extend` for optional behaviour (filtering and adding internal notes from the received-reports list; reading notifications from a report&#x27;s details).
+
+## Notes
+- Login/registration are shown for the Visitor; Citizen and Operator inherit them. Log out is available to both roles.
+- Status update and internal notes are reached through the received-reports list in the code, hence the relations modelled on that use case.
+</pre></details>
+<p class="links"><a href="outputs/GR10-Q4/view.puml">view.puml</a> · <a href="outputs/GR10-Q4/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q4/view.png"><img src="outputs-B/GR10-Q4/view.png" alt="GR10-Q4 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (edge-through-text 1)</p>
+<details><summary>README</summary><pre># Use case view: Municipal report management application
+
+**Takeaway:** a Citizen can register, log in, create reports and follow their own reports; a Municipal Operator can review all received reports, advance their status (with a citizen notification), add internal notes and monitor activity trends.
+
+- Stakeholder: software analyst. Detail level: overview, 8 use cases (budget ≤ 8), domain wording, no technology names.
+- Files: `view.puml`, `view.png` (`out/` holds the checker/renderer output).
+
+## How the view addresses the concern
+| Concern | Where in the view |
+|---|---|
+| Main types of users | Actors Citizen and Municipal Operator, both specializing the abstract actor User (`Entity/User.java:28`, `Citizen.java:11`, `MunicipalOperator.java:11`). |
+| Goals of each | Citizen: create report, review submitted reports. Operator: review received reports, update status, add internal note, monitor trends. Both: register, log in. |
+| Relations between functionalities | «include»: update status needs the received-reports review (the update button opens the received-reports screen, `UserDashboardGUI.java:575`). «extend»: internal note is opened from a report&#x27;s details in that review (`ReceivedReportsGUI.java:790`). Generalization of actors. |
+
+## Inventory (element → evidence)
+- Register account → `HomePageGUI.java:49`, `UserRegistrationController.java:23`
+- Log in → `HomePageGUI.java:52`, `UserLoginController.java:24`
+- Create report → `UserDashboardGUI.java:100`, citizen only (`:321`), `ReportCreationController.java:146`
+- Review submitted reports → `UserDashboardGUI.java:101`, `ReportReviewController.java:28`
+- Review received reports (filter by category and status) → `UserDashboardGUI.java:102`, `ReceivedReportsGUI.java:411`, `ReportReviewController.java:44`
+- Update report status → `UserDashboardGUI.java:103`, `ReportStatusUpdateController.java:27` (operator only)
+- Citizen notification (note on Update report status) → `NotificationController.java:22,46`
+- Add internal note → `InternalNoteController.java:25` (operator only)
+- Monitor activity trends → `UserDashboardGUI.java:104`, `ActivityMonitoringController.java:28` (operator only)
+
+## Omitted on purpose
+Log out, report details/history screens (folded into the two review use cases), the three monitoring variants (general, in progress, area summary), and the notification as its own use case (it is automatic).
+
+## Assumptions
+- &quot;User&quot; is an abstract actor drawn from the entity hierarchy. Registration and login are available before a role exists, so the actor owning them is the generalization.
+- The login and registration screens are reachable without authentication (`HomePageGUI`).
+
+## Check result
+Final `puml-check`: 2 warnings (aspect 2.6:1, too wide; one edge from Operator passing through the system boundary title), 1 crossing. The first layout (left to right) had 2 warnings too, but was too tall (1.19:1) and had the same title crossing. Two attempts to remove the title crossing (an edge direction hint and a note move) increased crossings (3 to 4, then 1 to 5), so I reverted to the best version. Image review: all inventory items are drawn, and no labels overlap.
+</pre></details>
+<p class="links"><a href="outputs-B/GR10-Q4/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q4/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q4/view.png"><img src="outputs-C/GR10-Q4/view.png" alt="GR10-Q4 C: + memory"></a><p class="check">layout issues: 1 (edge-through-text 1)</p>
+<details><summary>README</summary><pre># Use case view: Municipal Issue Reporting System
+
+**Takeaway:** the system lets any user register and log in, citizens report and follow municipal problems, and municipal operators review, process and monitor them.
+**Stakeholder:** software analyst. **Detail level:** overview (whole system, domain wording, no technology names).
+Files: `view.puml` (source), `view.png` (render).
+
+## How the view answers the concern
+- **Main types of users:** actors `Citizen` and `Municipal Operator`, both specializing the abstract `User` (Entity `User`, `Citizen`, `MunicipalOperator`).
+- **Goals of each:** Citizen: Create report, View submitted reports. Operator: View received reports, Update report status, Add internal note, Monitor activity trends. Both (through `User`): Register account, Log in.
+- **How functionalities relate:** «extend» from View report details to the two report lists (opened optionally from a selected row); «include» from Update report status and Add internal note to View received reports (the operator picks a report in that list first), and from Update report status to View report details (the status screen loads the details).
+
+## Inventory (element -&gt; evidence)
+| Element | Evidence |
+|---|---|
+| User / Citizen / Municipal Operator | `Entity/User.java:28`, `Citizen.java:11`, `MunicipalOperator.java:11` |
+| Register account (role chosen in a combo box) | `Boundary/UserRegistrationGUI.java:214`, `:32`; `Control/UserRegistrationController.java:55-64`; `Control/SystemServicesController.java:registerUser` |
+| Log in | `Boundary/HomePageGUI.java:110`, `Boundary/UserLoginGUI.java`, `Control/UserLoginController.java:49` |
+| Create report (citizen only) | `Boundary/UserDashboardGUI.java:447`, `Control/ReportCreationController.java:155` |
+| View submitted reports (citizen only) | `UserDashboardGUI.java:476`, `Control/ReportReviewController.java:34` |
+| View received reports (operator only, with filters) | `UserDashboardGUI.java:506`, `Control/ReportReviewController.java:53`, `Boundary/ReceivedReportsGUI.java:117,176` |
+| View report details | `ReceivedReportsGUI.java:254`, `SubmittedReportsGUI.java:164`, `ReportStatusUpdateGUI.java:450`, `Control/ReportDetailsController.java:42-49` |
+| Update report status (operator only) | `UserDashboardGUI.java:566` (opens `ReceivedReportsGUI(..., true)` :575), `Control/ReportStatusUpdateController.java:40` |
+| Add internal note (operator only) | `ReceivedReportsGUI.java:790`, `Control/InternalNoteController.java:56` |
+| Monitor activity trends (operator only) | `UserDashboardGUI.java:536`, `Control/ActivityMonitoringController.java:38` |
+
+## Omitted on purpose
+Log out and Back to dashboard (navigation); filter/clear-filter and image attachment (parts of other use cases); the citizen notification sent when a status changes (`Control/ReportStatusUpdateController.java:104` -&gt; `NotificationController`) is an internal effect of Update report status, not a separate user goal. The view has 9 use cases, one over the budget of 8, because two actor groups share the system; dropping one would lose a goal.
+
+## Assumptions
+- The generalization from `User` to the two roles is drawn from the entity classes; the login and registration screens are reachable without a role.
+- «include»/«extend» are inferred from the screen navigation, not from an explicit feature model.
+
+## Check result
+Final `puml-check`: 1 warning (a Citizen edge passes through the system boundary title). An alternative layout removed it but added 5 edge crossings, so the first version was kept. The image review found no overlapping labels.
+</pre></details>
+<p class="links"><a href="outputs-C/GR10-Q4/view.puml">view.puml</a> · <a href="outputs-C/GR10-Q4/prompt.txt">prompt</a></p></div></div></section>
+<section id="GR10-Q3">
+<h2>GR10-Q3</h2>
+<p class="request">“I am a database engineer. I need to modify the persistence layer to support future changes to the management of municipal reports. Before modifying the database, I need to understand the main data entities stored by the system, the relationships among them, and which information must be persisted throughout the lifecycle of a report. In particular, I need to understand how users, reports, locations, categories, states, state changes, internal notes, and notifications are related, and which parts of the application depend on this persisted information.”</p>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>database engineer</td></tr><tr><th>perspective</th><td>the persistence layer, before changing how reports are managed</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main data entities stored and their relationships</li><li>information persisted throughout the lifecycle of a report</li><li>how users, reports, locations, categories, states, state changes, internal notes and notifications are related</li><li>which parts of the application depend on the persisted information</li></ul></td></tr><tr><th>aspect</th><td>informational</td></tr><tr><th>viewpoint</th><td>data model</td></tr><tr><th>model kind</th><td>UML class diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q3/view.png"><img src="outputs/GR10-Q3/view.png" alt="GR10-Q3 A: agent"></a><p class="check">layout issues: 15 (bundled-edges 6, edge-through-text 4, detached-label 2, edge-crosses-nested-borders 1, many-crossings 1, busy 1)</p>
+<details><summary>README</summary><pre># GR10-Q3 – Data model view (UML class diagram)
+
+**Viewpoint / model kind:** data model, UML class diagram. **Aspect:** informational.
+**Stakeholder:** database engineer, preparing to change the persistence layer.
+**Source:** `Entity/*.java` (JPA annotations), `META-INF/persistence.xml`, `Database/PersistenceService.java`, and the callers in `Control/` and `Boundary/`.
+
+## What it shows
+- **Persisted entities.** `users` (single table, discriminator `role`: Citizen / MunicipalOperator, with embedded `Credentials`), `reports` (with embedded `Location` and the `ReportCategory` enum stored as a string), `status_updates`, `internal_notes` and `notifications`. Columns, keys, nullability and lengths are taken from the annotations.
+- **Relationships and cardinalities.** A report belongs to exactly one citizen and has 0..1 assigned operators. It owns 0..* status updates and 0..* internal notes (cascade ALL, orphan removal). Updates and notes each record the operator who made them. A notification points to one report and one citizen recipient.
+- **Status.** Statuses are not tables. `reports.current_status` holds a string (`submitted`, `assigned`, `in_progress`, `resolved`), and the state classes (`Submitted` … `Resolved`) are rebuilt from it on load. The package is drawn separately and marked non-persisted.
+- **Dependents.** `PersistenceService` is the only access point to JPA. `UserService` and `ReportService` use it. The controllers call those services, `SystemServicesController` is the façade, and the GUIs call that façade (`UserLoginGUI` calls `UserLoginController` directly). `ReportCategory` is also used directly by two GUIs.
+
+## How it addresses the concern
+| Concern | Where in the view |
+|---|---|
+| Main entities and relationships | The &quot;Persisted entities&quot; package and its associations |
+| Information persisted over a report&#x27;s lifecycle | `Report` (current status, editability, operator, date, image), `StatusUpdate` (one row per transition with timestamp and operator), `InternalNote`, `Notification` (only for notifiable statuses), and the status state machine |
+| How users, reports, locations, categories, states, state changes, notes and notifications relate | `Location` and `ReportCategory` are columns of `reports`. States are the `current_status` string. State changes are `status_updates`. Notes and notifications are child tables of `reports`. Users are linked through `citizen_id` and `operator_id`. |
+| Parts of the application that depend on the data | The service, control and boundary packages, with dependency arrows |
+
+## Points to check before changing the schema
+- Status names are duplicated as strings in `reports.current_status`, `status_updates.new_status` and `notifications.notified_status`, and in the code constants. Only `current_status` is validated on load.
+- Notifications have no key to the status update that triggered them. The link is by report and status text.
+- The email uniqueness constraint is on `users.email`. Passwords are stored as plain strings in the code.
+- The schema is generated by Hibernate (`hbm2ddl.auto=update`) and there are no migration scripts.
+- `Report.location` is not a table. Changing it means changing columns in `reports`.
+- `reports.operator_id` is set at the first status update (`updateReportStatus` calls `assignOperator`).
+- Reports are loaded with eager notes and updates.
+</pre></details>
+<p class="links"><a href="outputs/GR10-Q3/view.puml">view.puml</a> · <a href="outputs/GR10-Q3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/GR10-Q3/view.png"><img src="outputs-B/GR10-Q3/view.png" alt="GR10-Q3 B: + skill and feedback loop"></a><p class="check">layout issues: 4 (edge-through-text 2, crowded-ends 1, busy 1)</p>
+<details><summary>README</summary><pre># Data model view – persistence of municipal reports (UML class diagram)
+
+**Takeaway:** every report is one row in `reports` (with location and category inline) owned by a citizen and optionally assigned to an operator; its lifecycle is persisted as child rows (status updates, internal notes) plus notifications, and only `ReportService`/`UserService` (via `PersistenceService`) touch them.
+
+Stakeholder: database engineer, about to change report management. Detail level: *detailed* for the persistence area only (12 classes, within the ≤15 budget); technology names (JPA, Hibernate, MySQL) are used.
+
+## How the view answers the concern
+- **Main entities and relations:** the persistent classes `User` (Citizen / MunicipalOperator, single table `users`, discriminator `role`), `Report`, `StatusUpdate`, `InternalNote`, `Notification`, with multiplicities on every foreign key.
+- **Lifecycle information:** `Report.currentStatusName` + `citizenEditable` (current state), `StatusUpdate` (history: date, new status, operator), `InternalNote` (text, date, operator), `Notification` (date, message, notified status, recipient). Status values are in the note on `Report`.
+- **Users, locations, categories, states:** users = `User` hierarchy + embedded `Credentials`; location = embedded `Location` (columns in `reports`); category = enum `ReportCategory` stored as string column (values in note); states = text column, not a table (the state objects are rebuilt on load and not persisted).
+- **Dependent parts:** `UserService`, `ReportService` and `PersistenceService` are shown with the entities they use. The note records that Control classes call the services and GUIs reach them only through Control (the Control/Boundary classes are not drawn, to stay one abstraction level).
+
+## Inventory (evidence)
+| Element | Evidence |
+|---|---|
+| User, Citizen, MunicipalOperator, Credentials | `src/main/java/Entity/User.java:20-67`, `Citizen.java:9-10`, `MunicipalOperator.java:9-10`, `Credentials.java:9-16` |
+| Report, Location | `Report.java:29-112`, `Location.java:9-25` |
+| ReportCategory | `ReportCategory.java:6-12`, `Report.java:49-51` |
+| StatusUpdate | `StatusUpdate.java:20-53`; created `Report.java:367-382` |
+| InternalNote | `InternalNote.java:20-53`; created `Report.java:224-242` |
+| Notification | `Notification.java:19-53`; saved `ReportService.java:398` |
+| ReportService / UserService | `Entity/ReportService.java`, `Entity/UserService.java` (`persistenceService.*` calls) |
+| PersistenceService, store | `Database/PersistenceService.java:24,51,116,177`, `META-INF/persistence.xml` |
+| Callers | `Control/*Controller.java` create the services; `Boundary/*GUI.java` use `SystemServicesController` |
+
+## Omitted on purpose
+State classes (`Submitted`, `Assigned`, `InProgress`, `Resolved`, `ReportStatus`: not persisted), Control and Boundary classes, getters/validation, individual service methods.
+
+## Assumptions
+- `Notification` has no inverse collection in `Report` and no cascade; it is persisted separately by `ReportService`.
+- Table names come from `@Table`; Location/Credentials columns are embedded, so no separate tables. `Notification.destinatario` is shown as `recipient`.
+- Dependency labels (reads/creates) summarise `ReportService` calls; `UserService` also uses `Citizen`/`MunicipalOperator` lookups through `User`.
+- `&lt;&lt;persistent&gt;&gt;`/`&lt;&lt;embeddable&gt;&gt;` are not UML standard stereotypes; they are declared as a profile in the legend.
+
+## Check result
+Final `puml-check`: 3 warnings (two edge labels near a line, two crowded multiplicity ends at `MunicipalOperator`); first render had 13. Image review: moved the enum into a note and fixed a mis-rendered attribute; a variant with extra ranks was worse (13 warnings) and was reverted.
+</pre></details>
+<p class="links"><a href="outputs-B/GR10-Q3/view.puml">view.puml</a> · <a href="outputs-B/GR10-Q3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/GR10-Q3/view.png"><img src="outputs-C/GR10-Q3/view.png" alt="GR10-Q3 C: + memory"></a><p class="check">layout issues: 6 (edge-through-text 2, edge-through-node 2, bundled-edges 1, busy 1)</p>
+<details><summary>README</summary><pre># Data model view: persisted entities of the municipal report system
+
+**Takeaway:** every report is one row in `reports` linked to the citizen who filed it, with its location and category stored inline and its history in child rows (status updates, internal notes, notifications). All access goes through `ReportService` and `UserService`.
+
+**Stakeholder:** database engineer, about to change the persistence layer. **Detail:** balanced (14 classes: 11 persisted types plus 3 persistence-access classes), with attributes shown because the change is to the schema. Technology names (JPA table and column terms) are used because the audience is engineering.
+
+## How the view answers the concern
+- **Main entities and relationships:** the seven JPA entities in `persistence.xml:14-20` and their associations. `Credentials` and `Location` are embedded columns, not tables. `ReportCategory` is an enum stored as a string.
+- **Users, reports, locations, categories:** `User` is a single table with a `role` discriminator, with `Citizen` and `MunicipalOperator` as subclasses. `Report` points to the citizen who reported it and the optional assigned operator. `Location` is embedded in `Report` and `ReportCategory` is its `category` attribute.
+- **States and state changes:** the current state is the string `currentStatusName` on `Report`. Each change is a `StatusUpdate` row (date, new status, operator), composed by `Report` with cascade and orphan removal. The state objects (`Submitted`, `Assigned`, `InProgress`, `Resolved`) are `@Transient`, so they are not stored.
+- **Internal notes and notifications:** `InternalNote` holds text, date and author operator, and is composed by `Report`. `Notification` holds date, message and notified status, and points to the report and the citizen recipient. It is not cascaded from `Report`.
+- **Lifecycle information persisted:** the creation attributes on `Report`, then `StatusUpdate`, `InternalNote` and `Notification` rows added over time.
+- **Dependents:** `ReportService` and `UserService` use `PersistenceService`, which uses `JpaUtil`. Only these services access the entities. The 9 Control classes reach persistence through them (the 10th, `SystemServicesController`, is a facade).
+
+## Inventory (element: evidence)
+- `User`: Entity/User.java:20-33 (single table, discriminator `role`: :22-27)
+- `Credentials`: Credentials.java:9-16; embedded in User.java:47
+- `Citizen`: Citizen.java:9-11; `MunicipalOperator`: MunicipalOperator.java:9-11
+- `Report`: Report.java:29-113 (citizen :87-89, operator :94-96, notes :101-107, updates :112-113, category :49-51, status string :69-70, `@Transient` status :75-76, `Location` embedded :56-57)
+- `Location`: Location.java:9-25. `ReportCategory`: ReportCategory.java:8-12
+- `StatusUpdate`: StatusUpdate.java:20-54. `InternalNote`: InternalNote.java:20-54
+- `Notification`: Notification.java:19-54 (citizen :48-50, report :52-54)
+- `ReportService` use of Report, Notification, InternalNote and StatusUpdate: ReportService.java:113, 200, 213, 248, 398
+- `UserService` use of User: UserService.java:89, 123
+- Both services use `PersistenceService`: ReportService.java:21, UserService.java:20
+- Persistence unit and entity list: persistence.xml:10-20
+
+## Omitted on purpose
+- The status state classes and the `ReportStatus` interface (not persisted).
+- The 9 Control classes and the Swing GUI classes (shown only as a note).
+- `JpaUtil`, constructors, getters and private helper methods.
+- Edges from `ReportService` to `StatusUpdate`, `InternalNote` and `User` (written in a note and merged into the `Report` edge).
+
+## Assumptions
+- Foreign-key column names come from `@JoinColumn`, but the real database schema (`hbm2ddl update`, persistence.xml:35-36) was not inspected.
+- Statuses are free strings, so the only status values known are the constants in Report.java:33-36 (no database constraint is visible).
+- Table names appear in a note rather than as stereotypes, to stay within standard UML.
+
+## Check result
+Final `puml-check`: 4 warnings (edge-through-text and edge-through-node on long cross-row edges, bundled edges); the first run had 10. Aspect ratio is 1.85 against a target of 1.78, with no tiny text. Image review: the layout was restacked into rows and the view was kept at the better, less wide version. Rendered with PlantUML to `view.png`.
+</pre></details>
+<p class="links"><a href="outputs-C/GR10-Q3/view.puml">view.puml</a> · <a href="outputs-C/GR10-Q3/prompt.txt">prompt</a></p></div></div></section>
+<section id="IS-reg-L1">
+<h2>IS-reg-L1</h2>
+<p class="request">“I am an integration tester, and I would like a dynamic view of the user registration functionality.”</p><details><summary>original long request</summary><p>I am an integration tester. I need to test the user registration functionality and understand which system components are involved and how they interact.</p></details>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>testing the user registration feature end to end</td></tr><tr><th>concern</th><td>control_flow</td></tr><tr><th>concern details</th><td><ul><li>system components involved in user registration</li><li>how they interact</li></ul></td></tr><tr><th>aspect</th><td>behavioural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L1/view.png"><img src="outputs/IS-reg-L1/view.png" alt="IS-reg-L1 A: agent"></a><p class="check">layout issues: 10 (group-label-on-lifeline 4, message-crosses-lifeline 3, group-label-crosses-lifeline 2, message-spans-lifelines 1)</p>
+<details><summary>README</summary><pre># View: User Registration - Dynamic View (UML sequence diagram)
+
+**Stakeholder:** integration tester. **Concern:** control flow of user registration: which components take part and how they interact. **Aspect/viewpoint:** behavioural / dynamic.
+
+`view.puml` shows the end-to-end flow of registering a Student or a Librarian, derived from the code in `JavaProject/src/main`.
+
+## How it addresses the concern
+- **Components involved:** the participants are the registration client (Swing `Registration`, or web `registration.html`/`app.js`), `AuthenticationController` (`POST /api/auth/register`), `RestExceptionHandler`, `LibraryFacade`, `UserManager`, `StudentFactory`/`LibrarianFactory`, `UserRegistry`, `PersistenceManager` and the database. Stereotypes give each one&#x27;s layer.
+- **How they interact:** messages follow the call chain: UI -&gt; (controller, web only) -&gt; `LibraryFacade.register` -&gt; `UserManager.register` -&gt; validation -&gt; uniqueness checks via `UserRegistry`/`PersistenceManager` -&gt; factory creation -&gt; `registerUser`/`save` -&gt; `UserDTO` returned. The Swing client calls the facade directly; the web client goes through REST.
+- **Control flow / branches for test design:** `alt`/`opt` fragments cover the Student vs Librarian validation, invalid data or duplicate email/identifier (`IllegalArgumentException`, mapped to HTTP 400 by `RestExceptionHandler`), persistence failure (`save` returns false, `RuntimeException`), and success (DTO returned, user told to sign in and sent to login).
+
+Scope note: login and other use cases are out of scope. The Swing client&#x27;s exception path is shown only as propagation to the UI error dialog.
+</pre></details>
+<p class="links"><a href="outputs/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs/IS-reg-L1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L1/view.png"><img src="outputs-B/IS-reg-L1/view.png" alt="IS-reg-L1 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (group-label-on-lifeline 1)</p>
+<details><summary>README</summary><pre># Sequence diagram: user registration
+
+**Takeaway:** a registration request travels Registration Form → Authentication Controller → Library Facade → User Manager, which validates, checks uniqueness through User Registry / Persistence Manager, builds a Student or Librarian and saves it; any rule violation comes back as an exception shown to the user as an error.
+
+**Stakeholder:** integration tester (end-to-end registration). **Detail:** balanced (one feature), 7 lifelines, ~18 messages; engineering wording (HTTP path, class names).
+
+Files: `view.puml` (source), `view.png` (render).
+
+## How the view addresses the concern
+- **System components involved:** the 7 lifelines: user (Student/Librarian), Registration Form, Authentication Controller, Library Facade, User Manager, User Registry, Persistence Manager.
+- **How they interact / control flow:** main flow top to bottom (submit, POST, facade delegation, validation, uniqueness check, factory creation, save, UserDTO back); one `alt` shows the error path (IllegalArgumentException mapped to HTTP 400, RuntimeException if saving fails).
+
+## Inventory (element → evidence)
+| Element | Evidence |
+|---|---|
+| Registration Form (web) | `JavaProject/src/main/resources/static/registration.html:53-70` (POST `/auth/register`, alert, show error) |
+| Registration Form (Swing) | `boundary/Swing/Registration.java:116-141` (calls `LibraryFacade` directly) |
+| Authentication Controller | `boundary/SpringBoot/AuthenticationController.java:16-31` (`POST /api/auth/register`) |
+| Error mapping to HTTP 400 | `boundary/SpringBoot/RestExceptionHandler.java:19-22` |
+| Library Facade | `controller/LibraryFacade.java:37-40` |
+| User Manager (validate, uniqueness, factory, save, DTO) | `controller/UserManager.java:65-97` |
+| Factory (Student/Librarian) | `controller/factory/StudentFactory.java`, `LibrarianFactory.java` (collapsed into a User Manager self-message) |
+| User Registry | `entity/UserRegistry.java:26-67` |
+| Persistence Manager | `database/PersistenceManager.java:19-43` (`save`, returns false on failure) |
+
+## Omitted on purpose
+Database/JPA internals, entities, DTO fields, login and other use cases, individual validation rules (collapsed to &quot;validate input&quot;), the two lookups (collapsed, &quot;x2&quot;), and the facade/controller return hops in the error path are shown but not annotated further.
+
+## Assumptions
+- The two uniqueness checks (email, identifier) are drawn as one message pair; in code they are separate calls (`UserManager.java:77-84`).
+- On save failure `UserManager` throws `RuntimeException`, which `RestExceptionHandler` does not map (only IllegalArgument/IllegalState/Security); so the HTTP status for that case is unconfirmed. The `alt` shows &quot;HTTP 400&quot; only for rule violations.
+- The Swing form path bypasses the controller; noted in the diagram, not drawn separately.
+
+## Check result
+Final `puml-check`: 0 warnings other than `aspect` (sequence diagrams are tall; 866x976), plus 1 info. Image review changed the error path from a trailing `alt` to an `alt accepted / else rejected`, and collapsed repeated lookups to stay under the message budget.
+</pre></details>
+<p class="links"><a href="outputs-B/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L1/view.png"><img src="outputs-C/IS-reg-L1/view.png" alt="IS-reg-L1 C: + memory"></a><p class="check">layout issues: 4 (group-label-crosses-lifeline 1, message-crosses-lifeline 1, group-label-on-lifeline 1, message-spans-lifelines 1)</p>
+<details><summary>README</summary><pre># Sequence diagram – User registration (view.puml / view.png)
+
+**Takeaway:** a registration request travels Registration form → AuthenticationController → LibraryFacade → UserManager → UserRegistry → MySQL; UserManager validates, checks duplicates, creates the Student or Librarian through a factory and persists it, and returns a UserDTO or an error that is mapped to HTTP 400.
+
+**Stakeholder:** integration tester (end-to-end test of registration). **Detail:** balanced (one feature), engineering wording (REST path, JPA, MySQL). 6 lifelines, 11 messages (slightly under the 12 budget).
+
+## Concern
+- *System components involved:* the six lifelines, one per architectural role (inventory below).
+- *How they interact / control flow:* the top-to-bottom messages show the call chain, the validation, duplicate check, creation, persistence and return path. The `alt` shows the error path (invalid input or duplicate -&gt; IllegalArgumentException -&gt; HTTP 400); the note on UserRegistry gives the save-failure path.
+
+## Inventory (element -&gt; evidence)
+| Element | Evidence |
+|---|---|
+| Registration form (web) | `resources/static/registration.html:53-66` (POST `/auth/register`, then redirect to login) |
+| Registration form (Swing) | `boundary/Swing/Registration.java:116-141` (calls `LibraryFacade.register` directly) |
+| AuthenticationController | `boundary/SpringBoot/AuthenticationController.java:15-31` (`POST /api/auth/register`) |
+| LibraryFacade | `controller/LibraryFacade.java:37-40` |
+| UserManager (validate, duplicates, factory, save) | `controller/UserManager.java:65-97` |
+| StudentFactory / LibrarianFactory | `controller/factory/StudentFactory.java:8-18`, `UserManager.java:89` |
+| UserRegistry | `entity/UserRegistry.java:26-67` |
+| PersistenceManager save (merged into UserRegistry lifeline) | `database/PersistenceManager.java:19-37` (begin/persist/commit, rollback -&gt; false) |
+| MySQL reservationsdb | `resources/META-INF/persistence.xml:21` |
+| HTTP 400 mapping | `boundary/SpringBoot/RestExceptionHandler.java:18-21` |
+| Test entry point (calls the facade) | `src/test/.../RegistrationTest.java:53-90` |
+
+## Omitted on purpose
+UserDTO/User entities, `app.js` helper, PersistenceManager as separate lifeline, individual validation rules, the repeated registry lookups (email, student number, librarian code), the Student/Librarian role branch in detail, the login flow.
+
+## Assumptions
+- The Swing and web forms are shown as one lifeline; the Swing path skips AuthenticationController (note in view).
+- Error replies are drawn as one message from UserManager to the form, with a note that they pass through LibraryFacade and AuthenticationController.
+- No notification or e-mail step exists in registration code (none found).
+
+## Check
+Final puml-check: 0 errors; 2 warnings (alt label and one error message cross a lifeline because the form is far left of UserManager) – accepted, as shortening further lost meaning. Image review: layout readable, no overlaps; no changes needed after the first image.
+</pre></details>
+<p class="links"><a href="outputs-C/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs-C/IS-reg-L1/prompt.txt">prompt</a></p></div></div></section>
+<section id="IS-reg-L2">
+<h2>IS-reg-L2</h2>
+<p class="request">“I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the main components involved in registration, their responsibilities, and how they interact when a new user creates an account. I also need to identify the main integration points that should be exercised during the tests.”</p>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>designing integration tests for user registration</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components involved in registration and their responsibilities</li><li>how they interact when a new user creates an account</li><li>main integration points to exercise in the tests</li></ul></td></tr><tr><th>aspect</th><td>behavioural, structural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L2/view.png"><img src="outputs/IS-reg-L2/view.png" alt="IS-reg-L2 A: agent"></a><p class="check">layout issues: 9 (group-label-on-lifeline 4, message-crosses-lifeline 3, group-label-crosses-lifeline 1, message-spans-lifelines 1)</p>
+<details><summary>README</summary><pre># View: User registration (UC1) - UML sequence diagram
+
+Viewpoint: dynamic. Model kind: UML sequence diagram. Stakeholder: integration tester.
+Source: `JavaProject/src/main` (AuthenticationController, LibraryFacade, UserManager,
+StudentFactory/LibrarianFactory, UserRegistry, PersistenceManager, registration.html, Swing `Registration`).
+
+## What it shows
+The runtime interaction when a new Student or Librarian creates an account: from the registration
+form (web page or Swing client), through the REST controller (web only), the facade, the
+`UserManager` (validation, uniqueness checks, role-specific creation), the `UserRegistry` and
+`PersistenceManager`, down to the MySQL database. The success path and the two error paths
+(validation/uniqueness -&gt; HTTP 400; persistence failure) are shown as alternatives.
+
+## How it addresses the concern
+- **Main components and responsibilities (structural/behavioural):** each participant is labelled
+  with its role. The form collects input; `AuthenticationController` exposes `POST /api/auth/register`;
+  `LibraryFacade` is the single entry point and delegates; `UserManager` validates and orchestrates;
+  the factories create the Student or Librarian; `UserRegistry` provides lookups and save;
+  `PersistenceManager` runs JPA transactions; `RestExceptionHandler` maps errors to HTTP.
+- **Control flow:** the message order shows validation first (no data access), then duplicate checks
+  on email and identifier, then creation and persistence, then the DTO or error returned to the user.
+- **Connectivity / integration points:** markers IP0-IP7 (explained in the legend) identify the interfaces
+  to exercise: the HTTP contract (IP1), the facade entry shared by web and Swing (IP2),
+  manager-to-registry checks (IP3), factory (IP4), registry-to-persistence-to-database with
+  the unique-email constraint (IP5/IP6), and response/error mapping (IP7).
+
+## Observations useful for test design
+- Swing calls `LibraryFacade` directly, so the HTTP layer is only covered via the web client or REST calls.
+- A `RuntimeException` from a failed save is not handled by `RestExceptionHandler` (only
+  IllegalArgument/IllegalState/Security), so the response then depends on the framework default.
+- Passwords are stored and compared in plain form in the entity (no hashing in the registration path).
+</pre></details>
+<p class="links"><a href="outputs/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs/IS-reg-L2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L2/view.png"><img src="outputs-B/IS-reg-L2/view.png" alt="IS-reg-L2 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (group-label-on-lifeline 1)</p>
+<details><summary>README</summary><pre># Sequence diagram: new user registration
+
+**Takeaway:** a registration request passes through a fixed chain, UI → AuthenticationController → LibraryFacade → UserManager → UserRegistry → PersistenceManager → MySQL. All validation and the duplicate checks are in UserManager, so the tester can exercise each hop and each failure mode on that path.
+
+**Stakeholder:** integration tester. **Detail level:** balanced (one feature; 8 lifelines counting the actor, 12 forward messages plus replies). Wording is technical (REST, JPA, MySQL) because the reader is an engineer.
+
+## How it answers the concern
+| Concern | Where in the view |
+|---|---|
+| Main components and responsibilities | The lifelines. Responsibilities are given in the inventory below. The self-messages on UserManager show validation and user creation. |
+| How they interact | The message order from &quot;submit form&quot; to the reply. The `alt` shows the rejected and saved outcomes. |
+| Integration points to exercise | See the list below; IP1 is marked in the diagram. |
+
+Integration points (the numbering is mine, not from the code):
+- **IP1 UI → AuthenticationController:** `POST /api/auth/register`, form-encoded, with `role, name, surname, email, password, identifier`. The Swing `Registration` form bypasses REST and calls `LibraryFacade` directly (`Registration.java:116-135`).
+- **IP2 AuthenticationController → LibraryFacade → UserManager:** the facade only delegates.
+- **IP3 UserManager → UserRegistry → PersistenceManager → MySQL, read:** the duplicate email and identifier checks.
+- **IP4 The same chain, write:** the transactional INSERT. `save` returns false on failure, which UserManager turns into a `RuntimeException`.
+- **IP5 Error mapping:** `RestExceptionHandler` maps `IllegalArgumentException` to HTTP 400 `{error}`.
+
+## Inventory (element → evidence)
+- Registration UI: `static/registration.html:52-68` posts through `app.js` `api()`; `boundary/Swing/Registration.java:116`.
+- AuthenticationController (REST endpoint, delegates to the facade): `boundary/SpringBoot/AuthenticationController.java:22-31`.
+- LibraryFacade (single entry to the controllers): `controller/LibraryFacade.java:37-40`.
+- UserManager (validates, checks duplicates, creates the user via `StudentFactory`/`LibrarianFactory`, builds the DTO): `controller/UserManager.java:65-97`.
+- UserRegistry (user lookups and save): `entity/UserRegistry.java:26-67`.
+- PersistenceManager (JPA transaction and queries): `database/PersistenceManager.java:19-43, 172`.
+- MySQL `reservationsdb`: `META-INF/persistence.xml:21`. Unique constraint on the email column: `entity/User.java:21`.
+- Error mapping: `boundary/SpringBoot/RestExceptionHandler.java:19-28`.
+- Existing tests that call the facade: `RegistrationTest.java`.
+
+## Omitted on purpose
+- `UserDTO`, `JpaUtil` and the Spring/Swing glue.
+- The individual validation rules (field formats, `@unina.it` email, password 8-32 characters). They are collapsed into one self-message.
+- The repeated email and identifier lookups. They are collapsed into one request (the code does two SELECTs, or one for the email and one for the identifier).
+- Login and the other use cases.
+
+## Assumptions
+- The `alt` is drawn after the INSERT for readability. Invalid-input and duplicate rejections actually happen before the INSERT, and a failed save happens at the INSERT; a note on the diagram says so.
+- A save failure is returned as a `RuntimeException`. `RestExceptionHandler` has no handler for it, so the HTTP result is whatever Spring&#x27;s default does (unconfirmed). The diagram says &quot;error response&quot; generically.
+- The `@unina.it` email rule and the identifier formats are enforced only in `UserManager`; the web form was not checked for client-side rules.
+
+## Check result
+- `puml-check` (16:9 target): 1 warning, `aspect`. Sequence diagrams are tall, and it would be cleared only by splitting.
+- An earlier version had 5 lifeline-crossing warnings; routing the replies through the facade cleared them.
+- Image review: the diagram reads top to bottom with no overlaps. I merged the save-failure branch into one `alt` and added a note to explain it.
+</pre></details>
+<p class="links"><a href="outputs-B/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L2/view.png"><img src="outputs-C/IS-reg-L2/view.png" alt="IS-reg-L2 C: + memory"></a><p class="check">layout issues: 3 (group-label-on-lifeline 2, group-label-crosses-lifeline 1)</p>
+<details><summary>README</summary><pre># Registration sequence view (integration tester)
+
+**Takeaway:** a registration request travels form → AuthenticationController (REST) → LibraryFacade → UserManager (validate, duplicate checks, factory) → UserRegistry → PersistenceManager → MySQL, and every failure comes back as an exception that the REST layer maps to HTTP 400.
+Stakeholder: integration tester. Detail level: balanced (one feature), engineering wording (REST, JPA, MySQL).
+
+## Concern coverage
+- **Main components and responsibilities:** the seven lifelines and their labels; responsibilities per inventory below.
+- **Interaction on account creation:** main flow top to bottom (validate, 2 duplicate lookups collapsed into one message, factory, save, INSERT) plus the `alt` for rejection, save failure and success.
+- **Integration points to exercise:** (1) form → `POST /api/auth/register`; (2) controller → LibraryFacade → UserManager; (3) UserManager → UserRegistry duplicate lookups; (4) UserRegistry → PersistenceManager → MySQL (SELECT, INSERT, rollback); (5) exception → HTTP 400 mapping. The Swing form enters at (2), bypassing REST (note in view).
+
+## Inventory (element → evidence; paths under JavaProject/src/main)
+- Registration form (web): resources/static/registration.html:53-66 (api helper resources/static/app.js:41); Swing: java/it/unina/reservations/boundary/Swing/Registration.java:116-141
+- AuthenticationController: boundary/SpringBoot/AuthenticationController.java:22-31
+- RestExceptionHandler (400 mapping): boundary/SpringBoot/RestExceptionHandler.java:19-22
+- LibraryFacade.register: controller/LibraryFacade.java:37-40
+- UserManager.register (validate, duplicates, factory, save): controller/UserManager.java:65-97; rules :52-58, :26, :29
+- StudentFactory/LibrarianFactory: controller/factory/StudentFactory.java:8-18
+- UserRegistry: entity/UserRegistry.java:26-28, :37-67
+- PersistenceManager.save: database/PersistenceManager.java:19-43
+- MySQL reservationsdb, unit reservationsPU: resources/META-INF/persistence.xml:7,21
+- Existing tests via the facade: src/test/.../RegistrationTest.java:53+
+
+## Omitted on purpose
+Factories as own lifelines (a self-call), JpaUtil, entities/DTO details, login, notifications (registration sends none).
+
+## Assumptions
+- DB lookups return nothing in the success path; the lookup/INSERT ordering is drawn before the `alt`, whose first branch is raised before the INSERT.
+- Unique email constraint (entity/User.java:21) is not drawn; a violation would surface as save failure.
+
+## Check
+puml-check: no lifeline crossings, remaining output is info-level group-label notes only. Image review: fixed messages that jumped over LibraryFacade and clarified the failure branch label.
+</pre></details>
+<p class="links"><a href="outputs-C/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs-C/IS-reg-L2/prompt.txt">prompt</a></p></div></div></section>
+<section id="IS-reg-L3">
+<h2>IS-reg-L3</h2>
+<p class="request">“I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the registration process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components handle the registration request, validate the user&#x27;s personal information and selected role, manage role-specific data such as the student ID or librarian identifier, verify the validity and uniqueness of the account, and persist the newly created user. I also need to understand how these components collaborate when invalid or already existing user data is provided, so that I can identify the main integration points and interactions that should be covered by the tests.”</p>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>designing integration tests for user registration, at the level of the architecture</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components in the registration process, their responsibilities, interactions and dependencies</li><li>which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness of the account, and persist the new user</li><li>how they collaborate when invalid or already existing data is provided</li><li>main integration points and interactions the tests should cover</li></ul></td></tr><tr><th>aspect</th><td>behavioural, structural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L3/view.png"><img src="outputs/IS-reg-L3/view.png" alt="IS-reg-L3 A: agent"></a><p class="check">layout issues: 12 (group-label-crosses-lifeline 5, group-label-on-lifeline 5, message-crosses-lifeline 1, message-spans-lifelines 1)</p>
+<details><summary>README</summary><pre># User registration – dynamic view (UML sequence diagram)
+
+`view.puml` shows the runtime control flow of user registration (UC1) for a Student or Librarian, derived from the code:
+`Registration` (Swing) / `registration.html` + `app.js` → `AuthenticationController` (`POST /api/auth/register`) → `LibraryFacade` → `UserManager` → `StudentFactory`/`LibrarianFactory` → `UserRegistry` → `PersistenceManager` → database. `RestExceptionHandler` maps failures to HTTP responses.
+
+## How it addresses the concern
+- **Main components and responsibilities**: one lifeline per component, with stereotypes. Boundary receives the request (UI/REST controller), the facade delegates, `UserManager` validates and orchestrates, the factories build the role-specific user, `UserRegistry` checks existence and registers, `PersistenceManager` handles JPA persistence.
+- **Who does what**:
+  - *Handles the request*: `AuthenticationController` (web) or the Swing form via `LibraryFacade`.
+  - *Validates personal data and role*: `UserManager.validate`, `validateStudent`, `validateLibrarian` (section 1).
+  - *Role-specific data*: student ID format (letter + 8 digits) vs. librarian code (alphanumeric); `StudentFactory` / `LibrarianFactory` set `studentNumber` / `internalIdentifierCode`.
+  - *Validity and uniqueness*: `UserRegistry` lookups by email and by identifier (section 2).
+  - *Persistence*: `UserRegistry.registerUser` → `PersistenceManager.save` (section 3).
+- **Invalid or existing data**: `alt` branches show validation failure, duplicate email, duplicate identifier (all `IllegalArgumentException` → HTTP 400 `{&quot;error&quot;}` via `RestExceptionHandler`, or an error dialog in Swing), and persistence failure (`RuntimeException`, which has no dedicated handler, so default HTTP 500).
+- **Integration points to cover**: UI/REST ↔ `LibraryFacade`; `UserManager` ↔ `UserRegistry`; `UserManager` ↔ factories; `UserRegistry` ↔ `PersistenceManager` ↔ DB; exception propagation to `RestExceptionHandler`/UI.
+
+Notes: the Swing client blocks blank fields locally before calling the backend. Uniqueness is checked (email first, then identifier) before persisting; DB unique constraints are a second line of defense that surfaces as the persistence failure branch.
+</pre></details>
+<p class="links"><a href="outputs/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs/IS-reg-L3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-reg-L3/view.png"><img src="outputs-B/IS-reg-L3/view.png" alt="IS-reg-L3 B: + skill and feedback loop"></a><p class="check">layout issues: 2 (group-label-on-lifeline 1, message-spans-lifelines 1)</p>
+<details><summary>README</summary><pre># Sequence view: user registration (Student / Librarian)
+
+**Takeaway:** A registration request goes Client → AuthenticationController → LibraryFacade → UserManager. UserManager validates the role and personal data, checks uniqueness through UserRegistry/PersistenceManager, builds the role-specific user with a factory, and persists it. Invalid or duplicate data ends in an `IllegalArgumentException` that RestExceptionHandler maps to HTTP 400.
+
+Stakeholder: integration tester. Detail level: balanced-to-detailed for this one feature (7 lifelines, 21 messages with 3 `alt` fragments), because the concern asks for the invalid and duplicate paths and the integration points.
+
+Files: `view.puml` (source), `view.png` (render).
+
+## How the view answers the concern
+| Concern | Where |
+|---|---|
+| Handles the request | Messages 1–3: AuthenticationController (`POST /api/auth/register`) → LibraryFacade → UserManager. The Swing form skips the controller and calls LibraryFacade directly. |
+| Validates personal data and role | Message 4 (UserManager): role, password length, name, surname, email (unina.it), identifier format. |
+| Role-specific data (student ID / librarian code) | Message 4 and the bottom note (student ID = letter + 8 digits, librarian code alphanumeric); messages 10–11 (role picks the lookup); message 15 (StudentFactory or LibrarianFactory sets the identifier). |
+| Validity and uniqueness | Messages 7–12: email check, then identifier check, through UserRegistry → PersistenceManager. |
+| Persists the new user | Messages 17–19: `registerUser` → `save` (JPA persist in a transaction). |
+| Invalid data | `alt invalid` (5–6): 400 `{&quot;error&quot;: message}`. |
+| Existing data | `alt duplicate` (13–14): same 400 response. |
+| Save failure | `alt not saved` (21): `RuntimeException`. |
+| Integration points to test | Client↔Controller (HTTP and error JSON), Controller↔Facade↔UserManager, UserManager↔UserRegistry, UserRegistry↔PersistenceManager↔database, UserManager↔factories. |
+
+## Inventory (element → evidence)
+- Registration Client: `static/registration.html:53-57` (POST `/auth/register`); `boundary/Swing/Registration.java:116-134`.
+- AuthenticationController: `boundary/SpringBoot/AuthenticationController.java:22-31`.
+- RestExceptionHandler (merged into the controller lifeline): `RestExceptionHandler.java:19-28` (IllegalArgumentException → 400).
+- LibraryFacade: `controller/LibraryFacade.java:37-39`.
+- UserManager: `controller/UserManager.java:65-97` (validation 52-58, 173-221; uniqueness 77-87).
+- StudentFactory / LibrarianFactory: `controller/factory/*.java` (UserManager.java:89-90).
+- UserRegistry: `entity/UserRegistry.java:26-67`.
+- PersistenceManager: `database/PersistenceManager.java:19-37` (`save`), `:172` (`findFirstByFields`).
+
+## Omitted on purpose
+UserDTO, User/Student/Librarian entities, JpaUtil, the database itself (shown as the JPA layer), the singleton accessors, the login flow, and the static JS helper `app.js`. The facade and controller hops on the return path are collapsed into one message (5, 13, 20, 21).
+
+## Assumptions / unconfirmed
+- The HTTP status for the `RuntimeException` on a failed save (message 21) is unconfirmed. `RestExceptionHandler` has no handler for it, so the framework default presumably applies.
+- Messages 5, 13, 20 and 21 run UserManager → Controller or Client directly, standing for the collapsed return through LibraryFacade.
+- The uniqueness lookups run in this order (email first, then identifier), so a request with both duplicated reports the email error.
+- The email domain `unina.it` is enforced by regex (`UserManager.java:26`).
+
+## Check result
+`puml-check` ends with 1 warning (`aspect`: the diagram is tall, ratio 1.23 vs 1.78; kept because a sequence of 21 messages is inherently tall) and 2 info lines (lifeline-spanning messages). The `group-label-crosses-lifeline` warnings were fixed by shortening the alt labels. After viewing the PNG I made no further changes.
+</pre></details>
+<p class="links"><a href="outputs-B/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs-B/IS-reg-L3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-reg-L3/view.png"><img src="outputs-C/IS-reg-L3/view.png" alt="IS-reg-L3 C: + memory"></a><p class="check">layout issues: 4 (group-label-on-lifeline 2, group-label-crosses-lifeline 1, message-spans-lifelines 1)</p>
+<details><summary>README</summary><pre># Sequence view: user registration
+
+**Takeaway:** a registration request passes Controller -&gt; Facade -&gt; UserManager, which alone validates role-specific data and checks uniqueness through UserRegistry/PersistenceManager, then builds the user with a role factory and saves it; invalid or duplicate data ends as IllegalArgumentException (HTTP 400), a failed save as RuntimeException.
+Stakeholder: integration tester. Detail: balanced/detailed for one feature (7 lifelines, 22 messages incl. replies); engineering wording.
+
+## Concern -&gt; view
+- Handles the request: AuthenticationController (msgs 1-2, 12, 19, 22); Swing form bypasses it (note).
+- Validates personal data and role: UserManager self-calls 4-6.
+- Role-specific data (student ID / librarian code): alt Student/Librarian (5-6), uniqueness lookup (9-10), UserFactory (13-14).
+- Validity and uniqueness: UserManager + UserRegistry + PersistenceManager (7-10).
+- Persistence: UserRegistry -&gt; PersistenceManager.save (15-16, 17/20).
+- Invalid/existing data: alt at 11-12; save failure alt at 17-19.
+- Integration points to test: Controller-Facade-UserManager, UserManager-UserRegistry-PersistenceManager (lookups and save), UserManager-UserFactory, exception-to-HTTP mapping.
+
+## Inventory (file:line, under JavaProject/src/main/java/it/unina/reservations)
+- AuthenticationController: boundary/SpringBoot/AuthenticationController.java:22-31
+- LibraryFacade: controller/LibraryFacade.java:37-40
+- UserManager: controller/UserManager.java:65-97 (validation :52-58, :173-198, :199-221)
+- UserFactory/StudentFactory/LibrarianFactory: controller/factory/StudentFactory.java:8-18
+- UserRegistry: entity/UserRegistry.java:26-67
+- PersistenceManager.save: database/PersistenceManager.java:19-37
+- RestExceptionHandler (note only): boundary/SpringBoot/RestExceptionHandler.java:19-22
+- Swing entry (note only): boundary/Swing/Registration.java:116-141
+
+## Omitted
+DTO mapping, JPA/JpaUtil, MySQL, web page, login flow, individual validation rules (collapsed into self-calls).
+
+## Assumptions
+- Format-validation exceptions (steps 4-6) are thrown before the lookups; the single alt at 11-12 groups all 400 outcomes for brevity.
+- The unmapped RuntimeException is shown as &quot;not mapped to 400&quot; per RestExceptionHandler handling only IllegalArgument/IllegalState/Security; the resulting HTTP status (framework default) was not verified.
+
+## Check
+puml-check: 2 warns left (aspect: tall sequence; one alt-label crossing a lifeline), no overlaps. Image reviewed: readable, no changes needed.
+</pre></details>
+<p class="links"><a href="outputs-C/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs-C/IS-reg-L3/prompt.txt">prompt</a></p></div></div></section>
+<section id="IS-seat-L1">
+<h2>IS-seat-L1</h2>
+<p class="request">“I am a software developer. I need to modify the seat booking functionality and understand the main system components involved and how they interact.”</p>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to modify the seat booking feature</td></tr><tr><th>concern</th><td>control_flow</td></tr><tr><th>concern details</th><td><ul><li>main system components involved in seat booking</li><li>how they interact</li></ul></td></tr><tr><th>aspect</th><td>structural, behavioural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L1/view.png"><img src="outputs/IS-seat-L1/view.png" alt="IS-seat-L1 A: agent"></a><p class="check">layout issues: 5 (edge-through-text 1, edge-through-cluster 1, edge-through-own-label 1, bundled-edges 1, busy 1)</p>
+<details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
+
+**Viewpoint/model kind:** component / UML component diagram. **Stakeholder:** developer about to modify seat booking. **Concern:** control flow.
+
+## What it shows
+The components on the path of a seat booking and the calls between them, derived from `JavaProject/src/main/java/it/unina/reservations`:
+
+- **Presentation:** Swing wizard (students/librarians; `ReservationSummary` calls `makeReservation`), static web UI (`app.js` → `/api`), REST controllers (`/api/reservations/create`, `/api/rooms/...`), and `NotificationScheduler`.
+- **Control:** `LibraryFacade` (single entry point), `ReservationManager`, `StudyRoomManager`, `NotificationManager`, and the `AssignmentStrategy` interface (`FirstAvailableAssignment`).
+- **Domain:** `Reservation` with its state classes, room/area/seat/time-slot/student entities, and the three registries.
+- **Persistence/external:** `PersistenceManager` (JPA) → MySQL; `NotificationServiceAdapter` → email gateway.
+
+## How it addresses the concern
+- **Main components involved in seat booking:** the packages and components above; the booking logic lives in `ReservationManager.makeReservation`, which validates room/area/slot/seat, enforces one active reservation per student and slot (`Student.hasActiveOrConfirmedReservation...`), picks the seat (explicit id, or `AssignmentStrategy` when seatId = 0), saves an ACTIVE `Reservation`, and notifies.
+- **How they interact:** edges are labelled with the calls. Both UIs (Swing directly, web via REST) go through `LibraryFacade`; the facade delegates to managers; managers use entities and registries, which persist via `PersistenceManager`. Seat availability is computed in the domain (`Area.getAvailableSeats` → `Seat.isAvailable` → `ReservationRegistry`). State changes are pushed to `NotificationManager` via the Observer link, which delivers through the `NotificationService` interface. The scheduler drives expiry/completion and reminders.
+
+Notes: the booking section is `synchronized` on `ReservationManager`; the notification is attached and fired after the reservation is saved. Not rendered/validated with PlantUML here.
+</pre></details>
+<p class="links"><a href="outputs/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs/IS-seat-L1/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L1/view.png"><img src="outputs-B/IS-seat-L1/view.png" alt="IS-seat-L1 B: + skill and feedback loop"></a><p class="check">layout issues: 1 (busy 1)</p>
+<details><summary>README</summary><pre># Component view: seat booking (IS-seat-L1)
+
+Files: `view.puml` (source), `view.png` (render).
+
+**Takeaway:** every booking request, from the Swing wizard or the web page, enters `LibraryFacade`. The facade delegates to `ReservationManager`, which validates the request, picks the seat, saves the reservation and notifies the student.
+
+**Stakeholder / detail:** software developer about to modify seat booking. The view is *detailed* for the booking path and shows 15 components, within the budget of 20. Wording is technical (Spring REST, JPA/Hibernate, Observer).
+
+## How the concern is addressed
+- **Main components involved:** four layers are drawn.
+  - Boundary: Swing wizard, web page, `ReservationController`.
+  - Controller: `LibraryFacade`, `ReservationManager`, `AssignmentStrategy`, `NotificationManager`.
+  - Entity: domain model, three registries, `PersistenceManager`.
+  - Notification delivery: adapter and email gateway.
+
+  `ReservationManager` is highlighted as the component to modify.
+- **How they interact (control flow):** each edge is a call, labelled with the operation or protocol. The flow is UI/REST → facade → `ReservationManager`. From there it resolves room, area, seat and student through the registries, checks seat availability on the domain model, and selects a seat via the strategy when the seat is automatic (id 0). It then saves the reservation and notifies via the Observer. `NotificationScheduler` is the other entry point into the facade, via `manageReservationEnd()`.
+- **Structural and behavioural aspects:** components and dependencies give the structure. Labelled call directions give the behaviour. Call order is not drawn; a sequence view would show it.
+
+## Inventory (element → evidence)
+| Element | Evidence |
+|---|---|
+| Swing Booking Wizard | `boundary/Swing/ReservationSummary.java:100` |
+| Web Booking Page | `static/reservation.html:385` (`POST /reservations/create`), `static/app.js:2,10` |
+| ReservationController | `boundary/SpringBoot/ReservationController.java:21-38` |
+| LibraryFacade | `controller/LibraryFacade.java` (`makeReservation`, `manageReservationEnd`) |
+| ReservationManager | `controller/ReservationManager.java:61` (`makeReservation`) |
+| AssignmentStrategy / FirstAvailableAssignment | `controller/strategy/*`, `ReservationManager.java:29,258` |
+| NotificationManager | `ReservationManager.java:114-117`, `controller/NotificationManager.java:15,40` |
+| Domain model | `ReservationManager.java:92,100,122` (`Area.getAvailableSeats`, `Seat.isAvailable`, `Student`, `Reservation`) |
+| ReservationRegistry / StudyRoomRegistry / UserRegistry | `ReservationManager.java:25-27` |
+| PersistenceManager | `entity/ReservationRegistry.java:17-20`, `entity/StudyRoomRegistry.java:17-20`; Hibernate/MySQL in `META-INF/persistence.xml:8,21` |
+| NotificationServiceAdapter, ExternalEmailGateway | `boundary/NotificationConfiguration.java:17`, `boundary/NotificationServiceAdapter.java:12` |
+| NotificationScheduler | `boundary/NotificationScheduler.java:19-30` |
+
+## Omitted on purpose
+- DTOs and `RestExceptionHandler`.
+- The other Swing wizard steps.
+- `StudyRoomManager` and `StudyRoomController`, which serve the room, slot and seat queries before booking. They are not on the `makeReservation` path.
+- Other managers (`UserManager`, user factories).
+- Reservation state classes.
+- The MySQL database, which is only named in the legend.
+
+## Assumptions
+- The Swing wizard is represented by `ReservationSummary`, the only step that calls `makeReservation`. The earlier wizard steps are folded into it.
+- The three registries and the domain classes are grouped as the Entity layer, as the package layout does.
+- The Hibernate/MySQL link comes from `persistence.xml`. I did not check how `PersistenceManager` uses it.
+
+## Check result
+- `puml-check`: 0 overlap, edge or text issues. The one remaining warning is `aspect` (the view is taller than 16:9), accepted because the view is meant as a page, not a slide.
+- Image review changes:
+  - Removed the `StudyRoomManager` edge, because it is off the booking path.
+  - Lightened the `ReservationManager` fill so its text is readable.
+  - Gave the `ReservationManager` edges separate ranks so their labels don&#x27;t crowd.
+</pre></details>
+<p class="links"><a href="outputs-B/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L1/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L1/view.png"><img src="outputs-C/IS-seat-L1/view.png" alt="IS-seat-L1 C: + memory"></a><p class="check">layout issues: 1 (busy 1)</p>
+<details><summary>README</summary><pre># UML component diagram: seat booking (view.puml / view.png)
+
+**Takeaway:** a booking request from the web or Swing UI enters through `LibraryFacade`, is executed by `ReservationManager` (which uses the domain, the registries, a seat-assignment strategy and `NotificationManager`), and is persisted via `PersistenceManager` to MySQL.
+
+Stakeholder: software developer about to modify seat booking. Detail: *detailed* for the booking path (ReservationManager highlighted), overview elsewhere (15 nodes, within the ≤20 budget). Wording: technology names kept.
+
+## Concern → where answered
+- **Main components involved:** all boxes; yellow `ReservationManager` is the place the booking rules live (`makeReservation`, `cancelReservation`, `performCheckIn`).
+- **How they interact:** labelled edges, caller → callee. Entry: Web Client → REST Controllers → LibraryFacade, or Swing → LibraryFacade; down through managers to registries, persistence and DB; side paths to the seat-assignment strategy and notifications (Observer + `NotificationService`).
+- Control flow order inside one booking is *not* shown (needs a sequence view): resolve student/room/area/slot → validate seat → (synchronized) uniqueness, availability, seat choice → save → notify.
+
+## Inventory (element → evidence)
+- Web Client: `static/reservation.html:385` POST `/reservations/create`; `static/app.js:2` `API=&#x27;/api&#x27;`.
+- Swing Booking Wizard: `boundary/Swing/ReservationSummary.java:100`, `DateAndRoomSelection.java:214`, `TimeSlotSelection.java:87`, `AreaSelection.java:85`.
+- REST Controllers: `boundary/SpringBoot/ReservationController.java:15-49` (create/cancel/checkIn → facade).
+- Notification Scheduler: `boundary/NotificationScheduler.java:15-29` (60 s; `@EnableScheduling` in `ReservationsApplication.java:13`).
+- LibraryFacade: `controller/LibraryFacade.java:117-164` (delegates to managers).
+- ReservationManager: `controller/ReservationManager.java:65-102` (make), `:205` cancel, `:240` check-in; notify `:120-123`, `:220`.
+- StudyRoomManager: `controller/StudyRoomManager.java:196,225,263` (rooms, slots, detail).
+- AssignmentStrategy: `controller/strategy/AssignmentStrategy.java:10`, `FirstAvailableAssignment.java:15`; used `ReservationManager.java:39,400`.
+- Reservation Domain: `entity/Reservation.java:82-88` (setState notifies), `:101-126` state transitions; `entity/state/*`; `entity/Seat.java:44` availability.
+- Registries: `entity/ReservationRegistry.java:33-56`; `StudyRoomRegistry`, `UserRegistry` (`ReservationManager.java:28-30`); Seat→registry `Seat.java:45`.
+- NotificationManager: `controller/NotificationManager.java:15,40,51,73`; interface `NotificationService.java:11`.
+- Email Adapter: `boundary/NotificationServiceAdapter.java:12-20`, `ExternalEmailGateway.java:12` (stub, returns 200); wired in `NotificationConfiguration.java:17`.
+- PersistenceManager: `database/PersistenceManager.java:19,74,185`; MySQL: `META-INF/persistence.xml:21`.
+
+## Omitted on purpose
+DTOs, Area/TimeSlot/Student entities as separate boxes, JpaUtil, user registration/login, room creation, librarian monitoring, `StudentController`/`StudyRoomController` as separate boxes (merged into REST Controllers). Librarian actor is omitted: the librarian does not book seats.
+
+## Assumptions
+- &quot;Registries&quot; merges three registry classes; &quot;Reservation Domain&quot; merges Reservation, its state classes and Seat.
+- The Observer edge is drawn Domain → NotificationManager since `ReservationManager` attaches it (`:121`, `:248`).
+- Cancel/check-in/end flows are included as they share the booking components.
+
+## Check result
+puml-check: 0 crossings, 0 text overlaps; 1 `aspect` warning (ratio 1.26, tall) kept because left-to-right gave 6.0 and unpackaged TB with ranksep 70 gave 0.61; packaged layers gave 7 warnings. Image review added the missing ReservationManager→NotificationManager edge and a missing label.
+</pre></details>
+<p class="links"><a href="outputs-C/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs-C/IS-seat-L1/prompt.txt">prompt</a></p></div></div></section>
+<section id="IS-seat-L2">
+<h2>IS-seat-L2</h2>
+<p class="request">“I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before changing the code, I need to understand the main components involved in this functionality, their responsibilities, and how they interact with each other. I also want to identify which parts of the system may be affected by the modification.”</p>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to add new booking rules to seat booking</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main components involved in seat booking and their responsibilities</li><li>how they interact with each other</li><li>which parts of the system may be affected by the modification</li></ul></td></tr><tr><th>aspect</th><td>structural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L2/view.png"><img src="outputs/IS-seat-L2/view.png" alt="IS-seat-L2 A: agent"></a><p class="check">layout issues: 12 (edge-through-text 6, bundled-edges 3, edge-through-own-label 1, label-on-border 1, busy 1)</p>
+<details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
+
+**Stakeholder / concern:** a developer about to add new booking rules. Viewpoint: component; aspect: structural. Derived from `JavaProject/src/main/java/it/unina/reservations`.
+
+## What it shows
+Layers (Boundary, Control, Entity, Persistence) and the components on the seat-booking path, with dependency arrows labelled by the interaction.
+
+## How it addresses the concern
+- **Main components and responsibilities.** Component names and stereotypes state the role. The key one is `ReservationManager`, highlighted. It orchestrates `makeReservation` (validation, seat choice, save, notify), cancel, check-in, and expiry or completion. `StudyRoomManager` computes room, slot and seat availability. `AssignmentStrategy` auto-assigns a seat. `NotificationManager` is the Observer for booking events. The registries hide persistence. `Reservation` and its State classes hold the lifecycle.
+- **Interactions.** Swing UI, REST controllers and the scheduler all enter through `LibraryFacade`. The facade delegates to the managers. `ReservationManager` uses the registries, the strategy and the notifications. `Reservation` notifies `NotificationManager`. The registries go through `PersistenceManager` to the database. Notifications go through the adapter to email.
+- **Likely impact of new rules.**
+  - *Primary:* `ReservationManager.makeReservation` and its validators.
+  - *Rules scattered in entities:* `Student.hasActiveOrConfirmedReservationForDateAndSlot`, `Seat.isAvailable`, `Reservation` (check-in tolerance, state transitions).
+  - *Query support:* `ReservationRegistry`, which would need new queries if a rule needs new data such as per-day limits.
+  - *Consistency:* `StudyRoomManager` availability views (room, slot and seat listings shown to the user) should reflect the new rules, or the UI will offer options that are then rejected.
+  - *Seat selection:* `AssignmentStrategy`, if the rules change auto-assignment.
+  - *Interface contract:* `LibraryFacade`, REST controllers, `ReservationRequestDTO` and the Swing screens, only if inputs or error messages change.
+  - *Notifications:* new rules that produce new messages.
+  - Tests in `src/test/.../MakeReservationTest` cover the booking path.
+
+Notes: the static HTML pages in `resources/static` contain no `/api/` calls, so they are omitted. The booking path is the Swing UI plus the REST API.
+</pre></details>
+<p class="links"><a href="outputs/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs/IS-seat-L2/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L2/view.png"><img src="outputs-B/IS-seat-L2/view.png" alt="IS-seat-L2 B: + skill and feedback loop"></a><p class="check">layout issues: 3 (edge-through-text 2, bundled-edges 1)</p>
+<details><summary>README</summary><pre># Component view: seat booking and its dependencies
+
+**Takeaway:** a booking request flows from three entry points through `Library Facade` into `Reservation Manager`, which holds the booking rules (validation, seat selection) and delegates to the reservation domain, the registries and notifications. A new rule changes `Reservation Manager` first. It may also change the domain rules, `Seat Assignment Strategy` and the entry points&#x27; error handling.
+
+Stakeholder: software developer about to add booking rules. Detail level: **detailed** for the booking area only (13 components, within the ≤20 budget). Wording uses technology names, since the reader is an engineer.
+
+## How the concern is answered
+- **Components and responsibilities**: each box is named for its role. Responsibilities are in the inventory below.
+- **Interaction**: the labelled arrows show who calls whom. Flow runs top to bottom: entry points → facade → managers → domain/registries → persistence → MySQL.
+- **Affected parts**: blue marks the places for new rules. Light red marks domain classes that already hold booking constraints. Everything downstream of `Reservation Manager` (registries, persistence) is affected only if a rule needs new data. Notification Manager is affected only if a rule adds a message.
+
+## Inventory (element → evidence, `JavaProject/src/main/java/it/unina/reservations/`)
+| Element | Responsibility | Evidence |
+|---|---|---|
+| Swing Booking Wizard | Desktop UI; submits the reservation | `boundary/Swing/ReservationSummary.java:100`, `DateAndRoomSelection.java:214`, `TimeSlotSelection.java:87` |
+| REST Controllers | `POST /api/reservations/create`, cancel, check-in; room/slot/detail queries. `RestExceptionHandler` turns rule violations into HTTP 400 | `boundary/SpringBoot/ReservationController.java:21-49`, `StudyRoomController.java:44-65`, `RestExceptionHandler.java:19` |
+| Notification Scheduler | Every minute runs end-of-reservation handling and reminders | `boundary/NotificationScheduler.java:15-29` |
+| Library Facade | Single entry that delegates to the managers | `controller/LibraryFacade.java:117,81-102` |
+| Reservation Manager | Booking rules: room/area/slot/seat checks, one reservation per student per slot, seat selection, save, notify; also cancel, check-in, expiry | `controller/ReservationManager.java:65-197,357-401` |
+| Seat Assignment Strategy | Picks the seat when none is chosen (first available) | `controller/strategy/AssignmentStrategy.java:10`, `FirstAvailableAssignment.java:15`; used at `ReservationManager.java:400` |
+| Study Room Manager | Room, slot and seat availability queries for the booking screens | `controller/StudyRoomManager.java:196-289` |
+| Notification Manager | Observer of `Reservation`; sends emails | `controller/NotificationManager.java:14-47`, `ReservationManager.java:120` |
+| Reservation Domain | `Reservation`, its state classes, `Seat`, `Area` and `Student`. Holds the 6-hour cancellation window, the 10-minute check-in tolerance and seat/student occupancy checks | `entity/Reservation.java:19,156-164`, `Seat.java:44`, `Area.java:49`, `Student.java:42` |
+| Registries | Reservation, StudyRoom and User lookup and save | `entity/ReservationRegistry.java:33-123`, `ReservationManager.java:28-30` |
+| Persistence Manager | JPA/Hibernate access | `database/PersistenceManager.java`, `ReservationRegistry.java:20` |
+| MySQL database | Stores the data | `resources/META-INF/persistence.xml:21` |
+| Email Adapter | Implements `NotificationService`; sends through `ExternalEmailGateway` | `boundary/NotificationServiceAdapter.java:12-20`, `NotificationConfiguration.java:17` |
+
+## Omitted on purpose
+DTOs, the user and room management paths (`UserManager`, factories, `StudyRoomManager` create/delete), the Swing screens other than the booking ones, the reminder path from facade to Notification Manager, and the reservation state classes as separate boxes. This keeps the view on the booking path.
+
+## Assumptions / unconfirmed
+- The static web pages in `resources/static` were not shown to call the reservation API (no `/api/` match), so no web client is drawn.
+- `SeatSelection.java` was not checked for how it obtains seat data, so its edge is not drawn.
+- `NotificationScheduler` is shown calling the facade for the end-of-slot job only; the reminder path is omitted.
+- The state classes are inside Reservation Domain.
+
+## Check result
+Final `puml-check`: 3 warnings, no text overlaps, 13 nodes, 15 edges. They are `aspect` (the diagram is tall, 0.80 ratio, because it is layered), and two edges that pass through package areas (`facade→roommgr`, `roommgr→dom`) plus bundled edges at Study Room Manager. The image review found a visible `«accent»`-style stereotype label, which is not a UML standard stereotype; I replaced it with inline colours and the legend. The first render was too wide and was switched to top-to-bottom. The facade→Notification Manager edge was dropped because it was off the booking path.
+</pre></details>
+<p class="links"><a href="outputs-B/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L2/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L2/view.png"><img src="outputs-C/IS-seat-L2/view.png" alt="IS-seat-L2 C: + memory"></a><p class="check">layout issues: 1 (busy 1)</p>
+<details><summary>README</summary><pre># Component view: seat booking
+
+**Takeaway:** every booking request, from web or Swing, funnels through `LibraryFacade` into `ReservationManager`. That class holds all booking rules and collaborates with the registries, the domain model, the seat-assignment strategy and the notification observer. New rules belong in `ReservationManager`, and possibly in the model classes it calls.
+
+Stakeholder: software developer about to add booking rules. Detail level: *detailed* for the booking area only (15 components, within the ≤20 budget). Wording uses technology names (Spring, JPA, HTTP), since the audience is engineering.
+
+## How the view answers the concern
+- **Components and responsibilities:** each box carries its responsibility in its name (see inventory).
+- **Interaction:** edges run caller to callee with a verb label. Dashed edges are dependencies the code resolves through a singleton or observer, not a direct field.
+- **Affected parts:**
+  - Primary: `ReservationManager`.
+  - Likely: Reservation Model (`Student.hasActiveOrConfirmedReservationForDateAndSlot` is already a rule), Room and Seat Model (`Seat.isAvailable`, `Area.getAvailableSeats`), and the Reservation Registry queries.
+  - If a rule needs new inputs: `ReservationRequestDTO`, the REST API and the UIs (entry points, so a rule changing the request shape touches them).
+  - Notification Manager, if a rule adds a message.
+  - Everything below the registries is unaffected unless the schema changes.
+
+## Inventory (element → evidence)
+- Web Pages: `static/reservation.html:385` (POST /reservations/create), `app.js:2`
+- Swing Booking Wizard: `boundary/Swing/ReservationSummary.java:100`
+- Reservation REST API: `boundary/SpringBoot/ReservationController.java:15-49`
+- Expiry Scheduler: `boundary/NotificationScheduler.java:15-29`
+- LibraryFacade: `controller/LibraryFacade.java:117-150`, `:162`
+- ReservationManager: `controller/ReservationManager.java:65-102` (rules: `:104`, `:151`, `:142`, `:378`)
+- Seat Assignment Strategy: `controller/strategy/AssignmentStrategy.java:10`, set at `ReservationManager.java:39`
+- Notification Manager: `controller/NotificationManager.java:15`, attached at `ReservationManager.java:120-123`
+- Reservation Model: `entity/Reservation.java:16`, `:179-182`, `entity/Student.java:42`
+- Room and Seat Model: `entity/Seat.java:44-52`, `entity/Area.java:49`
+- Reservation, Room, User Registry: `entity/ReservationRegistry.java:33`, `StudyRoomRegistry.java:125`, `UserRegistry.java:16`
+- Persistence Manager: `database/PersistenceManager.java`, created in each registry (`ReservationRegistry.java:20`)
+- Notification Gateway: `boundary/ExternalEmailGateway.java:12` (stub), reached via `NotificationService`
+
+## Omitted on purpose
+DTOs, state classes (folded into Reservation Model), factories, user registration, room management and monitoring, `RestExceptionHandler`, `NotificationServiceAdapter` / `NotificationConfiguration` (folded into the gateway), MySQL (a deployment concern).
+
+## Assumptions
+- &quot;Reservation Model&quot; and &quot;Room and Seat Model&quot; group domain classes into one box each. They are not separate modules in the code.
+- `StudyRoomManager` also touches reservations (`controller/StudyRoomManager.java:167-174`, forced cancel on room deletion). It is omitted but is a possible impact point.
+
+## Check
+puml-check: OK, 0 crossings, 0 warnings (the `busy` note is info only, 20 edges). The first run flagged an edge through its label, which I fixed. The image review needed no changes.
+</pre></details>
+<p class="links"><a href="outputs-C/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs-C/IS-seat-L2/prompt.txt">prompt</a></p></div></div></section>
+<section id="IS-seat-L3">
+<h2>IS-seat-L3</h2>
+<p class="request">“I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes.”</p>
+<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to add new booking rules; needs the architecture behind seat booking</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components in the booking process, their responsibilities, interactions and dependencies</li><li>which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications</li><li>which parts need to be modified and which other components may be affected</li></ul></td></tr><tr><th>aspect</th><td>structural, behavioural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
+<div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L3/view.png"><img src="outputs/IS-seat-L3/view.png" alt="IS-seat-L3 A: agent"></a><p class="check">layout issues: 9 (edge-through-text 6, label-on-border 1, bundled-edges 1, busy 1)</p>
+<details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
+
+Source: `view.puml`. Derived from `JavaProject/src/main/java/it/unina/reservations`.
+
+**What it shows.** The components on the seat-booking path, grouped in layers (boundary, control, entity, persistence), the external email service, and the calls between them. Student and librarian use either the web UI (REST) or the Swing wizard (direct facade calls).
+
+**How it addresses the concern**
+- *Handling booking requests:* `ReservationController` (`POST /api/reservations/create`) and the Swing `ReservationSummary` both go through `LibraryFacade` to `ReservationManager.makeReservation`.
+- *Checking seat availability:* `StudyRoomController` and `StudyRoomManager` serve availability to the UI. During booking, `ReservationManager` calls `Area.getAvailableSeats` and `Seat.isAvailable`, which query `ReservationRegistry`.
+- *Applying booking rules:* these live in `ReservationManager` (room active and open, slot not past, seat in area, one reservation per student and slot, seat selection under a `synchronized` block). `AssignmentStrategy` handles automatic seat choice. `Reservation` and its states hold the cancellation window and check-in rules. This is where new rules go.
+- *Managing and storing reservations:* `ReservationManager`, `Reservation`, `ReservationRegistry`, `PersistenceManager` (JPA), MySQL.
+- *External services:* `Reservation` notifies `NotificationManager` (Observer), which uses the `NotificationService` interface. `NotificationServiceAdapter` and `ExternalEmailGateway` (a stub) reach the email service. `NotificationConfiguration` wires the adapter at startup.
+- *Impact of changes:* a new rule mainly touches `ReservationManager` and possibly `Reservation` / `Student` / `Seat`. It may affect `ReservationRegistry` queries, the `ReservationRequestDTO` / `ReservationController` parameters, `RestExceptionHandler` and the UIs (error display), `NotificationManager` messages, and `NotificationScheduler`-driven expiry and reminders.
+</pre></details>
+<p class="links"><a href="outputs/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs/IS-seat-L3/prompt.txt">prompt</a></p></div><div><h3>B: + skill and feedback loop</h3><a href="outputs-B/IS-seat-L3/view.png"><img src="outputs-B/IS-seat-L3/view.png" alt="IS-seat-L3 B: + skill and feedback loop"></a><p class="check">layout issues: 8 (edge-through-text 3, label-on-border 2, edge-through-own-label 1, bundled-edges 1, busy 1)</p>
+<details><summary>README</summary><pre># Component view: seat booking (IS-seat-L3)
+
+**Takeaway:** every booking enters through `LibraryFacade`; `ReservationManager` validates the request and applies the booking rules, with seat availability checked in the domain entities and seat choice delegated to `AssignmentStrategy`. Reservations are stored through `ReservationRegistry` and `PersistenceManager` into MySQL, and `NotificationManager` sends notices through an adapter to an email gateway.
+
+Stakeholder: software developer adding booking rules. Detail level: detailed for the booking path (15 components, within the 20 budget). Technology names are included because the audience is engineering. Yellow marks the components most likely to change.
+
+## How the view answers the concern
+- **Handles booking requests:** Swing Client and REST Controllers call Library Facade, which calls Reservation Manager (`makeReservation`).
+- **Checks seat availability:** Reservation Manager calls Domain Entities (`Area.getAvailableSeats`, `Seat.isAvailable`), which query Reservation Registry for existing bookings and Study Room Registry for the area&#x27;s seats. Study Room Manager serves the availability queries used by the UI.
+- **Applies booking rules:** Reservation Manager (room active and open, slot not past, one booking per student and slot, seat in area, locked section) and Assignment Strategy (automatic seat choice).
+- **Manages and stores reservations:** Reservation Manager, Domain Entities (Reservation and its states), Reservation Registry, Persistence Manager, MySQL.
+- **External services:** Notification Manager → Notification Adapter → External Email Gateway (a stub).
+- **Modify / affected:** Reservation Manager, Assignment Strategy and Domain Entities are the likely change points. Affected: Library Facade (if the API changes), Notification Manager, the registries, and the Swing and REST callers.
+
+## Inventory (element → evidence)
+Paths are under `JavaProject/src/main/java/it/unina/reservations/`.
+- Swing Client → `boundary/Swing/ReservationSummary.java:100`
+- REST Controllers → `boundary/SpringBoot/ReservationController.java:21-48`
+- Notification Scheduler → `boundary/NotificationScheduler.java:15-28`
+- Library Facade → `controller/LibraryFacade.java:117-164`
+- Reservation Manager → `controller/ReservationManager.java:65-102`
+- Study Room Manager → `controller/StudyRoomManager.java` (`getRoomDetail`)
+- Assignment Strategy → `controller/strategy/AssignmentStrategy.java`, `ReservationManager.java:400`
+- Notification Manager → `controller/NotificationManager.java:15-66`
+- Domain Entities → `entity/Area.java:49`, `entity/Seat.java:44`, `entity/Reservation.java`
+- Reservation Registry and Study Room Registry → `entity/ReservationRegistry.java:33`, `ReservationManager.java:28-30`
+- Persistence Manager → `database/PersistenceManager.java`
+- MySQL reservationsdb → `src/main/resources/META-INF/persistence.xml:21`
+- Notification Adapter and External Email Gateway → `boundary/NotificationServiceAdapter.java`, `boundary/ExternalEmailGateway.java:12`
+- Wiring of the adapter into the manager → `boundary/NotificationConfiguration.java:17`
+
+## Omitted on purpose
+DTOs, User and Librarian components, the Observer and ReservationState classes (shown as part of Domain Entities), the static web front end, `UserRegistry` and `NotificationConfiguration`. The cancel, check-in and expiry flows are shown only as the facade&#x27;s inbound calls. A sequence view would show the order of the checks.
+
+## Assumptions
+- The Study Room Manager → Study Room Registry edge is based on `getRoomDetail` (`StudyRoomManager.java:264-284`); I did not trace its other methods.
+- The web front end (`static/app.js`) probably calls the REST controllers, but I did not confirm it and left it out.
+
+## Check result
+`puml-check` reports 7 warnings: edges crossing package borders, one label on a border, and edges bundled out of Reservation Manager. The aspect ratio is 1.39 against the 1.78 target. A revision with a reordering and a hidden link also gave 7, so I reverted it. The single change after reading the image was replacing the in-diagram note with a legend, which went from 6 to 7 warnings. I kept the legend because the diagram reads the same either way and a legend is the proper notation. The warnings are layout issues, not content issues.
+</pre></details>
+<p class="links"><a href="outputs-B/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs-B/IS-seat-L3/prompt.txt">prompt</a></p></div><div><h3>C: + memory</h3><a href="outputs-C/IS-seat-L3/view.png"><img src="outputs-C/IS-seat-L3/view.png" alt="IS-seat-L3 C: + memory"></a><p class="check">layout issues: 7 (bundled-edges 3, edge-through-text 2, label-on-border 1, busy 1)</p>
+<details><summary>README</summary><pre># Component view: seat booking and notification (IS-seat-L3)
+
+**Takeaway:** every booking request enters through LibraryFacade and is handled, validated and stored by ReservationManager, so new booking rules belong in ReservationManager (plus the entity availability queries and AssignmentStrategy). Notifications are a side effect triggered by Reservation state changes.
+
+Stakeholder: software developer about to add booking rules. Detail: *detailed* for the booking area (16 elements), technology names included. Files: `view.puml`, `view.png`.
+
+## How the view answers the concern
+- **Handle booking requests:** REST ReservationController, Swing wizard and NotificationScheduler all call LibraryFacade, which delegates to ReservationManager.
+- **Check seat availability:** ReservationManager asks the entities (Area.getAvailableSeats, Seat.isAvailable), which query ReservationRegistry directly.
+- **Apply booking rules:** inside ReservationManager.makeReservation (seat-in-area, one reservation per student/date/slot via Student, availability, seat choice). Seat choice is pluggable through AssignmentStrategy.
+- **Manage and store reservations:** ReservationManager creates the Reservation (state pattern), saves it via ReservationRegistry -&gt; PersistenceManager -&gt; MySQL.
+- **External services:** Reservation.setState notifies observers; NotificationManager sends through the NotificationService interface, implemented by NotificationServiceAdapter -&gt; ExternalEmailGateway (stub).
+- **Impact:** change ReservationManager first. Also affected: Student/Area/Seat (rules that query reservations), ReservationRegistry, REST/Swing callers if the request fields change (ReservationRequestDTO), NotificationManager if new rejections need messages.
+
+## Inventory (file:line, under JavaProject/src/main/java/it/unina/reservations)
+- Web/REST ReservationController: boundary/SpringBoot/ReservationController.java:15-49
+- Swing wizard: boundary/Swing/ReservationSummary.java:100
+- NotificationScheduler: boundary/NotificationScheduler.java:15-29
+- LibraryFacade: controller/LibraryFacade.java:117-150, 162
+- ReservationManager: controller/ReservationManager.java:65-102 (rules :104, :142, :151; strategy :400; notify :121-122; save :134)
+- AssignmentStrategy / FirstAvailableAssignment: controller/strategy/AssignmentStrategy.java, ReservationManager.java:39
+- NotificationManager: controller/NotificationManager.java:15,40-60; NotificationService.java:11
+- NotificationServiceAdapter: boundary/NotificationServiceAdapter.java:12; ExternalEmailGateway.java:12 (stub); wiring NotificationConfiguration.java:17
+- Reservation: entity/Reservation.java:82-88; Student/Seat/Area: entity/Student.java:42, Seat.java:44-52, Area.java:49
+- ReservationRegistry: entity/ReservationRegistry.java:33,61,77,120; StudyRoomRegistry, UserRegistry (ReservationManager.java:28-30)
+- PersistenceManager: database/PersistenceManager.java:19-37; MySQL: resources/META-INF/persistence.xml:21
+
+## Omitted on purpose
+DTOs, state classes, factories, registration/login and room-management flows, StudyRoomManager, monitoring and statistics, REST exception handler, web pages.
+
+## Assumptions
+- Entity and registry classes are drawn as components in the &quot;Entity&quot; package; they are really one layer of classes.
+- Notification delivery failures are caught and logged in NotificationManager (:57-59), so they do not abort a booking.
+
+## Check result
+Final puml-check: 6 warnings (3 bundled-edge, 1 edge-through-text, 1 label-on-border, 1 container-crossing), none overlapping. A left-to-right variant had 4 warnings but tiny text, and a variant with a realization arrow had 7; both were discarded. Image review: layout reads top to bottom, labels sit on their edges.
+</pre></details>
+<p class="links"><a href="outputs-C/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs-C/IS-seat-L3/prompt.txt">prompt</a></p></div></div></section>
+</body></html>

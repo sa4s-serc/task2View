@@ -1,0 +1,83 @@
+@startuml
+title Seat booking – component view (for adding new booking rules)
+skinparam componentStyle uml2
+left to right direction
+
+actor Student
+actor Librarian
+
+package "Boundary" {
+  component "Swing wizard UI\n(DateAndRoomSelection, TimeSlotSelection,\nAreaSelection, SeatSelection,\nReservationSummary, StudentDashboard)" as Swing
+  component "Spring REST controllers\n(ReservationController, StudyRoomController,\nStudentController)" as Rest
+  component "RestExceptionHandler" as RestEx
+  component "NotificationScheduler\n(@Scheduled, 60 s)" as Sched
+  component "NotificationServiceAdapter /\nExternalEmailGateway" as Adapter
+}
+
+package "Control" {
+  component "LibraryFacade" as Facade
+  component "ReservationManager\n<<booking rules live here>>\n(makeReservation, cancel, check-in,\nhistory, manageReservationEnd)" as RM #LightYellow
+  component "StudyRoomManager\n(available rooms / time slots,\nroom detail with seat availability,\ndelete room -> force-cancel)" as SRM
+  component "AssignmentStrategy\n(FirstAvailableAssignment)" as Strat
+  component "NotificationManager\n(Observer)" as NM
+}
+
+package "Entity (domain model)" {
+  component "Reservation + ReservationState\n(Active/Confirmed/Completed/\nCancelled/Expired)" as Res
+  component "Student" as Stu
+  component "StudyRoom / Area / Seat / TimeSlot" as Room
+  component "ReservationRegistry" as RR
+  component "StudyRoomRegistry" as SRR
+  component "UserRegistry" as UR
+}
+
+package "Persistence" {
+  component "PersistenceManager / JpaUtil" as PM
+}
+database "Database\n(JPA, persistence.xml)" as DB
+cloud "Email service" as Mail
+
+Student --> Swing
+Librarian --> Swing
+
+Swing ..> Facade : calls
+Rest ..> Facade : delegates
+Rest ..> RestEx
+Sched ..> Facade : manageReservationEnd,\nsendReminders
+
+Facade ..> RM : makeReservation,\ncancel, checkIn, history
+Facade ..> SRM : rooms, slots,\nroom detail
+Facade ..> NM : sendReminders
+
+RM ..> Strat : selectSeat (auto-assign)
+RM ..> RR
+RM ..> SRR : resolve room/area/seat
+RM ..> UR : resolve student
+RM ..> Res : create, state transitions
+RM ..> NM : notify
+
+SRM ..> SRR
+SRM ..> RR : seat occupancy,\nforce-cancel on delete
+SRM ..> Res
+
+Res ..> NM : notifyObservers (Observer)
+Stu ..> RR : hasActiveOrConfirmed...\n(uniqueness rule)
+Room ..> RR : Seat.isAvailable\n(overlap rule)
+Room ..> SRR : Area.getAvailableSeats
+
+RR ..> PM
+SRR ..> PM
+UR ..> PM
+PM ..> DB
+
+NM ..> Adapter : NotificationService
+Adapter ..> Mail
+
+note bottom of RM
+  Current rules, all in makeReservation():
+  active room, weekday, slot not past/started,
+  seat in area, one active/confirmed booking
+  per student+date+slot, seat free,
+  check-in tolerance 10 min (Reservation).
+end note
+@enduml

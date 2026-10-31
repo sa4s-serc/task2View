@@ -1,0 +1,67 @@
+@startuml GR10-Q2-deployment
+title Deployment View - Municipal Report Management System (desktop client + MySQL)
+skinparam componentStyle uml2
+skinparam nodeStyle rectangle
+
+node "Build host (developer / CI)" as build <<device>> {
+  node "JDK 23 + Apache Maven" as mvn <<execution environment>> {
+    artifact "municipal-report-management-1.0-SNAPSHOT\n(Maven build output of pom.xml)" as app_build <<artifact>>
+  }
+}
+
+node "Maven Central\nrepo.maven.apache.org/maven2" as central <<external repository>>
+
+node "Client workstation (desktop OS with display)\nUsed by Citizens and Municipal Operators" as client <<device>> {
+  node "JVM (Java 23 runtime, Swing/AWT)" as jvm <<execution environment>> {
+    artifact "Application classes\nBoundary / Control / Entity / Database" as app <<artifact>>
+    artifact "META-INF/persistence.xml\nunit: Municipal_Report_Management_System\nJDBC url, user, password, hbm2ddl=update" as persxml <<artifact>>
+    artifact "/images/logo.png (classpath resource)" as logo <<artifact>>
+    artifact "hibernate-core 6.6.50.Final\n(JPA / Jakarta Persistence provider)" as hib <<library>>
+    artifact "mysql-connector-j 9.4.0\n(JDBC driver com.mysql.cj.jdbc.Driver)" as jdbc <<library>>
+    artifact "forms_rt 7.0.3\n(IntelliJ GUI form runtime)" as forms <<library>>
+    note bottom of app
+      Entry points (main): HomePageGUI,
+      UserLoginGUI, UserRegistrationGUI.
+      Single process: GUI, controllers,
+      business logic and persistence.
+    end note
+  }
+}
+
+node "Database server host\n(127.0.0.1 by default, i.e. same machine as client)" as dbhost <<device>> {
+  node "MySQL server\nTCP port 3306" as mysql <<execution environment>> {
+    database "reports_db\n(user: reports_user)" as db <<database schema>>
+    artifact "Tables: users (single-table: Citizen, MunicipalOperator),\nreports, internal_notes, status_updates, notifications" as tables <<tables>>
+  }
+}
+
+app ..> persxml : <<reads>>
+app ..> logo : <<loads>>
+app ..> hib : <<uses>>
+app ..> forms : <<uses>>
+hib ..> jdbc : <<uses>>
+
+jdbc --> mysql : "JDBC over TCP\njdbc:mysql://127.0.0.1:3306/reports_db\n(JPA/JPQL -> SQL; RESOURCE_LOCAL transactions)"
+db *-- tables
+
+mvn ..> central : "HTTPS: resolve dependencies\n(build time only)"
+app_build ..> app : <<deploy: copy jar + dependencies,\nrun with java -cp>>
+
+note right of dbhost
+  Provisioning (README): CREATE DATABASE reports_db;
+  CREATE USER 'reports_user'@'localhost';
+  GRANT ALL on reports_db.*.
+  Schema is created/updated by Hibernate
+  (hbm2ddl.auto=update) at first connection.
+  Credentials are hard-coded defaults in
+  persistence.xml; change for non-local use.
+end note
+
+note bottom of client
+  No application server, no network service of its own,
+  no other external service found in the code. Notifications
+  are application-level (Notification entity), not e-mail/push.
+  Multiple clients can share one MySQL server only if the JDBC
+  url is changed from 127.0.0.1 to the server's host.
+end note
+@enduml

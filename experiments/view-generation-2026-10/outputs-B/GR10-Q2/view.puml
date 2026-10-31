@@ -1,0 +1,53 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 240 }
+title   { FontSize 18; FontStyle bold }
+</style>
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+title Deployment view: Municipal Report Management System (desktop client + MySQL)
+
+node "Build machine\nJDK 23 + Maven" as build <<device>> {
+  artifact "pom.xml" as pom
+}
+node "Maven Central\nrepo.maven.apache.org" as central <<device>>
+
+node "User workstation (citizen / operator)" as ws <<device>> {
+  node "JVM (Java 23)" as jvm <<executionEnvironment>> {
+    artifact "municipal-report-management\n1.0-SNAPSHOT (Swing app, HomePageGUI.main)" as app
+    artifact "persistence.xml\n(unit Municipal_Report_Management_System)" as pxml
+    artifact "hibernate-core 6.6.50 +\nmysql-connector-j 9.4.0 +\nforms_rt 7.0.3" as libs
+  }
+}
+
+node "Database host\n(127.0.0.1 by default)" as dbhost <<device>> {
+  node "MySQL server\nport 3306" as mysql <<executionEnvironment>> {
+    artifact "reports_db schema\n(user reports_user)" as schema
+  }
+}
+
+build ..> central : resolve dependencies\n(HTTPS)
+build ..> ws : <<deploy>> app jar
+app ..> pxml : read config
+app ..> libs : <<use>>
+ws ..> dbhost : JPA/Hibernate over\nJDBC, TCP 3306
+
+note left of dbhost
+  Schema tables are created and updated by
+  Hibernate (hbm2ddl.auto=update) at first connect.
+  Database and user are created manually (README).
+end note
+@enduml

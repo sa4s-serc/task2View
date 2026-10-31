@@ -1,0 +1,21 @@
+@startuml
+title Component view: Municipal Report Management desktop application
+skinparam nodesep 60
+skinparam ranksep 45
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+
+component "Boundary\n(Swing GUI screens)" as ui
+component "Control\n(SystemServicesController\n+ use-case controllers)" as ctl
+component "Entity services\n(UserService, ReportService)" as svc
+component "Domain entities\n(User, Citizen, MunicipalOperator,\nReport, status states, notes,\nnotifications)" as dom
+component "Database\n(PersistenceService, JpaUtil)" as db
+component "MySQL reports_db\n(external database)" as mysql
+
+ui --> ctl : invokes use cases
+ctl --> svc : delegates
+svc -right-> dom : manipulates
+svc --> db : stores, queries
+db ..> dom : maps via JPA
+db --> mysql : JDBC
+@enduml

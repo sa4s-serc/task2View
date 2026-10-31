@@ -1,0 +1,62 @@
+@startuml
+title Component view: seat booking in the study-room reservation app
+top to bottom direction
+skinparam defaultFontName Helvetica
+skinparam nodesep 40
+skinparam ranksep 70
+skinparam shadowing false
+skinparam ComponentBackgroundColor #F4F6F8
+skinparam ComponentBorderColor #475569
+skinparam ArrowColor #475569
+skinparam NoteBackgroundColor #FFFBE6
+skinparam NoteBorderColor #A68B00
+
+package "Boundary" {
+  [Swing Client\n(ReservationSummary, wizard)] as swing
+  [REST Controllers\n(Spring: ReservationController)] as rest
+  [Notification Scheduler\n(@Scheduled, 60 s)] as sched
+}
+package "Controller" {
+  [Library Facade] as facade
+  [Reservation Manager\nvalidates + applies rules] as resmgr #FFE9A8
+  [Study Room Manager\nrooms, slots, seat maps] as roommgr
+  [Assignment Strategy\n(FirstAvailableAssignment)] as strat #FFE9A8
+  [Notification Manager\n(Observer)] as notif
+}
+package "Entity" {
+  [Domain Entities\nReservation, Seat, Area, states] as ent #FFE9A8
+  [Reservation Registry] as resreg
+  [Study Room Registry] as roomreg
+}
+package "Persistence and external" {
+  [Persistence Manager\n(JPA/Hibernate)] as pers
+  [MySQL reservationsdb] as db
+  [Notification Adapter] as adapter
+  [External Email Gateway\n(stub)] as gw
+}
+
+swing --> facade : book / cancel
+rest --> facade : book / cancel
+sched --> facade : end + reminders
+facade --> resmgr : makeReservation
+facade --> roommgr : query availability
+facade --> notif : sendReminders
+resmgr ---> roomreg : resolve room, seat
+resmgr --> ent : check seats, state
+resmgr --> strat : pick seat
+resmgr --> resreg : save reservation
+resmgr --> notif : notify booking
+roommgr --> roomreg : read rooms
+ent --> resreg : find seat bookings
+ent --> roomreg : list area seats
+notif --> resreg : find reminders
+resreg --> pers : persist
+roomreg --> pers : persist
+pers --> db : JDBC
+notif --> adapter : sendNotification
+adapter --> gw : send email
+
+legend right
+ Yellow = most likely to change for new booking rules
+end legend
+@enduml

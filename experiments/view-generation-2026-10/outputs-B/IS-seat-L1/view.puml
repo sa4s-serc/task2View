@@ -1,0 +1,71 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root { FontName Helvetica; FontSize 14; FontColor #1F2937 }
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+</style>
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 60
+top to bottom direction
+
+title Component view: seat booking (makeReservation) control flow
+
+package "Boundary (UI and REST)" {
+  [Swing Booking Wizard\n(ReservationSummary)] as swing #DBEAFE
+  [Web Booking Page\n(reservation.html, app.js)] as web #DBEAFE
+  [ReservationController\n(Spring REST)] as rest #DBEAFE
+}
+
+package "Controller" {
+  [LibraryFacade] as facade #BFDBFE
+  [ReservationManager] as rm #60A5FA
+  [AssignmentStrategy\n(FirstAvailableAssignment)] as strat #BFDBFE
+  [NotificationManager] as nm #BFDBFE
+}
+
+package "Entity" {
+  [Domain Model\n(Student, Area, Seat,\nTimeSlot, Reservation)] as model #FEF3C7
+  [ReservationRegistry] as rreg #FEF3C7
+  [StudyRoomRegistry] as sreg #FEF3C7
+  [UserRegistry] as ureg #FEF3C7
+  [PersistenceManager\n(JPA / Hibernate)] as pm #FEF3C7
+}
+
+package "Notification delivery" {
+  [NotificationServiceAdapter] as nsa #E5E7EB
+  [ExternalEmailGateway] as mail #E5E7EB
+}
+
+[NotificationScheduler] as sched #E5E7EB
+
+swing --> facade : makeReservation()
+web --> rest : POST /api/reservations/create
+rest --> facade : makeReservation()
+facade --> rm : delegates
+rm --> strat : select seat (auto)
+rm ----> sreg : resolve room, area, seat
+rm ---> ureg : resolve student
+rm --> model : check seats
+rm --> rreg : save reservation
+rm --> nm : notify (Observer)
+rreg --> pm : persist
+sreg --> pm : query
+ureg --> pm : query
+nm --> nsa : send notification
+nsa --> mail : send email
+sched --> facade : manageReservationEnd()
+
+legend right
+  Medium blue: ReservationManager, the component to modify.
+  Light blue: UI and controller; yellow: entity layer; grey: delivery and scheduling.
+  Persistence: Hibernate to MySQL (reservationsdb), not drawn as a component.
+endlegend
+@enduml

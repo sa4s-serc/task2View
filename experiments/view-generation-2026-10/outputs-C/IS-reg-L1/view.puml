@@ -1,0 +1,38 @@
+@startuml
+title Sequence diagram - User registration (Student / Librarian)
+skinparam shadowing false
+skinparam maxMessageSize 120
+
+participant "Registration form\n(web or Swing)" as UI
+participant "AuthenticationController\n(Spring REST)" as AC
+participant "LibraryFacade" as LF
+participant "UserManager" as UM
+participant "UserRegistry\n(JPA)" as UR
+database "MySQL\nreservationsdb" as DB
+
+UI -> AC : POST /api/auth/register\n(role, name, surname,\nemail, password, identifier)
+note over UI
+  Swing variant calls
+  LibraryFacade.register directly
+end note
+AC -> LF : register(...)
+LF -> UM : register(...)
+UM -> UM : validate role, names,\npassword, unina.it email, id format
+UM -> UR : email / identifier\nalready used?
+UR -> DB : SELECT user
+alt invalid / duplicate
+  UM --> UI : IllegalArgumentException\n(HTTP 400 {error})
+  note over UM
+    propagated via LibraryFacade and
+    AuthenticationController (RestExceptionHandler)
+  end note
+else valid
+  UM -> UM : StudentFactory / LibrarianFactory\ncreateUser(...)
+  UM -> UR : registerUser(newUser)
+  UR -> DB : begin, persist, commit
+  note over UR : on failure: rollback, false,\nRuntimeException "could not be saved"
+  UM --> LF : UserDTO
+  LF --> AC : UserDTO
+  AC --> UI : UserDTO (HTTP 200)
+end
+@enduml

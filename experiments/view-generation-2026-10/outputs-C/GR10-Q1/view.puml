@@ -1,0 +1,32 @@
+@startuml
+title Component view: municipal problem reporting desktop application
+skinparam nodesep 50
+skinparam ranksep 70
+skinparam defaultFontName Helvetica
+
+package "Boundary layer (Swing)" {
+  [Swing GUI Screens] as gui
+}
+package "Control layer" {
+  [System Services Controller\n(facade)] as facade
+  [Use-case Controllers] as ctrl
+}
+package "Entity layer" {
+  [Domain Services\n(Report, User)] as svc
+  [Domain Entities] as ent
+}
+package "Database layer" {
+  [Persistence Service\n(JPA/Hibernate)] as pers
+}
+database "MySQL reports_db" as db
+
+gui --> facade : request use cases
+gui --> ctrl : log in
+gui .down.> ent : category enum
+facade --> ctrl : delegates
+ctrl --> svc : invoke operations
+svc -> ent : manipulates
+svc --> pers : load, store
+pers ..> ent : maps (JPA)
+pers --> db : JDBC
+@enduml

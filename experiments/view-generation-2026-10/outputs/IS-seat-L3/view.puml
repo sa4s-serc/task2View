@@ -1,0 +1,104 @@
+@startuml
+title Seat Booking - Component View (booking request, availability, rules, storage, notification)
+left to right direction
+skinparam componentStyle uml2
+skinparam shadowing false
+
+actor "Student" as student
+actor "Librarian" as librarian
+
+package "Presentation / Boundary" {
+  component "Web UI\n(static/*.html, app.js)" as WebUI
+  component "Swing Wizard UI\n(Login, DateAndRoomSelection,\nAreaSelection, SeatSelection,\nReservationSummary)" as SwingUI
+  component "ReservationController\n(/api/reservations: create, cancel, checkIn)" as ResCtl
+  component "StudyRoomController\n(/api/rooms: available, time-slots, detail)" as RoomCtl
+  component "StudentController\n(/api/student: history)" as StuCtl
+  component "RestExceptionHandler" as ExH
+  component "NotificationScheduler\n(@Scheduled every 60 s)" as Sched
+  component "NotificationConfiguration\n(wires adapter at startup)" as NotifCfg
+  component "NotificationServiceAdapter" as Adapter
+}
+
+package "Application / Control" {
+  component "LibraryFacade\n(single entry point)" as Facade
+  component "ReservationManager\n(request validation, booking rules,\nuniqueness check, seat selection,\ncancel / check-in / expiry)" as ResMgr
+  component "StudyRoomManager\n(rooms, time slots, seat availability views)" as RoomMgr
+  component "NotificationManager\n(Observer; builds messages, reminders)" as NotifMgr
+  component "AssignmentStrategy\n(FirstAvailableAssignment)" as Strategy
+}
+
+package "Domain / Entity" {
+  component "Reservation + ReservationState\n(Active/Confirmed/Cancelled/Expired/Completed;\ncancellation window, check-in rules)" as Resv
+  component "StudyRoom / Area / Seat / TimeSlot\n(open-day, schedule, seat availability)" as RoomModel
+  component "Student / User" as UserModel
+  component "ReservationRegistry" as ResReg
+  component "StudyRoomRegistry" as RoomReg
+  component "UserRegistry" as UserReg
+}
+
+package "Persistence" {
+  component "PersistenceManager / JpaUtil\n(JPA)" as Persist
+}
+
+database "MySQL reservationsdb" as DB
+cloud "External Email Service" as Email
+component "ExternalEmailGateway\n(stub, returns HTTP-like 200)" as Gateway
+
+interface "NotificationService" as INotif
+interface "Observer" as IObs
+
+student --> WebUI
+student --> SwingUI
+librarian --> WebUI
+librarian --> SwingUI
+
+WebUI --> ResCtl : HTTP REST
+WebUI --> RoomCtl : HTTP REST
+WebUI --> StuCtl : HTTP REST
+SwingUI --> Facade : direct call
+ResCtl --> Facade
+RoomCtl --> Facade
+StuCtl --> Facade
+ExH ..> ResCtl : maps exceptions\nto HTTP errors
+Sched --> Facade : manageReservationEnd(),\nsendReminders()
+
+Facade --> ResMgr : makeReservation, cancel,\ncheckIn, history, expiry
+Facade --> RoomMgr : available rooms / slots / detail
+Facade --> NotifMgr : sendReminders
+
+ResMgr --> RoomReg : resolve room, area, seat
+ResMgr --> UserReg : resolve student
+ResMgr --> RoomModel : isOpenOnDate, getScheduledTimeSlots,\ngetAvailableSeats / isAvailable
+ResMgr --> UserModel : hasActiveOrConfirmed\nReservationForDateAndSlot
+ResMgr --> Strategy : selectSeat (auto-assign)
+ResMgr --> Resv : create, cancel, checkIn, manageEnd
+ResMgr --> ResReg : saveReservation, update, find
+ResMgr --> NotifMgr : attach / sendNotification
+
+RoomMgr --> RoomReg
+RoomMgr --> ResReg : occupancy
+RoomModel ..> ResReg : findReservationsBySeat\n(seat availability)
+UserModel ..> ResReg : findActiveReservations
+Resv ..> IObs : notifyObservers
+NotifMgr -up-( IObs
+NotifMgr ..|> IObs
+NotifMgr --> ResReg : reminders / ending
+NotifMgr --> INotif : sendNotification
+Adapter ..|> INotif
+NotifCfg --> NotifMgr : setNotificationService
+NotifCfg ..> Adapter : creates
+Adapter --> Gateway
+Gateway --> Email : send email
+
+ResReg --> Persist
+RoomReg --> Persist
+UserReg --> Persist
+Persist --> DB : JDBC
+
+note bottom of ResMgr
+  Booking rules currently live here
+  (validate* / resolve* / selectSeat inside
+  makeReservation, synchronized) and in
+  Reservation (cancellation window, check-in).
+end note
+@enduml

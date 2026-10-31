@@ -1,0 +1,62 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+</style>
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 60
+
+title Use case diagram - Municipal report management application
+
+actor "Citizen" as cit
+actor "User" as usr
+actor "Municipal Operator" as op
+
+rectangle "Municipal Report Management System" {
+  usecase "Register account" as UC1
+  usecase "Log in" as UC2
+  usecase "Create report" as UC3
+  usecase "Review submitted\nreports" as UC4
+  usecase "Review received\nreports" as UC5
+  usecase "Update report\nstatus" as UC6
+  usecase "Add internal note" as UC7
+  usecase "Monitor activity\ntrends" as UC8
+}
+
+cit -|> usr
+op -|> usr
+
+usr --> UC1
+usr --> UC2
+cit --> UC3
+cit --> UC4
+op --> UC5
+op --> UC6
+op --> UC7
+op --> UC8
+
+UC6 ..> UC5 : <<include>>
+UC7 ..> UC5 : <<extend>>
+
+note bottom of UC6
+  Citizen is notified of the
+  new status (Assigned,
+  In Progress, Resolved)
+end note
+note bottom of UC5
+  Filter by category
+  and status
+end note
+@enduml

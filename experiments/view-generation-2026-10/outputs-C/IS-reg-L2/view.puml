@@ -1,0 +1,49 @@
+@startuml
+title Sequence diagram: new user registration (Student or Librarian)
+skinparam shadowing false
+skinparam maxMessageSize 150
+
+actor "New user" as U
+participant "Registration form\n(web page / Swing)" as F
+participant "AuthenticationController\n(REST /api/auth)" as C
+participant "LibraryFacade" as L
+participant "UserManager" as M
+participant "UserRegistry" as R
+participant "PersistenceManager\n(JPA)" as P
+database "MySQL\nreservationsdb" as D
+
+U -> F : fill role, name, surname,\nemail, password, identifier
+F -> C : POST /api/auth/register\n(form-encoded)
+note right of F : Swing form skips REST and calls\nLibraryFacade.register directly
+C -> L : register(role, name, surname,\nemail, password, identifier)
+L -> M : register(...)
+M -> M : validate fields, email *@unina.it,\nstudent number [A-Z]\\d{8}
+M -> R : institutionalEmailExists(email),\nthen find by studentNumber / code
+R -> P : findFirstByFields(...)  (2 lookups)
+P -> D : SELECT
+D --> P : none found
+P --> R : null
+R --> M : not duplicate
+M -> M : StudentFactory / LibrarianFactory\n.createUser(...)
+M -> R : registerUser(newUser)
+R -> P : save(newUser)
+P -> D : INSERT (begin / persist / commit)
+alt rejected before save
+  M --> L : IllegalArgumentException\n(invalid input or duplicate)
+  L --> C : (propagates)
+  C --> F : HTTP 400 {error}\n(RestExceptionHandler)
+else save fails
+  P --> R : false (rolled back)
+  R --> M : false
+  M --> L : RuntimeException
+  L --> C : (propagates)
+else success
+  D --> P : committed
+  P --> R : true
+  R --> M : true
+  M --> L : UserDTO
+  L --> C : UserDTO
+  C --> F : 200 UserDTO
+  F --> U : "Registration complete"
+end
+@enduml

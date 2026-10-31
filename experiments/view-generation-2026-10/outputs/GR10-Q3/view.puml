@@ -1,0 +1,229 @@
+@startuml GR10-Q3-data-model
+title Persistence data model – Municipal report management (JPA/Hibernate, MySQL reports_db)
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty methods
+
+package "Persisted entities (persistence unit Municipal_Report_Management_System)" {
+
+  abstract class User <<@Entity, table users>> {
+    {field} <<PK, identity>> user_id : Long
+    name : String <<not null, 50>>
+    lastName : String <<not null, 50>>
+    phone_number : String <<not null, 20>>
+    credentials : Credentials <<embedded>>
+    --
+    single-table inheritance,
+    discriminator column role (30)
+  }
+
+  class Credentials <<@Embeddable, columns of users>> {
+    email : String <<not null, UNIQUE, 100>>
+    password : String <<not null, 100>>
+  }
+
+  class Citizen <<role = CITIZEN>>
+  class MunicipalOperator <<role = MUNICIPAL_OPERATOR>>
+
+  class Report <<@Entity, table reports>> {
+    {field} <<PK, identity>> report_id : Long
+    title : String <<not null, 50>>
+    description : String <<not null, 1000>>
+    category : ReportCategory <<enum as string, not null>>
+    location : Location <<embedded>>
+    report_date : Date <<DATE, nullable>>
+    attached_image : String <<nullable>>
+    current_status : String <<not null, 30>>
+    citizen_editable : boolean <<not null>>
+    citizen_id : FK -> users <<not null>>
+    operator_id : FK -> users <<nullable>>
+  }
+
+  class Location <<@Embeddable, columns of reports>> {
+    city : String <<not null, 80>>
+    cap : String <<not null, 5>>
+    street : String <<not null, 100>>
+    street_number : String <<not null, 10>>
+    municipal_area : String <<not null, 80>>
+  }
+
+  enum ReportCategory <<stored as string in reports.category>> {
+    BROKEN_STREETLIGHT
+    DAMAGED_ROAD
+    ABANDONED_WASTE
+    GENERAL_HAZARD
+    DAMAGED_STREET_FURNITURE
+  }
+
+  class StatusUpdate <<@Entity, table status_updates>> {
+    {field} <<PK, identity>> update_id : Long
+    update_date : Timestamp <<not null>>
+    new_status : String <<not null, 30>>
+    report_id : FK -> reports <<not null>>
+    operator_id : FK -> users <<not null>>
+  }
+
+  class InternalNote <<@Entity, table internal_notes>> {
+    {field} <<PK, identity>> note_id : Long
+    text : String <<not null, 1000>>
+    created_date : Timestamp <<not null>>
+    report_id : FK -> reports <<not null>>
+    operator_id : FK -> users <<not null>>
+  }
+
+  class Notification <<@Entity, table notifications>> {
+    {field} <<PK, identity>> notification_id : Long
+    sent_date : Timestamp <<not null>>
+    message : String <<not null, 1000>>
+    notified_status : String <<not null, 50>>
+    citizen_id : FK -> users <<not null>>
+    report_id : FK -> reports <<not null>>
+  }
+}
+
+package "Report status (NOT persisted as entities; state pattern, rebuilt from reports.current_status on load)" {
+  interface ReportStatus {
+    updateStatus(report)
+    isStatusNotifiable() : boolean
+  }
+  class Submitted <<"submitted", editable, not notifiable>>
+  class Assigned <<"assigned", notifiable>>
+  class InProgress <<"in_progress", not notifiable>>
+  class Resolved <<"resolved", final, notifiable>>
+  ReportStatus <|.. Submitted
+  ReportStatus <|.. Assigned
+  ReportStatus <|.. InProgress
+  ReportStatus <|.. Resolved
+  Submitted -> Assigned : updateStatus
+  Assigned -> InProgress
+  InProgress -> Resolved
+}
+
+package "Persistence access" {
+  class PersistenceService <<Database>> {
+    save(obj) : persist
+    update(obj) : merge
+    findById(class, id)
+    findByAttribute(...)
+    findByFields(class, criteria)
+  }
+  class JpaUtil <<singleton EntityManagerFactory>>
+}
+
+package "Application services (Entity package)" {
+  class UserService {
+    registerUser / isUserRegistered
+    retrieveUserDataByCredentials
+    verifyUserCitizen / isMunicipalOperator
+  }
+  class ReportService {
+    registerNewReport
+    retrieveReportsSubmitted / Received
+    retrieveDetailsReport / retrieveHistoryReport
+    updateReportStatus
+    registerInternalNote
+    generateStatusChangeNotification
+    generateMonitoringResults
+  }
+}
+
+package "Control (dependent on persisted data via services)" {
+  class UserRegistrationController
+  class UserLoginController
+  class ReportCreationController
+  class ReportReviewController
+  class ReportDetailsController
+  class ReportStatusUpdateController
+  class InternalNoteController
+  class NotificationController
+  class ActivityMonitoringController
+  class SystemServicesController
+}
+
+package "Boundary (Swing GUIs; use ReportCategory directly)" {
+  class UserRegistrationGUI
+  class UserLoginGUI
+  class ReportCreationGUI
+  class SubmittedReportsGUI
+  class ReceivedReportsGUI
+  class ReportStatusUpdateGUI
+  class InternalNoteGUI
+  class ActivityMonitoringGUI
+}
+
+' ---- data model relations
+User <|-- Citizen
+User <|-- MunicipalOperator
+User *-- "1" Credentials : embedded
+Report *-- "1" Location : embedded
+Report --> "1" ReportCategory : category
+Report "0..*" --> "1" Citizen : citizenReporting\n(citizen_id)
+Report "0..*" --> "0..1" MunicipalOperator : operator\n(operator_id, set on first status update)
+Report "1" *-- "0..*" StatusUpdate : statusUpdates\n(cascade ALL, orphanRemoval, eager)
+Report "1" *-- "0..*" InternalNote : internalNotes\n(cascade ALL, orphanRemoval, eager)
+StatusUpdate "0..*" --> "1" MunicipalOperator : operator
+InternalNote "0..*" --> "1" MunicipalOperator : author
+Notification "0..*" --> "1" Report : report
+Notification "0..*" --> "1" Citizen : recipient
+Report ..> ReportStatus : current_status string\nmapped to state object
+note right of Notification
+  Created only for notifiable statuses
+  (assigned, resolved). No FK to
+  StatusUpdate: the link is by report
+  + notified_status text.
+end note
+note bottom of Report
+  Status history is two-fold: the latest value
+  in reports.current_status, every change
+  appended to status_updates.
+  Status names are plain strings (no status table).
+end note
+
+' ---- dependencies on persisted data
+PersistenceService ..> JpaUtil
+UserService ..> PersistenceService
+ReportService ..> PersistenceService
+UserService ..> User : reads/writes
+UserService ..> Citizen
+UserService ..> MunicipalOperator
+ReportService ..> Report : reads/writes
+ReportService ..> StatusUpdate
+ReportService ..> InternalNote
+ReportService ..> Notification
+ReportService ..> User
+
+UserRegistrationController ..> UserService
+UserLoginController ..> UserService
+ReportCreationController ..> UserService
+ReportCreationController ..> ReportService
+ReportReviewController ..> UserService
+ReportReviewController ..> ReportService
+ReportDetailsController ..> UserService
+ReportDetailsController ..> ReportService
+ReportStatusUpdateController ..> UserService
+ReportStatusUpdateController ..> ReportService
+InternalNoteController ..> UserService
+InternalNoteController ..> ReportService
+NotificationController ..> ReportService
+ActivityMonitoringController ..> UserService
+ActivityMonitoringController ..> ReportService
+
+SystemServicesController ..> UserRegistrationController
+SystemServicesController ..> ReportCreationController
+SystemServicesController ..> ReportReviewController
+SystemServicesController ..> ReportDetailsController
+SystemServicesController ..> ReportStatusUpdateController
+SystemServicesController ..> InternalNoteController
+SystemServicesController ..> ActivityMonitoringController
+
+UserRegistrationGUI ..> SystemServicesController
+ReportCreationGUI ..> SystemServicesController
+SubmittedReportsGUI ..> SystemServicesController
+ReceivedReportsGUI ..> SystemServicesController
+ReportStatusUpdateGUI ..> SystemServicesController
+InternalNoteGUI ..> SystemServicesController
+ActivityMonitoringGUI ..> SystemServicesController
+UserLoginGUI ..> UserLoginController
+ReportCreationGUI ..> ReportCategory
+ReceivedReportsGUI ..> ReportCategory
+@enduml

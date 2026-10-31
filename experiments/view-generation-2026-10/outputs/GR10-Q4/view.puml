@@ -1,0 +1,54 @@
+@startuml
+left to right direction
+title Municipal Report Management System - Use Case View
+
+actor "Visitor\n(unauthenticated)" as Visitor
+actor "Citizen" as Citizen
+actor "Municipal Operator" as Operator
+
+rectangle "Municipal Report Management System" {
+  usecase "Register account" as UC_Register
+  usecase "Log in" as UC_Login
+  usecase "Log out" as UC_Logout
+
+  usecase "Create report" as UC_Create
+  usecase "View submitted reports" as UC_Submitted
+  usecase "View report notifications" as UC_ViewNotif
+
+  usecase "View received reports" as UC_Received
+  usecase "Filter received reports" as UC_Filter
+  usecase "View report details and history" as UC_Details
+  usecase "Update report status" as UC_Status
+  usecase "Add internal note" as UC_Note
+  usecase "Monitor activity trends" as UC_Monitor
+  usecase "Notify citizen of status change" as UC_Notify
+}
+
+Visitor --> UC_Register
+Visitor --> UC_Login
+
+Citizen --> UC_Create
+Citizen --> UC_Submitted
+Citizen --> UC_Logout
+
+Operator --> UC_Received
+Operator --> UC_Status
+Operator --> UC_Monitor
+Operator --> UC_Logout
+
+Citizen -|> Visitor
+Operator -|> Visitor
+
+UC_Submitted ..> UC_Details : <<include>>
+UC_Received ..> UC_Details : <<include>>
+UC_Details <.. UC_ViewNotif : <<extend>>
+UC_Filter .> UC_Received : <<extend>>
+UC_Note .> UC_Received : <<extend>>
+UC_Status ..> UC_Notify : <<include>>
+
+note right of UC_Notify
+  Generated automatically when the new
+  status is notifiable; the citizen reads
+  it via "View report notifications".
+end note
+@enduml

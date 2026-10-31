@@ -1,0 +1,28 @@
+@startuml
+title Deployment diagram - Municipal Report Management desktop application
+
+node "Operator / citizen workstation" as ws <<device>> {
+  node "JVM (Java 23), Swing" as jvm <<executionEnvironment>> {
+    artifact "municipal-report-management-1.0-SNAPSHOT\n(Boundary, Control, Entity, Database classes)" as app
+    artifact "hibernate-core 6.6.50.Final\n(JPA provider)" as hib
+    artifact "mysql-connector-j 9.4.0\n(JDBC driver)" as jdbc
+    artifact "forms_rt 7.0.3\n(Swing form runtime)" as forms
+    artifact "persistence.xml\n(unit Municipal_Report_Management_System)" as pxml
+  }
+  node "MySQL server" as mysql <<executionEnvironment>> {
+    artifact "schema reports_db\n(tables created by hbm2ddl update)" as schema
+  }
+}
+
+app ..> hib : <<use>> JPA API
+app ..> forms : <<use>>
+hib ..> jdbc : <<use>>
+hib ..> pxml : config
+jvm ----- mysql : JDBC/TCP 3306
+
+note bottom of ws
+  JDBC URL jdbc:mysql://127.0.0.1:3306/reports_db, user reports_user:
+  both runtime nodes sit on one host.
+  Packaging of the application into a jar is not configured in pom.xml.
+end note
+@enduml

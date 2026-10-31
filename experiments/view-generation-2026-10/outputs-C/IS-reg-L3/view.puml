@@ -1,0 +1,76 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+
+' ---- body ----
+title Sequence view: user registration (Student / Librarian)
+hide footbox
+autonumber "<b>00"
+
+actor       "Registering\nuser"            as usr
+participant "Authentication\nController"   as ctl
+participant "Library\nFacade"              as fac
+participant "User\nManager"                as mgr
+participant "User\nFactory"                as fty
+participant "User\nRegistry"               as reg
+participant "Persistence\nManager"         as pm
+
+usr -> ctl : POST /api/auth/register
+ctl -> fac : register(role, data)
+fac -> mgr : register(role, data)
+mgr -> mgr : validate role, name,\npassword length
+alt Student
+  mgr -> mgr : validate name, email,\nstudent ID format
+else Librarian
+  mgr -> mgr : validate name, email,\ncode format
+end
+mgr -> reg : institutionalEmailExists
+reg -> pm : findFirstByFields
+mgr -> reg : find by student ID / code
+reg -> pm : findFirstByFields
+alt invalid or duplicate
+  mgr --> ctl : IllegalArgument
+  ctl --> usr : HTTP 400 {error}
+else valid
+  mgr -> fty : createUser(...)
+  fty --> mgr : Student / Librarian
+  mgr -> reg : registerUser(user)
+  reg -> pm : save(user)
+  alt commit fails
+    pm --> reg : false (rollback)
+    mgr --> ctl : RuntimeException
+    ctl --> usr : error, not mapped to 400
+  else committed
+    pm --> reg : true
+    mgr --> ctl : UserDTO
+    ctl --> usr : 200 UserDTO
+  end
+end
+
+note over ctl : 400 mapping is done by RestExceptionHandler\n(advice, not a lifeline). Swing form calls\nLibraryFacade directly, skipping this entry.
+note over mgr : Factory is chosen by role: StudentFactory\nor LibrarianFactory (both UserFactory).
+@enduml

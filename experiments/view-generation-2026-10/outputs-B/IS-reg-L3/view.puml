@@ -1,0 +1,78 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+
+' ---- body ----
+title Sequence view: user registration (Student / Librarian)
+hide footbox
+autonumber "<b>00"
+
+participant "Registration Client\n(web form / Swing form)" as cli
+participant "AuthenticationController\n+ RestExceptionHandler" as ctl
+participant "LibraryFacade" as fac
+participant "UserManager" as um
+participant "StudentFactory /\nLibrarianFactory" as uf
+participant "UserRegistry" as reg
+participant "PersistenceManager\n(JPA)" as pm
+
+cli -> ctl : POST /api/auth/register
+ctl -> fac : register(role, personal data,\npassword, identifier)
+fac -> um : register(...)
+um -> um : validate role, password,\nname, email, identifier format
+alt invalid
+  um --> ctl : IllegalArgumentException\n(propagates via facade)
+  ctl --> cli : 400 {"error": message}
+else valid
+  um -> reg : institutionalEmailExists(email)
+  reg -> pm : findFirstByFields(User)
+  pm --> reg : User or null
+  um -> reg : findStudentByStudentNumber /\nfindLibrarianByCode
+  reg -> pm : findFirstByFields(Student | Librarian)
+  pm --> reg : entity or null
+  alt duplicate
+    um --> ctl : IllegalArgumentException
+    ctl --> cli : 400 {"error": message}
+  else new
+    um -> uf : createUser(name, surname,\nemail, password, identifier)
+    uf --> um : Student or Librarian
+    um -> reg : registerUser(newUser)
+    reg -> pm : save(newUser)
+    pm --> reg : true / false
+    alt saved
+      um --> cli : UserDTO (200, via facade and controller)
+    else not saved
+      um --> ctl : RuntimeException "could not be saved"
+      note right : No handler for RuntimeException in\nRestExceptionHandler: HTTP status\nunconfirmed (framework default)
+    end
+  end
+end
+
+note over um, reg
+  Role chooses the branch: student ID = letter + 8 digits;
+  librarian code = alphanumeric. Both checked for uniqueness.
+end note
+@enduml

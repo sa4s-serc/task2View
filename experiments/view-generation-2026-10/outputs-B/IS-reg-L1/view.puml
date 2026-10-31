@@ -1,0 +1,44 @@
+@startuml
+title Sequence diagram: user registration (student or librarian)
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+
+actor "Student /\nLibrarian" as user
+participant "Registration\nForm" as form
+participant "Authentication\nController" as auth
+participant "Library\nFacade" as facade
+participant "User\nManager" as um
+participant "User\nRegistry" as reg
+participant "Persistence\nManager" as pm
+
+user ->> form : submit details
+form ->> auth : POST /api/auth/register
+auth ->> facade : register
+facade ->> um : register
+um -> um : validate input
+um -> reg : check email, identifier
+reg -> pm : findFirstByFields (x2)
+pm --> reg : result
+reg --> um : taken?
+alt accepted
+  um -> um : create user (factory)
+  um -> reg : registerUser
+  reg -> pm : save
+  pm --> reg : true
+  reg --> um : true
+  um --> facade : UserDTO
+  facade --> auth : UserDTO
+  auth --> form : UserDTO
+  form --> user : registration complete
+else rejected
+  um --> facade : exception
+  facade --> auth : exception
+  auth --> form : HTTP 400 error
+  form --> user : show error
+end
+
+note over form
+  The Swing form calls
+  LibraryFacade directly
+end note
+@enduml

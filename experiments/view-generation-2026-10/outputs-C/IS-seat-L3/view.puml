@@ -1,0 +1,53 @@
+@startuml
+title Component view: seat booking (make / cancel / check-in) and notification
+top to bottom direction
+skinparam shadowing false
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 55
+
+package "Boundary" {
+  [Web client + ReservationController\n(Spring REST /api/reservations)] as rest
+  [Swing booking wizard] as swing
+  [NotificationScheduler\n(every 60 s)] as sched
+  [NotificationServiceAdapter] as adapter
+  [ExternalEmailGateway (stub)] as gw
+}
+package "Controller" {
+  [LibraryFacade] as facade
+  [ReservationManager\n(booking rules, flow, lifecycle)] as rm
+  [AssignmentStrategy\n(FirstAvailableAssignment)] as strat
+  [NotificationManager\n(Observer)] as nm
+  interface "NotificationService" as ns
+}
+package "Entity" {
+  [Reservation\n(state + observers)] as res
+  [Student, Area, Seat\n(availability queries)] as ent
+  [ReservationRegistry] as rr
+  [StudyRoomRegistry,\nUserRegistry] as other
+}
+package "Database" {
+  [PersistenceManager\n(JPA/Hibernate)] as pm
+}
+[MySQL reservationsdb] as db
+
+rest --> facade : create/cancel/check-in
+swing --> facade : same calls
+sched --> facade : end + reminders
+facade --> rm : delegate booking
+facade --> nm : send reminders
+rm --> strat : pick seat
+rm --> ent : validate, list free seats
+rm --> res : create, set state
+rm --> rr : save, query
+rm --> other : resolve room/student
+ent --> rr : query reservations
+res ..> nm : notify state change
+nm --> ns : send message
+adapter -up- ns
+adapter --> gw : send email
+nm --> rr : find reminders
+rr --> pm : persist
+other --> pm : persist
+pm --> db : JDBC
+@enduml
