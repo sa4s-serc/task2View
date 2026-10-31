@@ -1,0 +1,552 @@
+#!/usr/bin/env python3
+"""puml-new: scaffold a PlantUML file from a tested template with the house style inlined.
+
+Usage:
+  puml-new TYPE [OUT.puml] [--preset slide|print] [--direction lr|tb] [--title "Text"] [--no-style] [--force]
+
+TYPE: sequence | activity | component | deployment | class | state | usecase | er | network | dfd |
+      c4-context | c4-container | c4-component
+      (or 'list' to print the types, 'style' to print just the style block)
+
+--preset slide (default): 14 px text; print: 12 px text. (PNG dpi is set at export time by puml-render,
+  never inside the file: skinparam dpi also scales the SVG and breaks size checks.)
+--no-style: omit the inline style (use when the project has lib/house.puml and you !include it).
+Writes to OUT.puml (or stdout if omitted). Never overwrites an existing file unless --force.
+"""
+import argparse, os, sys
+
+# --------------------------------------------------------------------------- house style
+# Verified on PlantUML 1.2026.8. Appearance lives in <style>; the skinparams below are layout
+# knobs that have NO <style> equivalent (linetype, nodesep, ranksep) or are kept for
+# older renderers (maxMessageSize/wrapWidth; the <style> MaximumWidth is the modern form).
+# Never add: skinparam padding / ParticipantPadding / handwritten (they paint a warning banner
+# into the image on 1.2026.x), linetype ortho (labels overlap), SameClassWidth.
+# Never set LineColor/LineThickness on root or title: `title { LineThickness 0 }` and `LineColor transparent`
+# strip the stroke from EVERY element in description diagrams (SVG renders borderless). Line properties
+# live on element/arrow/note/legend only, which also leaves the title without a border.
+STYLE = """\
+' ---- house style ({preset}) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize {wrap}
+skinparam wrapWidth {wrap}
+<style>
+root {{
+  FontName Helvetica
+  FontSize {fs}
+  FontColor #1F2937
+}}
+element {{ BackgroundColor #F1F5F9; LineColor #475569; LineThickness {lt}; RoundCorner 6 }}
+arrow   {{ LineColor #475569; LineThickness {lt}; FontSize {fs_small}; MaximumWidth {wrap} }}
+note    {{ BackgroundColor #FFF7E0; LineColor #B45309; FontSize {fs_small}; MaximumWidth {wrap_note} }}
+title   {{ FontSize {fs_title}; FontStyle bold }}
+caption {{ FontSize {fs_small}; FontColor #64748B }}
+legend  {{ FontSize {fs_small}; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }}
+.accent {{ BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }}
+.alert  {{ BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }}
+.muted  {{ BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }}
+{extra}</style>
+hide stereotype
+"""
+
+PRESETS = {
+    "slide": dict(preset="slide", dpi=192, fs=14, fs_small=12, fs_title=18, lt="1.2", wrap=180, wrap_note=220),
+    "print": dict(preset="print", dpi=300, fs=12, fs_small=11, fs_title=15, lt="1", wrap=160, wrap_note=200),
+}
+
+# Graphviz-backed diagram types get spacing + routing knobs (dot only; ignored by smetana/elk).
+GRAPHVIZ_EXTRA = """\
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+"""
+
+TEMPLATES = {
+"sequence": dict(style_extra="""sequenceDiagram {{
+  participant {{ Margin 0 12 }}
+  lifeLine    {{ LineColor #94A3B8 }}
+  group       {{ FontSize {fs_small} }}
+}}
+""", body="""\
+title {title}
+hide footbox
+autonumber "<b>00"
+
+' Declare every participant up front, in reading order, with a short alias.
+actor       "Customer"        as cust
+participant "Web App"         as web
+participant "Order Service"   as orders
+participant "Payment Gateway" as pay
+database    "Orders DB"       as db
+
+cust  -> web    : place order
+web   -> orders ++ : POST /orders
+orders -> db    : insert PENDING
+orders -> pay   ++ : authorize(amount)
+alt authorized
+  pay --> orders -- : AUTH_OK
+  orders -> db  : status = CONFIRMED
+else declined
+  pay --> orders : DECLINED
+  orders -> db  : status = DECLINED
+end
+orders --> web  -- : 201 {{orderId, status}}
+web   --> cust  : confirmation page
+"""),
+
+"activity": dict(style_extra="""activityDiagram {{
+  activity    {{ MaximumWidth 200 }}
+  diamond     {{ FontSize {fs_small} }}
+  arrow       {{ FontSize {fs_small} }}
+  activityBar {{ BackgroundColor #475569; LineColor #475569 }}
+}}
+""", body="""\
+title {title}
+' Do NOT set skinparam conditionStyle diamond: it drops the yes/no labels of "repeat while".
+' Pipelines with gates: put the happy path in the then-branch and the exit (stop) in the else, or the
+' diagram grows a long bypass edge.
+
+|Customer|
+start
+:Add items to cart;
+:Checkout;
+|Web App|
+:Validate cart;
+if (Cart valid?) then (yes)
+  |Order Service|
+  :Create order\\n(PENDING);
+  fork
+    :Reserve inventory;
+  fork again
+    :Authorize payment;
+  end fork
+  if (Both succeeded?) then (yes)
+    :Confirm order;
+    |Customer|
+    :Receive confirmation;
+  else (no)
+    :Release reservations;
+    |Customer|
+    :Receive decline notice;
+  endif
+else (no)
+  :Show cart errors;
+endif
+stop
+"""),
+
+"component": dict(graphviz=True, style_extra="", body="""\
+title {title}
+
+' Declare containers and components in reading order (left to right = flow order under
+' left to right direction), then write links in flow order. --> = next layer; -> = same layer.
+actor "Customer" as cust
+
+package "Edge" {{
+  [API Gateway] as gw
+}}
+package "Services" {{
+  [Order Service]     as orders
+  [Inventory Service] as inv
+  [Payment Service]   as pay
+}}
+package "Data" {{
+  database "Orders DB" as odb
+  queue    "Event Bus" as bus
+}}
+
+cust   --> gw     : HTTPS
+gw     --> orders : orders
+gw     --> inv    : stock check
+orders --> pay    : authorize
+orders -[norank]-> odb : persist
+' [norank]: this edge would otherwise pull Orders DB up and run through the "Data" title.
+orders ---> bus   : OrderCreated
+inv    --> bus    : StockChanged
+' (---> = one extra rank: gives the label room so it does not land on the package border)
+"""),
+
+"deployment": dict(graphviz=True, style_extra="", body="""\
+title {title}
+
+' Link CONTAINERS (browser, runtime, payments), not the nodes nested inside them: an edge that targets
+' an inner node is drawn across the container and, top-to-bottom, through its title. Keep nesting <= 2.
+actor "User" as user
+
+node "Browser" as browser {{
+  [Web UI (SPA)] as ui
+}}
+rectangle "Cloud provider" as cp {{
+  node "Serverless runtime" as runtime {{
+    [REST API] as api
+  }}
+  database "Managed SQL" as sqldb
+  database "Object store" as objstore
+}}
+cloud "Payment provider" as payments {{
+  [Payments API] as payapi
+}}
+' rectangle, not cloud, for a provider boundary that holds several nodes: the bumpy cloud outline is wider
+' and nodes near its edge straddle it. cloud is fine for a small external box like the one above.
+
+user    --> browser : HTTPS
+browser --> runtime : JSON / HTTPS
+api     --> sqldb   : SQL
+api     --> objstore : objects
+runtime --> payments : REST
+"""),
+
+"class": dict(graphviz=True, style_extra="""classDiagram {{
+  class {{ BackgroundColor #F8FAFC }}
+}}
+""", body="""\
+title {title}
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+' Keep members to what the reader needs (3-6 per class). Use notes for detail.
+' Multiplicities sit at their own end: A "1" --> "0..*" B puts 0..* at B. Build rows for wide models:
+' A -> B same rank, A --> B next row; flip the arrowhead (A <-- B), not the operands, to keep rows.
+' Enums: show them as attribute types; draw an enum box only when the diagram is about it.
+class Customer {{
+  +id: UUID
+  +email: String
+  +placeOrder(cart): Order
+}}
+class Order {{
+  +id: UUID
+  +status: OrderStatus
+  +total(): Money
+}}
+class OrderLine {{
+  +sku: String
+  +quantity: int
+}}
+enum OrderStatus {{
+  PENDING
+  CONFIRMED
+  CANCELLED
+}}
+interface PaymentGateway {{
+  +authorize(amount): Auth
+}}
+class CardGateway
+
+Customer "1" --> "0..*" Order : places
+Order    "1" *--  "1..*" OrderLine
+Order    -->  OrderStatus
+Order    ..>  PaymentGateway
+PaymentGateway <|.. CardGateway
+"""),
+
+"state": dict(graphviz=True, style_extra="""stateDiagram {{
+  state {{ BackgroundColor #F8FAFC }}
+}}
+""", body="""\
+title {title}
+hide empty description
+' States without a description would otherwise draw an empty second compartment.
+' Lifecycles: build rows. A -> B keeps B on the same rank (same row in top-to-bottom), A --> B starts the
+' next row. Two opposite edges between the same pair must not both be ->: make one of them -up-> or --> .
+
+[*] --> Draft
+Draft --> Submitted : submit
+Submitted --> Approved : approve
+Submitted --> Rejected : reject
+Rejected --> Draft : revise
+Approved --> Published : publish
+Published --> Archived : archive
+Archived --> [*]
+
+Submitted : reviewer assigned
+Published : visible to customers
+"""),
+
+"usecase": dict(graphviz=True, style_extra="", body="""\
+title {title}
+
+actor "Customer" as cust
+actor "Support Agent" as agent
+
+rectangle "Store" {{
+  usecase "Browse catalog" as UC1
+  usecase "Place order"    as UC2
+  usecase "Track order"    as UC3
+  usecase "Request refund" as UC4
+  usecase "Approve refund" as UC5
+}}
+
+cust  --> UC1
+cust  --> UC2
+cust  --> UC3
+cust  --> UC4
+agent --> UC5
+UC4 ..> UC5 : <<extends>>
+"""),
+
+"er": dict(graphviz=True, style_extra="", body="""\
+title {title}
+hide circle
+skinparam classAttributeIconSize 0
+' Columns: * = NOT NULL, no marker = nullable; tag keys <<PK>>, <<FK>>, <<UQ>> (one tag per column).
+' Crow's feet: ||--o{{ one to zero-or-many, ||--|{{ one to one-or-many, ||--o| one to zero-or-one,
+' |o--o{{ zero-or-one to many (a nullable FK). One dash (||-o{{) = same rank, two (||--o{{) = next rank:
+' build rows. Two FKs to the same table: label both edges (users ||--o{{ refunds : requested_by).
+' Edges are polyline (house style); switch to linetype ortho only when no edge carries a label.
+
+entity "customer" as customer {{
+  * id : uuid <<PK>>
+  --
+  * email : text
+    name : text
+}}
+entity "order" as order {{
+  * id : uuid <<PK>>
+  --
+  * customer_id : uuid <<FK>>
+  * status : text
+  * created_at : timestamptz
+}}
+entity "order_line" as line {{
+  * id : uuid <<PK>>
+  --
+  * order_id : uuid <<FK>>
+  * sku : text
+  * quantity : int
+}}
+entity "payment" as payment {{
+  * id : uuid <<PK>>
+  --
+  * order_id : uuid <<FK>>
+  * amount_cents : int
+}}
+
+customer ||--o{{ order
+order    ||--|{{ line
+order    ||--o| payment
+"""),
+
+"network": dict(graphviz=True, style_extra=""".zone-untrusted {{ BackgroundColor #FEF2F2; LineColor #B91C1C; LineThickness 1.5 }}
+.zone-dmz       {{ BackgroundColor #FFF7ED; LineColor #C2410C; LineThickness 1.5 }}
+.zone-internal  {{ BackgroundColor #F0FDF4; LineColor #15803D; LineThickness 1.5 }}
+.zone-restricted{{ BackgroundColor #F5F3FF; LineColor #6D28D9; LineThickness 1.5 }}
+.zone-external  {{ BackgroundColor #F8FAFC; LineColor #64748B; LineThickness 1.5; LineStyle 4 }}
+""", body="""\
+title {title}
+' Trust-zone classes (in the style block above): <<zone-untrusted>> <<zone-dmz>> <<zone-internal>> <<zone-restricted>> <<zone-external>>
+' Network recipe: zones are rectangles with a <<zone-...>> class and the CIDR on a second line;
+' the firewall is the <<accent>>; edges carry protocol/port only; flows go INTO ZONES (link the
+' rectangle, not its members) unless the member matters. Keep nesting to zone > device.
+' HA pairs: one rectangle "FW pair (HA)" holding both nodes, joined with a plain  fwa - fwb  (no label).
+' External clouds (M365, SaaS) go on their own rank, never inside the DMZ row. Split big networks by
+' layer (physical / logical VLAN / policy) or by site, with <<muted>> "(see X)" stub nodes.
+
+cloud "Internet" as inet <<zone-untrusted>>
+actor "Remote users" as remote
+
+rectangle "FW pair (HA)" as fw <<accent>> {{
+  node "fw-a" as fwa
+  node "fw-b" as fwb
+}}
+fwa - fwb
+
+rectangle "DMZ\\n10.0.1.0/24" as dmz <<zone-dmz>> {{
+  node "WAF / reverse proxy" as waf
+  node "VPN concentrator"    as vpn
+}}
+rectangle "Internal LAN\\n10.0.10.0/24" as lan <<zone-internal>> {{
+  node "AD DS / DNS" as ad
+  node "File server" as files
+  node "Workstations" as ws
+}}
+rectangle "Management\\n10.0.99.0/24" as mgmt <<zone-restricted>> {{
+  node "Jump host" as jump
+  node "SIEM collector" as siem
+}}
+cloud "Microsoft 365 / Entra" as m365 <<zone-external>>
+
+inet   --> fw   : HTTPS 443
+remote --> fw   : IPsec / SSL VPN
+fw     --> dmz  : 443 only
+fw     --> lan
+vpn    --> lan  : split tunnel
+jump   --> lan  : RDP/SSH
+fw     --> m365 : HTTPS 443
+siem   <-- fw   : syslog 514
+' (the fw -> lan edge is unlabelled on purpose: "policy" landed on the zone border; the rule set belongs in a table)
+
+legend right
+  Zone colours: red untrusted, orange DMZ, green internal, purple restricted, dashed grey external
+  Blue = enforcement point (firewall)
+endlegend
+"""),
+
+"dfd": dict(graphviz=True, direction="tb", style_extra=""".boundary {{ BackgroundColor transparent; LineColor #94A3B8; LineStyle 6; LineThickness 1.2 }}
+""", body="""\
+title {title}
+' DFD notation: process = usecase (ellipse), external entity = rectangle, data store = database,
+' trust boundary = rectangle <<boundary>> (dashed, from the style block); PII flows -[#D55E00,bold]-> and say (PII).
+' DFD recipe: number processes (0, 1, 1.1); draw WRITES to stores and say "reads omitted" in the legend
+' when read-backs would loop around the diagram. Rows by zone, top-to-bottom (Public / App / Data+Third party);
+' write upward flows with a flipped arrowhead (server <-- p2) so the rows hold. Keep one level per diagram:
+' level 0 (context) then one level-1 per process. Boundaries stay top-to-bottom even for slides (direction="tb").
+' Hand-offs between processes in one zone: draw them through the store (p2 <-- db), not as a same-rank p1 -> p2;
+' Graphviz can put another process between the two, and the flow then loops over the zone title.
+
+rectangle "Public" as z_pub <<boundary>> {{
+  rectangle "Client" as client
+  rectangle "Field worker" as server
+}}
+rectangle "App" as z_app <<boundary>> {{
+  usecase "1 Intake" as p1
+  usecase "2 Assign" as p2
+  usecase "3 Log visit" as p3
+}}
+rectangle "Data" as z_data <<boundary>> {{
+  database "Audit log" as audit
+  database "Case DB" as db
+}}
+rectangle "External" as z_ext <<boundary>> {{
+  rectangle "Partner portal" as court
+}}
+
+' Flows from outside into App or External target the ZONE (z_app, z_ext); flows to and from a store target the store.
+' Short zone titles + zone-level links are what keeps edges off the titles (measured: 3 crossings -> 0).
+client -[#D55E00,bold]-> z_app : new case (PII)
+server -[#D55E00,bold]-> z_app : visit + GPS (PII)
+p2 <-- db : open cases
+server <-- p2 : job offer
+p1 -[#D55E00,bold]-> db : case (PII)
+p3 --> db : visit
+p3 --> audit : event
+p2 --> z_ext : filing
+
+legend right
+  <color:#D55E00><b>orange bold</b></color> = carries PII
+  dashed box = trust boundary; other store reads omitted
+endlegend
+"""),
+
+"c4-container": dict(graphviz=True, c4="C4_Container", style_extra="", body="""\
+title {title}
+' C4-PlantUML from the bundled stdlib (offline). Layout helpers: LAYOUT_TOP_DOWN(), LAYOUT_LEFT_RIGHT(),
+' LAYOUT_LANDSCAPE(), Lay_D/U/L/R(a, b). SHOW_LEGEND() must be the last line.
+
+Person(customer, "Customer", "Buys products")
+
+System_Boundary(shop, "Shop") {{
+  Container(web, "Web App", "SPA framework", "Storefront UI")
+  Container(api, "API", "REST, serverless", "Orders, inventory, payments")
+  ContainerDb(db, "Database", "managed SQL", "Orders and customers")
+  ContainerQueue(bus, "Event Bus", "managed queue", "Domain events")
+}}
+System_Ext(payments, "Payment provider", "Card payments")
+
+Rel(customer, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads/writes", "SQL")
+Rel(api, bus, "Publishes", "events")
+Rel(api, payments, "Charges", "REST")
+
+SHOW_LEGEND()
+"""),
+
+"c4-component": dict(graphviz=True, c4="C4_Component", style_extra="", body="""\
+title {title}
+' C4 component view: the inside of ONE container. Component(alias, label, technology, description):
+' technology comes before the description. Show only the containers and externals the components use.
+
+Container(web, "Web App", "SPA", "Storefront UI")
+
+Container_Boundary(api, "API") {{
+  Component(auth, "Auth middleware", "JWT", "Validates tokens")
+  Component(orders, "Orders", "module", "Order lifecycle")
+  Component(payments, "Payments", "module", "Provider client")
+}}
+ContainerDb(db, "Database", "managed SQL", "Orders")
+System_Ext(psp, "Payment provider", "Card payments")
+
+Rel(web, auth, "Calls", "JSON/HTTPS")
+Rel(auth, orders, "Passes request")
+Rel(orders, payments, "Charges")
+Rel(orders, db, "Reads/writes", "SQL")
+Rel(payments, psp, "Authorizes", "REST")
+
+SHOW_LEGEND()
+"""),
+
+"c4-context": dict(graphviz=True, c4="C4_Context", style_extra="", body="""\
+title {title}
+
+Person(customer, "Customer", "Buys products")
+Person(agent, "Support Agent", "Handles refunds")
+System(shop, "Online Shop", "Storefront, orders, payments")
+System_Ext(payments, "Payment provider", "Payment processing")
+System_Ext(email, "Email Provider", "Transactional email")
+
+Rel(customer, shop, "Shops", "HTTPS")
+Rel(agent, shop, "Manages orders", "HTTPS")
+Rel(shop, payments, "Charges cards", "REST")
+Rel(shop, email, "Sends receipts", "SMTP/API")
+
+SHOW_LEGEND()
+"""),
+}
+
+def build(kind, title, preset, with_style=True, direction=None):
+    t = TEMPLATES[kind]
+    p = dict(PRESETS[preset])
+    out = ["@startuml"]
+    if t.get("c4"):
+        out.append(f"!include <C4/{t['c4']}>")
+    if with_style:
+        extra = t["style_extra"].format(**p)
+        out.append(STYLE.format(extra=extra, **p).rstrip())
+        if t.get("graphviz"):
+            out.append(GRAPHVIZ_EXTRA.rstrip())
+    if t.get("graphviz"):
+        d = direction or t.get("direction") or ("lr" if preset == "slide" else "tb")
+        if t.get("c4"):
+            out.append("LAYOUT_LEFT_RIGHT()" if d == "lr" else "LAYOUT_TOP_DOWN()")
+        else:
+            out.append("left to right direction" if d == "lr" else "top to bottom direction")
+    out.append("")
+    out.append("' ---- body ----")
+    body = t["body"].format(title=title).rstrip().replace("LAYOUT_TOP_DOWN()\n", "")
+    out.append(body)
+    out.append("@enduml")
+    return "\n".join(out) + "\n"
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("kind"); ap.add_argument("out", nargs="?")
+    ap.add_argument("--preset", choices=list(PRESETS), default="slide")
+    ap.add_argument("--title", default="Diagram title")
+    ap.add_argument("--no-style", action="store_true"); ap.add_argument("--force", action="store_true")
+    ap.add_argument("--direction", choices=["lr", "tb"], help="Graphviz diagrams: left-to-right (slides default) or top-to-bottom (print default)")
+    a = ap.parse_args()
+    if a.kind == "list":
+        print("\n".join(TEMPLATES)); return
+    if a.kind == "style":
+        p = PRESETS[a.preset]
+        hdr = ("' house.puml: the plantuml-diagrams skill's house style as an include file.\n"
+               "' Copy to <project>/docs/diagrams/lib/house.puml and write  !include lib/house.puml  (relative to the diagram).\n"
+               "' Prefer the inline form from puml-new when the diagram must render on Kroki / VS Code server / MCP.\n"
+               "' NOTE: an included file must never contain the text @start""uml, even in a comment, or the include fails.\n"
+               "' Regenerate: scripts/puml-new style > assets/lib/house.puml\n")
+        print(hdr + STYLE.format(extra="", **p) + GRAPHVIZ_EXTRA); return
+    if a.kind not in TEMPLATES:
+        sys.exit(f"unknown type {a.kind!r}; one of: {', '.join(TEMPLATES)}")
+    text = build(a.kind, a.title, a.preset, not a.no_style, a.direction)
+    if a.out:
+        if os.path.exists(a.out) and not a.force:
+            sys.exit(f"{a.out} exists (use --force to overwrite)")
+        os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+        open(a.out, "w").write(text); print(a.out)
+    else:
+        sys.stdout.write(text)
+
+if __name__ == "__main__":
+    main()

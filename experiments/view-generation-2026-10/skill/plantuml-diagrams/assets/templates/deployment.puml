@@ -1,0 +1,58 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+' ---- body ----
+title deployment example
+
+' Link CONTAINERS (browser, runtime, payments), not the nodes nested inside them: an edge that targets
+' an inner node is drawn across the container and, top-to-bottom, through its title. Keep nesting <= 2.
+actor "User" as user
+
+node "Browser" as browser {
+  [Web UI (SPA)] as ui
+}
+rectangle "Cloud provider" as cp {
+  node "Serverless runtime" as runtime {
+    [REST API] as api
+  }
+  database "Managed SQL" as sqldb
+  database "Object store" as objstore
+}
+cloud "Payment provider" as payments {
+  [Payments API] as payapi
+}
+' rectangle, not cloud, for a provider boundary that holds several nodes: the bumpy cloud outline is wider
+' and nodes near its edge straddle it. cloud is fine for a small external box like the one above.
+
+user    --> browser : HTTPS
+browser --> runtime : JSON / HTTPS
+api     --> sqldb   : SQL
+api     --> objstore : objects
+runtime --> payments : REST
+@enduml

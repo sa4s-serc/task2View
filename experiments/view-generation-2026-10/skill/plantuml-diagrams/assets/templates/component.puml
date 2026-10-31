@@ -1,0 +1,59 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+' ---- body ----
+title component example
+
+' Declare containers and components in reading order (left to right = flow order under
+' left to right direction), then write links in flow order. --> = next layer; -> = same layer.
+actor "Customer" as cust
+
+package "Edge" {
+  [API Gateway] as gw
+}
+package "Services" {
+  [Order Service]     as orders
+  [Inventory Service] as inv
+  [Payment Service]   as pay
+}
+package "Data" {
+  database "Orders DB" as odb
+  queue    "Event Bus" as bus
+}
+
+cust   --> gw     : HTTPS
+gw     --> orders : orders
+gw     --> inv    : stock check
+orders --> pay    : authorize
+orders -[norank]-> odb : persist
+' [norank]: this edge would otherwise pull Orders DB up and run through the "Data" title.
+orders ---> bus   : OrderCreated
+inv    --> bus    : StockChanged
+' (---> = one extra rank: gives the label room so it does not land on the package border)
+@enduml

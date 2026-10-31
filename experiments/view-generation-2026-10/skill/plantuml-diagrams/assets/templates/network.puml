@@ -1,0 +1,83 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+.zone-untrusted { BackgroundColor #FEF2F2; LineColor #B91C1C; LineThickness 1.5 }
+.zone-dmz       { BackgroundColor #FFF7ED; LineColor #C2410C; LineThickness 1.5 }
+.zone-internal  { BackgroundColor #F0FDF4; LineColor #15803D; LineThickness 1.5 }
+.zone-restricted{ BackgroundColor #F5F3FF; LineColor #6D28D9; LineThickness 1.5 }
+.zone-external  { BackgroundColor #F8FAFC; LineColor #64748B; LineThickness 1.5; LineStyle 4 }
+</style>
+hide stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+' ---- body ----
+title network example
+' Trust-zone classes (in the style block above): <<zone-untrusted>> <<zone-dmz>> <<zone-internal>> <<zone-restricted>> <<zone-external>>
+' Network recipe: zones are rectangles with a <<zone-...>> class and the CIDR on a second line;
+' the firewall is the <<accent>>; edges carry protocol/port only; flows go INTO ZONES (link the
+' rectangle, not its members) unless the member matters. Keep nesting to zone > device.
+' HA pairs: one rectangle "FW pair (HA)" holding both nodes, joined with a plain  fwa - fwb  (no label).
+' External clouds (M365, SaaS) go on their own rank, never inside the DMZ row. Split big networks by
+' layer (physical / logical VLAN / policy) or by site, with <<muted>> "(see X)" stub nodes.
+
+cloud "Internet" as inet <<zone-untrusted>>
+actor "Remote users" as remote
+
+rectangle "FW pair (HA)" as fw <<accent>> {
+  node "fw-a" as fwa
+  node "fw-b" as fwb
+}
+fwa - fwb
+
+rectangle "DMZ\n10.0.1.0/24" as dmz <<zone-dmz>> {
+  node "WAF / reverse proxy" as waf
+  node "VPN concentrator"    as vpn
+}
+rectangle "Internal LAN\n10.0.10.0/24" as lan <<zone-internal>> {
+  node "AD DS / DNS" as ad
+  node "File server" as files
+  node "Workstations" as ws
+}
+rectangle "Management\n10.0.99.0/24" as mgmt <<zone-restricted>> {
+  node "Jump host" as jump
+  node "SIEM collector" as siem
+}
+cloud "Microsoft 365 / Entra" as m365 <<zone-external>>
+
+inet   --> fw   : HTTPS 443
+remote --> fw   : IPsec / SSL VPN
+fw     --> dmz  : 443 only
+fw     --> lan
+vpn    --> lan  : split tunnel
+jump   --> lan  : RDP/SSH
+fw     --> m365 : HTTPS 443
+siem   <-- fw   : syslog 514
+' (the fw -> lan edge is unlabelled on purpose: "policy" landed on the zone border; the rule set belongs in a table)
+
+legend right
+  Zone colours: red untrusted, orange DMZ, green internal, purple restricted, dashed grey external
+  Blue = enforcement point (firewall)
+endlegend
+@enduml

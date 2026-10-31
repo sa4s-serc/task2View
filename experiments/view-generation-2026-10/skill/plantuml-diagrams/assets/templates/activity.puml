@@ -1,0 +1,64 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+activityDiagram {
+  activity    { MaximumWidth 200 }
+  diamond     { FontSize 12 }
+  arrow       { FontSize 12 }
+  activityBar { BackgroundColor #475569; LineColor #475569 }
+}
+</style>
+hide stereotype
+
+' ---- body ----
+title activity example
+' Do NOT set skinparam conditionStyle diamond: it drops the yes/no labels of "repeat while".
+' Pipelines with gates: put the happy path in the then-branch and the exit (stop) in the else, or the
+' diagram grows a long bypass edge.
+
+|Customer|
+start
+:Add items to cart;
+:Checkout;
+|Web App|
+:Validate cart;
+if (Cart valid?) then (yes)
+  |Order Service|
+  :Create order\n(PENDING);
+  fork
+    :Reserve inventory;
+  fork again
+    :Authorize payment;
+  end fork
+  if (Both succeeded?) then (yes)
+    :Confirm order;
+    |Customer|
+    :Receive confirmation;
+  else (no)
+    :Release reservations;
+    |Customer|
+    :Receive decline notice;
+  endif
+else (no)
+  :Show cart errors;
+endif
+stop
+@enduml
