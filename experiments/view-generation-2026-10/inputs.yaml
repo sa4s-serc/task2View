@@ -6,6 +6,8 @@
 # Terms from ISO/IEC/IEEE 42010:2022, clause 3:
 #   entity_of_interest (3.12), stakeholder (3.17), perspective = stakeholder perspective (3.18),
 #   concern (3.10), aspect (3.9), viewpoint (3.8) / model_kind (3.15).
+#   The perspective carries the detail level the stakeholder needs (overview, balanced or detailed); it is an
+#   input, not the generator's choice (added 2026-10-31; conditions A-D ran with the description only).
 #
 # request          the stakeholder's text as given to the generators (short rewrite where one exists)
 # original_request the pilot's long text, for the four requests that were rewritten short
@@ -29,7 +31,9 @@ cases:
     original_request: "I am a software architect. I need to review the overall organization of the system before planning its future evolution. I want to understand the main architectural components, their responsibilities, how the system is decomposed into different layers or subsystems, and the main dependencies among them. I also need to identify how user-facing functionality, application logic, domain entities, and data persistence are separated and how these parts collaborate to provide the main system functionalities."
     entity_of_interest: gr10
     stakeholder: software architect
-    perspective: the whole system at a high level, before planning its evolution
+    perspective:
+      description: the whole system at a high level, before planning its evolution
+      detail_level: overview   # request says high-level
     concern: general
     concern_details:
       - main architectural components and their responsibilities
@@ -45,7 +49,9 @@ cases:
     original_request: "I am a DevOps engineer. I need to deploy and configure the system in a new execution environment. Before preparing the deployment, I need to understand which runtime environments and software artifacts are required, where the application and its data are executed and stored, and how the main runtime elements communicate with each other. I also need to identify the technologies and runtime dependencies involved in the communication between the application and the database."
     entity_of_interest: gr10
     stakeholder: DevOps engineer
-    perspective: runtime and operations; deploying the system in a new environment
+    perspective:
+      description: runtime and operations; deploying the system in a new environment
+      detail_level: detailed   # request says complete
     concern: deployment, connectivity
     concern_details:
       - required runtime environments and software artifacts
@@ -61,7 +67,9 @@ cases:
     original_request: "I am a business analyst. I need to understand at a high level how a system for reporting and managing problems in a municipal area is expected to work. I know that the application should allow people to report issues in the territory and support the municipality in managing them, but I do not yet know the specific user roles or the functionalities available to each of them. I need to identify the main types of users that interact with the system, the main goals they can achieve through it, and how the different functionalities are related to each other."
     entity_of_interest: gr10
     stakeholder: software analyst
-    perspective: what the system offers its users, without knowing the user roles yet
+    perspective:
+      description: what the system offers its users, without knowing the user roles yet
+      detail_level: overview   # inferred; original request says at a high level
     concern: general            # inferred; the vocabulary has no label for functionality
     concern_details:
       - main types of users that interact with the system
@@ -75,7 +83,9 @@ cases:
     request: "I am a database engineer. I need to modify the persistence layer to support future changes to the management of municipal reports. Before modifying the database, I need to understand the main data entities stored by the system, the relationships among them, and which information must be persisted throughout the lifecycle of a report. In particular, I need to understand how users, reports, locations, categories, states, state changes, internal notes, and notifications are related, and which parts of the application depend on this persisted information."
     entity_of_interest: gr10
     stakeholder: database engineer
-    perspective: the persistence layer, before changing how reports are managed
+    perspective:
+      description: the persistence layer, before changing how reports are managed
+      detail_level: detailed   # inferred; the request lists eight kinds of persisted data
     concern: general            # inferred; the vocabulary has no label for data model
     concern_details:
       - main data entities stored and their relationships
@@ -92,7 +102,9 @@ cases:
     original_request: "I am an integration tester. I need to test the user registration functionality and understand which system components are involved and how they interact."
     entity_of_interest: progetto-is
     stakeholder: integration tester
-    perspective: testing the user registration feature end to end
+    perspective:
+      description: testing the user registration feature end to end
+      detail_level: balanced   # inferred
     concern: control_flow       # inferred
     concern_details:
       - system components involved in user registration
@@ -105,7 +117,9 @@ cases:
     request: "I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the main components involved in registration, their responsibilities, and how they interact when a new user creates an account. I also need to identify the main integration points that should be exercised during the tests."
     entity_of_interest: progetto-is
     stakeholder: integration tester
-    perspective: designing integration tests for user registration
+    perspective:
+      description: designing integration tests for user registration
+      detail_level: balanced   # inferred
     concern: control_flow, connectivity   # inferred
     concern_details:
       - main components involved in registration and their responsibilities
@@ -119,7 +133,9 @@ cases:
     request: "I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the registration process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components handle the registration request, validate the user's personal information and selected role, manage role-specific data such as the student ID or librarian identifier, verify the validity and uniqueness of the account, and persist the newly created user. I also need to understand how these components collaborate when invalid or already existing user data is provided, so that I can identify the main integration points and interactions that should be covered by the tests."
     entity_of_interest: progetto-is
     stakeholder: integration tester
-    perspective: designing integration tests for user registration, at the level of the architecture
+    perspective:
+      description: designing integration tests for user registration, at the level of the architecture
+      detail_level: balanced   # inferred; says high-level architecture but names five responsibilities and the error paths
     concern: control_flow, connectivity   # inferred
     concern_details:
       - main components in the registration process, their responsibilities, interactions and dependencies
@@ -134,7 +150,9 @@ cases:
     request: "I am a software developer. I need to modify the seat booking functionality and understand the main system components involved and how they interact."
     entity_of_interest: progetto-is
     stakeholder: software developer
-    perspective: about to modify the seat booking feature
+    perspective:
+      description: about to modify the seat booking feature
+      detail_level: overview   # inferred; asks only for the main components
     concern: control_flow       # inferred
     concern_details:
       - main system components involved in seat booking
@@ -147,7 +165,9 @@ cases:
     request: "I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before changing the code, I need to understand the main components involved in this functionality, their responsibilities, and how they interact with each other. I also want to identify which parts of the system may be affected by the modification."
     entity_of_interest: progetto-is
     stakeholder: software developer
-    perspective: about to add new booking rules to seat booking
+    perspective:
+      description: about to add new booking rules to seat booking
+      detail_level: balanced   # inferred
     concern: general            # inferred; change impact has no label in the vocabulary
     concern_details:
       - main components involved in seat booking and their responsibilities
@@ -161,7 +181,9 @@ cases:
     request: "I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes."
     entity_of_interest: progetto-is
     stakeholder: software developer
-    perspective: about to add new booking rules; needs the architecture behind seat booking
+    perspective:
+      description: about to add new booking rules; needs the architecture behind seat booking
+      detail_level: balanced   # inferred; says high-level architecture but names five responsibilities and external services
     concern: control_flow, connectivity   # inferred; connectivity for the external notification service
     concern_details:
       - main components in the booking process, their responsibilities, interactions and dependencies

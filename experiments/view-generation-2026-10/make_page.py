@@ -26,7 +26,10 @@ def case_html(case: str, c: dict, entities: dict) -> str:
     out = HERE / "outputs" / case
     rows = [f"<tr><th>entity of interest</th><td>{esc(entities[c['entity_of_interest']]['description'])}</td></tr>"]
     for f in FIELDS:
-        rows.append(f"<tr><th>{f.replace('_', ' ')}</th><td>{esc(c[f])}</td></tr>")
+        value = c[f]
+        if isinstance(value, dict):  # perspective: description and detail level
+            value = f"{value['description']} (detail level: {value['detail_level']})"
+        rows.append(f"<tr><th>{f.replace('_', ' ')}</th><td>{esc(value)}</td></tr>")
         if f == "concern":
             items = "".join(f"<li>{esc(d)}</li>" for d in c.get("concern_details", []))
             rows.append(f"<tr><th>concern details</th><td><ul>{items}</ul></td></tr>")

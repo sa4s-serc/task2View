@@ -48,11 +48,19 @@ def log(msg: str) -> None:
     print(f"[{datetime.now():%H:%M:%S}] {msg}", flush=True)
 
 
-def fill(template: str, case: str, c: dict, entities: dict, **extra: str) -> str:
+def perspective(c: dict, with_level: bool) -> str:
+    """The perspective's description, with its detail level when that is part of the input (condition E on)."""
+    p = c["perspective"]
+    if isinstance(p, str):
+        return p
+    return f"{p['description']}; detail level: {p['detail_level']}" if with_level else p["description"]
+
+
+def fill(template: str, case: str, c: dict, entities: dict, with_level: bool = False, **extra: str) -> str:
     details = "\n".join(f"  - {d}" for d in c.get("concern_details", []))
     return template.format(
         request=c["request"], entity=entities[c["entity_of_interest"]]["description"],
-        stakeholder=c["stakeholder"], perspective=c["perspective"], concern=c["concern"], details=details,
+        stakeholder=c["stakeholder"], perspective=perspective(c, with_level), concern=c["concern"], details=details,
         aspect=c["aspect"], viewpoint=c["viewpoint"], model_kind=c["model_kind"], case=case, **extra)
 
 

@@ -46,7 +46,7 @@ def main() -> None:
                          f'<div class="fields">{fields}<textarea data-case="{case}" data-view="{i}" data-c="comment" '
                          f'placeholder="comment"></textarea></div></div>')
         sections.append(f"""<section id="{case}"><h2>{case}</h2><p class="request">“{esc(c['request'])}”</p>
-<p>Stakeholder: <b>{esc(c['stakeholder'])}</b> · perspective: {esc(c['perspective'])} · model kind: {esc(c['model_kind'])}</p>
+<p>Stakeholder: <b>{esc(c['stakeholder'])}</b> · perspective: {esc(c['perspective']['description'] if isinstance(c['perspective'], dict) else c['perspective'])} · model kind: {esc(c['model_kind'])}</p>
 <ul>{details}</ul><div class="cards">{''.join(cards)}</div></section>""")
     (HERE / "blind-key.json").write_text(json.dumps(key, indent=2), encoding="utf-8")
     nav = " · ".join(f'<a href="#{k}">{k}</a>' for k in sheet["cases"])
