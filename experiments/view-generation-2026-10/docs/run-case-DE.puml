@@ -1,5 +1,5 @@
 @startuml
-title 2. One case in condition D: run_case() and critic_loop()
+title 2. One case in conditions D and E: run_case() and critic_loop()
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign left
@@ -12,11 +12,11 @@ participant "workdir\n(copy of repo)" as wd
 participant "claude -p\ngenerator (Sonnet)" as gen
 participant "claude -p\ncritic (Opus)" as cr
 participant "critic_loop()\nscore()" as cl
-participant "outputs-D/<case>/" as out
+participant "outputs-D|E/<case>/" as out
 
 == prepare ==
-rc -> rc : build_prompt(): prompt.txt + prompt-D.txt\nfilled from inputs.yaml
-rc -> prep : ~--src task2view/<repo> ~--dst view-generation/D/<case>/<repo>
+rc -> rc : build_prompt(): prompt.txt + prompt-D.txt (D) or prompt-E.txt (E)\nfilled from inputs.yaml; E adds the detail level to the perspective
+rc -> prep : ~--src task2view/<repo> ~--dst view-generation/<D|E>/<case>/<repo>
 prep -> wd : copy files except UML models and binaries
 rc -> wd : copy skill/uml-view and skill/plantuml-diagrams\ninto .claude/skills/
 
@@ -27,7 +27,7 @@ gen --> rc : session id (from stream-json), log <case>.jsonl
 
 == review 1 ==
 rc -> cl : critic_loop(session)
-cl -> cr : claude(critic.txt filled, Opus,\nRead, Grep, Glob, Write critique-1.json only)
+cl -> cr : claude(critic.txt filled (E: with the given level), Opus,\nRead, Grep, Glob, Write critique-1.json only)
 cr -> wd : read view, PNG, inventory, code;\nwrite critique-1.json
 cl -> cl : first = score(critique-1)
 
@@ -47,6 +47,9 @@ end
 
 == collect ==
 rc -> out : copy view-out/<case>/ (incl. v1/, critiques);\nwrite loop.json, prompt.txt
+opt condition E
+  rc -> out : check_inventory.py ~--level <given level>\n→ inventory-check.txt
+end
 note over rc, out
   Afterwards, outside the run: puml-check on every
   view writes check.json; make_page.py and

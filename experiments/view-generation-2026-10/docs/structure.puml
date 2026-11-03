@@ -1,5 +1,5 @@
 @startuml
-title 1. Structure: files, functions, processes and artifacts (conditions A–D)
+title 1. Structure: files, functions, processes and artifacts (conditions A–E)
 skinparam linetype polyline
 skinparam nodesep 45
 skinparam ranksep 60
@@ -8,16 +8,16 @@ skinparam defaultFontSize 12
 skinparam ArrowFontSize 11
 
 package "inputs" as inp {
-  artifact "inputs.yaml\n2 entities of interest,\n10 cases × 42010 inputs" as yaml
-  artifact "prompt.txt + prompt-B/C/D.txt\ncritic.txt, revise.txt" as prompts
+  artifact "inputs.yaml\n2 entities of interest, 10 cases × 42010 inputs;\nperspective = description + detail_level [E]" as yaml
+  artifact "prompt.txt + prompt-B/C/D/E.txt\ncritic.txt, revise.txt" as prompts
 }
 
 package "run_generate.py" as rg {
-  component "main()\n~--condition A|B|C|D, ~--only" as main
-  component "run_case()\nprepare workdir, copy skills,\nmemory (C), copy outputs" as runcase
+  component "main()\n~--condition A|B|C|D|E, ~--only" as main
+  component "run_case()\nprepare workdir, copy skills,\nmemory (C), copy outputs,\nE: check_inventory ~--level" as runcase
   component "fill() / build_prompt()" as fill
   component "claude()\nspawns one headless session,\nreturns its session id" as claudefn
-  component "critic_loop()  [D]\ncritique, revise once,\ncritique, keep best" as loopfn
+  component "critic_loop()  [D, E]\ncritique, revise once,\ncritique, keep best" as loopfn
   component "score()\nyes 2, partly 1, level right 2,\nminus unsupported" as scorefn
 }
 
@@ -31,7 +31,7 @@ package "skill/  (copied to workdir/.claude/skills)" as sk {
 package "processes" as procs {
   node "prepare_subject.py\n(drops UML models, binaries)" as prep
   node "claude -p generator\nSonnet 5.5, auto memory off" as gen
-  node "claude -p critic  [D]\nOpus 5.5, fresh session,\nread-only + critique file" as critic
+  node "claude -p critic  [D, E]\nOpus 5.5, fresh session,\nread-only + critique file" as critic
   node "plantuml 1.2026.9 + Graphviz" as plantuml
 }
 
@@ -41,7 +41,7 @@ package "~/t2v-subjects" as subj {
 }
 
 package "results (git)" as res {
-  artifact "outputs/, outputs-B/C/D/<case>/\nview.puml, view.png, README.md, prompt.txt\nD: inventory.json, critique-1/2.json,\nloop.json, v1/" as outs
+  artifact "outputs/, outputs-B/C/D/E/<case>/\nview.puml, view.png, README.md, prompt.txt\nD, E: inventory.json, critique-1/2.json,\nloop.json, v1/; E: inventory-check.txt" as outs
   artifact "check.json per view" as chk
   artifact "memory/ [C]" as mem
   artifact "logs*/ (local only)" as logs
@@ -60,13 +60,14 @@ runcase --> prep : once per workdir
 prep ..> srcrepo : copies
 prep --> workdir : writes
 runcase --> claudefn : generate
-runcase --> loopfn : D only
+runcase --> loopfn : D, E
+runcase --> chkinv : E, given level
 loopfn --> claudefn : critic, revise, critic
 loopfn --> scorefn
 claudefn --> gen : spawns
 claudefn --> critic : spawns
 claudefn --> logs : stream-json
-gen ..> sk : follows (B–D)
+gen ..> sk : follows (B–E)
 gen --> workdir : reads code,\nwrites view
 critic --> workdir : reads view,\nwrites critique
 pscripts --> plantuml : renders

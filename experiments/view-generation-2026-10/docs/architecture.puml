@@ -1,0 +1,48 @@
+@startuml
+title 0. Architecture: view generation from 42010 inputs (condition E, the current design)
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 55
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowFontSize 11
+
+actor "Researcher" as researcher
+actor "Rater" as rater
+
+component "Request sheet\n(entity of interest, stakeholder,\nperspective + detail level, concern\n+ details, aspect, viewpoint, model kind)" as sheet
+component "Orchestrator\n(run_generate.py)" as orch
+component "Workspace preparation\n(repository copy without\nUML models, + skills)" as prep
+component "Subject repository" as repo
+
+package "Generator agent: Sonnet 5.5, skills, tools" as genpkg {
+  component "Generator session" as gen
+  component "uml-view skill\n(levels, budgets, abstraction,\nUML rules, examples)" as skill
+  component "plantuml-diagrams skill\n(templates, puml-check)" as pskill
+  component "Inventory checker\n(check_inventory.py)" as chk
+  component "PlantUML renderer" as plantuml
+}
+
+component "Critic agent\n(Opus 5.5, fresh session,\nread-only)" as critic
+component "Results\n(view, inventory, README,\ncritiques, keep-best record)" as results
+component "Evaluation pages\n(side-by-side, blind rating)" as pages
+
+researcher --> sheet : writes requests
+orch --> sheet : reads inputs
+orch --> prep : prepares workspace
+prep --> repo : copies
+orch --> gen : prompts; resumes once\nwith the critique
+gen --> skill : follows
+gen --> pskill : renders and checks layout
+pskill --> plantuml : renders
+gen --> chk : checks evidence,\ntwo-way, budget
+chk ---> repo : verifies path:line
+gen --> repo : explores code
+orch --> critic : asks for review
+critic --> repo : checks claims
+critic --> results : writes critique
+gen --> results : writes view
+orch --> results : keeps the better version
+pages --> results : reads
+rater --> pages : rates views blind
+@enduml

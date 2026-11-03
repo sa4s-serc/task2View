@@ -1,5 +1,5 @@
 @startuml
-title 3. Inside one generator session (uml-view skill, conditions B–D)
+title 3. Inside one generator session (uml-view skill, conditions B–E)
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 skinparam ActivityFontSize 12
@@ -11,11 +11,16 @@ start
 aspect, viewpoint, model kind);
 partition "1. Before drawing" {
   :Write the one-sentence takeaway;
-  :Choose detail level (overview, balanced,
-  detailed) from the perspective, and wording
-  from the stakeholder → element budget;
-  note right: the agent chooses the level itself;\nin D it often chose higher than the request
-  :D only: read the matching example(s)
+  if (condition E?) then (yes)
+    :Take the detail level given in the
+    perspective (overview, balanced, detailed);
+  else (B, C, D)
+    :Choose the detail level from the
+    perspective description;
+    note right: in D the agent often chose\na higher level than the request
+  endif
+  :Wording from the stakeholder → element budget;
+  :D, E: read the matching example(s)
   in examples/;
 }
 partition "2. Find evidence" {
@@ -24,7 +29,7 @@ partition "2. Find evidence" {
   → tests → docs;
   :Build the inventory: element, relation,
   responsibility, path:line or "unknown";
-  :D only: write inventory.json;
+  :D, E: write inventory.json;
 }
 partition "3–4. Draw" {
   :puml-new <type> view.puml (template);
@@ -40,8 +45,9 @@ partition "5. Check loop" {
     :Fix one issue kind (direction, grouping,
     hidden links, split, drop);
   repeat while (issue count fell in one\nof the last two runs, and under 12 runs?) is (yes)
-  if (condition D?) then (yes)
-    :check_inventory.py inventory.json;
+  if (condition D or E?) then (yes)
+    :check_inventory.py inventory.json
+    (E: ~--level <given level>);
     :Fix evidence, two-way, relation,
     concern and budget issues;
   else (B, C)
