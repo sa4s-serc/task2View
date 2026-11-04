@@ -1,65 +1,40 @@
 @startuml
-title 0. Architecture: view generation from 42010 inputs (condition F, the current design)
-skinparam linetype polyline
-skinparam nodesep 50
-skinparam ranksep 60
+title View generation pipeline (condition F, the current design)
+left to right direction
 skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam ArrowFontSize 11
-
-actor "Researcher" as researcher
-actor "Rater" as rater
-
-component "Request sheet\n(entity of interest, stakeholder,\nperspective + detail level, concern\n+ details, aspect, viewpoint, model kind)" as sheet
-component "Orchestrator\n(run_generate.py)" as orch
-
-package "Before the session (deterministic, no LLM)" as before {
-  component "Workspace preparation\n(repository copy without\nUML models, + skills)" as prep
-  component "Static graph builder\n(Phase 0 repository card,\ntree-sitter)" as builder
+skinparam defaultFontSize 13
+skinparam ArrowFontSize 12
+skinparam rectangleRoundCorner 10
+skinparam nodesep 40
+skinparam ranksep 45
+skinparam rectangle {
+  BackgroundColor #F8FAFC
+  BorderColor #475569
 }
-component "Subject repository\n(copy)" as repo
-component "Repository graph\n(symbols, dependencies with file:line,\nentry points, entities, deployment)" as graph
-
-package "Generator agent: Sonnet 5.5, skills, tools" as genpkg {
-  component "Generator session" as gen
-  component "uml-view skill\n(levels, budgets, abstraction,\nUML rules, examples)" as skill
-  component "Graph query\n(graph_query.py: summary,\nsearch, around, members)" as gq
-  component "Inventory checker\n(check_inventory.py: evidence,\ntwo-way, budget, graph)" as chk
-  component "plantuml-diagrams skill\n(templates, PlantUML,\npuml-check layout)" as pskill
+skinparam card {
+  BackgroundColor #FFFFFF
+  BorderColor #94A3B8
 }
 
-component "Critic agent\n(Opus 5.5, fresh session,\nread-only)" as critic
-component "Results\n(view, inventory with members,\nREADME, critiques, keep-best record)" as results
-component "Evaluation pages\n(side-by-side, blind rating)" as pages
+card "**Request**\n(ISO 42010 inputs)\n\nstakeholder\nperspective + detail level\nconcern + details\naspect, viewpoint\nmodel kind" as req
+card "**Repository**" as repo
 
-note bottom of results
-  No memory across cases: every case starts
-  from a fresh copy and a fresh session.
-  Within a case: the generator session is
-  resumed once for the revision, and v1/ keeps
-  the first version.
-end note
+rectangle "**1. Prepare**\n(no LLM)\n\ncopy the repository,\nremove existing\nUML models,\nadd the skills" as prep
+rectangle "**2. Static graph**\n(no LLM, tree-sitter)\n\nclasses and dependencies\nwith file:line,\nentry points, entities,\ndeployment files" as graph
+rectangle "**3. Generator agent**\n(Sonnet 5.5, uml-view skill)\n\na. find the concern's code\n    (graph search + reading code)\nb. group code into elements\n    at the given detail level\nc. inventory: elements, relations,\n    evidence, members\nd. draw PlantUML" as gen
+rectangle "**4. Checks**\n(scripts, no LLM)\n\nevidence lines exist\ndiagram = inventory\nelement budget for the level\narrows backed by the graph\nlayout (overlaps, crossings)" as chk
+rectangle "**5. Critic agent**\n(Opus 5.5, fresh session)\n\nconcern details answered?\nright detail level?\nsupported by the code?\ncorrect UML?" as critic
+rectangle "**6. Keep the better version**\n(critic score)" as keep
+card "**View**\n\nview.png / view.puml\ninventory.json\nREADME.md" as out
 
-researcher --> sheet : writes requests
-orch --> sheet : reads inputs
-orch --> prep : prepares workspace
-prep --> repo : copies
-orch --> builder : builds graph
-builder --> repo : parses code
-builder --> graph : writes
-orch --> gen : prompts; resumes once\nwith the critique
-gen --> skill : follows
-gen --> gq : finds the concern's code
-gq --> graph : queries
-gen --> repo : reads code and config
-gen --> chk : checks inventory
-chk ---> graph : checks relations\nand members
-gen --> pskill : renders, checks layout
-orch --> critic : asks for review
-critic --> repo : checks claims
-critic --> results : writes critique
-gen --> results : writes view
-orch --> results : keeps the better version
-pages --> results : reads
-rater --> pages : rates views blind
+req --> prep
+repo --> prep
+prep --> graph
+graph --> gen
+gen --> chk
+chk --> gen : fix issues\n(repeat)
+chk --> critic
+critic --> gen : critique\n(one revision)
+critic --> keep : accept, or\nafter the revision
+keep --> out
 @enduml
