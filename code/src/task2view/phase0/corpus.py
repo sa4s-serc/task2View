@@ -23,8 +23,10 @@ def _matches(rule: dict, name: str, ext: str, dirs: set[str], languages: dict) -
         return True
     if ext and ext in {e.lower() for e in rule.get("extensions", [])}:
         return True
-    lname = name.lower()
-    if any(fnmatch.fnmatch(lname, pattern.lower()) for pattern in rule.get("names", [])):
+    if rule.get("case_sensitive"):  # naming conventions such as *IT.java: Visit.java is not a test
+        if any(fnmatch.fnmatchcase(name, pattern) for pattern in rule.get("names", [])):
+            return True
+    elif any(fnmatch.fnmatch(name.lower(), pattern.lower()) for pattern in rule.get("names", [])):
         return True
     if dirs & {p.lower() for p in rule.get("paths", [])}:
         return True
