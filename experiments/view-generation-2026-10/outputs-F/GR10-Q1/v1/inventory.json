@@ -1,0 +1,220 @@
+{
+ "model_kind": "UML component diagram",
+ "detail_level": "overview",
+ "elements": [
+  {
+   "alias": "gui",
+   "name": "Swing screens",
+   "responsibility": "Swing windows for login, registration, report creation/review, status update, internal notes, monitoring",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75"
+   ],
+   "members": [
+    "Boundary.*"
+   ]
+  },
+  {
+   "alias": "ctrl",
+   "name": "Use-case controllers",
+   "responsibility": "SystemServicesController facade and per-use-case controllers orchestrating services",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:22-29"
+   ],
+   "members": [
+    "Control.*"
+   ]
+  },
+  {
+   "alias": "svc",
+   "name": "Domain services",
+   "responsibility": "ReportService and UserService: business rules and persistence calls",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:14-22",
+    "src/main/java/Entity/UserService.java:12-20"
+   ],
+   "members": [
+    "Entity.ReportService",
+    "Entity.UserService"
+   ]
+  },
+  {
+   "alias": "dom",
+   "name": "Domain entities",
+   "responsibility": "JPA entities and report lifecycle states",
+   "evidence": [
+    "src/main/java/Entity/Report.java:76"
+   ],
+   "members": [
+    "Entity.Report",
+    "Entity.User",
+    "Entity.Citizen",
+    "Entity.MunicipalOperator",
+    "Entity.Credentials",
+    "Entity.Location",
+    "Entity.Notification",
+    "Entity.InternalNote",
+    "Entity.StatusUpdate",
+    "Entity.ReportCategory",
+    "Entity.ReportStatus",
+    "Entity.Submitted",
+    "Entity.Assigned",
+    "Entity.InProgress",
+    "Entity.Resolved"
+   ]
+  },
+  {
+   "alias": "persist",
+   "name": "Persistence access",
+   "responsibility": "Generic JPA CRUD/query and EntityManagerFactory singleton",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:15-30",
+    "src/main/java/Database/JpaUtil.java:11-17"
+   ],
+   "members": [
+    "Database.*"
+   ]
+  },
+  {
+   "alias": "db",
+   "name": "MySQL database",
+   "responsibility": "Relational store reports_db",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:26"
+   ]
+  },
+  {
+   "alias": "user",
+   "name": "Citizen / Municipal operator",
+   "responsibility": "Human users of the desktop app",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:1",
+    "src/main/java/Entity/MunicipalOperator.java:1"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "user",
+   "to": "gui",
+   "label": "operates",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75"
+   ]
+  },
+  {
+   "from": "gui",
+   "to": "ctrl",
+   "label": "invokes use cases",
+   "evidence": [
+    "src/main/java/Boundary/ActivityMonitoringGUI.java:54",
+    "src/main/java/Boundary/UserLoginGUI.java:111"
+   ]
+  },
+  {
+   "from": "gui",
+   "to": "dom",
+   "label": "reads report categories",
+   "evidence": [
+    "src/main/java/Boundary/ReportCreationGUI.java:4"
+   ]
+  },
+  {
+   "from": "ctrl",
+   "to": "svc",
+   "label": "delegates",
+   "evidence": [
+    "src/main/java/Control/ReportCreationController.java:14-21"
+   ]
+  },
+  {
+   "from": "ctrl",
+   "to": "dom",
+   "label": "handles entities",
+   "evidence": [
+    "src/main/java/Control/ReportCreationController.java:12"
+   ]
+  },
+  {
+   "from": "svc",
+   "to": "dom",
+   "label": "manipulates",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:82"
+   ]
+  },
+  {
+   "from": "svc",
+   "to": "persist",
+   "label": "stores, queries",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:16",
+    "src/main/java/Entity/UserService.java:14"
+   ]
+  },
+  {
+   "from": "persist",
+   "to": "db",
+   "label": "JDBC",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:26"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main architectural components and their responsibilities",
+   "answered_by": [
+    "gui",
+    "ctrl",
+    "svc",
+    "dom",
+    "persist",
+    "db"
+   ]
+  },
+  {
+   "detail": "decomposition into layers or subsystems",
+   "answered_by": [
+    "gui",
+    "ctrl",
+    "svc",
+    "dom",
+    "persist"
+   ]
+  },
+  {
+   "detail": "main dependencies among them",
+   "answered_by": [
+    "gui",
+    "ctrl",
+    "svc",
+    "dom",
+    "persist",
+    "db"
+   ]
+  },
+  {
+   "detail": "separation of UI, application logic, domain entities and persistence, and collaboration",
+   "answered_by": [
+    "gui",
+    "ctrl",
+    "dom",
+    "persist"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Individual GUI screens and controllers",
+   "reason": "overview level; one component per layer"
+  },
+  {
+   "name": "Test packages",
+   "reason": "not part of runtime structure"
+  },
+  {
+   "name": "Control to Database / Entity-level fine dependencies",
+   "reason": "collapsed into layer relations"
+  }
+ ]
+}

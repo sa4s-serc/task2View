@@ -1,0 +1,71 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+
+title UML sequence diagram: user registration (POST /api/auth/register)
+hide footbox
+autonumber "<b>00"
+
+actor       "Client\n(REST client / Swing form)"        as client
+participant "AuthenticationController\n(REST, /api/auth)"  as ctl
+participant "UserManager\n(via LibraryFacade)"          as um
+participant "UserRegistry"                              as registry
+participant "PersistenceManager\n(JPA, MySQL)"          as pm
+participant "Student / Librarian\nFactory"              as factory
+
+client -> ctl ++ : POST /register (role, name,\nsurname, email, password, identifier)
+ctl -> um ++ : register(...)
+um -> um : validate role, name, password,\nemail, student ID / librarian code
+alt invalid data or role
+  um --> client : IllegalArgumentException\n(HTTP 400 {"error"})
+else valid
+  um -> registry ++ : email / identifier exists?
+  registry -> pm ++ : findFirstByFields(...)\n(returns User or null)
+  deactivate pm
+  deactivate registry
+  alt already registered
+    um --> client : IllegalArgumentException\n(HTTP 400, nothing saved)
+  else new
+    um -> factory : createUser(...)
+    um -> registry ++ : registerUser(newUser)
+    registry -> pm ++ : save(newUser)
+    alt save fails
+      um --> client : RuntimeException "could not be saved"
+    else saved
+      um --> client : UserDTO (HTTP 200)
+      deactivate ctl
+    end
+  end
+end
+note over client, factory
+  The Swing form calls LibraryFacade.register directly (no controller)
+  and shows the exception text in a dialog.
+end note
+@enduml

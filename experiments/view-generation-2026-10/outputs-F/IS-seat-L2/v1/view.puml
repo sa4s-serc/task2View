@@ -1,0 +1,61 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 60
+
+title UML component diagram: seat booking (make reservation)
+
+component "Swing booking wizard\n(student desktop UI)" as swing <<muted>>
+component "ReservationController\n(Spring REST /api/reservations)" as rest <<muted>>
+component "LibraryFacade\n(single entry to use cases)" as facade
+component "ReservationManager\n(booking rules, seat choice)" as resmgr <<accent>>
+component "AssignmentStrategy\n(auto seat pick)" as strategy <<accent>>
+component "StudyRoomManager\n(room and seat availability)" as roommgr
+component "Reservation domain model\n(Reservation, Seat, Area, StudyRoom,\nTimeSlot, Student, states)" as domain
+component "Registries\n(Reservation, StudyRoom, User)" as reg
+component "PersistenceManager\n(JPA / Hibernate)" as pm
+component "Reservations DB\n(MySQL)" as db <<muted>>
+component "NotificationManager\n(observer of Reservation)" as notif
+component "NotificationServiceAdapter\n(email gateway)" as mail <<muted>>
+
+swing  --> facade : makeReservation
+rest   --> facade : makeReservation
+facade --> resmgr : delegates booking
+facade -right-> roommgr : queries availability
+resmgr -right-> strategy : selectSeat
+resmgr --> domain : validates, creates
+resmgr --> reg : saves
+resmgr --> notif : notifies
+roommgr --> reg : finds rooms
+roommgr --> domain : reads seats
+reg --> pm : save, query
+pm --> db : SQL via JPA
+domain --> reg : looks up reservations
+notif --> mail : sendNotification
+
+legend right
+  Blue = where booking rules live (change here)
+  Faded = callers and external-facing edges
+  Plain = shared collaborators the change may affect
+end legend
+@enduml

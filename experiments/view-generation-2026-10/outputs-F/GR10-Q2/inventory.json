@@ -1,0 +1,224 @@
+{
+ "model_kind": "UML deployment diagram",
+ "detail_level": "detailed",
+ "elements": [
+  {
+   "alias": "buildhost",
+   "name": "Build host",
+   "responsibility": "Machine that compiles and packages the project (inferred from Maven build)",
+   "evidence": [
+    "pom.xml:1-12"
+   ]
+  },
+  {
+   "alias": "maven",
+   "name": "Maven + JDK 23",
+   "responsibility": "Build execution environment; compiler source/target 23",
+   "evidence": [
+    "pom.xml:11-12",
+    "README.md:11-15"
+   ]
+  },
+  {
+   "alias": "central",
+   "name": "Maven Central",
+   "responsibility": "External repository from which dependencies are resolved",
+   "evidence": [
+    "pom.xml:15-20"
+   ]
+  },
+  {
+   "alias": "apphost",
+   "name": "Application host (desktop), also hosts MySQL",
+   "responsibility": "Single workstation running the Swing JVM and the MySQL server (127.0.0.1, localhost-only grant)",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75",
+    "src/main/resources/META-INF/persistence.xml:24",
+    "README.md:22-27"
+   ]
+  },
+  {
+   "alias": "jvm",
+   "name": "JVM, Java 23",
+   "responsibility": "Runtime for the Swing desktop UI",
+   "evidence": [
+    "pom.xml:11-12",
+    "src/main/java/Boundary/HomePageGUI.java:75"
+   ]
+  },
+  {
+   "alias": "jar",
+   "name": "municipal-report-management-1.0-SNAPSHOT.jar",
+   "responsibility": "Application artifact; no Main-Class, no bundled libraries (pom has only maven-compiler-plugin); contains persistence.xml",
+   "evidence": [
+    "pom.xml:9-11",
+    "src/main/java/Boundary/HomePageGUI.java:75",
+    "src/main/java/Boundary/UserLoginGUI.java:91",
+    "src/main/java/Boundary/UserRegistrationGUI.java:145",
+    "pom.xml:60-72"
+   ],
+   "members": [
+    "Boundary.*",
+    "Control.*",
+    "Entity.*",
+    "Database.*"
+   ]
+  },
+  {
+   "alias": "persxml",
+   "name": "persistence.xml (deployment spec)",
+   "responsibility": "Packaged in jar: driver com.mysql.cj.jdbc.Driver, URL, user, hard-coded password, hbm2ddl.auto=update, RESOURCE_LOCAL",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:11-39"
+   ]
+  },
+  {
+   "alias": "hib",
+   "name": "hibernate-core 6.6.50.Final",
+   "responsibility": "JPA provider",
+   "evidence": [
+    "pom.xml:44-48",
+    "src/main/resources/META-INF/persistence.xml:13"
+   ]
+  },
+  {
+   "alias": "jdbc",
+   "name": "mysql-connector-j 9.4.0",
+   "responsibility": "JDBC driver for MySQL",
+   "evidence": [
+    "pom.xml:38-42",
+    "src/main/resources/META-INF/persistence.xml:21"
+   ]
+  },
+  {
+   "alias": "forms",
+   "name": "forms_rt 7.0.3",
+   "responsibility": "GUI form runtime for .form bound Swing screens",
+   "evidence": [
+    "pom.xml:32-36",
+    "src/main/java/Boundary/HomePageGUI.form:1"
+   ]
+  },
+  {
+   "alias": "mysql",
+   "name": "MySQL server",
+   "responsibility": "Database server on port 3306",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:24",
+    "README.md:17-19"
+   ]
+  },
+  {
+   "alias": "schema",
+   "name": "schema reports_db",
+   "responsibility": "Database holding application data, user reports_user",
+   "evidence": [
+    "README.md:22-27",
+    "src/main/resources/META-INF/persistence.xml:24-30"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "maven",
+   "to": "central",
+   "label": "resolves dependencies",
+   "evidence": [
+    "pom.xml:15-20"
+   ]
+  },
+  {
+   "from": "jar",
+   "to": "hib",
+   "label": "use",
+   "evidence": [
+    "src/main/java/Database/JpaUtil.java:13",
+    "src/main/java/Database/PersistenceService.java:25"
+   ]
+  },
+  {
+   "from": "jar",
+   "to": "forms",
+   "label": "use",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.form:1",
+    "pom.xml:32-36"
+   ]
+  },
+  {
+   "from": "hib",
+   "to": "jdbc",
+   "label": "use",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:21-22"
+   ]
+  },
+  {
+   "from": "jvm",
+   "to": "mysql",
+   "label": "JDBC, TCP 3306",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:24"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "required runtime environments and software artifacts",
+   "answered_by": [
+    "jvm",
+    "jar",
+    "persxml",
+    "hib",
+    "jdbc",
+    "forms",
+    "mysql",
+    "maven"
+   ]
+  },
+  {
+   "detail": "where the application runs and where its data is stored",
+   "answered_by": [
+    "apphost",
+    "schema"
+   ]
+  },
+  {
+   "detail": "how the main runtime elements communicate",
+   "answered_by": [
+    "jar",
+    "hib",
+    "jdbc",
+    "mysql"
+   ]
+  },
+  {
+   "detail": "technologies and runtime dependencies between the application and the database",
+   "answered_by": [
+    "hib",
+    "jdbc",
+    "persxml",
+    "mysql",
+    "schema"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Boundary/Control/Entity/Database packages",
+   "reason": "code structure belongs to a component view; folded into the jar"
+  },
+  {
+   "name": "JUnit",
+   "reason": "test scope only, not deployed"
+  },
+  {
+   "name": "Hibernate transitive libraries",
+   "reason": "not declared in the code; resolved by Maven"
+  },
+  {
+   "name": "jar built by Maven arrow",
+   "reason": "non-standard node-to-artifact dependency (reviewer); build host kept minimal"
+  }
+ ]
+}

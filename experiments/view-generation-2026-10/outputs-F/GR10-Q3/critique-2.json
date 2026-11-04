@@ -1,0 +1,38 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main data entities stored and their relationships",
+     "answered": "yes",
+     "why": "All seven persisted entities from persistence.xml (User, Citizen, MunicipalOperator, Report, StatusUpdate, InternalNote, Notification) and both embeddables (Location, Credentials) are drawn. Columns, lengths, nullability, the discriminator and the multiplicities match the JPA annotations (Report.java, User.java, StatusUpdate.java, InternalNote.java, Notification.java). The FK column names are given on the edges and in the note."},
+    {"detail": "information persisted throughout the lifecycle of a report",
+     "answered": "partly",
+     "why": "The view shows which rows and columns hold lifecycle data (current_status, citizen_editable, a StatusUpdate per change, notes, notifications for assigned/resolved only), and the note lists the four status values. But the lifecycle note says 'operator_id is set on the first status change'. ReportService.updateReportStatus (ReportService.java:289) calls report.assignOperator(operator) on every change, so reports.operator_id is overwritten with whichever operator made the latest change. The engineer gets a wrong idea of what that column means over time. The view also never says that nothing is ever deleted: PersistenceService has only save/update/find."},
+    {"detail": "how users, reports, locations, categories, states, state changes, internal notes and notifications are related",
+     "answered": "yes",
+     "why": "All eight concepts appear with their links. Location is embedded in Report; category is an enum stored as text. A state is the text in current_status, repeated in status_updates.new_status and notifications.notified_status, as the note says. StatusUpdate and InternalNote each reference the report and an operator. Notification references the report and the citizen."},
+    {"detail": "which parts of the application depend on the persisted information",
+     "answered": "partly",
+     "why": "The chain from GUIs to controllers to ReportService/UserService to PersistenceService is shown, with the entities each service touches. But the GUI and controller layers are two empty packages, so the engineer cannot tell which screens or use cases would break. The string field-path coupling is known only from a note. The note also says ActivityMonitoringGUI is a caller of findByFields. In fact that GUI only puts the keys 'currentStatusName' and 'location.municipalArea' into a parameter map (ActivityMonitoringGUI.java:545,572), and ReportService.java:445 is what passes them to findByFields. That indirect dependency on column and attribute names is not drawn. ReportCreationController and ReceivedReportsGUI also depend on ReportCategory directly."}
+  ],
+  "level": "right",
+  "level_why": "'Detailed' for a database engineer calls for physical columns, constraints, PKs/FKs, cascades and multiplicities, and the view gives exactly these. Service internals and the ReportStatus state classes (which are not persisted) are correctly left out. Nothing needs to be cut. The two packages are the coarsest elements. Adding a few named dependents (see missing) would stay within 'detailed', but adding a class per GUI or per controller would not be needed.",
+  "unsupported": [
+    "The lifecycle note says 'operator_id is set on the first status change'. The code (ReportService.java:289 calling Report.assignOperator before every updateStatus) reassigns reports.operator_id on every status change, so it holds the operator of the latest change, not the first.",
+    "The findByFields note lists ActivityMonitoringGUI as a caller. The GUI never calls PersistenceService. It only builds map keys that ReportService later passes to findByFields as attribute paths.",
+    "The Notification note says the FK 'blocks deleting a report'. That is true at the DB level, but the application has no delete operation at all (PersistenceService offers only save/update/findById/findByAttribute/findByFields). The note should say the app never deletes, so the engineer does not assume a delete path exists."
+  ],
+  "missing": [
+    "Reports are never deleted or archived by the application: there is no remove or delete in PersistenceService. A database engineer changing how reports are managed needs this.",
+    "Which dependents rely on attribute and column names held in strings: ActivityMonitoringGUI and ActivityMonitoringController (currentStatusName, location.municipalArea), and ReportService queries (citizenReporting.userId, report.reportId). At present this appears only in a note with the wrong caller.",
+    "The view does not say that the four status names are hard-coded in Java constants (Report.java STATUS_*, Notification.java STATUS_ASSIGNED/RESOLVED) and nowhere else. So changing the status vocabulary means changing the code, not only the data."
+  ],
+  "uml": [
+    "Report has both an attribute 'category: ReportCategory' and a dashed dependency Report ..> ReportCategory labelled 'category'. The same structural property is shown twice, and a dependency is the wrong kind for it. Keep the typed attribute and drop the dependency, or replace both with an association.",
+    "The dependents are drawn as empty packages with dependencies, which is legal UML. But the 'gui ..> Cat : lists values' and 'ctrl ..> rsvc' edges hide which members depend, so the packages say nothing more than their names."
+  ],
+  "fixes": [
+    "Correct the lifecycle note: operator_id is (re)assigned to the acting operator on every status change (ReportService.java:289), not only on the first one.",
+    "Fix the findByFields note: ActivityMonitoringGUI supplies attribute-path keys (currentStatusName, location.municipalArea) that ReportService passes to findByFields. Draw this as a dependency from the Activity Monitoring GUI/controller to Report, or name it in the GUI package.",
+    "Remove the redundant Report ..> ReportCategory dependency. The typed attribute 'category: ReportCategory' already shows the link.",
+    "State in the Notification note that the application performs no deletes, so the FK blocking report deletion only matters for future or manual deletes.",
+    "In the lifecycle note, add that status names are code constants (Report.STATUS_*, Notification.STATUS_*) with no lookup table, so changing the vocabulary needs both a code change and a data migration."
+  ]}

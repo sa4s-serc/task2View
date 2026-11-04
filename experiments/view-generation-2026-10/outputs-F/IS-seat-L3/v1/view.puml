@@ -1,0 +1,63 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML component diagram: seat booking in the study-room reservation application
+
+
+component "Swing client" as swing
+component "REST API\n(Spring MVC)" as rest
+component "LibraryFacade" as facade
+component "ReservationManager\n(booking rules)" <<accent>> as resMgr
+component "Seat assignment\nstrategy" as strategy
+component "Room and seat model\n(StudyRoom, Area, Seat, TimeSlot)" as roomModel
+component "Reservation model\n(Reservation, states, Subject)" as resModel
+component "Registries" as registries
+component "PersistenceManager\n(JPA / Hibernate)" as persist
+component "NotificationManager\n(Observer)" as notifMgr
+component "Notification boundary\n(scheduler, email adapter)" as sched
+component "Reservations database\n(MySQL)" <<muted>> as db
+
+swing --> facade : makeReservation
+rest --> facade : makeReservation
+sched --> facade : manageReservationEnd
+sched --> notifMgr : injects email adapter
+facade --> resMgr : delegates
+facade --> notifMgr : sendReminders
+resMgr --> strategy : selectSeat
+resMgr --> roomModel : checks availability
+resMgr --> resModel : creates, attaches observer
+resMgr --> registries : finds, saves
+resModel --> notifMgr : notifyObservers
+registries --> persist : save, query
+persist --> db : JDBC
+notifMgr --> sched : sendNotification
+
+note bottom of resMgr
+  Booking rules live here:
+  student, room, area, slot resolution;
+  one active booking per slot;
+  seat free check; default seat strategy
+end note
+@enduml

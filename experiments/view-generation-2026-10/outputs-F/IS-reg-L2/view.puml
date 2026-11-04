@@ -1,0 +1,89 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+
+title UML sequence diagram: new user registration (REST POST /api/auth/register)
+hide footbox
+autonumber "<b>00"
+
+actor "REST client" as client
+participant "Authentication\nController" as ctl
+participant "RestException\nHandler" as eh
+participant "Library\nFacade" as facade
+participant "User\nManager" as um
+participant "UserRegistry +\nPersistenceManager" as reg
+participant "MySQL\nreservationsdb" as db
+
+client -> ctl ++ : IP1 POST /api/auth/register\n(role, name, surname, email,\npassword, identifier)
+ctl -> facade ++ : IP2 register(...)
+facade -> um ++ : register(...)
+um -> um : validate role, name, password,\nunina.it email, ID format by role
+break invalid input
+  um --> eh : IP5 IllegalArgumentException
+  eh --> client : 400 {"error": message}
+end
+um -> reg ++ : IP3 find user by email
+reg -> db : IP4 SELECT by institutionalEmail
+db --> reg : row or none
+reg --> um -- : user or null
+break email taken
+  um --> eh : IllegalArgumentException
+end
+um -> reg ++ : find by student number\nor librarian code (by role)
+reg -> db : SELECT by studentNumber /\ninternalIdentifierCode
+db --> reg : row or none
+reg --> um -- : match or null
+break ID in use
+  um --> eh : IllegalArgumentException
+end
+um -> um : create Student or Librarian\n(UserFactory by role)
+um -> reg ++ : registerUser(newUser)
+reg -> db : IP4 INSERT (transaction)
+alt save succeeds
+  db --> reg : committed
+  reg --> um : true
+  um --> facade -- : UserDTO
+  facade --> ctl -- : UserDTO
+  ctl --> client -- : 200 UserDTO
+else save fails
+  reg --> um -- : false
+  um --> ctl : IP5 RuntimeException\n(default 500)
+end
+note over facade, um
+  Swing path: Registration.register() calls
+  LibraryFacade.register directly (no controller,
+  no exception handler); the exception message
+  is shown in a dialog.
+end note
+legend right
+  IP1..IP5 = integration points to exercise:
+  IP1 REST boundary, IP2 controller to application,
+  IP3 registry lookups (email, then identifier),
+  IP4 database read and transactional write,
+  IP5 error mapping (400 handler / default 500)
+end legend
+@enduml

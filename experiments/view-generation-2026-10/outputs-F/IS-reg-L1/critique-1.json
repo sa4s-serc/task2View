@@ -1,0 +1,33 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "system components involved in user registration",
+     "answered": "yes",
+     "why": "The lifelines match the real call chain: Registration (Swing) -> LibraryFacade.register -> UserManager.register -> UserRegistry -> PersistenceManager -> MySQL (persistence.xml jdbc:mysql). The REST entry AuthenticationController POST /api/auth/register exists and calls the same LibraryFacade.register, so the note is supported. Folding the factories into UserManager and merging UserRegistry/PersistenceManager into one lifeline is acceptable at balanced level."},
+    {"detail": "how they interact",
+     "answered": "partly",
+     "why": "The main call chain and the success and failure replies are right, but the control flow is wrong in one place and incomplete in two. (a) Message 04 sends 'validate' to UserRegistry/PersistenceManager. In the code, UserManager validates on its own (validate, validateStudent, validateLibrarian: role, name, password 8-32, email domain, identifier format) and throws IllegalArgumentException before it queries the registry. The diagram shows the SELECT running unconditionally before the alt, so an invalid-input failure looks as if it hits the database. (b) The form's own blank-field check (Registration.java:127-131, 'Complete all fields', return) stops the flow before the facade is called. This client-side failure is not drawn, yet a tester has to tell it apart from a backend rejection. (c) The synchronous calls 04 and 06 have no replies (lookup result; registerUser returns boolean). So the view never shows that a failed save (PersistenceManager.save rolls back and returns false) becomes a RuntimeException in UserManager."}
+  ],
+  "level": "right",
+  "level_why": "Six lifelines, 13 numbered messages and one alt fit a balanced level for an end-to-end integration tester. Nothing needs to be cut. The fixes below correct or relabel existing messages and add at most a self-call, two short replies and an early-exit fragment, which keeps the view at balanced level. Splitting the email check and the identifier check, or listing validation rules per role, would go past balanced and should not be added. Minor: README says 12 messages, the diagram has 13.",
+  "unsupported": [
+    "Message 04 'validate, find by email and identifier' UserManager -> UserRegistry/PersistenceManager: UserRegistry does no validation. Validation is UserManager.validate/validateStudent/validateLibrarian (UserManager.java:69-74). Only institutionalEmailExists and findStudentByStudentNumber/findLibrarianByCode go to the registry (lines 77-83).",
+    "Unconditional 'SELECT' (05) before the alt: in the code, no SELECT happens when validation fails, because the exception is thrown first."
+  ],
+  "missing": [
+    "UserManager self-call for validation (validate + role-specific validation) with its early failure, placed before the registry lookup.",
+    "Form-side blank-field check in Registration.register(): 'Complete all fields' error, and LibraryFacade is never called (Registration.java:127-131).",
+    "Replies from UserRegistry/PersistenceManager to UserManager: lookup result for the duplicate check, and the boolean from registerUser/save. save returning false (after a rollback) leads to RuntimeException 'Server error: the user could not be saved' (UserManager.java:92-95, PersistenceManager.save).",
+    "Failure guard should name the actual failure causes a tester provokes: invalid input (IllegalArgumentException, no DB access), duplicate email or identifier (IllegalArgumentException after the SELECT), save failure (RuntimeException after an attempted INSERT)."
+  ],
+  "uml": [
+    "Synchronous messages 04 and 06 to UserRegistry/PersistenceManager have no reply messages, and that lifeline's activation never ends. Add dashed replies and close the activation (likewise the activations on form, facade and UserManager should end after the final replies instead of running to the bottom).",
+    "The guard '[failure]' is used in the second operand. Prefer '[else]' or a specific condition (e.g. '[invalid input or duplicate or save failed]') so the alt operands are mutually exclusive by their guards.",
+    "Exception propagation is drawn as an ordinary reply labelled 'exception'. Name the exception type (IllegalArgumentException / RuntimeException) on the reply so it is readable as an exceptional return."
+  ],
+  "fixes": [
+    "Replace message 04 with a UserManager self-call 'validate(role, name, password, email, identifier)' followed by 'find by email / identifier' to UserRegistry/PersistenceManager. Restructure the alt so invalid input fails before any SELECT.",
+    "Add the form-side blank-field check as an early-exit fragment (opt/alt or break) on the Registration form: 'Complete all fields' error, no call to LibraryFacade.",
+    "Add replies from UserRegistry/PersistenceManager to UserManager (lookup result; boolean saved), and show that saved=false raises RuntimeException 'user could not be saved'.",
+    "Make the failure guard name the three causes and label the exception replies with their types; use '[else]' or mutually exclusive guards.",
+    "End the activation bars where the calls return, and fix the README message count."
+  ]}

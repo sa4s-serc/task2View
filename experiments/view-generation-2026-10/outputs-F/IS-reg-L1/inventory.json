@@ -1,0 +1,219 @@
+{
+ "model_kind": "UML sequence diagram",
+ "detail_level": "balanced",
+ "takeaway": "Registration is submitted from the Swing form through LibraryFacade to UserManager, which validates, checks uniqueness via UserRegistry/PersistenceManager in MySQL and only then creates and saves the user; any failure returns an exception shown as an error dialog.",
+ "elements": [
+  {
+   "alias": "user",
+   "name": "Student / Librarian",
+   "responsibility": "Person registering with a role",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:129"
+   ]
+  },
+  {
+   "alias": "form",
+   "name": "Registration form (Swing)",
+   "responsibility": "Collects fields, checks blanks, calls facade, shows result",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:116-142"
+   ],
+   "members": [
+    "it.unina.reservations.boundary.Swing.Registration"
+   ]
+  },
+  {
+   "alias": "facade",
+   "name": "LibraryFacade",
+   "responsibility": "Single entry to controllers; delegates to UserManager",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-40"
+   ],
+   "members": [
+    "it.unina.reservations.controller.LibraryFacade"
+   ]
+  },
+  {
+   "alias": "um",
+   "name": "UserManager",
+   "responsibility": "Validates, checks duplicates, creates user via factory",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97"
+   ],
+   "members": [
+    "it.unina.reservations.controller.UserManager",
+    "it.unina.reservations.controller.factory.*"
+   ]
+  },
+  {
+   "alias": "reg",
+   "name": "UserRegistry / PersistenceManager (JPA, MySQL)",
+   "responsibility": "User lookup and save through JPA",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-67",
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19",
+    "JavaProject/src/main/resources/META-INF/persistence.xml:21"
+   ],
+   "members": [
+    "it.unina.reservations.entity.UserRegistry",
+    "it.unina.reservations.database.PersistenceManager"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "user",
+   "to": "form",
+   "label": "submit fields",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:116-123"
+   ]
+  },
+  {
+   "from": "form",
+   "to": "user",
+   "label": "error: Complete all fields",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:127-131"
+   ]
+  },
+  {
+   "from": "form",
+   "to": "facade",
+   "label": "register(...)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:134"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "um",
+   "label": "register(...)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "facade",
+   "label": "IllegalArgumentException (invalid input)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:54-57"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "reg",
+   "label": "find by email and identifier",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:77-83"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "um",
+   "label": "existing user or none",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:38"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "facade",
+   "label": "IllegalArgumentException (duplicate)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:78"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "reg",
+   "label": "create user, save",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:89-92"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "um",
+   "label": "saved true/false",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "facade",
+   "label": "UserDTO",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:96"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "facade",
+   "label": "RuntimeException (save failed)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:94"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "form",
+   "label": "UserDTO or exception",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39"
+   ]
+  },
+  {
+   "from": "form",
+   "to": "user",
+   "label": "complete or error dialog",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:135-141"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "system components involved in user registration",
+   "answered_by": [
+    "form",
+    "facade",
+    "um",
+    "reg"
+   ]
+  },
+  {
+   "detail": "how they interact",
+   "answered_by": [
+    "form",
+    "facade",
+    "um",
+    "reg"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "AuthenticationController (REST /api/auth/register)",
+   "reason": "Alternative entry calling the same facade; shown in a note to stay within 7 lifelines"
+  },
+  {
+   "name": "DTOs, entities, StudentFactory/LibrarianFactory",
+   "reason": "Internal detail folded into UserManager"
+  },
+  {
+   "name": "Login window",
+   "reason": "Post-registration navigation only"
+  },
+  {
+   "name": "MySQL database lifeline",
+   "reason": "Merged into the persistence lifeline label to stay near the message budget; SELECT/INSERT in message labels"
+  },
+  {
+   "name": "UserManager validate self-call",
+   "reason": "Drawn as self-message (UserManager.java:67-75); checker does not track self-calls"
+  }
+ ]
+}

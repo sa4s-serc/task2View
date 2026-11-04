@@ -1,0 +1,44 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML component diagram: Municipal Report Management System, whole system (overview)
+
+actor "Citizen /\nMunicipal operator" as user
+
+component "Swing screens\n(Boundary: login, registration, reports,\nstatus update, notes, monitoring)" as gui
+component "Use-case controllers\n(Control: SystemServicesController facade\n+ one controller per use case)" as ctrl
+component "Domain services\n(ReportService, UserService)" as svc
+component "Domain entities\n(Report, User, Citizen, MunicipalOperator,\nNotification, report states)" as dom <<accent>>
+component "Persistence access\n(Database: PersistenceService, JpaUtil;\nJPA / Hibernate)" as persist
+component "MySQL database\nreports_db (JDBC)" as db <<muted>>
+
+user --> gui : operates
+gui --> ctrl : invokes use cases
+gui --> dom : reads report categories
+ctrl --> svc : delegates
+ctrl --> dom : handles entities
+svc --> dom : manipulates
+svc --> persist : stores, queries
+persist --> db : JDBC
+@enduml

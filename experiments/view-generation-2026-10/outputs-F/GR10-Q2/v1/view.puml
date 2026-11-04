@@ -1,0 +1,74 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML deployment diagram: Municipal Report Management System (build and runtime)
+
+node "Build host" as buildhost <<device>> {
+  node "Maven + JDK 23" as maven <<executionEnvironment>>
+}
+node "Maven Central\nrepo.maven.apache.org" as central <<device>> <<muted>>
+
+node "Application host (desktop)" as apphost <<device>> {
+  node "JVM, Java 23\n(Swing desktop UI)" as jvm <<executionEnvironment>> {
+    artifact "municipal-report-management\n-1.0-SNAPSHOT.jar" as jar <<accent>>
+    artifact "META-INF/persistence.xml\nunit Municipal_Report_Management_System" as persxml
+    artifact "hibernate-core 6.6.50.Final\n(JPA provider)" as hib
+    artifact "mysql-connector-j 9.4.0\n(JDBC driver)" as jdbc
+    artifact "forms_rt 7.0.3\n(GUI form runtime)" as forms
+  }
+}
+
+node "Database host\n(127.0.0.1 by default)" as dbhost <<device>> {
+  node "MySQL server\nport 3306" as mysql <<executionEnvironment>> {
+    artifact "schema reports_db\n(user reports_user)" as schema
+  }
+}
+
+maven --> central : resolves dependencies\nHTTPS
+maven ..> jar : builds, packages
+jar --> persxml : reads settings
+jar --> hib : persists via JPA
+hib --> jdbc : calls JDBC
+jdbc ---> mysql : JDBC, TCP 3306
+
+note bottom of schema
+  Tables created and updated by Hibernate
+  (hbm2ddl.auto = update); created by
+  the first run. Database and user must
+  be created beforehand (README SQL).
+end note
+note bottom of jar
+  Entry points: HomePageGUI,
+  UserLoginGUI, UserRegistrationGUI.
+  Each user runs their own JVM and
+  connects directly to MySQL.
+end note
+
+legend right
+  Nesting: artifact deployed on node. Dashed arrow: build output.
+  Solid arrow: runtime call or communication.
+  Grey node: external repository.
+endlegend
+@enduml

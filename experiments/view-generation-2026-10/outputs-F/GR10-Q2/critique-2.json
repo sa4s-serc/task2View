@@ -1,0 +1,37 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "required runtime environments and software artifacts",
+     "answered": "partly",
+     "why": "The view shows JVM Java 23, the MySQL server, the application jar and its three direct libraries with versions that match pom.xml. It also says the jar has no Main-Class (pom.xml has only maven-compiler-plugin) and names the three main classes (HomePageGUI, UserLoginGUI, UserRegistrationGUI), which is correct. But the launch note says 'classpath = jar + the three libraries', and that is wrong. The application code imports jakarta.persistence.* directly (JpaUtil.java:7-9, PersistenceService.java:5-7, every Entity class). That API, and Hibernate's other runtime libraries (jboss-logging, byte-buddy, antlr, etc.), come in only as transitive dependencies of hibernate-core. A DevOps engineer who follows the note gets ClassNotFoundException at startup. The view also does not say which MySQL server version is required. Neither the repo nor its README pins one, so the view should state that it is unspecified."},
+    {"detail": "where the application runs and where its data is stored",
+     "answered": "yes",
+     "why": "The view now shows one desktop device that hosts both the JVM and MySQL. This matches jdbc:mysql://127.0.0.1:3306/reports_db (persistence.xml:24) and the 'reports_user'@'localhost' grant in the README. The data is in schema reports_db inside the MySQL execution environment, and the note says what has to change for a remote database."},
+    {"detail": "how the main runtime elements communicate",
+     "answered": "yes",
+     "why": "The view shows a communication path from the JVM to MySQL labelled JDBC, TCP 3306, and in-process «use» dependencies jar -> hibernate-core -> mysql-connector-j. This matches JpaUtil.java:17 (Persistence.createEntityManagerFactory) and the driver setting in persistence.xml. The build-time link Build host -> Maven Central over HTTPS is also given (pom.xml repositories)."},
+    {"detail": "technologies and runtime dependencies between the application and the database",
+     "answered": "partly",
+     "why": "The deployment spec gives the driver class, the URL, the user, the hard-coded password, hbm2ddl.auto=update, RESOURCE_LOCAL and the unit name, which match persistence.xml. The precondition (create the database and user first) is stated. Three things are missing: (1) the jar's own direct dependency on the Jakarta Persistence API, which the diagram reduces to jar -> hibernate-core; (2) the fact that the configuration is not externalised (no System.getenv/getProperty anywhere in src/main), so a new environment needs a rebuild and cannot override settings at launch; (3) hibernate.show_sql=true and format_sql=true, so every SQL statement is written to stdout, which matters for operating the application."}
+  ],
+  "level": "right",
+  "level_why": "For a 'detailed' deployment view, the right elements are the device, the two execution environments, the deployed jar with its deployment spec, the versioned libraries and the schema, and the view shows them. JUnit is correctly left out. The build host and Maven Central go beyond the runtime aspect, but they are minimal, and a new environment has to build from source because no prebuilt artifact or installer exists. Nothing needs cutting. Do not list every transitive Hibernate jar. One element or note line ('hibernate-core runtime dependencies incl. jakarta.persistence-api, resolved by Maven') is enough at this level.",
+  "unsupported": [
+    "Launch note 'classpath = jar + the three libraries': the code needs jakarta.persistence-api (imported directly in JpaUtil.java, PersistenceService.java and all Entity classes), and hibernate-core needs its own transitive runtime jars. pom.xml declares only forms_rt, mysql-connector-j and hibernate-core, so these three jars alone are not a sufficient classpath.",
+    "jar ..> hibernate-core «use» as the jar's only persistence dependency: the application code compiles against jakarta.persistence.* and reaches Hibernate only through the provider entry in persistence.xml (org.hibernate.jpa.HibernatePersistenceProvider). A direct use of hibernate-core classes is not supported, since no org.hibernate import exists in src/main."
+  ],
+  "missing": [
+    "The transitive runtime dependencies of hibernate-core, at least jakarta.persistence-api (shown as an artifact or named in the launch note, e.g. 'use mvn dependency:copy-dependencies to collect the runtime classpath'), with the jar depending on the JPA API.",
+    "The fact that DB settings cannot be overridden at run time: URL, user and password exist only in the persistence.xml packaged in the jar, and no environment variables or system properties are read.",
+    "hibernate.show_sql=true / format_sql=true (persistence.xml:38-43): all SQL goes to the console. This is an operational fact for the deployment spec."
+  ],
+  "uml": [
+    "Build host 'Maven + JDK 23' -> Maven Central is drawn as a directed arrow. A communication path between nodes is an undirected association, as was done for JVM -- MySQL. Drop the arrowhead and keep the HTTPS label.",
+    "The deployment spec is nested in the jar artifact. In UML a «deployment spec» is attached to a deployment (or to the deployed artifact via a dependency), not owned as a nested artifact. Nesting is tolerable, but a dashed dependency from the spec to the jar, or attaching it to the jar's deployment on the JVM, is the standard form. Also, 'packaged in jar' already says it is inside the jar artifact, so this can be shown by «manifest» or the note."
+  ],
+  "fixes": [
+    "Correct the launch note. The runtime classpath is the jar plus all runtime-scoped dependencies (the three declared libraries and their transitive jars, including jakarta.persistence-api), for example as collected by mvn dependency:copy-dependencies. Do not say 'three libraries'.",
+    "Add jakarta.persistence-api as an artifact in the JVM (jar ..> jakarta.persistence-api «use», hibernate-core implements/uses it), or retarget the jar's «use» to it, because the code depends on the JPA API and not on Hibernate classes.",
+    "Add to the deployment spec or the MySQL note that the configuration is compiled into the jar with no env/system-property override, and that show_sql/format_sql=true log all SQL to stdout.",
+    "Make Maven + JDK 23 -- Maven Central an undirected communication path labelled HTTPS.",
+    "State that no MySQL server version is pinned by the repo (README says only 'MySQL'), so the DevOps engineer knows it is unspecified rather than omitted."
+  ]}

@@ -1,0 +1,46 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+</style>
+hide <<accent>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+top to bottom direction
+
+title UML component diagram: seat booking, main components and control flow
+
+component "Swing desktop UI\n(booking wizard, dashboards)" as ui
+component "REST API\n(Spring MVC, /api/reservations, /api/rooms)" as rest
+component "Library Facade\n(single entry to the managers)" as facade <<accent>>
+component "Reservation Manager\n(validation, seat assignment strategy)" as resmgr <<accent>>
+component "Study Room Manager\n(rooms, time slots, seat availability)" as roommgr
+component "Domain model & persistence\n(registries, entities, JPA/Hibernate)" as domain
+component "Notification\n(observer, email adapter)" as notif
+
+ui     --> facade  : makeReservation
+rest   --> facade  : makeReservation
+facade --> resmgr  : delegates booking
+facade --> roommgr : queries availability
+resmgr --> domain  : finds, saves seats
+roommgr --> domain : reads rooms, seats
+resmgr --> notif   : notifies on change
+
+legend right
+  Blue = core of the seat-booking control flow
+endlegend
+@enduml

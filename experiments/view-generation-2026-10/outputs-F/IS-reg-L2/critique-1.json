@@ -1,0 +1,48 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main components involved in registration and their responsibilities",
+      "answered": "partly",
+      "why": "The six code lifelines (AuthenticationController, LibraryFacade, UserManager, UserRegistry, PersistenceManager, MySQL) match the code. But RestExceptionHandler (@RestControllerAdvice, boundary/SpringBoot/RestExceptionHandler.java) is left out, and on the REST path it is the component that turns registration failures into the HTTP response. Responsibilities appear only through message labels; the diagram never states them (they are only in inventory.json)."
+    },
+    {
+      "detail": "how they interact when a new user creates an account",
+      "answered": "partly",
+      "why": "The success chain down to the INSERT is correct. Three parts of the flow are wrong or blurred: (a) validation failures (UserManager.validate/validateStudent/validateLibrarian, lines 67-75) throw before any registry lookup, but the alt is placed after the lookups, so a validation failure looks like it reaches the database; (b) message 05 merges two separate checks run one after the other. The email check goes first and throws at once if it finds a match (lines 77-79); only then does the student-number or librarian-code check run (81-86). Each check is its own findFirstByFields/SELECT; (c) the save-failure path is missing: when PersistenceManager.save fails, it rolls back and returns false, and UserManager then throws RuntimeException (lines 92-95)."
+    },
+    {
+      "detail": "main integration points to exercise in the tests",
+      "answered": "partly",
+      "why": "The REST boundary, the facade/manager hand-off, the registry lookups and the transactional INSERT can all be read off the arrows. The error contract at the boundary is not shown, and the README wrongly says there is no exception handler. In fact RestExceptionHandler maps IllegalArgumentException to HTTP 400 with {\"error\": message}, and the save-failure RuntimeException is not handled there, so it falls through to Spring's default 500 response. The diagram does not mark which interactions are the integration points; the list is only in the README."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines and about 20 messages fit the balanced level for an integration tester: one lifeline per layer, factories folded into a self-message, and DTO, entity and JpaUtil classes left out. The fixes below restructure the existing messages rather than adding many: splitting the lookups adds about two messages, and adding the exception handler adds one lifeline. Message 08 (an unlabelled DB reply) could be merged into 09 to make room.",
+  "unsupported": [
+    "The 'Client (REST or Swing form)' lifeline sends POST /api/auth/register to AuthenticationController, but the Swing Registration form never goes through the controller: Registration.java:134 calls LibraryFacade.getInstance().register(...) directly. One lifeline standing for both callers draws a Swing-to-controller interaction the code does not have.",
+    "The alt guard [validation or duplicate failure] comes after messages 05-10 (lookups and SELECT), which implies validation runs after the DB lookups. In the code, validate()/validateStudent()/validateLibrarian() throw IllegalArgumentException before any UserRegistry call (UserManager.java:67-75).",
+    "Message 22 'error response' is generic. The code defines it in RestExceptionHandler: HTTP 400 with body {\"error\": <message>} for IllegalArgumentException/IllegalStateException.",
+    "README assumption 'the REST layer has no exception handler' is false; RestExceptionHandler.java is a @RestControllerAdvice."
+  ],
+  "missing": [
+    "RestExceptionHandler, which maps IllegalArgumentException to 400 {error}. This is the error contract an integration test of POST /api/auth/register must check.",
+    "The save-failure branch: PersistenceManager.save catches the RuntimeException, rolls back and returns false (PersistenceManager.java:31-38). UserManager then throws RuntimeException('Server error...') (UserManager.java:93-95), which RestExceptionHandler does not handle (so Spring's default 500), and the Swing form shows it in a dialog.",
+    "The two separate uniqueness lookups and their order: email first (findUserByEmail on User.institutionalEmail), then studentNumber (Student) or internalIdentifierCode (Librarian), each a separate SELECT. Each one gives a distinct duplicate-email or duplicate-identifier test case.",
+    "The role branch (Student vs Librarian) changes both the validation rules and the lookup entity. It deserves a guard or label so testers cover both roles."
+  ],
+  "uml": [
+    "One lifeline stands for two different callers (REST client and Swing Registration form) whose interactions differ: Swing calls LibraryFacade, not AuthenticationController. Use separate lifelines, or keep the REST client only and show the Swing entry as its own short interaction or a ref.",
+    "The alt fragment encloses the outcome but not the decision. The validation failure should be its own fragment (or an alt/break) right after message 04, before the lookups. The duplicate failure should be an alt/break right after each lookup reply.",
+    "Message 05 bundles two operations ('institutionalEmailExists, find by student no. / code') into one synchronous message. A UML message is one operation call, so split it into two messages.",
+    "Exceptions are drawn as plain reply messages ('IllegalArgumentException', 'exception'). That is acceptable, but use a break fragment or label the return as a thrown exception consistently. Message 08 is an unlabelled reply; label it or drop it.",
+    "The external caller would conventionally be an actor (or a lifeline with no implied code class), not a participant styled like a code component."
+  ],
+  "fixes": [
+    "Separate the REST client from the Swing form. Keep the REST client as the main caller and show Swing → LibraryFacade.register as a distinct entry (second short lifeline or ref), not via the controller.",
+    "Restructure the control flow to match UserManager.register: validation failure (break, IllegalArgumentException) right after message 04; email lookup → break on duplicate email; identifier lookup (Student.studentNumber or Librarian.internalIdentifierCode by role) → break on duplicate identifier; then create and save.",
+    "Add RestExceptionHandler as a lifeline (or label the error replies) to show IllegalArgumentException → HTTP 400 {\"error\": message}. Remove the false 'no exception handler' assumption from the README.",
+    "Add the save-failure branch: save rolls back and returns false → UserManager throws RuntimeException → unhandled by RestExceptionHandler (default 500) / dialog in Swing.",
+    "Mark the integration points on the diagram itself (e.g. short notes or numbered references on messages 01, 03, 05/lookups, 13-14, and the error returns) so the view answers the third concern without relying on the README."
+  ]
+}

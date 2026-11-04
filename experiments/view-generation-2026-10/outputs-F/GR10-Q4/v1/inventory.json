@@ -1,0 +1,198 @@
+{
+ "model_kind": "UML use case diagram",
+ "detail_level": "overview",
+ "takeaway": "Citizens register, log in, report problems and follow them; municipal operators review received reports, update status, add notes and monitor trends.",
+ "elements": [
+  {
+   "alias": "citizen",
+   "name": "Citizen",
+   "responsibility": "Role: files and follows reports; dashboard shows create/submitted buttons only",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:299-302",
+    "src/main/java/Boundary/UserDashboardGUI.java:322-329",
+    "src/main/java/Entity/UserService.java:260-262"
+   ]
+  },
+  {
+   "alias": "operator",
+   "name": "Municipal operator",
+   "responsibility": "Role: handles received reports, status, notes, trends",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:304-307",
+    "src/main/java/Boundary/UserDashboardGUI.java:341-348",
+    "src/main/java/Entity/UserService.java:264-266"
+   ]
+  },
+  {
+   "alias": "ucAccess",
+   "name": "Register and log in",
+   "responsibility": "Sign up as citizen or municipal operator, authenticate; dashboard adapts to role",
+   "evidence": [
+    "src/main/java/Boundary/UserRegistrationGUI.java:186",
+    "src/main/java/Control/UserRegistrationController.java:23",
+    "src/main/java/Boundary/UserLoginGUI.java:160-170",
+    "src/main/java/Boundary/UserLoginGUI.java:267"
+   ]
+  },
+  {
+   "alias": "ucCreate",
+   "name": "Report a problem",
+   "responsibility": "Citizen submits a categorised, located report",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:447-455",
+    "src/main/java/Control/SystemServicesController.java:57"
+   ]
+  },
+  {
+   "alias": "ucTrack",
+   "name": "Track my reports and notifications",
+   "responsibility": "Citizen lists submitted reports, sees history and status notifications",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:476-484",
+    "src/main/java/Control/SystemServicesController.java:85",
+    "src/main/java/Boundary/SubmittedReportsGUI.java:743-770"
+   ]
+  },
+  {
+   "alias": "ucReview",
+   "name": "Review received reports",
+   "responsibility": "Operator lists, filters and opens received reports",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:506-515",
+    "src/main/java/Control/SystemServicesController.java:106"
+   ]
+  },
+  {
+   "alias": "ucStatus",
+   "name": "Update status or add internal note",
+   "responsibility": "Operator changes a report's status (citizen is notified) or records an internal note",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:566-575",
+    "src/main/java/Boundary/ReceivedReportsGUI.java:1122",
+    "src/main/java/Control/ReportStatusUpdateController.java:66",
+    "src/main/java/Boundary/ReceivedReportsGUI.java:790",
+    "src/main/java/Control/SystemServicesController.java:210"
+   ]
+  },
+  {
+   "alias": "ucMonitor",
+   "name": "Monitor activity trends",
+   "responsibility": "Operator views report statistics",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:536-545",
+    "src/main/java/Control/SystemServicesController.java:188"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "citizen",
+   "to": "ucCreate",
+   "label": "(association)",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:447"
+   ]
+  },
+  {
+   "from": "citizen",
+   "to": "ucTrack",
+   "label": "(association)",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:476"
+   ]
+  },
+  {
+   "from": "operator",
+   "to": "ucReview",
+   "label": "(association)",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:506"
+   ]
+  },
+  {
+   "from": "operator",
+   "to": "ucMonitor",
+   "label": "(association)",
+   "evidence": [
+    "src/main/java/Boundary/UserDashboardGUI.java:536"
+   ]
+  },
+  {
+   "from": "ucStatus",
+   "to": "ucReview",
+   "label": "<<extend>>",
+   "evidence": [
+    "src/main/java/Boundary/ReceivedReportsGUI.java:1122"
+   ]
+  },
+  {
+   "from": "citizen",
+   "to": "ucAccess",
+   "label": "(association)",
+   "evidence": [
+    "src/main/java/Boundary/UserLoginGUI.java:267"
+   ]
+  },
+  {
+   "from": "operator",
+   "to": "ucAccess",
+   "label": "(association)",
+   "evidence": [
+    "src/main/java/Boundary/UserLoginGUI.java:267"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main types of users that interact with the system",
+   "answered_by": [
+    "citizen",
+    "operator"
+   ]
+  },
+  {
+   "detail": "goals each of them can achieve",
+   "answered_by": [
+    "ucAccess",
+    "ucCreate",
+    "ucTrack",
+    "ucReview",
+    "ucStatus",
+    "ucMonitor"
+   ]
+  },
+  {
+   "detail": "how the functionalities are related to each other",
+   "answered_by": [
+    "ucStatus",
+    "ucReview"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Log out / return to dashboard",
+   "reason": "navigation, not a goal"
+  },
+  {
+   "name": "Send status notification",
+   "reason": "automatic side effect of Update report status, shown inside Track my reports"
+  },
+  {
+   "name": "Database (MySQL)",
+   "reason": "technology, not a use case"
+  },
+  {
+   "name": "Log in as prerequisite of all use cases",
+   "reason": "drawn as no relation to keep the overview readable; the dashboard is only reachable after login"
+  },
+  {
+   "name": "System boundary box",
+   "reason": "not drawn, to stay within the 8-element budget; the title names the system"
+  },
+  {
+   "name": "Register / Log in as separate use cases; Add internal note as separate use case",
+   "reason": "merged to stay within budget"
+  }
+ ]
+}

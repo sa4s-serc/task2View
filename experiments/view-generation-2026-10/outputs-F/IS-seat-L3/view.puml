@@ -1,0 +1,78 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML component diagram: seat booking in the study-room reservation application
+
+
+component "Client boundaries\n(Swing, REST)" as swing
+component "LibraryFacade" as facade
+component "ReservationManager\n(booking rules)" <<accent>> as resMgr
+component "StudyRoomManager\n(availability queries)" as roomMgr
+component "Room, seat and reservation model\n(Seat, Area, Reservation, states)" as domain
+component "Registries and persistence\n(JPA / Hibernate)" as registries
+component "NotificationManager\n(Observer)" as notifMgr
+component "Email adapter" as adapter
+interface "AssignmentStrategy\n(FirstAvailableAssignment)" as stratIf
+interface "NotificationService" as notifIf
+component "External email gateway\n(stub)" <<muted>> as gateway
+component "Reservations database\n(MySQL)" <<muted>> as db
+
+swing ..> facade : makeReservation
+facade ..> resMgr : delegates booking
+facade ..> roomMgr : availability queries
+resMgr ..> stratIf : selects seat
+resMgr ..> domain : checks seat, creates
+resMgr ..> registries : finds, saves
+resMgr ..> notifMgr : attaches observer
+roomMgr ..> registries : reads rooms, bookings
+domain ..> registries : reads bookings
+domain ..> notifMgr : notifies observers
+notifMgr ..> notifIf : sends notification
+adapter -up- notifIf
+adapter ..> gateway : sends email
+registries ....> db : JDBC
+
+note bottom of resMgr
+  Booking rules (makeReservation):
+  student, room (active, open weekdays),
+  area and time slot resolved;
+  chosen seat must be in the area;
+  one active or confirmed booking per
+  student, date and slot; seat must be free;
+  default seat via strategy
+end note
+note bottom of roomMgr
+  Likely affected by a rule change:
+  clients and facade (request shape),
+  StudyRoomManager (availability lists),
+  registries (new queries),
+  NotificationManager (new messages)
+end note
+legend right
+  Dashed arrow: dependency (caller to dependency).
+  Grey boxes: outside the application (external service, database).
+  Blue box: place to change.
+endlegend
+@enduml

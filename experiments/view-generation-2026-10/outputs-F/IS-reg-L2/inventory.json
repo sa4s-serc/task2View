@@ -1,0 +1,207 @@
+{
+ "model_kind": "UML sequence diagram",
+ "detail_level": "balanced",
+ "elements": [
+  {
+   "alias": "client",
+   "name": "REST client",
+   "responsibility": "External caller of the REST API (actor); the Swing form is a separate path shown as a note",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22"
+   ]
+  },
+  {
+   "alias": "ctl",
+   "name": "AuthenticationController",
+   "responsibility": "REST entry point POST /api/auth/register; delegates to the facade",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31"
+   ],
+   "members": [
+    "it.unina.reservations.boundary.SpringBoot.AuthenticationController"
+   ]
+  },
+  {
+   "alias": "eh",
+   "name": "RestExceptionHandler",
+   "responsibility": "@RestControllerAdvice: maps IllegalArgumentException/IllegalStateException to HTTP 400 {error}; RuntimeException is not handled (default 500)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:15-22"
+   ],
+   "members": [
+    "it.unina.reservations.boundary.SpringBoot.RestExceptionHandler"
+   ]
+  },
+  {
+   "alias": "facade",
+   "name": "LibraryFacade",
+   "responsibility": "Single application entry point; forwards register to UserManager",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-40"
+   ],
+   "members": [
+    "it.unina.reservations.controller.LibraryFacade"
+   ]
+  },
+  {
+   "alias": "um",
+   "name": "UserManager",
+   "responsibility": "Validates input, checks uniqueness, creates Student/Librarian via factory, returns UserDTO",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97"
+   ],
+   "members": [
+    "it.unina.reservations.controller.UserManager",
+    "it.unina.reservations.controller.factory.*"
+   ]
+  },
+  {
+   "alias": "reg",
+   "name": "UserRegistry + PersistenceManager",
+   "responsibility": "Domain registry of users (uniqueness lookups, registerUser) and the JPA wrapper it delegates to (find, transactional save with rollback)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-67",
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-43"
+   ],
+   "members": [
+    "it.unina.reservations.entity.UserRegistry",
+    "it.unina.reservations.database.PersistenceManager"
+   ]
+  },
+  {
+   "alias": "db",
+   "name": "MySQL reservationsdb",
+   "responsibility": "Relational store of users (via Hibernate persistence unit reservationsPU)",
+   "evidence": [
+    "JavaProject/src/main/resources/META-INF/persistence.xml:1",
+    "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java:19"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "client",
+   "to": "ctl",
+   "label": "POST /api/auth/register",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22"
+   ]
+  },
+  {
+   "from": "ctl",
+   "to": "facade",
+   "label": "register(...)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:29-30"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "um",
+   "label": "register(...)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "reg",
+   "label": "find user by email / identifier, registerUser",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:77-92"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "db",
+   "label": "SELECT / INSERT",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-30",
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:74-80"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "eh",
+   "label": "IllegalArgumentException",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:67-86",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19-22"
+   ]
+  },
+  {
+   "from": "eh",
+   "to": "client",
+   "label": "400 {error}",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:21"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "ctl",
+   "label": "RuntimeException (default 500)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:93-95"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main components involved in registration and their responsibilities",
+   "answered_by": [
+    "ctl",
+    "eh",
+    "facade",
+    "um",
+    "reg",
+    "db"
+   ]
+  },
+  {
+   "detail": "how they interact when a new user creates an account",
+   "answered_by": [
+    "client",
+    "ctl",
+    "eh",
+    "facade",
+    "um",
+    "reg",
+    "db"
+   ]
+  },
+  {
+   "detail": "main integration points to exercise in the tests",
+   "answered_by": [
+    "ctl",
+    "eh",
+    "facade",
+    "um",
+    "reg",
+    "db"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "UserFactory/StudentFactory/LibrarianFactory",
+   "reason": "folded into UserManager (self-message)"
+  },
+  {
+   "name": "UserDTO, JpaUtil, User/Student/Librarian entities",
+   "reason": "data carriers and helpers"
+  },
+  {
+   "name": "Login screen, authentication flow",
+   "reason": "not part of registration"
+  },
+  {
+   "name": "Swing Registration -> LibraryFacade direct call",
+   "reason": "second entry path (Registration.java:134), shown as a note to stay within the lifeline budget"
+  },
+  {
+   "name": "UserRegistry/PersistenceManager as separate lifelines",
+   "reason": "merged into one lifeline to fit 7 lifelines with the exception handler; registry-to-persistence is a plain delegation"
+  }
+ ]
+}

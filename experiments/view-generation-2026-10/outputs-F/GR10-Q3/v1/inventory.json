@@ -1,0 +1,400 @@
+{
+ "model_kind": "UML class diagram",
+ "detail_level": "detailed",
+ "elements": [
+  {
+   "alias": "gui",
+   "name": "Boundary GUIs",
+   "responsibility": "Swing screens that call the controllers",
+   "evidence": [
+    "src/main/java/Boundary/ReportCreationGUI.java:70"
+   ],
+   "members": [
+    "Boundary.*"
+   ]
+  },
+  {
+   "alias": "ctrl",
+   "name": "Controllers",
+   "responsibility": "Control classes that call ReportService/UserService",
+   "evidence": [
+    "src/main/java/Control/ReportStatusUpdateController.java:19-20"
+   ],
+   "members": [
+    "Control.*"
+   ]
+  },
+  {
+   "alias": "rsvc",
+   "name": "ReportService",
+   "responsibility": "Registers, reads, updates reports, notes, notifications",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:29-480"
+   ],
+   "members": [
+    "Entity.ReportService"
+   ]
+  },
+  {
+   "alias": "usvc",
+   "name": "UserService",
+   "responsibility": "Registers and looks up users",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:72-123"
+   ],
+   "members": [
+    "Entity.UserService"
+   ]
+  },
+  {
+   "alias": "ps",
+   "name": "PersistenceService",
+   "responsibility": "JPA save/update/find gateway to MySQL",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:24-177"
+   ],
+   "members": [
+    "Database.PersistenceService"
+   ]
+  },
+  {
+   "alias": "User",
+   "name": "User",
+   "responsibility": "Abstract users table, single-table inheritance",
+   "evidence": [
+    "src/main/java/Entity/User.java:1-70"
+   ],
+   "members": [
+    "Entity.User"
+   ]
+  },
+  {
+   "alias": "Cred",
+   "name": "Credentials",
+   "responsibility": "Embedded email/password in users",
+   "evidence": [
+    "src/main/java/Entity/Credentials.java:1-30"
+   ],
+   "members": [
+    "Entity.Credentials"
+   ]
+  },
+  {
+   "alias": "Citizen",
+   "name": "Citizen",
+   "responsibility": "User subtype who submits reports",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:1-20"
+   ],
+   "members": [
+    "Entity.Citizen"
+   ]
+  },
+  {
+   "alias": "Op",
+   "name": "MunicipalOperator",
+   "responsibility": "User subtype who handles reports",
+   "evidence": [
+    "src/main/java/Entity/MunicipalOperator.java:1-20"
+   ],
+   "members": [
+    "Entity.MunicipalOperator"
+   ]
+  },
+  {
+   "alias": "Report",
+   "name": "Report",
+   "responsibility": "Central reports table with category and current status",
+   "evidence": [
+    "src/main/java/Entity/Report.java:29-113"
+   ],
+   "members": [
+    "Entity.Report"
+   ]
+  },
+  {
+   "alias": "Loc",
+   "name": "Location",
+   "responsibility": "Embedded address columns in reports",
+   "evidence": [
+    "src/main/java/Entity/Location.java:1-30"
+   ],
+   "members": [
+    "Entity.Location"
+   ]
+  },
+  {
+   "alias": "SU",
+   "name": "StatusUpdate",
+   "responsibility": "Status change history row",
+   "evidence": [
+    "src/main/java/Entity/StatusUpdate.java:1-60"
+   ],
+   "members": [
+    "Entity.StatusUpdate"
+   ]
+  },
+  {
+   "alias": "Note",
+   "name": "InternalNote",
+   "responsibility": "Operator note on a report",
+   "evidence": [
+    "src/main/java/Entity/InternalNote.java:1-60"
+   ],
+   "members": [
+    "Entity.InternalNote"
+   ]
+  },
+  {
+   "alias": "Notif",
+   "name": "Notification",
+   "responsibility": "Message sent to citizen on status change",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:21-60"
+   ],
+   "members": [
+    "Entity.Notification"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "gui",
+   "to": "ctrl",
+   "label": "invokes",
+   "evidence": [
+    "src/main/java/Boundary/ReportCreationGUI.java:70"
+   ]
+  },
+  {
+   "from": "ctrl",
+   "to": "rsvc",
+   "label": "calls",
+   "evidence": [
+    "src/main/java/Control/ReportStatusUpdateController.java:20"
+   ]
+  },
+  {
+   "from": "ctrl",
+   "to": "usvc",
+   "label": "calls",
+   "evidence": [
+    "src/main/java/Control/ReportStatusUpdateController.java:19"
+   ]
+  },
+  {
+   "from": "rsvc",
+   "to": "ps",
+   "label": "reads/writes",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:113"
+   ]
+  },
+  {
+   "from": "usvc",
+   "to": "ps",
+   "label": "reads/writes",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:89"
+   ]
+  },
+  {
+   "from": "User",
+   "to": "Citizen",
+   "label": "subtype",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:6"
+   ]
+  },
+  {
+   "from": "User",
+   "to": "Op",
+   "label": "subtype",
+   "evidence": [
+    "src/main/java/Entity/MunicipalOperator.java:6"
+   ]
+  },
+  {
+   "from": "User",
+   "to": "Cred",
+   "label": "credentials",
+   "evidence": [
+    "src/main/java/Entity/User.java:67"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "Loc",
+   "label": "location",
+   "evidence": [
+    "src/main/java/Entity/Report.java:56-57"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "Citizen",
+   "label": "citizenReporting",
+   "evidence": [
+    "src/main/java/Entity/Report.java:87-89"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "Op",
+   "label": "operator",
+   "evidence": [
+    "src/main/java/Entity/Report.java:94-96"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "SU",
+   "label": "statusUpdates",
+   "evidence": [
+    "src/main/java/Entity/Report.java:112-113"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "Note",
+   "label": "internalNotes",
+   "evidence": [
+    "src/main/java/Entity/Report.java:101-107"
+   ]
+  },
+  {
+   "from": "SU",
+   "to": "Op",
+   "label": "operator",
+   "evidence": [
+    "src/main/java/Entity/StatusUpdate.java:36-38"
+   ]
+  },
+  {
+   "from": "Note",
+   "to": "Op",
+   "label": "operator",
+   "evidence": [
+    "src/main/java/Entity/InternalNote.java:24-26"
+   ]
+  },
+  {
+   "from": "Notif",
+   "to": "Report",
+   "label": "report",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:46-48"
+   ]
+  },
+  {
+   "from": "Notif",
+   "to": "Citizen",
+   "label": "destinatario",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:43-45"
+   ]
+  },
+  {
+   "from": "rsvc",
+   "to": "Report",
+   "label": "manages",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:82"
+   ]
+  },
+  {
+   "from": "rsvc",
+   "to": "SU",
+   "label": "records",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:604"
+   ]
+  },
+  {
+   "from": "rsvc",
+   "to": "Note",
+   "label": "records",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:818"
+   ]
+  },
+  {
+   "from": "rsvc",
+   "to": "Notif",
+   "label": "creates",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:390"
+   ]
+  },
+  {
+   "from": "usvc",
+   "to": "User",
+   "label": "registers",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:91"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main data entities stored and their relationships",
+   "answered_by": [
+    "User",
+    "Report",
+    "Loc",
+    "Cred",
+    "SU",
+    "Note",
+    "Notif"
+   ]
+  },
+  {
+   "detail": "information persisted throughout the lifecycle of a report",
+   "answered_by": [
+    "Report",
+    "SU",
+    "Note",
+    "Notif"
+   ]
+  },
+  {
+   "detail": "how users, reports, locations, categories, states, state changes, internal notes and notifications are related",
+   "answered_by": [
+    "User",
+    "Report",
+    "Loc",
+    "SU",
+    "Note",
+    "Notif"
+   ]
+  },
+  {
+   "detail": "which parts of the application depend on the persisted information",
+   "answered_by": [
+    "gui",
+    "ctrl",
+    "rsvc",
+    "usvc",
+    "ps"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "ReportCategory enum",
+   "reason": "stored as text column; values listed in note"
+  },
+  {
+   "name": "ReportStatus and Submitted/Assigned/InProgress/Resolved",
+   "reason": "transient state objects, not persisted; status kept as text in reports.current_status"
+  },
+  {
+   "name": "JpaUtil",
+   "reason": "EntityManager factory plumbing"
+  },
+  {
+   "name": "UserService to Citizen/MunicipalOperator",
+   "reason": "type checks only (UserService.java:205,218); covered by User"
+  }
+ ]
+}
