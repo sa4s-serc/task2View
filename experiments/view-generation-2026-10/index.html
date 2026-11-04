@@ -17,8 +17,28 @@ derives it from the repository and writes one view. Conditions side by side: A t
 skill and its render, check and look loop; C as B plus a notes file per repository kept across cases; D with the
 revised skill (checked inventory, examples, no self-review) and a separate critic on a different model, one
 revision, better version kept; E as D with the detail level given in the stakeholder perspective instead of
-chosen by the agent. Layout issues are counted by puml-check, which B, C and D also used while working,
-so they favour those conditions; per node normalises for size. The judgement is the blind rating.</p>
+chosen by the agent; F as E with a static dependency graph of the repository, which the agent queries to find the
+concern's code and against which the drawn relations are checked. Layout issues are counted by puml-check, which
+B to F also used while working, so they favour those conditions; per node normalises for size. The judgement is
+the blind rating.</p>
+<h2 id="pipeline">The current design (condition F)</h2>
+<p><img src="docs/architecture.png" alt="View generation pipeline, condition F"></p>
+<ol>
+<li><b>Request and repository.</b> The request gives the ISO 42010 inputs: stakeholder, perspective with the detail
+level, concern with its details, aspect, viewpoint and model kind.</li>
+<li><b>Prepare</b> (no LLM): a fresh copy of the repository without its existing UML models, plus the skills.</li>
+<li><b>Static graph</b> (no LLM, tree-sitter): classes and dependencies with file:line, entry points, persisted
+entities, deployment files.</li>
+<li><b>Generator agent</b> (Sonnet 5.5, uml-view skill): finds the concern's code with the graph and by reading code;
+groups it into elements at the given detail level; writes the inventory (elements, relations, evidence, members);
+draws PlantUML.</li>
+<li><b>Checks</b> (scripts, no LLM): evidence lines exist, diagram matches inventory, element budget for the level,
+arrows backed by the graph, layout. The agent fixes what they report and checks again.</li>
+<li><b>Critic agent</b> (Opus 5.5, fresh session): are the concern details answered, is the level right, is it
+supported by the code, is the UML correct. Its critique goes back to the generator for one revision.</li>
+<li><b>Keep the better version</b> by the critic's score: view.png / view.puml, inventory.json, README.md.</li>
+</ol>
+<p>No memory is kept across cases: every case starts from a fresh copy and a fresh session.</p>
 <nav><a href="#GR10-Q1">GR10-Q1</a> · <a href="#GR10-Q2">GR10-Q2</a> · <a href="#GR10-Q4">GR10-Q4</a> · <a href="#GR10-Q3">GR10-Q3</a> · <a href="#IS-reg-L1">IS-reg-L1</a> · <a href="#IS-reg-L2">IS-reg-L2</a> · <a href="#IS-reg-L3">IS-reg-L3</a> · <a href="#IS-seat-L1">IS-seat-L1</a> · <a href="#IS-seat-L2">IS-seat-L2</a> · <a href="#IS-seat-L3">IS-seat-L3</a></nav>
 <section id="GR10-Q1">
 <h2>GR10-Q1</h2>
