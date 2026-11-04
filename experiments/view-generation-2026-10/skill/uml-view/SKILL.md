@@ -42,6 +42,16 @@ examples, which show one system at overview and at detailed level). Copy the lev
 notation, not the content. See `examples/README.md`.
 
 ## 2. Find the evidence
+0. **If `.claude/repo-graph.json` exists, start from it.** It is a static dependency graph built from the code
+   before the session: symbols, dependencies between them with `file:line`, entry points, persisted entities,
+   deployment and build files. Query it with `python3 -I .claude/skills/uml-view/scripts/graph_query.py`:
+   - `summary` for the layers, packages and entry points;
+   - `search <terms>` with the words of the concern and its details and the stakeholder's entry points (routes,
+     screens, main classes), to find where the concern lives;
+   - `around <symbol> [--depth 2]` to follow that code's dependencies.
+   Draw only that neighbourhood, not the whole graph. The graph is class level: group it into elements as §3
+   says, do not copy it. It has no run-time framework wiring, databases, external systems or users; read the
+   code and config for those.
 1. Explore in this order and stop when the concern is covered: entry points → interfaces/APIs and their
    callers → data stores, schemas, migrations → deployment and build files → tests → docs (docs give intent
    only; code wins when they disagree). [MP, MEL, NIL, YER]
@@ -50,12 +60,17 @@ notation, not the content. See `examples/README.md`.
    Write it as `inventory.json` next to `view.puml`, in this shape (aliases are the ones used in the PlantUML):
    ```json
    {"model_kind": "UML component diagram", "detail_level": "overview | balanced | detailed",
-    "elements":  [{"alias": "orders", "name": "Order service", "responsibility": "...", "evidence": ["src/a/B.java:12-40"]}],
+    "elements":  [{"alias": "orders", "name": "Order service", "responsibility": "...", "evidence": ["src/a/B.java:12-40"],
+                   "members": ["com.shop.orders.*"]}],
     "relations": [{"from": "web", "to": "orders", "label": "places order", "evidence": ["src/web/C.java:88"]}],
     "concern_details": [{"detail": "...", "answered_by": ["orders"]}, {"detail": "...", "not_answered": "why, and which view would"}],
     "omitted": [{"name": "...", "reason": "..."}]}
    ```
    Evidence is a list of `path:line` or `path:start-end` relative to the repository root, or `"unknown"`.
+   `members` says which code an element stands for, so the grouping is a recorded decision: symbol ids
+   (`pkg.Class`), packages (`pkg.*`) or paths (`src/a/`); `graph_query.py members <spec>` shows what a spec
+   covers. Give members to every element that stands for code; leave them out for users, databases, external
+   systems, nodes and use cases.
 3. Draw an edge only when code, config or docs show the interaction. If two classifications are plausible or the
    evidence is missing, mark the item "(unconfirmed)" and record it under Assumptions. [MSC, GD, CH]
 
@@ -106,9 +121,11 @@ notation, not the content. See `examples/README.md`.
    When fixing, change the graph (direction, grouping, splitting, dropping), never add elements that are not in
    the inventory. [GD, DIO, YH]
 3. Run `python3 -I .claude/skills/uml-view/scripts/check_inventory.py view-out/<case>/inventory.json --level <given
-   detail level>` and fix
-   what it reports: evidence that does not exist, elements or relations drawn but not in the inventory (or the
-   reverse), concern details with no answer, and elements over the budget. Exit 0 means clean.
+   detail level>` (add `--graph .claude/repo-graph.json` when the graph exists) and fix what it reports: evidence
+   that does not exist, elements or relations drawn but not in the inventory (or the reverse), concern details
+   with no answer, elements over the budget, members that match nothing, and drawn relations with no code
+   dependency behind them. For each "undrawn" dependency, draw it if the concern needs it, otherwise list it under
+   `omitted` with the reason. Exit 0 means clean.
 4. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
    [GD, DIO, YH]
 5. No renderer, no claim: if it did not render or you could not view it, say so. [GD, A365]
@@ -129,6 +146,6 @@ Written up from what the agent had to rediscover in earlier runs (they hold for 
 - The takeaway sentence, the stakeholder, and the detail level chosen and why.
 - For each concern detail: where the view answers it, or why it does not (and which other view would).
 - A pointer to `inventory.json` (do not repeat it) and the final `check_inventory.py` result.
-- Omitted on purpose (what was left out to stay within budget or level).
+- Omitted on purpose (what was left out to stay within budget or level, including undrawn dependencies).
 - Assumptions and "(unconfirmed)" items. [CH, DW, MP]
 - Check result: final puml-check and check_inventory.py results; after a revision, what changed and why.

@@ -45,6 +45,13 @@ Collected 2026-10-30 from about 130 published skills, in three groups. The full 
 ## What no source had, and what we added
 - **The link to 42010 inputs.** No skill reads a stakeholder, perspective or concern in the 42010 sense. The mapping from perspective to detail and from stakeholder to wording in §1 joins CL's two dials with DW's audiences.
 - **UML 2.5.1 conformance.** None of the 32 PlantUML skills checks it, and several break it. The overrides in §4 reject those rules (numbered as in `plantuml_uml.md` §2) and limit stereotypes to the standard profile.
+- **Relations checked against a static graph (condition F).** Most sources ask for evidence per edge (MSC, DW, MP),
+  but none check it. With a dependency graph built from the code before the session, `check_inventory.py
+  --graph` checks each drawn relation between code elements, and lists dependencies between drawn elements that
+  are not drawn. Static dependency context improved LLM architecture output in ArchAgent (arXiv 2601.13007), and
+  Briechle et al. (arXiv 2605.20055) validate LLM-written models against deterministic extraction. The agent
+  still does the grouping, recorded as `members`, because the graph is class level and copying it gives the
+  code-level views that failed in Miryala et al. (ICSA 2026).
 - **README tied to each concern detail.** The sources write general docs. Ours states, for each concern detail, where the view answers it.
 
 ## Conflicts between sources and how they were settled

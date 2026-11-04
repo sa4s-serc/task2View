@@ -6,3 +6,7 @@
 - `use-case-overview/`: business analyst, what users can do → 6 user goals, one actor (the code has no roles).
 - `class-balanced/`: database engineer, persisted data → 6 JPA entities, multiplicities from mappings, key attributes only.
 - `deployment-balanced/`: DevOps engineer → the `k8s/` manifests as nodes, execution environments and artifacts.
+
+Elements that stand for code carry `members` (packages, classes or paths). Checked against the spring-petclinic
+static graph with `check_inventory.py --graph`: no drawn relation lacks a code dependency; the undrawn
+dependencies left are listed under `omitted` with the reason.

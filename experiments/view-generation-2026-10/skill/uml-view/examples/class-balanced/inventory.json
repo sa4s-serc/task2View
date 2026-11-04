@@ -1,32 +1,185 @@
 {
-  "model_kind": "UML class diagram",
-  "detail_level": "balanced",
-  "takeaway": "Six JPA entities in two unconnected clusters: Owner owns Pets which own Visits (cascade ALL), each Pet has exactly one PetType; Vets and Specialties are many-to-many through vet_specialties.",
-  "elements": [
-    {"alias": "Owner", "name": "Owner", "responsibility": "table owners; lastName indexed and searched by prefix; telephone validated as 10 digits", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/Owner.java:48-70", "src/main/java/org/springframework/samples/petclinic/model/Person.java:31-39", "src/main/resources/db/h2/schema.sql:36-44"]},
-    {"alias": "Pet", "name": "Pet", "responsibility": "table pets; name unique per owner (unique_owner_pet_name)", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/Pet.java:44-59", "src/main/java/org/springframework/samples/petclinic/model/NamedEntity.java:33-35", "src/main/resources/db/h2/schema.sql:46-56"]},
-    {"alias": "Visit", "name": "Visit", "responsibility": "table visits; date column visit_date, description max 255", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/Visit.java:35-45", "src/main/resources/db/h2/schema.sql:58-65"]},
-    {"alias": "PetType", "name": "PetType", "responsibility": "table types; lookup of pet kinds", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/PetType.java:26-28", "src/main/resources/db/h2/schema.sql:30-34"]},
-    {"alias": "Vet", "name": "Vet", "responsibility": "table vets", "evidence": ["src/main/java/org/springframework/samples/petclinic/vet/Vet.java:43-50", "src/main/resources/db/h2/schema.sql:10-15"]},
-    {"alias": "Specialty", "name": "Specialty", "responsibility": "table specialties", "evidence": ["src/main/java/org/springframework/samples/petclinic/vet/Specialty.java:28-30", "src/main/resources/db/h2/schema.sql:17-21"]}
-  ],
-  "relations": [
-    {"from": "Owner", "to": "Pet", "label": "pets: 0..1 to 0..*, composition (cascade ALL, FK pets.owner_id nullable)", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/Owner.java:67-70", "src/main/resources/db/h2/schema.sql:51-53"]},
-    {"from": "Pet", "to": "Visit", "label": "visits: 0..1 to 0..*, composition (cascade ALL, FK visits.pet_id nullable)", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/Pet.java:56-59", "src/main/resources/db/h2/schema.sql:60-64"]},
-    {"from": "Pet", "to": "PetType", "label": "type: 0..* to 1 (@ManyToOne, type_id NOT NULL)", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/Pet.java:52-54", "src/main/resources/db/h2/schema.sql:50", "src/main/resources/db/h2/schema.sql:54"]},
-    {"from": "Vet", "to": "Specialty", "label": "specialties: 0..* to 0..* (@ManyToMany via vet_specialties)", "evidence": ["src/main/java/org/springframework/samples/petclinic/vet/Vet.java:47-50", "src/main/resources/db/h2/schema.sql:23-28"]}
-  ],
-  "concern_details": [
-    {"detail": "the persisted entities", "answered_by": ["Owner", "Pet", "Visit", "PetType", "Vet", "Specialty"]},
-    {"detail": "relationships with multiplicities from the JPA mappings", "answered_by": ["Owner", "Pet", "Visit", "PetType", "Vet", "Specialty"]},
-    {"detail": "key attributes and constraints", "answered_by": ["Owner", "Pet", "Visit"]},
-    {"detail": "cascade/ownership of child rows", "answered_by": ["Owner", "Pet"]}
-  ],
-  "omitted": [
-    {"name": "BaseEntity, NamedEntity, Person", "reason": "@MappedSuperclass, no tables of their own; their id/name/firstName/lastName columns are folded into the subclasses (note + shown attributes)"},
-    {"name": "Vets (XML wrapper)", "reason": "response DTO, not persisted"},
-    {"name": "firstName, address, Pet/Vet getters and helper methods", "reason": "not key for the data model; public operations are not needed for this concern"},
-    {"name": "MySQL and PostgreSQL schema variants", "reason": "same tables; H2 schema used as the reference, differences (e.g. VARCHAR_IGNORECASE) not shown"},
-    {"name": "Repositories and queries", "reason": "access paths, not data; the only one that touches indexing (findByLastNameStartingWith) is reflected as {indexed} on Owner.lastName"}
-  ]
+ "model_kind": "UML class diagram",
+ "detail_level": "balanced",
+ "takeaway": "Six JPA entities in two unconnected clusters: Owner owns Pets which own Visits (cascade ALL), each Pet has exactly one PetType; Vets and Specialties are many-to-many through vet_specialties.",
+ "elements": [
+  {
+   "alias": "Owner",
+   "name": "Owner",
+   "responsibility": "table owners; lastName indexed and searched by prefix; telephone validated as 10 digits",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/Owner.java:48-70",
+    "src/main/java/org/springframework/samples/petclinic/model/Person.java:31-39",
+    "src/main/resources/db/h2/schema.sql:36-44"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.owner.Owner"
+   ]
+  },
+  {
+   "alias": "Pet",
+   "name": "Pet",
+   "responsibility": "table pets; name unique per owner (unique_owner_pet_name)",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/Pet.java:44-59",
+    "src/main/java/org/springframework/samples/petclinic/model/NamedEntity.java:33-35",
+    "src/main/resources/db/h2/schema.sql:46-56"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.owner.Pet"
+   ]
+  },
+  {
+   "alias": "Visit",
+   "name": "Visit",
+   "responsibility": "table visits; date column visit_date, description max 255",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/Visit.java:35-45",
+    "src/main/resources/db/h2/schema.sql:58-65"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.owner.Visit"
+   ]
+  },
+  {
+   "alias": "PetType",
+   "name": "PetType",
+   "responsibility": "table types; lookup of pet kinds",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/PetType.java:26-28",
+    "src/main/resources/db/h2/schema.sql:30-34"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.owner.PetType"
+   ]
+  },
+  {
+   "alias": "Vet",
+   "name": "Vet",
+   "responsibility": "table vets",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/vet/Vet.java:43-50",
+    "src/main/resources/db/h2/schema.sql:10-15"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.vet.Vet"
+   ]
+  },
+  {
+   "alias": "Specialty",
+   "name": "Specialty",
+   "responsibility": "table specialties",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/vet/Specialty.java:28-30",
+    "src/main/resources/db/h2/schema.sql:17-21"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.vet.Specialty"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "Owner",
+   "to": "Pet",
+   "label": "pets: 0..1 to 0..*, composition (cascade ALL, FK pets.owner_id nullable)",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/Owner.java:67-70",
+    "src/main/resources/db/h2/schema.sql:51-53"
+   ]
+  },
+  {
+   "from": "Pet",
+   "to": "Visit",
+   "label": "visits: 0..1 to 0..*, composition (cascade ALL, FK visits.pet_id nullable)",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/Pet.java:56-59",
+    "src/main/resources/db/h2/schema.sql:60-64"
+   ]
+  },
+  {
+   "from": "Pet",
+   "to": "PetType",
+   "label": "type: 0..* to 1 (@ManyToOne, type_id NOT NULL)",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/Pet.java:52-54",
+    "src/main/resources/db/h2/schema.sql:50",
+    "src/main/resources/db/h2/schema.sql:54"
+   ]
+  },
+  {
+   "from": "Vet",
+   "to": "Specialty",
+   "label": "specialties: 0..* to 0..* (@ManyToMany via vet_specialties)",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/vet/Vet.java:47-50",
+    "src/main/resources/db/h2/schema.sql:23-28"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "the persisted entities",
+   "answered_by": [
+    "Owner",
+    "Pet",
+    "Visit",
+    "PetType",
+    "Vet",
+    "Specialty"
+   ]
+  },
+  {
+   "detail": "relationships with multiplicities from the JPA mappings",
+   "answered_by": [
+    "Owner",
+    "Pet",
+    "Visit",
+    "PetType",
+    "Vet",
+    "Specialty"
+   ]
+  },
+  {
+   "detail": "key attributes and constraints",
+   "answered_by": [
+    "Owner",
+    "Pet",
+    "Visit"
+   ]
+  },
+  {
+   "detail": "cascade/ownership of child rows",
+   "answered_by": [
+    "Owner",
+    "Pet"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "BaseEntity, NamedEntity, Person",
+   "reason": "@MappedSuperclass, no tables of their own; their id/name/firstName/lastName columns are folded into the subclasses (note + shown attributes)"
+  },
+  {
+   "name": "Vets (XML wrapper)",
+   "reason": "response DTO, not persisted"
+  },
+  {
+   "name": "firstName, address, Pet/Vet getters and helper methods",
+   "reason": "not key for the data model; public operations are not needed for this concern"
+  },
+  {
+   "name": "MySQL and PostgreSQL schema variants",
+   "reason": "same tables; H2 schema used as the reference, differences (e.g. VARCHAR_IGNORECASE) not shown"
+  },
+  {
+   "name": "Repositories and queries",
+   "reason": "access paths, not data; the only one that touches indexing (findByLastNameStartingWith) is reflected as {indexed} on Owner.lastName"
+  },
+  {
+   "name": "Owner -> Visit dependency (addVisit parameter)",
+   "reason": "a method parameter; the Owner-Pet-Visit composition already carries it"
+  }
+ ]
 }

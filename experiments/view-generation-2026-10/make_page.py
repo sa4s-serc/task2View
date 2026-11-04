@@ -16,7 +16,8 @@ HERE = Path(__file__).resolve().parent
 FIELDS = ["stakeholder", "perspective", "concern", "aspect", "viewpoint", "model_kind"]
 CONDITIONS = {"outputs": "A: agent", "outputs-B": "B: + skill and feedback loop", "outputs-C": "C: + memory",
               "outputs-D": "D: revised skill + separate critic",
-              "outputs-E": "E: D + detail level given in the perspective"}
+              "outputs-E": "E: D + detail level given in the perspective",
+              "outputs-F": "F: E + static dependency graph"}
 
 
 def esc(s: object) -> str:

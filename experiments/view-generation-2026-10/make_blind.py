@@ -16,7 +16,7 @@ from pathlib import Path
 import yaml
 
 HERE = Path(__file__).resolve().parent
-CONDITIONS = {"outputs": "A", "outputs-B": "B", "outputs-C": "C", "outputs-D": "D", "outputs-E": "E"}
+CONDITIONS = {"outputs": "A", "outputs-B": "B", "outputs-C": "C", "outputs-D": "D", "outputs-E": "E", "outputs-F": "F"}
 CRITERIA = [("concern", "Answers the concern"), ("level", "Right level of detail for this stakeholder"),
             ("correct", "Correct for the code and correct UML"), ("readable", "Easy to read")]
 

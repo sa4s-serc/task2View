@@ -15,9 +15,12 @@ Conditions (--condition):
      (critique-2.json) and the better-scored version is kept (loop.json). No memory (outputs-D/)
   E  D with the detail level given in the stakeholder perspective (inputs.yaml) instead of chosen by the agent;
      the critic judges against it and the inventory is checked against its budget (outputs-E/)
+  F  E with a static dependency graph of the repository (.claude/repo-graph.json, built before the session with
+     the Phase 0 repository card, tree-sitter): the agent finds the concern's code with graph_query.py, gives
+     each element its members, and check_inventory.py checks the drawn relations against the graph (outputs-F/)
 
 B and C ran with the skills as of commit 91dc18a, D with skills, critic.txt and check_inventory.py as of
-e381c51; built-in auto memory is off for every run.
+e381c51, E as of 137e9ac; built-in auto memory is off for every run.
 
     cd Task2View/code && .venv/bin/python ../experiments/view-generation-2026-10/run_generate.py [--condition B] [--only GR10-Q1] [--dry-run]
 """
@@ -45,6 +48,7 @@ TOOLS = ["Bash(python3 -I .claude/skills/*)", "Bash(python3 .claude/skills/*)", 
          "Bash(plantuml *)"]
 ENV = {**os.environ, "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
 VIEW_FILES = ["view.puml", "view.png", "inventory.json", "README.md"]
+GRAPH = Path(".claude") / "repo-graph.json"
 
 
 def log(msg: str) -> None:
@@ -68,9 +72,26 @@ def fill(template: str, case: str, c: dict, entities: dict, with_level: bool = F
         aspect=c["aspect"], viewpoint=c["viewpoint"], model_kind=c["model_kind"], case=case, **extra)
 
 
+def build_graph(workdir: Path) -> None:
+    """Write the static dependency graph (the Phase 0 repository card) for the repository copy, leaving out the
+    copied skills and the agent's output folder."""
+    from task2view.phase0.card import build_card
+
+    card = json.loads(build_card(workdir).model_dump_json())
+    own = (".claude/", "view-out/")
+    outside = lambda path: not str(path).startswith(own)
+    card["root"] = "."
+    card["files"] = [f for f in card["files"] if outside(f["path"])]
+    card["symbols"] = {k: s for k, s in card["symbols"].items() if outside(s["file"])}
+    card["edges"] = [e for e in card["edges"] if outside(e["file"]) and e["target"] in card["symbols"]]
+    card["entry_points"] = [e for e in card["entry_points"] if outside(e["file"])]
+    (workdir / GRAPH).parent.mkdir(exist_ok=True)
+    (workdir / GRAPH).write_text(json.dumps(card), encoding="utf-8")
+
+
 def build_prompt(case: str, c: dict, entities: dict, cond: str) -> str:
     extra = "" if cond == "A" else (HERE / f"prompt-{cond}.txt").read_text()
-    return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities, with_level=cond == "E")
+    return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities, with_level=cond in ("E", "F"))
 
 
 class SessionFailed(RuntimeError):
@@ -154,6 +175,8 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     if cond != "A":
         for name, path in SKILLS.items():
             shutil.copytree(path, workdir / ".claude" / "skills" / name, dirs_exist_ok=True)
+    if cond == "F":
+        build_graph(workdir)
     memory = HERE / "memory" / f"{c['entity_of_interest']}.md"
     if cond == "C":
         memory.parent.mkdir(exist_ok=True)
@@ -171,14 +194,16 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     if not (produced / "view.puml").exists():
         log(f"stop: {case} wrote no view.puml; see {logs.name}/{case}.jsonl")
         return False
-    loop = critic_loop(case, c, entities, workdir, logs, session, cond == "E") if cond in ("D", "E") else None
+    lvl = cond in ("E", "F")
+    loop = critic_loop(case, c, entities, workdir, logs, session, lvl) if cond in ("D", "E", "F") else None
     shutil.copytree(produced, out_dir, dirs_exist_ok=True)
     if loop:
         (out_dir / "loop.json").write_text(json.dumps(loop, indent=2), encoding="utf-8")
-    if cond == "E" and (out_dir / "inventory.json").exists():
+    if lvl and (out_dir / "inventory.json").exists():
+        graph = ["--graph", str(workdir / GRAPH)] if cond == "F" else []
         check = subprocess.run([sys.executable, "-I", str(SKILLS["uml-view"] / "scripts" / "check_inventory.py"),
                                 str(out_dir / "inventory.json"), "--repo", str(workdir),
-                                "--level", c["perspective"]["detail_level"]], capture_output=True, text=True)
+                                "--level", c["perspective"]["detail_level"], *graph], capture_output=True, text=True)
         (out_dir / "inventory-check.txt").write_text(check.stdout, encoding="utf-8")
     (out_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
     if shutil.which("plantuml") and not (out_dir / "view.png").exists():
@@ -190,7 +215,7 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--condition", choices=["A", "B", "C", "D", "E"], default="A")
+    parser.add_argument("--condition", choices=["A", "B", "C", "D", "E", "F"], default="A")
     parser.add_argument("--only")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()

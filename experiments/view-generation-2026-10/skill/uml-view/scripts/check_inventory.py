@@ -2,6 +2,7 @@
 """check_inventory: check a view's inventory.json against the repository and the view's PlantUML source.
 
     python3 -I .claude/skills/uml-view/scripts/check_inventory.py view-out/<case>/inventory.json [--repo .]
+        [--level overview|balanced|detailed] [--graph .claude/repo-graph.json]
 
 The view source is view.puml next to the inventory. Checks:
   evidence      every "path:line" or "path:start-end" exists in the repository
@@ -11,6 +12,10 @@ The view source is view.puml next to the inventory. Checks:
   concern       every concern detail says which elements answer it, or why it is not answered
   budget        element count against the uml-view budget for the model kind and the detail level (--level, the
                 level given in the inputs, overrides the inventory's own detail_level)
+  graph         with --graph: every element's "members" resolve to symbols; every drawn relation between two
+                elements with members has at least one code dependency between them; dependencies between drawn
+                elements that are not drawn are listed as "undrawn" (reported, not an error: draw them or say in
+                the README why they are left out). Relations with an element that has no members are not checked.
 
 Exit codes: 0 clean, 1 issues found, 2 the inventory or view could not be read.
 Stdlib only.
@@ -18,6 +23,7 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import sys
@@ -76,12 +82,68 @@ def check_evidence(ev, repo: Path, where: str, issues: list) -> bool:
     return True
 
 
+def graph_issues(inv: dict, graph_path: Path, issues: list) -> None:
+    spec = importlib.util.spec_from_file_location("graph_query", Path(__file__).with_name("graph_query.py"))
+    gq = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gq)
+    try:
+        graph = gq.load(str(graph_path))
+    except (OSError, ValueError) as e:
+        issues.append(("graph", f"cannot read {graph_path}: {e}"))
+        return
+    symbols = graph.get("symbols", {})
+    members: dict[str, set[str]] = {}
+    for e in inv.get("elements", []):
+        specs = e.get("members") or []
+        if not specs:
+            continue
+        ids = set()
+        for s in specs:
+            got = gq.resolve(s, symbols)
+            if not got:
+                issues.append(("graph", f"element {e['alias']}: member '{s}' matches no symbol"))
+            ids |= got
+        if ids:
+            members[e["alias"]] = ids
+    pairs = gq.edges_by_pair(graph)
+
+    def between(a: str, b: str) -> list[dict]:
+        found = []
+        for x in members[a] - members[b]:
+            for y in members[b] - members[a]:
+                found += pairs.get((x, y), []) + pairs.get((y, x), [])
+        return found
+
+    drawn_pairs = set()
+    for r in inv.get("relations", []):
+        a, b = r.get("from"), r.get("to")
+        if a in members and b in members and a != b:
+            drawn_pairs.add(frozenset((a, b)))
+            if not between(a, b):
+                issues.append(("graph", f"{a}->{b} is drawn but the code has no dependency between their members"))
+    aliases = sorted(members)
+    for i, a in enumerate(aliases):
+        for b in aliases[i + 1:]:
+            if frozenset((a, b)) in drawn_pairs or members[a] >= members[b] or members[b] >= members[a]:
+                continue  # drawn, or one element contains the other
+            found = between(a, b)
+            if found:
+                issues.append(("undrawn", f"{a}--{b}: {len(found)} code dependencies, not drawn "
+                                          f"(e.g. {found[0]['source']} -> {found[0]['target']} "
+                                          f"at {found[0]['file']}:{found[0]['line']})"))
+    unchecked = [e["alias"] for e in inv.get("elements", []) if e["alias"] not in members
+                 and e.get("kind") != "message"]
+    if unchecked:
+        issues.append(("unchecked", f"no members, relations not checked against the graph: {', '.join(unchecked)}"))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("inventory")
     ap.add_argument("--repo", default=".")
     ap.add_argument("--level", choices=["overview", "balanced", "detailed"],
                     help="the detail level given in the inputs; overrides the inventory's detail_level")
+    ap.add_argument("--graph", help="the static dependency graph (.claude/repo-graph.json)")
     args = ap.parse_args()
     inv_path, repo = Path(args.inventory), Path(args.repo)
     try:
@@ -135,10 +197,14 @@ def main() -> int:
     else:
         issues.append(("budget", "set model_kind and detail_level (overview, balanced or detailed)"))
 
-    errors = [i for i in issues if i[0] != "unbacked"]
+    if args.graph:
+        graph_issues(inv, Path(args.graph), issues)
+
+    notes = {"unbacked", "undrawn", "unchecked"}
+    errors = [i for i in issues if i[0] not in notes]
     for kind_, msg in issues:
         print(f"{kind_}: {msg}")
-    print(f"{len(errors)} issues, {len(issues) - len(errors)} unbacked items, {len(elements)} elements, "
+    print(f"{len(errors)} issues, {len(issues) - len(errors)} notes (unbacked, undrawn, unchecked), {len(elements)} elements, "
           f"{len(inv.get('relations', []))} relations")
     return 1 if errors else 0
 
