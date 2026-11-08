@@ -1,0 +1,63 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+
+title UML sequence diagram: user registration (student or librarian creates an account)
+hide footbox
+autonumber "<b>00"
+
+actor       "Student /\nLibrarian"                          as user
+participant "Registration form\n(Swing) or\nAuthenticationController\n(POST /api/auth/register)" as ui
+participant "LibraryFacade"                                as facade
+participant "UserManager"                                  as um
+participant "UserRegistry +\nPersistenceManager\n(JPA)"    as reg
+database    "MySQL\nreservationsdb"                        as db
+
+user -> ui ++ : role, name, surname,\nemail, password, identifier
+ui -> ui : (form only) reject blank fields
+ui -> facade ++ : register(...)
+facade -> um ++ : register(...)
+um -> um : validate role, names, password\nlength, unina.it email, ID format
+alt valid input
+  um -> reg ++ : institutionalEmailExists(email)
+  reg -> db : SELECT user by email
+  um -> reg : findStudentByStudentNumber /\nfindLibrarianByCode
+  reg -> db : SELECT by identifier
+  reg --> um -- : not found
+  alt unique
+    um -> um : StudentFactory / LibrarianFactory\ncreateUser(...)
+    um -> reg ++ : registerUser(newUser)
+    reg -> db : INSERT (JPA persist, commit)
+    reg --> um -- : true
+    um --> facade : UserDTO
+    facade --> ui : UserDTO
+    ui --> user : success (dialog to Login, or UserDTO)
+  else duplicate or failed
+    um --> facade : exception
+    facade --> ui : exception
+    ui --> user -- : error message
+  end
+else invalid
+  um --> facade -- : IllegalArgumentException
+  facade --> ui -- : IllegalArgumentException
+  ui --> user : error message
+end
+@enduml

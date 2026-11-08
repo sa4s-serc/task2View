@@ -1,0 +1,70 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 30
+skinparam ranksep 40
+top to bottom direction
+
+title UML component diagram - seat booking (make / cancel / check-in a reservation)
+
+actor "Student" as stu
+
+  [Web Client\n(static HTML + app.js)] as web
+  [Swing Booking Wizard] as swing
+  [REST Controllers\n(Spring MVC)] as rest
+  [Notification Scheduler\n(@Scheduled, 60 s)] as sched
+  [Email Adapter\n(stub gateway)] as mail
+  [LibraryFacade] as facade
+  [ReservationManager] as resm #FFE08A
+  [StudyRoomManager] as roomm
+  [AssignmentStrategy\n(FirstAvailable)] as strat
+  [NotificationManager] as notm
+  [Reservation Domain\n(Reservation, state, Seat)] as dom
+  [Registries\n(Reservation, StudyRoom, User)] as reg
+[PersistenceManager\n(JPA)] as pm
+[MySQL reservationsdb] as db
+
+stu --> web : books via browser
+stu -> swing : books via desktop
+web --> rest : HTTP /api/reservations
+rest --> facade : makeReservation
+swing --> facade : direct call
+sched --> facade : end + reminders
+facade --> resm : make, cancel, check in
+facade --> roomm : rooms, slots, seats
+facade ---> notm : sendReminders
+resm -> strat : selectSeat
+resm --> notm : send, attach observer
+resm --> dom : check, change state
+resm --> reg : find, save, update
+roomm --> reg : query rooms, seats
+dom -> reg : Seat availability
+dom --> notm : Observer update
+notm --> mail : NotificationService
+reg -> pm : persist, query
+pm -> db : JDBC
+
+legend right
+  Yellow = component holding the booking logic to modify.
+end legend
+@enduml

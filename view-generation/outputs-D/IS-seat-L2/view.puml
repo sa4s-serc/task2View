@@ -1,0 +1,80 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 60
+
+title UML component diagram: seat booking, rules and ripple
+
+package "Study-room booking application" as app {
+component "Web pages\n(static HTML/JS)" as web
+component "Swing desktop UI" as swing
+component "REST controllers\n(Spring MVC)" as rest
+component "LibraryFacade\n(single entry point)" as facade
+component "ReservationManager\n(resolveRoom, resolveTimeSlot,\nvalidateSeatInArea, createAndSave)" as resmgr <<accent>>
+component "StudyRoomManager\n(rooms, slots, free-seat counts)" as roommgr <<accent>>
+component "FirstAvailableAssignment\n(default seat choice)" as strat <<accent>>
+interface "AssignmentStrategy" as IAssign
+component "StudyRoom, TimeSlot\n(active, open on date, schedule)" as roomModel <<accent>>
+component "Seat, Area\n(seat free, seats per area)" as seatModel <<accent>>
+component "Student\n(one booking per date and slot)" as student <<accent>>
+component "Reservation + states\n(ACTIVE, CONFIRMED, ...)" as resv <<accent>>
+interface "Observer" as IObs
+component "NotificationManager\n(sends student notifications)" as notif
+component "Registries + JPA persistence\n(occupiesSlot: ACTIVE or\nCONFIRMED blocks a seat)" as reg <<accent>>
+}
+
+web ..> rest : <<use>> /api/reservations, /api/rooms
+swing ..> facade : <<use>> booking, room queries
+rest ..> facade : <<use>> booking, room queries
+facade ..> resmgr : <<use>> makeReservation
+facade ..> roommgr : <<use>> room queries
+resmgr ..> roomModel : <<use>> room, slot rules
+resmgr ..> seatModel : <<use>> area, seat rules
+resmgr ..> student : <<use>> uniqueness rule
+resmgr ..> resv : <<use>> creates reservation
+resmgr ..> reg : <<use>> finds, saves
+resmgr ..> IAssign : <<use>> selects seat
+strat -- IAssign
+resmgr ..> IObs : <<use>> attaches observer
+resv ..> IObs : <<use>> notifies on change
+notif -- IObs
+roommgr ..> roomModel : <<use>> open-date check
+roommgr ..> seatModel : <<use>> counts free seats
+roommgr ..> reg : <<use>> finds rooms
+seatModel ..> reg : <<use>> checks occupancy
+student ..> reg : <<use>> finds bookings
+
+note bottom of reg
+  Affected by a new rule (blue):
+  where the rule lives, plus StudyRoomManager
+  because it reuses the availability rules.
+  Only if a rule needs new input: ReservationRequestDTO,
+  ReservationController, Swing ReservationSummary, reservation.html.
+  Tests to update: MakeReservationTest.
+end note
+
+legend right
+  Blue = edit points or ripple targets for new booking rules
+  Other = unchanged by rule changes on availability and eligibility
+end legend
+@enduml

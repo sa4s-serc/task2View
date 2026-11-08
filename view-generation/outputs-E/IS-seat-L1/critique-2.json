@@ -1,0 +1,29 @@
+{
+  "verdict": "accept",
+  "concern_details": [
+    {
+      "detail": "main system components involved in seat booking",
+      "answered": "yes",
+      "why": "The seven components match the code's booking path. The two entry points are the Swing wizard (ReservationSummary.java:100, DateAndRoomSelection.java:214, TimeSlotSelection.java:87, AreaSelection.java:85) and the web client with ReservationController/StudyRoomController (ReservationController.java:29, StudyRoomController.java:44,54,65). Both call LibraryFacade, which delegates to ReservationManager (LibraryFacade.java:118) and StudyRoomManager. Below them are the registries/JPA layer and NotificationManager. The highlight and labels point the developer to ReservationManager as the place where seats are checked and picked (ReservationManager.java:89-92), and away from StudyRoomManager."
+    },
+    {
+      "detail": "how they interact",
+      "answered": "yes",
+      "why": "Dashed dependencies with verb labels trace makeReservation from either entry point through the facade to ReservationManager, then to the registries (find, save) and to Notification (attach observer, Reservation notifies; ReservationManager.java:120-123). The browsing calls (rooms, slots, detail) are shown separately through StudyRoomManager. One small inaccuracy: the facade-to-StudyRoomManager edge is labelled only 'getRoomDetail', although the facade also delegates getAvailableStudyRooms and getAvailableTimeSlots there (LibraryFacade.java:84-102). The incoming edges promise 'rooms, slots, detail', so the label does not match them."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven components with one short verb phrase per edge suits an overview for a developer who needs to find where booking happens. The assignment strategy, state classes, DTOs, factories, UserManager and NotificationScheduler are correctly left out. Nothing is fine-grained enough to cut. Merging the web client into the REST element keeps the budget without losing the path. Adding the Reservation entity or the strategy would go past overview level.",
+  "unsupported": [
+    "Edge 'LibraryFacade ..> StudyRoomManager : getRoomDetail' is incomplete rather than wrong. The code also routes getAvailableStudyRooms and getAvailableTimeSlots through this edge (LibraryFacade.java:84-94), so the label understates what the facade delegates."
+  ],
+  "missing": [],
+  "uml": [
+    "Element names carry parenthetical descriptions ('(single entry point)', '(checks free seats, picks seat, saves reservation)'). This is acceptable at overview level, but strictly those are notes or responsibilities, not part of the component name. This is minor and does not block acceptance.",
+    "Optional: label the dependencies with the standard <<use>> stereotype to make the call semantics explicit in UML terms rather than only in the legend."
+  ],
+  "fixes": [
+    "Relabel 'LibraryFacade ..> StudyRoomManager' to 'get rooms, slots, detail' so it matches the incoming edges and LibraryFacade.java:84-102.",
+    "Optionally add <<use>> to the dashed dependencies."
+  ]
+}

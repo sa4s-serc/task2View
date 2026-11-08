@@ -1,0 +1,27 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "main components involved in seat booking and their responsibilities",
+     "answered": "yes",
+     "why": "The booking path (Swing wizard, ReservationController, LibraryFacade, ReservationManager, AssignmentStrategy/FirstAvailableAssignment, domain model, Registries, NotificationManager) and the pre-booking StudyRoomManager are all drawn. Each has a one-line role that the code supports (ReservationManager.java:65-100, LibraryFacade.java:82-118, AssignmentStrategy.java:10-11). One small gap: the ReservationManager role says 'input, area and seat checks' but leaves out its own time-slot rules in resolveTimeSlot (no past or already started slots, slot must be scheduled for the room: ReservationManager.java:357-375). That is a likely place for a new booking rule."},
+    {"detail": "how they interact with each other",
+     "answered": "yes",
+     "why": "Dashed usage dependencies follow the real calls: facade -> ReservationManager (LibraryFacade.java:118), ReservationManager -> domain checks (isActive/isOpenOnDate :189-192, getAvailableSeats :144, hasActiveOrConfirmed... :152), -> AssignmentStrategy, -> Registries (save), -> NotificationManager (observer attach :121). The domain model -> Registries lookups (Seat.java:45-47, Area.java:51, Student.java:43) are drawn. The note shows how violations surface (RestExceptionHandler.java:19-21 maps IllegalArgument/IllegalStateException to 400). Minor: the Swing -> facade edge is labelled only 'makeReservation', but the wizard also calls getAvailableStudyRooms/getAvailableTimeSlots (DateAndRoomSelection.java:214, TimeSlotSelection.java:87). So the facade -> StudyRoomManager branch has no visible caller, and only the note explains it."},
+    {"detail": "which parts of the system may be affected by the modification",
+     "answered": "yes",
+     "why": "Blue marks the places that hold rules: ReservationManager, the strategy, the domain model and the Registries (occupiesSlot, ReservationRegistry.java:120). The note on StudyRoomManager says that the availability screens must reflect new rules. The code supports this: StudyRoomManager calls occupiesSlot, isOpenOnDate and Seat.isAvailable directly (StudyRoomManager.java:172, 231, 289), and StudyRoomRegistry.java:77-83 does the same. The faded callers are explained as places that must show rule errors. The only missing rule location is the time-slot check noted above."}
+  ],
+  "level": "right",
+  "level_why": "Ten elements, merged where it makes sense (domain model, Registries), at the balanced level the stakeholder asked for. The previous review's cuts (PersistenceManager, DB, email adapter) were made. Each remaining box is either on the makeReservation path or must change with a new rule. NotificationManager is the weakest candidate for affected code, but it is a real step in the booking and costs one box. Nothing needs to be added as a new box. The remaining fixes are relabels.",
+  "unsupported": [],
+  "missing": [
+    "The time-slot booking rules in ReservationManager.resolveTimeSlot (no past or started slot, slot must be one of room.getScheduledTimeSlots(date); ReservationManager.java:357-375). Neither the ReservationManager role nor the 'Existing rules' note mentions them.",
+    "The wizard's availability calls through LibraryFacade (getAvailableStudyRooms, getAvailableTimeSlots, getRoomDetail). The Swing -> facade edge names only makeReservation, so the drawn facade -> StudyRoomManager dependency has no caller in the diagram."
+  ],
+  "uml": [
+    "Minor: AssignmentStrategy is a free-standing interface with a usage dependency from ReservationManager and a realization from FirstAvailableAssignment. This is valid UML. The component-diagram idiom would be a provided interface (ball) on FirstAvailableAssignment and a required interface (socket) on ReservationManager, but the current form does not need to change."
+  ],
+  "fixes": [
+    "Add the time-slot checks to ReservationManager's role (e.g. 'input, time-slot, area and seat checks') or to the existing-rules note (resolveTimeSlot: no past or started slots, slot must be scheduled).",
+    "Relabel Swing -> LibraryFacade as 'makeReservation; availability queries' so that the StudyRoomManager branch has a visible caller."
+  ]
+}

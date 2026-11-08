@@ -1,0 +1,66 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+hide footbox
+autonumber "<b>00"
+title UML sequence diagram: user registration (student or librarian)
+
+actor       "Student /\nLibrarian"                 as user
+participant "Registration form\n(Swing)"          as form
+participant "LibraryFacade"                       as facade
+participant "UserManager"                         as um
+participant "UserRegistry / PersistenceManager\n(JPA, MySQL)" as reg
+
+user -> form ++ : submit role, name, surname,\nemail, password, identifier
+break blank field
+  form --> user : error "Complete all fields"\n(facade not called)
+end
+form -> facade ++ : register(...)
+facade -> um ++ : register(...)
+um -> um : validate role, name, password,\nemail domain, identifier format
+alt invalid input
+  um --> facade : IllegalArgumentException\n(no database access)
+else valid
+  um -> reg ++ : find by email and identifier\n(SELECT)
+  return existing user or none
+  alt duplicate
+    um --> facade : IllegalArgumentException\n(email or identifier used)
+  else ok
+    um -> reg ++ : create user (factory), save\n(INSERT)
+    return saved (true / false)
+    alt saved
+      um --> facade : UserDTO
+    else save failed
+      um --> facade : RuntimeException\n(user could not be saved)
+    end
+  end
+end
+deactivate um
+facade --> form : UserDTO or exception
+deactivate facade
+form --> user : "Registration complete" and open Login,\nor error dialog with message
+deactivate form
+note over form
+  The REST entry point AuthenticationController
+  (POST /api/auth/register) calls the same
+  LibraryFacade.register and returns the UserDTO.
+end note
+@enduml

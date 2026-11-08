@@ -1,0 +1,70 @@
+@startuml GR10-Q1-component-view
+title Municipal Report Management System - High-level Component View
+skinparam componentStyle uml2
+skinparam shadowing false
+left to right direction
+
+actor "Citizen /\nMunicipal Operator" as User
+
+package "Presentation layer (package Boundary - Swing desktop GUI)" {
+  component "Access & Registration GUIs\n(HomePageGUI, UserLoginGUI,\nUserRegistrationGUI)" as AccessUI
+  component "Dashboard GUI\n(UserDashboardGUI: navigation,\nrole-based entry point)" as DashUI
+  component "Citizen Report GUIs\n(ReportCreationGUI,\nSubmittedReportsGUI)" as CitizenUI
+  component "Operator Report GUIs\n(ReceivedReportsGUI, ReportStatusUpdateGUI,\nInternalNoteGUI, ActivityMonitoringGUI)" as OperatorUI
+}
+
+package "Application logic layer (package Control)" {
+  component "UserLoginController" as LoginCtl
+  component "SystemServicesController\n(facade: single entry for\nuse-case operations)" as Facade
+  component "Use-case controllers\n(UserRegistration, ReportCreation,\nReportReview, ReportDetails,\nReportStatusUpdate, InternalNote,\nActivityMonitoring)" as UCCtl
+  component "NotificationController" as NotifCtl
+}
+
+package "Domain layer (package Entity)" {
+  component "Domain services\n(UserService, ReportService:\nbusiness rules, DTO maps)" as DomSvc
+  component "Domain entities\n(User, Citizen, MunicipalOperator,\nCredentials, Report, Location,\nReportCategory, StatusUpdate,\nInternalNote, Notification)" as Entities
+  component "Report status states\n(ReportStatus: Submitted, Assigned,\nInProgress, Resolved)" as States
+}
+
+package "Persistence layer (package Database)" {
+  component "PersistenceService\n(generic save / update / find)" as PersSvc
+  component "JpaUtil\n(EntityManagerFactory singleton)" as Jpa
+}
+
+database "MySQL reports_db\n(Hibernate / JPA, persistence.xml)" as DB
+
+User --> AccessUI
+User --> DashUI
+User --> CitizenUI
+User --> OperatorUI
+
+AccessUI ..> DashUI : opens after login
+DashUI ..> CitizenUI : navigates
+DashUI ..> OperatorUI : navigates
+OperatorUI ..> OperatorUI : navigates among\nreceived-reports screens
+
+AccessUI --> LoginCtl : login
+AccessUI --> Facade : register
+CitizenUI --> Facade
+OperatorUI --> Facade
+DashUI ..> AccessUI : logout
+
+Facade --> UCCtl : delegates
+LoginCtl --> DomSvc
+UCCtl --> DomSvc
+UCCtl --> NotifCtl : status change\nnotification
+NotifCtl --> DomSvc
+
+DomSvc --> Entities : creates / manipulates
+Entities --> States : Report delegates\nstatus behaviour
+DomSvc --> PersSvc : stores / queries\nentities
+PersSvc --> Jpa : obtains EntityManager
+Jpa --> DB : JDBC (MySQL)
+PersSvc ..> Entities : persists (JPA-mapped)
+
+note bottom of DomSvc
+  Controllers and GUIs exchange
+  Map<String,Object> data, not entity objects.
+  GUIs never reference Entity or Database.
+end note
+@enduml

@@ -1,0 +1,34 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main types of users that interact with the system",
+     "answered": "yes",
+     "why": "Citizen and Municipal operator are the two roles the code distinguishes (Entity/Citizen.java, Entity/MunicipalOperator.java; UserDashboardGUI.configureDashboardCitizen/configureDashboardOperator at lines 315-349). No other user kind exists."},
+    {"detail": "goals each of them can achieve through it",
+     "answered": "partly",
+     "why": "Citizen goals are complete. For the operator, 'Update status or add internal note' has no association to any actor, so the diagram never says that the operator updates report status, although this is one of the three operator buttons on the dashboard (UserDashboardGUI.java:103, updateStatusButton -> openGUIStatusUpdate). The element also merges two separate goals with their own GUIs and controllers (ReportStatusUpdateGUI/ReportStatusUpdateController vs InternalNoteGUI/InternalNoteController), so neither goal is clear."},
+    {"detail": "how the functionalities are related to each other",
+     "answered": "partly",
+     "why": "Only one relation between use cases is drawn, and it is half wrong: adding an internal note is an optional choice in the received-report details dialog (ReceivedReportsGUI.java:329-361), so «extend» fits it; but updating status is a goal the operator starts directly from the dashboard (it opens ReceivedReportsGUI in modeStatusUpdate to pick a report, UserDashboardGUI.java:566-580), so it is not an optional extension of reviewing. The key link across roles is not shown: a status update makes a notification (ReportStatusUpdateController.java:66 -> NotificationController.java:55) that the citizen reads in 'Track my reports and notifications' (SubmittedReportsGUI.java:743)."}
+  ],
+  "level": "right",
+  "level_why": "Two actors and six use cases suit an overview for an analyst who does not know the roles yet. Filters, area summary, 'reports in progress' and the lifecycle states (Submitted/Assigned/In Progress/Resolved) are rightly left out. Splitting the merged status/note use case adds only one ellipse and keeps the view at overview level. Nothing needs to be cut.",
+  "unsupported": [
+    "«extend» from 'Update status or add internal note' to 'Review received reports' for the status-update half: the code starts status update from its own dashboard button (UserDashboardGUI.java:103, :400-408, :566-580). It reuses the received-reports list to choose a report, but it is not an optional extension of the operator reviewing reports. Only 'Add internal note' is an optional extension of reviewing (ReceivedReportsGUI.java:333, :361, :771-790)."
+  ],
+  "missing": [
+    "Association Municipal operator -- update report status: the dashboard shows this as a goal of its own for the operator (UserDashboardGUI.java:103, :347).",
+    "The relation between the operator's status update and the citizen's notifications (ReportStatusUpdateController.requestNotification, NotificationController.generateStatusChangeNotification; read in SubmittedReportsGUI.displayNotificationsFromDetails). At the least, show it with a note, because it is the main way the functionalities of the two roles connect.",
+    "A system boundary (subject) named after the municipal reporting application, so the reader can see what the system offers and what lies outside it."
+  ],
+  "uml": [
+    "No subject/system boundary rectangle. UML allows leaving it out, but a use case diagram meant to show 'functionalities provided by the system' should show the subject that owns them.",
+    "The only operator goal that changes data, 'Update status or add internal note', is drawn as an extending use case with no actor. Because of this, the operator's main task cannot be traced from any actor association, which goes against what the diagram is meant to show.",
+    "One use case name joins two goals with 'or' ('Update status or add internal note'). A UML use case should name one goal of an actor."
+  ],
+  "fixes": [
+    "Split 'Update status or add internal note' into 'Update report status' and 'Add internal note'.",
+    "Associate Municipal operator directly with 'Update report status'. If a relation to reviewing is wanted, use 'Update report status' «include» a shared 'select received report' step, or leave it out. Do not draw it as «extend» of 'Review received reports'.",
+    "Keep 'Add internal note' «extend» 'Review received reports' (an optional choice in the report-details dialog).",
+    "Add a note (or a comment linked to both use cases) saying that a status update notifies the citizen, which the citizen sees in 'Track my reports and notifications'.",
+    "Put the six or seven use cases inside a system boundary named after the municipal problem reporting application, with the actors outside it."
+  ]}

@@ -1,0 +1,112 @@
+@startuml
+title Data model (UML class diagram): persisted entities of the municipal report system
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam shadowing false
+skinparam nodesep 50
+skinparam ranksep 60
+skinparam classAttributeIconSize 0
+skinparam linetype polyline
+top to bottom direction
+
+abstract class "User" as user {
+  userId : Long {id}
+  name, lastName, phoneNumber : String
+  role : String {discriminator}
+}
+class "Credentials" as cred {
+  email : String {unique}
+  password : String
+}
+class "Citizen" as citizen
+class "MunicipalOperator" as operator
+class "Report" as report {
+  reportId : Long {id}
+  title, description : String
+  category : ReportCategory
+  dateReport : Date
+  imageAttached : String
+  currentStatusName : String
+  citizenEditable : boolean
+}
+class "Location" as loc {
+  city, cap, street : String
+  streetNumber, municipalArea : String
+}
+enum "ReportCategory" as cat {
+  BROKEN_STREETLIGHT
+  DAMAGED_ROAD
+  ABANDONED_WASTE
+  GENERAL_HAZARD
+  DAMAGED_STREET_FURNITURE
+}
+class "StatusUpdate" as upd {
+  updateId : Long {id}
+  updateDate : Date
+  newStatus : String
+}
+class "InternalNote" as note {
+  noteId : Long {id}
+  text : String
+  dateEntry : Date
+}
+class "Notification" as notif {
+  notificationId : Long {id}
+  sentDate : Date
+  message : String
+  notifiedStatus : String
+}
+class "ReportService" as rsvc
+class "UserService" as usvc
+class "PersistenceService" as ps
+
+rsvc -[hidden]right- usvc
+usvc -[hidden]right- ps
+rsvc --> ps : persists via
+usvc --> ps : persists via
+rsvc ..> report : reads, saves
+rsvc ..> notif : creates, reads
+usvc ..> user : registers, finds
+
+user *-right- cred : embeds
+citizen -up-|> user
+operator -up-|> user
+citizen -[hidden]right- operator
+
+report *-right- loc : embeds
+loc -[hidden]right- cat
+report ..> cat : category
+report "*" -up-> citizen : reported by
+report "*" -up-> "0..1" operator : handled by
+
+report *-down- "*" upd : status history
+report *-down- "*" note : internal notes
+notif "*" -up-> report : about
+upd -[hidden]right- note
+note -[hidden]right- notif
+upd "*" -up-> operator : changed by
+note "*" -up-> operator : written by
+notif "*" -up-> citizen : sent to
+rsvc -[hidden]down- user
+user -[hidden]down- report
+
+note bottom of report
+  currentStatusName holds submitted, assigned,
+  in_progress or resolved (Report.java:33-36).
+  Status objects are @Transient, not stored.
+end note
+note bottom of ps
+  Used by the 9 Control classes
+  through ReportService / UserService.
+  Persistence unit lists 7 entities.
+Services also read StatusUpdate and
+  InternalNote by report id.
+end note
+note as tables
+  Tables: users (single table, role column),
+  reports, status_updates, internal_notes,
+  notifications. Credentials and Location are
+  columns embedded in users and reports.
+end note
+user -[hidden]- tables
+@enduml

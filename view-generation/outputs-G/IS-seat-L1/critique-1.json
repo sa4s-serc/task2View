@@ -1,0 +1,60 @@
+{
+  "concern_details": [
+    {
+      "detail": "main system components involved in seat booking",
+      "answered": "yes",
+      "answered_by": ["swing", "rest", "facade", "resmgr", "roommgr", "domain", "persist", "db", "notif"],
+      "why": "The view names both booking entry points (Swing wizard and REST controller, both calling LibraryFacade.makeReservation), the facade, the Reservation manager (with the assignment strategy as a member), the Study room manager for availability, the registries, persistence, the MySQL database and the notification observer. Each matches the code, and nothing on the booking path is missing."
+    },
+    {
+      "detail": "how they interact",
+      "answered": "partly",
+      "answered_by": ["IFacade", "IReservation", "IRoom", "IRegistry", "IPersist", "IDb"],
+      "why": "The required/provided interfaces show who calls whom, top to bottom, and they match the code: UI to facade to managers to registries to PersistenceManager to JPA. All dependencies carry the same generic <<use>> label, so the diagram does not say which interaction is the booking request itself (makeReservation) and which is an availability query. That makes the interaction only partly readable for the behavioural aspect. The README says the view does not show call order, which is acceptable for a component diagram at overview level."
+    }
+  ],
+  "level": "right",
+  "level_why": "Nine components and six interfaces, each a package or manager-level unit, with no classes, DTOs or operations shown. This suits an overview for a developer who needs to find where seat booking lives before changing it. Strategy and state classes are left out on purpose.",
+  "findings": [
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "student",
+      "claim": "The Student actor is drawn using the Library use-case API (a Java facade) directly. In the code, students reach the facade only through the Swing wizard or the REST controller, so the diagram suggests a third entry path that does not exist. The README says the arrow was shortened on purpose.",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java:100", "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:29"],
+      "fix": "Point the Student <<use>> dependency at the Swing booking wizard and the REST API, or drop the actor-to-interface arrows."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "librarian",
+      "claim": "The Librarian actor is also wired straight to the facade interface, and the librarian plays no part in creating a seat booking. Its evidence (LibrarianDashboard.java:1) points at the package line, not at a use of the facade.",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/boundary/Swing/LibrarianDashboard.java:82-83"],
+      "fix": "Connect the Librarian to the Swing UI instead of the facade interface, or remove it from this booking-focused view. If it stays, cite LibrarianDashboard.java:82-83 as evidence."
+    },
+    {
+      "severity": "minor",
+      "kind": "concern",
+      "element": "IReservation",
+      "claim": "Every dependency is labelled <<use>>, so the reader cannot tell which path carries the seat booking itself and which carries room or seat availability queries.",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:118", "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:101"],
+      "fix": "Rename the interfaces or add short notes so the booking path is visible, for example 'makeReservation / cancel / check-in' on Reservation operations and 'rooms, slots, seat map' on Room and seat availability."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "notif",
+      "claim": "The resmgr-to-notif edge is the only plain dependency not routed through an interface. In the code, Notification is reached through the entity Observer interface (NotificationManager implements Observer), and Reservation.notifyObservers calls update(). ReservationManager only attaches the observer.",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java:15", "JavaProject/src/main/java/it/unina/reservations/entity/Observer.java:8-9", "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:119-122"],
+      "fix": "Optionally show Notification providing an 'Observer' interface that Reservation manager (or the domain) requires, to keep the notation consistent with the rest of the diagram."
+    },
+    {
+      "severity": "minor",
+      "kind": "unsupported",
+      "element": "db",
+      "claim": "The evidence for the Reservations database (and for the JDBC / JPA interface) is persistence.xml:1, the XML declaration line. The MySQL connection is defined further down in that file.",
+      "evidence": ["JavaProject/src/main/resources/META-INF/persistence.xml:21-24"],
+      "fix": "Cite persistence.xml:21-24 as evidence for db and IDb. Consider naming the element 'MySQL reservationsdb'."
+    }
+  ]
+}

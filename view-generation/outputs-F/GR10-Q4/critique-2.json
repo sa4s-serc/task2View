@@ -1,0 +1,28 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main types of users that interact with the system",
+     "answered": "yes",
+     "why": "Citizen and Municipal operator are the only two roles in the code (Entity/Citizen.java, Entity/MunicipalOperator.java; UserDashboardGUI.configureDashboardCitizen/configureDashboardOperator, lines 315-349; role choice in UserRegistrationGUI.java:182-187). No other user kind exists."},
+    {"detail": "goals each of them can achieve through it",
+     "answered": "partly",
+     "why": "The goals on the role dashboards are all there and correctly assigned. Citizen: create report, view submitted reports (UserDashboardGUI.java:100-101). Operator: view received reports, update status, monitor trends (lines 102-104), plus adding an internal note from the details dialog (ReceivedReportsGUI.java:329-361). But the one goal both user types reach through the system is missing: registering an account and choosing a role, then logging in. The home page offers it (HomePageGUI.java:49-52), and SystemServicesController.registerUser (line 35), UserRegistrationController, UserLoginController and UserRegistrationBlackBoxTest all cover it. This analyst does not know the user roles yet, and registration is where the code assigns a role, so leaving it out hides how a person becomes a Citizen or an Operator."},
+    {"detail": "how the functionalities are related to each other",
+     "answered": "yes",
+     "why": "«extend» from 'Add internal note' to 'Review received reports' matches the optional 'Add Internal Note' choice in the report-details dialog (ReceivedReportsGUI.java:333, 361, 771-790). The note joining 'Update report status' and 'Track my reports and notifications' matches the code: registerStatusUpdate calls requestNotification (ReportStatusUpdateController.java:66), and the citizen reads it in SubmittedReportsGUI.displayNotificationsFromDetails (line 743). This is enough for an overview. A shared 'Register / log in' precondition would add one more relation that spans both roles."}
+  ],
+  "level": "right",
+  "level_why": "Two actors and six use cases fit an overview. Filters, report details/history/image, viewing internal notes, the lifecycle states, the monitoring sub-modes (in progress, area summary) and logout are rightly left out. Nothing needs to be cut. Adding one 'Register account' use case keeps the view at overview level (2 actors, 7 use cases). The README itself says it was dropped only because of a tool's element count, not because the stakeholder's level calls for that.",
+  "unsupported": [],
+  "missing": [
+    "'Register an account' (choose a role as Citizen or Municipal operator), and optionally 'Log in', associated with both actors: HomePageGUI.java:49-52 (Register / Sign in buttons), UserRegistrationGUI.java:182-187 (role selection), SystemServicesController.registerUser (line 35), UserLoginController.verifyCredentialsLogin (line 24). It is a goal the system offers to both user types, and it answers 'main types of users' for a reader who does not know the roles yet."
+  ],
+  "uml": [
+    "'Track my reports and notifications' joins two goals with 'and'. Since the note already explains where notifications are read, 'Track my reports' (or 'Follow my reports') would name one actor goal. Minor.",
+    "No subject (system boundary). UML allows this, and the title names the system, so this is acceptable. Showing the boundary would make 'functionalities provided by the system' explicit."
+  ],
+  "fixes": [
+    "Add a 'Register an account' use case (it covers role selection; fold 'log in' into it or leave login out as a precondition) and associate it with both Citizen and Municipal operator. Cite HomePageGUI.java:49-52, UserRegistrationGUI.java:182-187 and SystemServicesController.registerUser.",
+    "Keep the other six use cases, the «extend» and the notification note unchanged. Do not drop another use case to make room: 2 actors and 7 use cases are still an overview.",
+    "Optionally rename 'Track my reports and notifications' to 'Track my reports', so it names a single goal. The note already covers notifications.",
+    "Update README.md and inventory.json so registration is no longer listed as omitted."
+  ]}

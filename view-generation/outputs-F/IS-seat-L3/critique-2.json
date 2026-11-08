@@ -1,0 +1,37 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components in the booking process, their responsibilities, interactions and dependencies",
+     "answered": "yes",
+     "why": "The booking path (Swing/REST -> LibraryFacade -> ReservationManager -> AssignmentStrategy / model / registries -> MySQL, and ReservationManager -> NotificationManager -> NotificationService <- Email adapter -> gateway) is drawn and checks out against the code (ReservationController.java:21-30, ReservationManager.java:65-101, 173-196, 401). The role labels and the rules note give the responsibilities. One dependency arrow points the wrong way (see unsupported), and StudyRoomManager is missing its use of the model (see missing). Neither hides a main component."},
+    {"detail": "which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications",
+     "answered": "partly",
+     "why": "Requests, rules, storage and notification are each answered by a named element. Seat availability is only half answered. The single availability check is Seat.isAvailable / Area.getAvailableSeats over ReservationRegistry.occupiesSlot, in the model. Both ReservationManager (availableSeats, selectSeat) and StudyRoomManager (countAvailableSeats at StudyRoomManager.java:378-384, getRoomDetail at :289, and StudyRoomRegistry.getAvailableRooms -> StudyRoom.isAvailable) use it. The view draws StudyRoomManager reading only the registries, so it does not show that both booking and the pre-booking lists depend on the same model check. Also, the per-student rule is not implemented in ReservationManager. It is in Student.hasActiveOrConfirmedReservationForDateAndSlot (Student.java:42-50), and Student is not a member of any drawn element."},
+    {"detail": "which parts need to be modified and which other components may be affected",
+     "answered": "partly",
+     "why": "ReservationManager is marked as the place to change, and a note lists the affected components. Two things a developer adding rules needs are missing. (1) Availability rules belong in the model (Seat/Area availability, ReservationRegistry.occupiesSlot), not only in ReservationManager, and a change there affects StudyRoomManager's lists through the missing roomMgr -> model dependency. (2) The rule checks after resolution (uniqueness, availability, seat selection, save, notify) run inside a synchronized(this) block in makeReservation, so a new rule that reads booking state must go inside that block. StudyRoomManager.validateQueryDate also repeats the weekday/open rule (StudyRoomManager.java:214-221), so it is a second place a calendar rule must change."}
+  ],
+  "level": "right",
+  "level_why": "Twelve elements at manager/package granularity suits a balanced view for this developer. DTOs, UserManager, factories, the scheduler and the cancel/check-in flows are rightly left out. No cuts are needed. The fixes below change edges, notes and element membership and add no elements.",
+  "unsupported": [
+    "domain ..> notifMgr 'notifies observers': in the code the model does not depend on NotificationManager. Reservation.notifyObservers (Reservation.java:181-184) calls the entity.Observer interface, and NotificationManager implements Observer and imports entity.* (NotificationManager.java:4,15). The static dependency runs notifMgr -> model. The call to NotificationManager at run time comes only from ReservationManager's attach (ReservationManager.java:121). Drawn this way, the model looks coupled to the notification component.",
+    "AssignmentStrategy interface labelled '(FirstAvailableAssignment)': FirstAvailableAssignment is a separate class that implements the interface (FirstAvailableAssignment.java:8), not part of the interface. The label merges an interface with its realizing class.",
+    "The email gateway is drawn grey as 'outside the application', but ExternalEmailGateway is an in-repo stub class in the boundary package (ExternalEmailGateway.java:10-14). The '(stub)' label helps, but the legend's 'outside the application' claim is not true of the code."
+  ],
+  "missing": [
+    "StudyRoomManager -> Room, seat and reservation model dependency ('counts available seats'): StudyRoomManager.java:289 (Seat.isAvailable) and :381 (Area.getAvailableSeats). This is the edge that shows booking and the availability lists share one availability check.",
+    "Student, where the per-student uniqueness rule lives (Student.java:42-50, which calls ReservationRegistry.findActiveReservations), is missing from the model element's members and label, and the rules note credits the rule to ReservationManager alone.",
+    "The synchronized(this) section in ReservationManager.makeReservation around uniqueness -> availability -> selection -> save -> notify. Its ordering and atomicity are the control-flow fact a developer adding a rule needs.",
+    "The duplicated date/weekday validation in StudyRoomManager.validateQueryDate (StudyRoomManager.java:214-221), next to StudyRoom.isOpenOnDate used by ReservationManager.resolveRoom. It is a second place a calendar rule must be changed."
+  ],
+  "uml": [
+    "The interface element 'AssignmentStrategy (FirstAvailableAssignment)' merges an interface with its realizing class. Name the interface AssignmentStrategy only, and either note the default implementation or show the realization from a component.",
+    "notifMgr ..> notifIf and resMgr ..> stratIf use a plain dependency arrow to an interface circle. For a required interface, UML component notation uses a socket (or a «use» dependency). This is acceptable, but the provided/required pairing is clearer with a socket on NotificationManager.",
+    "The external gateway and the MySQL database are plain components told apart only by fill colour. Standard notation would mark the database as an «artifact» or a database/node, or put the application inside a subsystem boundary so that external elements sit outside it. As drawn, the notation does not carry the inside/outside distinction."
+  ],
+  "fixes": [
+    "Add the dependency StudyRoomManager ..> 'Room, seat and reservation model' (available-seat count, Seat.isAvailable). In the notes, say that availability rules live in the model (Seat/Area, ReservationRegistry.occupiesSlot) and are shared by booking and the pre-booking lists.",
+    "Reverse or relabel the model -> NotificationManager edge. Draw NotificationManager ..> model (implements Observer, reads Reservation), and leave the run-time trigger to ReservationManager's 'attaches observer' edge.",
+    "Add Student to the model element (label and members). In the rules note, say that the per-student uniqueness check is Student.hasActiveOrConfirmedReservationForDateAndSlot.",
+    "Extend the rules note with the order and atomicity: resolve -> seat-in-area -> [synchronized: uniqueness -> available seats -> select -> save -> notify]. New rules that read booking state go inside the synchronized block.",
+    "Rename the strategy interface to AssignmentStrategy only, with the default FirstAvailableAssignment in a note. In the affected-components note, add StudyRoomManager.validateQueryDate as a duplicate of the weekday/open rule."
+  ]}

@@ -1,0 +1,35 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main architectural components and their responsibilities", "answered": "yes",
+     "why": "Six components (Swing screens, use-case controllers, domain services, domain entities, persistence access, MySQL) match the Boundary/Control/Entity/Database packages and each names its role. The responsibilities are only implied by the names and the lists in brackets. A one-line responsibility per box (for example 'business rules and validation' for the services) would help the architect more than the class lists."},
+    {"detail": "decomposition into layers or subsystems", "answered": "partly",
+     "why": "The layers show only as the vertical order of the boxes. No package or subsystem groups them. The code's decomposition is the four BCED packages, and ReportService/UserService sit inside package Entity next to the entities. The view splits the services and entities into two sibling boxes and never shows that they form one Entity subsystem, so the real package-level layering (Boundary -> Control -> Entity -> Database) cannot be read from the diagram. That is mentioned only in the README."},
+    {"detail": "main dependencies among them", "answered": "partly",
+     "why": "The main chain GUI -> controllers -> services -> persistence -> DB is correct (checked against the imports). But Control -> Domain entities 'handles entities' is not supported by the code (see unsupported). The persistence -> entities mapping dependency is missing, and the arrows are drawn as associations, not dependencies."},
+    {"detail": "separation of user interface, application logic, domain entities and persistence, and how they collaborate", "answered": "partly",
+     "why": "The view shows that the UI and controllers never reach persistence. It does not show how the layers actually collaborate. The controllers and GUI exchange untyped Map<String,Object>/List<Map<...>> data with the services (for example ReportReviewController.retrieveReportsSubmitted, ReportDetailsController), and entity objects never leave the Entity package except the ReportCategory enum. The 'handles entities' arrow gives the wrong impression that entities flow up to the controllers."}
+  ],
+  "level": "right",
+  "level_why": "Overview was requested. One component per layer (6 components plus the user) fits the level. Individual screens and controllers are correctly left out. Nothing needs to be cut. The fixes below change relations and add grouping, not new elements.",
+  "unsupported": [
+    "Use-case controllers -> Domain entities 'handles entities': across src/main/java/Control the only Entity import other than the services is 'import Entity.ReportCategory' in ReportCreationController.java:3, and ReportCategory is never used in that file's body (unused import). The cited evidence ReportCreationController.java:12 is not an entity use. Controllers work only with ReportService/UserService and with Map<String,Object> results.",
+    "The controllers box claims the SystemServicesController facade fronts the GUI, but UserLoginGUI calls UserLoginController directly (UserLoginGUI.java:3,111). This is minor at overview, but the facade wording should say 'mostly via'."
+  ],
+  "missing": [
+    "Persistence access -> Domain entities: persistence.xml (lines 14-20) maps Entity.User, Citizen, MunicipalOperator, Report, InternalNote, StatusUpdate and Notification as JPA entities of the persistence unit that JpaUtil opens. The ORM mapping dependency of persistence on the entities is a key part of how entities and persistence collaborate, and it is not drawn.",
+    "The grouping into the code's layers/subsystems: packages Boundary, Control, Entity (holding both the domain services and the entities) and Database.",
+    "How data crosses the Control/Entity boundary: services return Map<String,Object> / List<Map<String,Object>> rather than entity objects. A short note on the services -> controllers interaction would cover this."
+  ],
+  "uml": [
+    "All relations are drawn with '-->' (solid association arrows). Compile-time/usage relations between components should be UML dependencies (dashed '..>'), optionally with <<use>>.",
+    "The layers are not shown as UML packages (or <<subsystem>> components) containing the components, so the layered decomposition has no notation behind it.",
+    "The MySQL database is drawn as a plain component inside the system with no boundary. It is external to the application. Put it outside a system boundary, or mark the application components inside a <<subsystem>>, so the reader can tell inside from outside."
+  ],
+  "fixes": [
+    "Remove the Use-case controllers -> Domain entities 'handles entities' relation (the code has only an unused ReportCategory import). Say in a note that controllers get Map-based data from the services, not entity objects.",
+    "Add a dependency Persistence access ..> Domain entities (JPA mapping of the entity classes, persistence.xml:14-20).",
+    "Group the components into UML packages for the layers Boundary, Control, Entity (containing Domain services and Domain entities) and Database, so the decomposition is explicit and matches the code.",
+    "Draw all inter-component relations as dashed dependencies ('..>'), keeping short labels.",
+    "Give each component a one-line responsibility instead of only class lists, and change the facade wording to 'mostly via SystemServicesController' (login uses UserLoginController directly)."
+  ]
+}

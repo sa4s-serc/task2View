@@ -1,0 +1,40 @@
+@startuml
+title Sequence diagram: new user registration (Student or Librarian)
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+
+actor "New user" as user
+participant "Registration UI\n(registration.html / Swing)" as ui
+participant "AuthenticationController\n(Spring REST)" as api
+participant "LibraryFacade" as facade
+participant "UserManager" as um
+participant "UserRegistry" as reg
+participant "PersistenceManager\n(JPA)" as pm
+database "MySQL\nreservationsdb" as db
+
+user -> ui : submit form
+ui -> api : POST /api/auth/register
+note right of ui : IP1: Swing form skips REST\nand calls LibraryFacade directly
+api -> facade : register(...)
+facade -> um : register(...)
+um -> um : validate fields\n(role, names, email, ID, password)
+um -> reg : check email, ID unused
+reg -> pm : findFirstByFields
+pm -> db : SELECT
+um -> um : create Student or Librarian\n(UserFactory)
+um -> reg : registerUser(user)
+reg -> pm : save(user)
+pm -> db : INSERT (transaction)
+alt rejected
+  um --> facade : exception
+  facade --> api : exception
+  api --> ui : 400 {error}
+else saved
+  um --> facade : UserDTO
+  facade --> api : UserDTO
+  api --> ui : 200 UserDTO
+end
+ui --> user : confirm or show error
+note over um, db : Rejected = invalid input or duplicate (raised before INSERT),\nor save failed (INSERT rolled back)
+@enduml

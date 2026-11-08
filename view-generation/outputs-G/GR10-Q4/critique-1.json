@@ -1,0 +1,58 @@
+{
+  "concern_details": [
+    {
+      "detail": "main types of users that interact with the system",
+      "answered": "yes",
+      "answered_by": ["user", "citizen", "operator"],
+      "why": "Two concrete actors, Citizen and Municipal operator, both specialize a generic User. This matches the two roles offered at registration (UserRegistrationGUI.java:112-113) and the role-specific dashboards (UserDashboardGUI.java:317-346)."
+    },
+    {
+      "detail": "goals each of them can achieve through it",
+      "answered": "yes",
+      "answered_by": ["ucReg", "ucLogin", "ucCreate", "ucSubmitted", "ucReceived", "ucStatus", "ucNote", "ucMonitor"],
+      "why": "Each actor is associated with the goals the code gives that role: shared register/log in, citizen create/review submitted, operator review received/update status/add note/monitor trends. These match SystemServicesController's service methods and the dashboard panel visibility."
+    },
+    {
+      "detail": "how the functionalities are related to each other",
+      "answered": "partly",
+      "answered_by": ["ucDetails", "ucNotify"],
+      "why": "Three <<include>> relations show that both review use cases share the report details/history view and that a status update triggers a notification. The view leaves out that adding an internal note is only reached from the details of a received report. It also does not link the notification to the citizen who reads it."
+    }
+  ],
+  "level": "right",
+  "level_why": "Ten user-goal use cases and three actors give an overview of what the system offers. Logout, navigation, report fields and state-machine steps are left out, which suits an overview.",
+  "findings": [
+    {
+      "severity": "minor",
+      "kind": "missing",
+      "element": "ucNote",
+      "claim": "Add internal note is opened only from the details dialog of a received report, but the view shows no relation from it to Review received reports or View report details and history. It looks like an independent top-level goal.",
+      "evidence": ["src/main/java/Boundary/ReceivedReportsGUI.java:361", "src/main/java/Boundary/ReceivedReportsGUI.java:771"],
+      "fix": "Draw ucNote ..> ucDetails as <<extend>> (or extend Review received reports). Alternatively, keep the operator association and add that extend link."
+    },
+    {
+      "severity": "minor",
+      "kind": "missing",
+      "element": "ucNotify",
+      "claim": "The README assumes no screen lets citizens read notifications, but the citizen's report details dialog has a 'View Notifications' option. The citizen can therefore see these notifications, yet the diagram does not connect the citizen to the notification use case.",
+      "evidence": ["src/main/java/Boundary/SubmittedReportsGUI.java:239", "src/main/java/Boundary/SubmittedReportsGUI.java:260", "src/main/java/Boundary/SubmittedReportsGUI.java:743"],
+      "fix": "Rename ucDetails to 'View report details, history and notifications', or associate Citizen with ucNotify as the receiving actor. Then correct the README assumption."
+    },
+    {
+      "severity": "minor",
+      "kind": "missing",
+      "element": "ucStatus",
+      "claim": "Update report status can also be launched from the received-reports list, besides from its own dashboard panel. The view shows it only as a standalone goal.",
+      "evidence": ["src/main/java/Boundary/ReceivedReportsGUI.java:1121"],
+      "fix": "Optionally add ucStatus extends Review received reports. Keeping the direct operator association is also acceptable at overview level."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "ucNotify",
+      "claim": "The note says notification happens only for notifiable statuses, which makes the step conditional. A conditional step fits <<extend>> with a condition better than an unconditional <<include>>.",
+      "evidence": ["src/main/java/Control/ReportStatusUpdateController.java:104"],
+      "fix": "Draw ucNotify ..> ucStatus as <<extend>> with condition [new status is notifiable]. Alternatively, keep <<include>> and leave the note as it is."
+    }
+  ]
+}

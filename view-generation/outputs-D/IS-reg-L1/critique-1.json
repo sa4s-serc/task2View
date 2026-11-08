@@ -1,0 +1,37 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "system components involved in user registration",
+     "answered": "yes",
+     "why": "Every layer on the REST path is a lifeline: registration.html/app.js, AuthenticationController, LibraryFacade, UserManager, UserRegistry/PersistenceManager and the JPA database. Each one matches the code. RestExceptionHandler shows up only as text inside message 19, and the second entry point (the Swing Registration form) is only a note. A tester can still find both, so this detail is answered."},
+    {"detail": "how they interact",
+     "answered": "partly",
+     "why": "The success path is correct and complete. The failure control flow is not. The alt frame comes after the checks, so it reads as if validation (05) and the duplicate lookups (06-08) always succeed. Message 08 'not found' is unconditional, which contradicts the 'duplicate' branch. In the code (UserManager.java:67-86), each check throws at its own point, so the call never reaches the factory or persist steps. Message 06 merges two separate lookups, institutionalEmailExists and then findStudentByStudentNumber or findLibrarianByCode chosen by role. Each lookup has its own error message, and a tester needs both. The save-failure path is missing: PersistenceManager.save returns false, then UserManager.java:93-95 throws a RuntimeException. RestExceptionHandler does not handle RuntimeException, so the client gets a different, non-400 response. The test entry point (RegistrationTest calls LibraryFacade.register directly) is mentioned only in the README, not in the view."}
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines and about 20 messages fit an integration tester checking registration end to end. Every boundary they would put a test at is shown: the HTTP endpoint with its form parameters and status codes, the facade, the manager, the registry and the database. Folding the factories and DTOs into UserManager self-calls is the right abstraction. Nothing should be dropped. What the view lacks is precision in the failure branches, not more elements.",
+  "unsupported": [
+    "Message 08 'not found' returned unconditionally before the alt: the code makes two separate lookups (email, then student number or librarian code), and either one can find a match and cause an IllegalArgumentException. 'Not found' holds only on the success path.",
+    "Guard [all checks pass] / [invalid / duplicate] placed after validation and lookup: in the code, validation failures (require in validate/validateStudent/validateLibrarian) throw before any registry call is made. The diagram implies the lookups always run.",
+    "Messages 07 and 11 to the Database are drawn with no reply: the SELECT lookups (persistenceManager.findFirstByFields) return an entity or null to UserRegistry. The view is internally inconsistent here, because 08 returns 'not found' to UserManager although the database never answered."
+  ],
+  "missing": [
+    "Save-failure path: PersistenceManager.save catches a RuntimeException, rolls back and returns false. UserManager then throws RuntimeException('Server error: the user could not be saved...'), which RestExceptionHandler (it handles only IllegalArgumentException/IllegalStateException) does not map to 400.",
+    "The role-dependent branch: the role selects validateStudent or validateLibrarian, findStudentByStudentNumber or findLibrarianByCode, and StudentFactory or LibrarianFactory (UserManager.java:70-89). Test cases are built around this, but the view only says 'Student or Librarian'.",
+    "Separate email-duplicate and identifier-duplicate checks, each with its own error message ('Email is already associated with an account.' / 'Identifier is already in use.').",
+    "The direct test entry point: RegistrationTest calls LibraryFacade.register without going through REST. It belongs in the note next to the Swing entry point, so the tester can see which lifelines the existing tests skip."
+  ],
+  "uml": [
+    "The exception is drawn as a dashed reply message ('17 IllegalArgumentException', '18 (propagated)'). UML has no exception-return message. Show it as a reply labelled with the raised exception (for example 'register(...) raises IllegalArgumentException'), or end the flow in a break fragment.",
+    "Use break fragments (or an alt whose operands start at each check) for the early exits, not a single alt placed after all the checks. The early exits are break semantics.",
+    "Activations on AuthenticationController, LibraryFacade and UserManager are never closed and run past the end of the interaction. Each one should end when its reply is sent, in both operands.",
+    "The actor is named 'Integration tester (or end user)'. The lifeline should be the system's role, 'User (Student / Librarian)'. The integration tester is the stakeholder, not a participant.",
+    "Synchronous calls to the Database (07, 11) have no reply messages, unlike every other synchronous call in the view."
+  ],
+  "fixes": [
+    "Restructure the failure flow: wrap 05 in a break [invalid input] fragment that returns 400, then split 06 into the email lookup and the role-specific identifier lookup, each followed by its own break [already used] fragment that returns 400 with its error message. Drop the unconditional 'not found'.",
+    "Add the save-failure path: registerUser returns false, UserManager raises RuntimeException, and the client gets a non-400 server error because RestExceptionHandler does not map it.",
+    "Show the role branch explicitly (an alt [role = Student] / [role = Librarian] fragment, or guard text on the lookup and factory messages): validateStudent/findStudentByStudentNumber/StudentFactory versus validateLibrarian/findLibrarianByCode/LibrarianFactory.",
+    "Fix the notation: replace the exception 'reply' arrows with labelled replies or break exits, close the activations, add replies from the Database, and rename the actor to User (Student / Librarian).",
+    "Add to the note that RegistrationTest enters at LibraryFacade.register, as the Swing client does, so the tester can see which layers the existing tests leave unexercised."
+  ]
+}

@@ -1,0 +1,38 @@
+{"verdict": "revise",
+ "concern_details": [
+  {"detail": "main components in the registration process, their responsibilities, interactions and dependencies",
+   "answered": "yes",
+   "why": "All seven participants on the path (AuthenticationController, LibraryFacade, UserManager, UserRegistry, Student/LibrarianFactory, PersistenceManager) are drawn with the calls between them, and the code confirms each one. Responsibilities only show through message names, which is enough for a sequence diagram."},
+  {"detail": "which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness of the account, and persist the new user",
+   "answered": "partly",
+   "why": "Request handling, the role-specific lookups and factories, the uniqueness checks and persistence are all correct against UserManager.register (lines 65-97). Validation is one self-call (04) that leaves out the institutional email rule (must end in unina.it, REGEX_EMAIL_ISTITUZIONALE, UserManager.java:26). That rule decides which test inputs are rejected. The view also does not say that uniqueness is backed by database unique constraints (User.java:21, Student.java:19, Librarian.java:13). When the lookup is passed, those constraints make save() return false."},
+  {"detail": "how they collaborate when invalid or already existing data is provided",
+   "answered": "partly",
+   "why": "The three early exits (invalid data, email taken, ID in use) and the save-failure branch are drawn in the code's order, and the HTTP 400 mapping is correct (RestExceptionHandler.java:19-22). The view does not connect 'false after rollback' to the duplicate case: a duplicate that reaches persist breaks a unique constraint, save returns false, and UserManager throws a RuntimeException that RestExceptionHandler does not map. The view does not show what the client receives in the save-failed branch (message 29 stops at the facade). For the Swing entry, the note leaves out that Registration catches every RuntimeException and shows it in an error dialog (Registration.java:139-141)."},
+  {"detail": "main integration points and interactions the tests should cover",
+   "answered": "yes",
+   "why": "The lifeline boundaries are the integration points: HTTP→controller, controller→facade, facade→manager, manager→registry (three lookups, one save), registry→PersistenceManager, manager→factory. The note names the second entry point (Swing→facade)."}
+ ],
+ "level": "too detailed",
+ "level_why": "The perspective asks for a balanced level. The view has 29 numbered messages, and the README admits this is more than double the balanced guideline. Most of the excess is duplication rather than information. Two separate role 'alt' fragments repeat the same split (12-15 and 18-21). Every registry lookup is drawn again as a registry→PersistenceManager 'find' message (09, 13, 15), and messages 19 and 21 return the created object. Nothing needs adding. Merge the two role alts into one alt, Student vs Librarian, holding one identifier lookup and one createUser each. Collapse the per-lookup registry→PersistenceManager hops into one 'findFirstByFields' message, or drop them and keep only save(user). These cuts bring the count close to 20 and lose nothing the tester needs.",
+ "unsupported": [
+  "Messages 09/13/15 ('find by email', 'find by studentNumber', 'find by librarian code') are drawn as three different PersistenceManager operations. The code makes all three through one generic call, PersistenceManager.findFirstByFields(entityClass, Map) (UserRegistry.java:38,45,59), which returns the entity or null. The labels suggest dedicated finder methods that do not exist.",
+  "The single 'User factory (Student/LibrarianFactory)' lifeline stands for two different classes, and messages 18/20 are named 'StudentFactory.createUser' / 'LibrarianFactory.createUser' as if one object had two class-qualified operations. In the code, UserManager creates a new StudentFactory or LibrarianFactory and calls the UserFactory.createUser interface method (UserManager.java:89-90)."
+ ],
+ "missing": [
+  "The institutional email domain rule (…@…unina.it, UserManager.java:26,201-212) inside the validation step. It is a key input class for invalid-data tests.",
+  "Database unique constraints on institutionalEmail, studentNumber and internalIdentifierCode (User.java:21, Student.java:19, Librarian.java:13). They are a second layer of uniqueness enforcement. Without them the 'save failed' branch has no visible cause a tester could provoke.",
+  "Where the save-failure RuntimeException ends up. It propagates through the facade and controller unmapped (RestExceptionHandler handles only IllegalArgument/IllegalState/Security), so the outcome at the client is not the 400 of the other error paths. The view should at least continue the reply to the client lifeline and mark the response as not mapped to 400."
+ ],
+ "uml": [
+  "One lifeline stands for two classifiers ('Student/LibrarianFactory'), with class-qualified message names. Use one lifeline typed by the interface (e.g. 'factory : UserFactory') and send 'createUser(...)' in each alt operand, with the concrete class in the guard or as the lifeline's selector.",
+  "The synchronous calls 09, 13 and 15 to PersistenceManager have no reply, but call 23 has one (24). Draw replies consistently, or merge these calls as proposed under level.",
+  "The 'break' fragments for email taken and ID in use cover only UserManager and LibraryFacade, and their reply messages end at the facade with 'propagates as above'. A break fragment ends the enclosing interaction for the lifelines it covers, so the controller and client lifelines are left without an outcome. Either cover the same lifelines as the first break or say in a note that the reply chain is the same."
+ ],
+ "fixes": [
+  "Merge the two role 'alt' fragments into one alt [Student] / [Librarian], each holding its identifier lookup, the 'ID in use' break and createUser. Draw a single factory lifeline 'factory : UserFactory' with plain createUser(...) messages.",
+  "Collapse the registry→PersistenceManager lookups into one findFirstByFields message (or drop them and keep save), and draw replies consistently. This brings the view down toward the balanced level.",
+  "Add the unina.it email rule to the validation step (04), since it is a main source of invalid-data test cases.",
+  "Annotate the save path: unique constraints on email, studentNumber and internalIdentifierCode make persist fail on duplicates, which leads to rollback, false, and a RuntimeException. Continue the save-failed reply to the client and show that it is not mapped to HTTP 400.",
+  "Make the email-taken and ID-in-use breaks reach the client (HTTP 400) as the first break does, or replace 'propagates as above' with a single shared note."
+ ]}

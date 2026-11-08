@@ -1,0 +1,71 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML deployment diagram: Municipal Report Management System (default single-machine topology)
+
+node "Build host" as buildhost <<device>> {
+  node "Maven + JDK 23" as maven <<executionEnvironment>>
+}
+node "Maven Central\nrepo.maven.apache.org" as central <<muted>>
+
+node "Application host (desktop)\nalso hosts MySQL (127.0.0.1)" as apphost <<device>> {
+  node "JVM, Java 23\n(Swing desktop UI)" as jvm <<executionEnvironment>> {
+    artifact "municipal-report-management\n-1.0-SNAPSHOT.jar\n(no Main-Class, no bundled libs)" as jar <<accent>> {
+      artifact "persistence.xml (packaged in jar)\nunit Municipal_Report_Management_System\ndriver com.mysql.cj.jdbc.Driver\nurl jdbc:mysql://127.0.0.1:3306/reports_db\nuser reports_user, password hard-coded\nhbm2ddl.auto = update, RESOURCE_LOCAL" as persxml <<deployment spec>>
+    }
+    artifact "hibernate-core 6.6.50.Final\n(JPA provider)" as hib
+    artifact "mysql-connector-j 9.4.0\n(JDBC driver)" as jdbc
+    artifact "forms_rt 7.0.3\n(GUI form runtime)" as forms
+  }
+  node "MySQL server\nport 3306" as mysql <<executionEnvironment>> {
+    artifact "schema reports_db\n(user reports_user, localhost grant)" as schema
+  }
+}
+
+maven --> central : resolves dependencies\nHTTPS
+jar ..> hib : <<use>>
+jar ..> forms : <<use>>
+hib ..> jdbc : <<use>>
+jvm -- mysql : JDBC, TCP 3306
+
+note bottom of jvm
+  Launch: classpath = jar + the three libraries;
+  choose one main class, e.g. Boundary.HomePageGUI
+  (also UserLoginGUI, UserRegistrationGUI).
+end note
+note bottom of mysql
+  Precondition: create database reports_db and
+  user reports_user with GRANT ALL on reports_db.*
+  before the first run (README SQL). Hibernate
+  then creates the tables. A remote database needs
+  persistence.xml edited, a rebuild, and a new grant.
+end note
+
+legend right
+  Nesting: artifact deployed on node.
+  Dashed arrow: dependency. Plain line: communication path.
+  Grey node: external repository.
+endlegend
+@enduml

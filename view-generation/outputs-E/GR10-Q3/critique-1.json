@@ -1,0 +1,38 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main data entities stored and their relationships", "answered": "yes",
+     "why": "All six persisted entities (User/Citizen/MunicipalOperator single table, Report, StatusUpdate, InternalNote, Notification) and the two embeddables are drawn with multiplicities that match the JPA mappings: Report->Citizen 1 (citizen_id NOT NULL), Report->MunicipalOperator 0..1 (operator_id nullable), StatusUpdate/InternalNote->operator 1, Notification->Report 1 and ->Citizen 1. What is missing is the mapping detail a database engineer works with. The FK column names and the discriminator values CITIZEN / MUNICIPAL_OPERATOR appear only in inventory.json and README.md, not in the view."},
+    {"detail": "information persisted throughout the lifecycle of a report", "answered": "partly",
+     "why": "The view shows that currentStatusName and citizenEditable are columns, that StatusUpdate rows accumulate, and that the state objects are rebuilt and not stored. It does not give the allowed values of current_status / new_status (submitted, assigned, in_progress, resolved; Report.java:34-37), and the rebuild throws IllegalStateException on any other value (Report.java:431-434). It also does not show the persisted rules tied to them: citizen_editable is true only when the status is submitted (Report.java:410-429, 386-391), and a StatusUpdate can be written only once an operator is assigned (Report.java:369-373). The lifecycle story in README.md is not in the diagram."},
+    {"detail": "how users, reports, locations, categories, states, state changes, internal notes and notifications are related", "answered": "yes",
+     "why": "Each of the eight concepts is drawn and connected to Report or to a user subtype. Location is embedded, the category is an enum column, the state is a string plus a transient object, and the state changes, notes and notifications are child rows with their operator or citizen. The weak point is the state: it is linked only through the transient ReportStatus. The reader cannot see from the view that StatusUpdate.newStatus and Notification.notifiedStatus hold the same status vocabulary as Report.currentStatusName."},
+    {"detail": "which parts of the application depend on the persisted information", "answered": "partly",
+     "why": "ReportService, UserService and PersistenceService are drawn, and a note names the controllers. However, ReportService is shown depending only on Report and Notification. It also queries InternalNote (ReportService.java:213-214) and StatusUpdate (ReportService.java:248-249) and loads User and MunicipalOperator by id (ReportService.java:43, 269, 323). A DB engineer changing those tables cannot see that ReportService depends on them."}
+  ],
+  "level": "right",
+  "level_why": "14 classes with typed attributes, length and uniqueness constraints and multiplicities fit a detailed data model for a database engineer. Nothing needs to be cut: the state implementations, controllers, GUIs and JpaUtil are rightly left out. The gaps are small persistence facts at the same level of detail, not extra elements: the status value set, the FK and discriminator names, and the column lengths on Location and Report.category. A few attributes have no constraints although siblings do: Location has no lengths (the code gives city 80, street 100, streetNumber 10, municipalArea 80) and category has no length (50).",
+  "unsupported": [
+    "User.role is drawn as an attribute of the User class, but there is no such Java field. It is only the discriminator column from @DiscriminatorColumn(name=\"role\", length=30) (User.java:23-27). Mark it as a column note or a constraint on User rather than as a class attribute, or say that it is a mapped column only.",
+    "Notification.notifiedStatus is drawn with the constraint {assigned | resolved}, but the column is an unconstrained VARCHAR(50) (Notification.java:44-45). The restriction is enforced only in Java (isStatusNotifiable, Notification.java:151-160), not in the schema, and the view should say so, because a DB engineer will read it as a database constraint."
+  ],
+  "missing": [
+    "The set of status values (submitted, assigned, in_progress, resolved) shared by Report.current_status, StatusUpdate.new_status and Notification.notified_status. Report rejects any other value on load (Report.java:431-434).",
+    "Lifecycle rules that shape the stored rows: citizen_editable is true only in submitted, each status change appends a StatusUpdate carrying the assigned operator (Report.java:369-382), and a Notification is saved by ReportService only for notifiable statuses (ReportService.java:390-398).",
+    "Dependencies of ReportService on InternalNote, StatusUpdate and MunicipalOperator/User (findByFields and findById calls at ReportService.java:43, 213, 248, 269, 323).",
+    "FK column names on the association ends (citizen_id, operator_id, report_id) and the discriminator values CITIZEN / MUNICIPAL_OPERATOR on the subclasses (Citizen.java, MunicipalOperator.java).",
+    "Column lengths on Location and on Report.category, and the fact that StatusUpdate.updateDate, InternalNote.dateEntry and Notification.sentDate are TIMESTAMP while Report.dateReport is DATE (Report.java:59-61). These matter when changing the schema."
+  ],
+  "uml": [
+    "Report is linked to ReportCategory twice: by the attribute 'category: ReportCategory' and by a dependency. A typed attribute is a structural property, not a usage dependency. Keep the attribute and remove the dependency, or replace both with a directed association named category.",
+    "Report ..> ReportStatus is likewise a structural (if transient) property, @Transient currentStatus. Show it as an attribute 'currentStatus: ReportStatus {transient}', or as a directed association with that constraint, rather than as a dependency.",
+    "The composition edges from Report to Location and from User to Credentials carry the label 'embeds', which repeats what the diamond already shows. Their part ends have no multiplicity, unlike the other compositions. Add 1 at the part end, or show the embeddables as attribute types.",
+    "The associations to Citizen and MunicipalOperator have no role names (citizenReporting, operator, destinatario, report). On the composition edges, the labels statusUpdates and internalNotes are placed as association names rather than as role names at the part end.",
+    "The source uses non-standard stereotypes <<accent>> and <<muted>> for styling. They are hidden in the rendering, but they are not UML stereotypes. Use a styling mechanism that does not attach stereotypes to model elements."
+  ],
+  "fixes": [
+    "Show the status vocabulary (submitted, assigned, in_progress, resolved) as a constraint or note on Report.currentStatusName, linked to StatusUpdate.newStatus and Notification.notifiedStatus. State the citizenEditable rule and the rule that a StatusUpdate requires an assigned operator.",
+    "Add the missing ReportService dependencies on InternalNote, StatusUpdate and the user classes, so that every persisted table has its dependents visible.",
+    "Put FK column names on the association ends (or as role names with {FK citizen_id} etc.) and the discriminator values on Citizen and MunicipalOperator. Present role as a mapped column rather than a Java attribute.",
+    "Replace the Report..>ReportCategory and Report..>ReportStatus dependencies with attributes or directed associations, and give the embedded parts multiplicity 1.",
+    "Complete the column constraints on the same footing as the other entities: lengths on Location and category, DATE vs TIMESTAMP on the date fields. Mark notifiedStatus {assigned | resolved} as enforced in code only."
+  ]}

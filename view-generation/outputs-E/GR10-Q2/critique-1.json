@@ -1,0 +1,50 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "required runtime environments and software artifacts",
+      "answered": "yes",
+      "why": "The JVM (Java 23), the MySQL server, the app classes, persistence.xml, hibernate-core 6.6.50.Final, mysql-connector-j 9.4.0 and forms_rt 7.0.3 all match pom.xml and persistence.xml. forms_rt really is a runtime dependency: UserLoginGUI.java:4-5 imports com.intellij.uiDesigner.core and calls $$$setupUI$$$. The note correctly says there is no runnable jar. One small gap: the classpath also needs Hibernate's transitive dependencies, such as jakarta.persistence-api, which the app imports directly (JpaUtil.java:7-9). The view does not say this."
+    },
+    {
+      "detail": "where the application runs and where its data is stored",
+      "answered": "partly",
+      "why": "The app runs in a JVM on the workstation, and its data is in reports_db on MySQL. But the view draws MySQL on a separate 'Database host' device, while the code's only configuration (persistence.xml:26-27, jdbc:mysql://127.0.0.1:3306) puts it on the same machine. The README setup also grants reports_user only @'localhost' (README.md:29-31). So a separate host does not work as configured: the operator would have to change the JDBC URL in persistence.xml and the MySQL grant. The view mentions neither."
+    },
+    {
+      "detail": "how the main runtime elements communicate",
+      "answered": "yes",
+      "why": "The only runtime connection is JDBC over TCP 3306 from the JVM to MySQL, and the view shows it. The code has no other network I/O (no sockets, HTTP or mail). The HTTPS link to Maven Central happens only at build time."
+    },
+    {
+      "detail": "technologies and runtime dependencies between the application and the database",
+      "answered": "partly",
+      "why": "The chain app -> Hibernate (JPA) -> mysql-connector-j -> MySQL is shown, and so is the hbm2ddl=update note. However, persistence.xml is drawn as a plain artifact the app 'reads'. The view does not show that this file holds the JDBC URL, user and password, or that it sits on the classpath, so pointing the app at a different database means editing it (and rebuilding). The README requires the database and user to exist before the first connect, but the note only says 'the schema must exist' and leaves out the user and the grant."
+    }
+  ],
+  "level": "right",
+  "level_why": "For a 'detailed' deployment view, it is right to show artifacts inside the JVM, including library versions and the use dependencies between them. The build side (Build machine, Maven 3 + JDK 23, Maven Central) is the only part outside the runtime perspective. It earns its place only because there is no packaged jar, so the build is how the app gets produced. Maven Central could be dropped or folded into a note without losing anything the concern needs. Nothing essential is missing for the level.",
+  "unsupported": [
+    "The separate 'Database host' device: the code configures only 127.0.0.1 (persistence.xml:26-27), and the README grants reports_user only @'localhost'. A remote database host is not supported as configured. Draw MySQL on the workstation by default, or explicitly mark the remote host as an option that needs URL and grant changes.",
+    "Maven Central drawn as a <<device>>: pom.xml:19-22 gives only a repository URL. It is a remote service, not a hardware device the system deploys to."
+  ],
+  "missing": [
+    "The MySQL user grant is bound to localhost (README.md:29-31). For a deployment in a new environment, this decides whether the database can sit on another host.",
+    "The contents of persistence.xml as deployment configuration (JDBC URL, user/password, hbm2ddl=update, show_sql=true), and the fact that it is bundled on the classpath under src/main/resources/META-INF, so changing the database endpoint means editing that file.",
+    "Hibernate's transitive runtime dependencies (for example jakarta.persistence-api, which the app imports directly). They must be on the classpath, since there is no fat jar.",
+    "Minor: the GUIs load /images/logo.png from the classpath (UserLoginGUI.java:206 and others), but src/main/resources has no images folder. A deployer should know this resource is expected and missing."
+  ],
+  "uml": [
+    "persistence.xml is a deployment descriptor, so it should be a <<deploymentSpec>> (deployment specification) attached to the app artifact, not a plain artifact with a <<use>> 'reads' dependency.",
+    "The communication paths (jvm -> mysql, mvn -> central) are drawn as directed arrows. In UML a communication path is an association between nodes, so draw it as an undirected line with the protocol as its name.",
+    "'mvn ..> app : <<create>>' from an execution environment to an artifact is not a standard deployment relation. Drop it, or replace it with a note that the build produces target/classes.",
+    "Maven Central should be a plain node (or <<executionEnvironment>>), not a <<device>>."
+  ],
+  "fixes": [
+    "Fix where the database lives: show MySQL on the workstation as the default (127.0.0.1). If a remote DB host is kept, mark it optional and note that it needs a JDBC URL change in persistence.xml and a MySQL grant beyond 'reports_user'@'localhost'.",
+    "Model persistence.xml as a <<deploymentSpec>> on the app artifact, listing the URL, user, hbm2ddl=update and its classpath location, and extend the DB note: the database AND the user and grant must exist before the first start.",
+    "Draw the communication paths as undirected associations named by protocol ('JDBC/TCP 3306', 'HTTPS'), and remove the non-standard <<create>> dependency.",
+    "Cut the build side down: drop Maven Central or turn it into a plain node (not <<device>>), or merge the build information into the workstation note, since it is not runtime.",
+    "In the classpath note, add that Hibernate's transitive dependencies (e.g. jakarta.persistence-api) are needed, and that /images/logo.png is expected but missing from the resources."
+  ]
+}

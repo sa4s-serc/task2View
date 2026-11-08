@@ -1,0 +1,70 @@
+@startuml
+title Seat Booking - Component View (control flow)
+skinparam componentStyle uml2
+left to right direction
+
+actor Student
+actor Librarian
+
+package "Presentation (boundary)" {
+  component "Swing Wizard UI\n(Login, DateAndRoomSelection, TimeSlotSelection,\nAreaSelection, SeatSelection, ReservationSummary,\nStudentDashboard)" as Swing
+  component "Web UI\n(static/*.html + app.js)" as Web
+  component "REST Controllers\n(ReservationController, StudyRoomController)" as Rest
+  component "NotificationScheduler\n(@Scheduled, every 60 s)" as Sched
+}
+
+package "Application / control" {
+  component "LibraryFacade\n(singleton)" as Facade
+  component "ReservationManager\n(makeReservation, cancel, checkIn,\nmanageReservationEnd)" as RM
+  component "StudyRoomManager\n(rooms, time slots, room detail)" as SRM
+  component "NotificationManager\n(Observer)" as NM
+  component "AssignmentStrategy /\nFirstAvailableAssignment" as Strat
+}
+
+package "Domain (entity)" {
+  component "Reservation + ReservationState\n(Active, Confirmed, Cancelled,\nExpired, Completed)" as Res
+  component "StudyRoom / Area / Seat /\nTimeSlot / Student" as Dom
+  component "ReservationRegistry\nStudyRoomRegistry\nUserRegistry" as Reg
+}
+
+package "Persistence" {
+  component "PersistenceManager\n(JPA / JpaUtil)" as PM
+}
+
+package "Notification delivery" {
+  component "NotificationServiceAdapter\n+ ExternalEmailGateway" as Mail
+}
+
+database "MySQL\nreservationsdb" as DB
+cloud "Email service" as Ext
+
+interface "NotificationService" as INS
+interface "AssignmentStrategy" as IAS
+
+Student --> Swing
+Librarian --> Swing
+Student --> Web
+Web --> Rest : HTTP /api/rooms/*,\n/api/reservations/*
+Swing --> Facade : direct calls\n(makeReservation, getAvailable*, getRoomDetail)
+Rest --> Facade
+Sched --> Facade : manageReservationEnd,\nsendReminders
+
+Facade --> RM : makeReservation,\ncancel, checkIn
+Facade --> SRM : getAvailableStudyRooms,\ngetAvailableTimeSlots,\ngetRoomDetail
+Facade --> NM : sendReminders
+
+RM --> Dom : resolve room/area/slot,\nArea.getAvailableSeats
+RM --> IAS : selectSeat(available)\n(seatId = 0)
+Strat -up- IAS
+RM --> Res : new Reservation(ACTIVE),\ncancel / checkIn / manageEnd
+RM --> Reg : saveReservation / update
+RM --> NM : attach + notifyObservers
+SRM --> Reg
+Dom --> Reg : Seat.isAvailable,\nStudent.hasActive...
+Res ..> NM : notifyObservers (Observer)
+NM --> INS : sendNotification
+Mail -up- INS
+Mail --> Ext : send email
+Reg --> PM : save / update / find
+PM --> DB : JDBC
+@enduml

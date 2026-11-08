@@ -1,0 +1,53 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components in the booking process, their responsibilities, interactions and dependencies",
+     "answered": "partly",
+     "why": "The main path (controller -> LibraryFacade -> ReservationManager -> registries -> JPA) is shown, and the names say what each part does. Some dependencies are missing. ReservationManager also depends on UserRegistry to resolve the student (ReservationManager.java:30,52). The Domain entities also call StudyRoomRegistry (Area.java:51-52). StudyRoomManager uses the Domain entities (Seat.isAvailable, StudyRoomManager.java:~289) and ReservationRegistry (StudyRoomManager.java:22,167). Without these the developer cannot fully trace dependencies."},
+    {"detail": "which components handle booking requests",
+     "answered": "partly",
+     "why": "ReservationController, Swing and LibraryFacade are shown. The Web UI reaches availability through StudyRoomController (/api/rooms/available, /{roomId}/time-slots -> LibraryFacade), which is not drawn. So the edge facade->StudyRoomManager 'availability queries' has no web caller. RestExceptionHandler is also missing. It turns the IllegalArgumentException/IllegalStateException thrown by the rules into HTTP 400, which is how a new rule's rejection reaches the client."},
+    {"detail": "which components check seat availability",
+     "answered": "partly",
+     "why": "ReservationManager -> Domain entities 'check availability' is shown. The view does not show that availability is worked out inside Seat.isAvailable by querying ReservationRegistry (with ReservationRegistry.occupiesSlot). It also does not show that StudyRoomManager runs the same check for the UI. A new availability rule therefore touches the entities and ReservationRegistry.occupiesSlot, and also changes what StudyRoomManager shows."},
+    {"detail": "which components apply booking rules",
+     "answered": "yes",
+     "why": "ReservationManager is labelled with the booking rules, and the legend says some rules sit in the Domain entities. This matches the code: resolveRoom, resolveArea, validateSeatInArea and validateUniqueness are in ReservationManager, and Student.hasActiveOrConfirmedReservationForDateAndSlot and Area/Seat availability are in the entities. AssignmentStrategy is shown as a separate place to change. The rules are only named in labels, though: no interface or operation such as makeReservation is shown on ReservationManager."},
+    {"detail": "which components manage and store reservations",
+     "answered": "partly",
+     "why": "ReservationRegistry, StudyRoomRegistry, PersistenceManager and MySQL are shown. UserRegistry is missing, and the student lookup is part of every booking. The view also does not say that the registries are singletons that the entities reach directly, which is the coupling a developer must know about."},
+    {"detail": "which components interact with external services such as notifications",
+     "answered": "partly",
+     "why": "NotificationManager -> adapter/stub is shown. NotificationService is a required interface defined in the controller package and implemented by NotificationServiceAdapter in boundary. Here it is only an edge label, not a UML interface, so the seam where a real e-mail service plugs in is not visible. The view also does not show that notification goes through the Observer pattern: ReservationManager attaches NotificationManager to the Reservation, and Reservation.notifyObservers calls it. So 'notify booking' and 'notify state change' look like two separate calls when they are one mechanism."},
+    {"detail": "which parts need to be modified and which other components may be affected",
+     "answered": "partly",
+     "why": "The README answers this, but the diagram only has a one-line legend. The diagram does not mark the parts likely to change (ReservationManager, entities, ReservationRegistry.occupiesSlot) apart from the parts likely to be affected (StudyRoomManager, RestExceptionHandler and the REST/Swing clients, NotificationManager). The facade->ReservationManager edge says only makeReservation, which hides that cancel, check-in and manageReservationEnd (called by the scheduler) go through the same manager and share its state rules."}
+  ],
+  "level": "right",
+  "level_why": "Component granularity at the level of manager, registry and facade suits a developer about to change booking rules. Merging the entities into one component is reasonable. Small tidy-ups: PersistenceManager and MySQL could merge into one persistence component. Web UI and Swing could stay separate but should show the real entry points. The level is not the problem; the missing dependencies and interfaces are.",
+  "unsupported": [
+    "The edge label sched -> facade 'end-of-slot, reminders' is supported, but the only facade -> ReservationManager edge is labelled 'makeReservation'. The code shows LibraryFacade.manageReservationEnd -> ReservationManager.manageReservationEnd (LibraryFacade.java:148-149), and cancel and check-in also go this way, so the label understates the dependency.",
+    "Web UI -> ReservationController alone suggests the web client reaches availability only through /api/reservations. The code routes availability through StudyRoomController (/api/rooms), which is not drawn.",
+    "ReservationManager -> NotificationManager 'notify booking' and Domain entities -> NotificationManager 'notify state change' are drawn as two independent calls. In the code ReservationManager attaches NotificationManager as an Observer (ReservationManager.java:121), and Reservation.notifyObservers calls Observer.update (Reservation.java:181-184)."
+  ],
+  "missing": [
+    "UserRegistry: ReservationManager.resolveStudent uses it for every booking (ReservationManager.java:30,52), and it persists through PersistenceManager.",
+    "StudyRoomController (/api/rooms/available, /{roomId}/time-slots): the web entry for availability queries, calling LibraryFacade.",
+    "RestExceptionHandler: maps the rule exceptions (IllegalArgumentException/IllegalStateException) to HTTP 400. This is directly affected by new rules.",
+    "Domain entities -> StudyRoomRegistry (Area.getAvailableSeats, Area.java:51-52).",
+    "StudyRoomManager -> Domain entities (Seat.isAvailable for room detail) and StudyRoomManager -> ReservationRegistry (StudyRoomManager.java:22,167-175). These show who is affected when the availability rule changes.",
+    "NotificationService as an explicit interface: required by NotificationManager, provided by NotificationServiceAdapter. Also the Observer/Subject interfaces (entity/Observer.java, Subject.java) through which reservations notify."
+  ],
+  "uml": [
+    "Dependencies are drawn as solid open arrows (-->), which read as directed associations. Use-dependencies between components should be dashed arrows (..>, optionally «use»), or provided/required interfaces should be connected (ball-and-socket).",
+    "NotificationService is a Java interface but appears only as an edge label. It should be a UML interface (lollipop provided by the adapter, socket required by NotificationManager).",
+    "The non-standard stereotype «muted» is applied to elements and explained in the legend as 'persistence or external boundary'. Use standard keywords instead: e.g. MySQL as a «database»-style node or «artifact», and the gateway with «external» in a note. Or drop the stereotype and leave styling out of the semantics.",
+    "'Domain entities (Area, Seat, Student, Reservation)' and the singleton registries are classes shown as «component». That is acceptable in a merged view, but a note should state that the components are logical groupings of classes, not deployable components.",
+    "NotificationScheduler is placed in the package 'Clients'. It is a scheduled boundary trigger, not a client. Consider a separate 'Scheduled jobs' grouping, or a note."
+  ],
+  "fixes": [
+    "Add the missing booking-path dependencies: UserRegistry (from ReservationManager, persisting via PersistenceManager), Domain entities -> StudyRoomRegistry, and StudyRoomManager -> Domain entities and ReservationRegistry, so the impact of a changed availability rule can be traced.",
+    "Add StudyRoomController (Web UI -> /api/rooms -> LibraryFacade) and RestExceptionHandler (attached to the REST controllers, mapping rule exceptions to HTTP 400), so the request-handling and error paths are complete.",
+    "Model NotificationService as a UML interface (required by NotificationManager, provided by NotificationServiceAdapter). Show the Observer mechanism (ReservationManager attaches NotificationManager; Reservation notifies) instead of two independent 'notify' edges.",
+    "Switch the relations to dashed dependency arrows or interface connectors, and replace the «muted» stereotype with standard notation.",
+    "Mark in the diagram, not only in the README, the components to modify for new rules (ReservationManager, Domain entities, ReservationRegistry.occupiesSlot, AssignmentStrategy) and those affected. Relabel facade -> ReservationManager to cover makeReservation, cancel, check-in and manageReservationEnd."
+  ]}

@@ -1,0 +1,72 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+</style>
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 60
+
+title UML component diagram: seat booking (make reservation)
+
+component "Swing booking wizard\n(student desktop UI)" as swing #F8FAFC
+component "ReservationController\n(Spring REST /api/reservations)" as rest #F8FAFC
+component "LibraryFacade\n(single entry to use cases)" as facade
+component "ReservationManager\n(orchestrates booking: input,\narea and seat checks, seat choice)" as resmgr #BFDBFE
+component "FirstAvailableAssignment\n(default seat-choice strategy)" as strategy #BFDBFE
+interface "AssignmentStrategy" as istrat
+component "StudyRoomManager\n(pre-booking availability screens)" as roommgr
+component "Reservation domain model\n(StudyRoom, Area, Seat, Student,\nReservation, states)" as domain #BFDBFE
+component "Registries\n(Reservation, StudyRoom, User;\noccupiesSlot rule)" as reg #BFDBFE
+component "NotificationManager\n(observer of Reservation)" as notif
+
+swing  ..> facade : makeReservation
+swing -[hidden]left-> rest
+rest   ..> facade : makeReservation
+facade ..> resmgr : delegates booking
+facade ..> roommgr : availability queries
+resmgr ..> istrat : selectSeat
+strategy .up.|> istrat : realizes
+resmgr ..> domain : delegates checks
+resmgr ..> reg : saves reservation
+resmgr ..> notif : notifies
+roommgr ..> domain : reads seats
+roommgr ..> reg : finds rooms
+domain ..> reg : checks occupancy
+
+note right of domain
+  Existing rules: StudyRoom.isActive,
+  isOpenOnDate; Area.getAvailableSeats;
+  Seat.isAvailable; Student.
+  hasActiveOrConfirmedReservation...
+end note
+note left of swing
+  Rule violations are thrown as
+  IllegalArgument/IllegalStateException;
+  REST maps them to HTTP 400,
+  the wizard shows the message.
+end note
+note bottom of roommgr
+  Not called by makeReservation; the
+  wizard's room, slot and seat screens
+  must reflect any new rule.
+end note
+
+legend right
+  Blue = code holding booking rules
+  Faded = callers that must show rule errors
+  Dashed arrow = usage dependency
+end legend
+@enduml

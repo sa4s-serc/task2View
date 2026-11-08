@@ -1,0 +1,20 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "system components involved in user registration",
+     "answered": "yes",
+     "why": "The lifelines follow the real call chain. Registration.register() (Registration.java:134) calls LibraryFacade.register, which calls UserManager.register (LibraryFacade.java:39). UserManager calls UserRegistry (institutionalEmailExists, findStudentByStudentNumber/findLibrarianByCode, registerUser), and UserRegistry calls PersistenceManager.save/findFirstByFields over JPA. The REST entry AuthenticationController (@RequestMapping /api/auth, @PostMapping /register) calls the same facade method, and the note says so correctly. At balanced level it is acceptable to fold the factories into UserManager and to merge UserRegistry, PersistenceManager and MySQL into one lifeline."},
+    {"detail": "how they interact",
+     "answered": "yes",
+     "why": "The order of control now matches UserManager.register. Validation runs as a self-call first (validate plus validateStudent/validateLibrarian) and throws IllegalArgumentException before any database access. Next come the duplicate lookups and their IllegalArgumentException, then the factory create and registerUser/save. When save returns false, UserManager throws RuntimeException. The form-side blank-field check that returns before the facade is called (Registration.java:127-131) is shown as a break. The form catches RuntimeException, which also covers IllegalArgumentException, and shows the message, which matches message 15. A tester can tell all four failure outcomes apart. One small simplification: message 07 merges two lookups into one call. In the code the email check runs and throws first, and only then does the identifier lookup run (UserManager.java:77-83). Both give the same exception type, so this is acceptable at balanced level."}
+  ],
+  "level": "right",
+  "level_why": "The view has 5 lifelines and 15 messages. Five of the messages are replies or error exits, and each separates a failure outcome that an end-to-end tester must provoke and check: blank field, invalid input, duplicate, save failure and success. That is slightly over a 12-message budget, but nothing is finer than balanced. There are no DTOs, entities, per-role rule lists or separate MySQL lifeline, and the REST path is kept to a note. Nothing needs to be cut. Splitting the email and identifier lookups, or listing validation rules per role, would go past balanced and should not be added.",
+  "unsupported": [],
+  "missing": [],
+  "uml": [
+    "Minor: message 07 'find by email and identifier' stands for two separate calls (institutionalEmailExists, then findStudentByStudentNumber or findLibrarianByCode depending on the role). The email check can throw before the second call runs. Wording such as 'check email, then identifier' would make the order clear without adding messages.",
+    "Minor: exceptions are drawn as ordinary dashed replies labelled with the exception type. UML has no dedicated exception notation, so this is acceptable. Element kinds (actor, lifelines), the synchronous call and reply arrows, the self-message and the break/alt combined fragments with guards are all correct, and no non-standard stereotypes are used."
+  ],
+  "fixes": [
+    "Optional: relabel message 07 to 'check email, then identifier (SELECT)' to show the order in UserManager.java:77-83 without adding messages."
+  ]}

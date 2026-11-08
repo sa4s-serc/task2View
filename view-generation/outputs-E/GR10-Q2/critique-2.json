@@ -1,0 +1,44 @@
+{
+  "verdict": "accept",
+  "concern_details": [
+    {
+      "detail": "required runtime environments and software artifacts",
+      "answered": "yes",
+      "why": "The view shows the JVM (Java 23) and MySQL as execution environments. It also shows the app classes, hibernate-core 6.6.50.Final, mysql-connector-j 9.4.0, forms_rt 7.0.3 and persistence.xml as artifacts. All of these match pom.xml:9-14, 35-52 and persistence.xml. forms_rt is a real runtime dependency: four GUIs import com.intellij.uiDesigner. The note covers the missing fat jar, the transitive dependencies (jakarta.persistence-api is imported directly in JpaUtil.java:7-9 and PersistenceService.java:5-7), the three main() entry points (HomePageGUI, UserLoginGUI and UserRegistrationGUI all have main) and the missing /images/logo.png. The view does not give a MySQL version, but the code does not specify one either."
+    },
+    {
+      "detail": "where the application runs and where its data is stored",
+      "answered": "yes",
+      "why": "Both the JVM and MySQL run on the user workstation, which matches jdbc:mysql://127.0.0.1:3306 (persistence.xml:26-27) and the grant to 'reports_user'@'localhost' (README.md:29-31). Data is in the reports_db schema. A note says what changes are needed to move the database to a remote host."
+    },
+    {
+      "detail": "how the main runtime elements communicate",
+      "answered": "yes",
+      "why": "The view shows one communication path, JDBC/TCP 3306, between the JVM and MySQL. A grep finds no other network I/O in src/main (no sockets or HTTP clients). The Maven Central link is build-time only, and the view rightly reduces it to a note."
+    },
+    {
+      "detail": "technologies and runtime dependencies between the application and the database",
+      "answered": "yes",
+      "why": "The view shows the chain app -> Hibernate -> MySQL JDBC driver -> MySQL. The persistence.xml deployment spec gives the URL, the user and hbm2ddl.auto=update. The DB note says that the database, the user and the grant must exist first and that Hibernate then manages the tables. One small gap: the spec leaves out the hard-coded password (reports_password, persistence.xml:32-33). The README says to change that password in both MySQL and persistence.xml for any non-local environment, which matters to a DevOps engineer. The spec also leaves out show_sql/format_sql=true, which logs SQL to stdout."
+    }
+  ],
+  "level": "right",
+  "level_why": "A 'detailed' deployment view should show the artifacts inside the JVM, with library versions, the deployment spec and its key settings, and the schema inside the database server, and this view does. The build machine, Maven Central, junit and the application layers were rightly dropped or reduced to notes, so nothing is finer than the level calls for. Nothing essential is missing either: the only gaps are a password entry and a logging line in the spec.",
+  "unsupported": [
+    "Minor: 'app ..> hib : <<use>> JPA API' is not quite right. The application code imports only jakarta.persistence.* (JpaUtil.java:7-9, PersistenceService.java:5-7), which is the jakarta.persistence-api artifact. It reaches hibernate-core only at runtime, through the provider entry in persistence.xml:12. The label overstates a direct compile-time use of hibernate-core."
+  ],
+  "missing": [
+    "The hard-coded DB password in persistence.xml (persistence.xml:32-33), and the README instruction to change it in both MySQL and persistence.xml for any non-local environment (README.md:43). Without this, a new environment ships with the example credentials.",
+    "hibernate.show_sql=true and format_sql=true (persistence.xml:38-42). All SQL is logged to stdout at runtime, which is an operational concern. This is minor."
+  ],
+  "uml": [
+    "The UML keyword for a deployment specification is «deployment spec». «deploymentSpec» is the PlantUML spelling, which is acceptable, but the 'configures' label on the dependency is not a standard keyword. Either attach the spec to the artifact with an unlabeled dependency, or leave the label as plain text without implying a stereotype. This is minor.",
+    "Drawing the schema reports_db as an artifact inside the MySQL execution environment is acceptable. Its label mixes in the DB user 'reports_user@localhost', which is a grant rather than part of the artifact. That information belongs in the note, which already has it."
+  ],
+  "fixes": [
+    "Add the password setting (hard-coded 'reports_password') to the persistence.xml deployment spec, with a short note that it must be changed in both MySQL and persistence.xml (and the app rebuilt) for any non-local environment.",
+    "Point the app's JPA use at the API rather than at hibernate-core. Either relabel app ..> hib as 'runtime JPA provider (via persistence.xml)', or add jakarta.persistence-api as an artifact the app uses, with hibernate-core implementing it.",
+    "Mention in the spec or the note that show_sql/format_sql=true logs all SQL to stdout.",
+    "Remove 'user reports_user@localhost' from the schema artifact label, since the DB note already covers the grant."
+  ]
+}

@@ -1,0 +1,64 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+title UML use case diagram: Municipal report management system
+
+actor "User" as user
+actor "Citizen" as citizen
+actor "Municipal operator" as operator
+
+rectangle "Municipal report management system" as sys {
+  usecase "Register an account" as ucReg
+  usecase "Log in" as ucLogin
+  usecase "Submit a problem report" as ucCreate
+  usecase "Review own\nsubmitted reports" as ucSubmitted
+  usecase "Review received reports" as ucReceived
+  usecase "View report details\nand history" as ucDetails
+  usecase "Update report status" as ucStatus
+  usecase "Notify citizen of\nstatus change" as ucNotify
+  usecase "Add internal note" as ucNote
+  usecase "Monitor activity trends" as ucMonitor
+}
+
+citizen -up-|> user
+operator -up-|> user
+
+user -- ucReg
+user -- ucLogin
+citizen -- ucCreate
+citizen -- ucSubmitted
+operator -- ucReceived
+operator -- ucStatus
+operator -- ucNote
+operator -- ucMonitor
+
+ucSubmitted ..> ucDetails : <<include>>
+ucReceived ..> ucDetails : <<include>>
+ucStatus ..> ucNotify : <<include>>
+
+note right of ucNotify
+  Notification is stored
+  only for notifiable statuses.
+end note
+@enduml

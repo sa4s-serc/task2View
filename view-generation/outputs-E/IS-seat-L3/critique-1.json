@@ -1,0 +1,46 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main components in the booking process, their responsibilities, interactions and dependencies",
+      "answered": "partly",
+      "why": "The components and their dependencies are drawn and match the code. Responsibilities only show up in a few name suffixes ('booking rules', 'JPA to MySQL', 'every 60 s'). The inventory has a responsibility line for every element, but the diagram does not show it for LibraryFacade, ReservationRegistry, Room and User registries, NotificationManager or the domain model. The order of the booking control flow (resolve, then uniqueness check, availability, seat selection, save, notify) cannot be read from the arrows. The arrows also mix in flows that are not booking: cancel notice, reminders and expiry."
+    },
+    {
+      "detail": "which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications",
+      "answered": "partly",
+      "why": "Request handling (clients, ReservationController, LibraryFacade, ReservationManager) and storage (ReservationRegistry, PersistenceManager) are clear. Availability is shown only in part. Seat.isAvailable reads ReservationRegistry, which is drawn. But Area.getAvailableSeats also calls StudyRoomRegistry.getSeatsForArea (Area.java:49-58), and that dependency is not drawn. Rules are split across ReservationManager (validateSeatInArea, resolveRoom/Area/TimeSlot) and the entities (Student.hasActiveOrConfirmedReservationForDateAndSlot does the uniqueness rule, Seat.isAvailable does occupancy). Yet the note places 'uniqueness' in ReservationManager, so a developer adding a rule cannot tell which rules sit in the entities. For notifications, the booking confirmation is drawn as dom --> NotificationManager. In the code, ReservationManager.notifyReservation attaches NotificationManager as an Observer and triggers notifyObservers (ReservationManager.java:121-122). NotificationManager reaches email only through the NotificationService interface, which NotificationServiceAdapter implements and NotificationConfiguration wires at startup. That port is the real extension point toward the external service, and it is hidden inside one box."
+    },
+    {
+      "detail": "which parts need to be modified and which other components may be affected",
+      "answered": "partly",
+      "why": "ReservationManager is marked as the change point. The view does not mark which other components are affected; that list appears only in the README. The domain entities that hold rule logic (Student, Seat), ReservationRegistry (new queries), the controller and clients (new request fields or error messages) and NotificationManager (new messages) are drawn just like everything else. The diagram cannot answer 'what else may be affected' on its own."
+    }
+  ],
+  "level": "right",
+  "level_why": "Twelve components on the booking path suits a 'balanced' level, and no class-level detail is drawn. A few edges belong to other flows and can go: 'sends cancel notice' (cancelReservation), 'finds pending reminders', and 'sendReminders'. The README itself says only the booking flow is drawn. NotificationScheduler can stay, because expiry (manageReservationEnd) changes which reservations occupy a seat, but its reminder edges add nothing for this concern. The fixes below swap drawn content rather than add volume, so the level does not grow.",
+  "unsupported": [
+    "dom --> nm 'notifies on state change' as a direct dependency: Reservation extends Subject and knows only the Observer interface (entity/Observer.java, entity/Subject.java). NotificationManager implements Observer and is attached at runtime by ReservationManager.notifyReservation (ReservationManager.java:120-123). The domain model has no compile-time dependency on NotificationManager.",
+    "Note 'makeReservation validation chain (room, slot, seat, uniqueness)' in ReservationManager: ReservationManager.validateUniqueness only delegates. The uniqueness rule is Student.hasActiveOrConfirmedReservationForDateAndSlot (Student.java:42), and seat occupancy is Seat.isAvailable / ReservationRegistry.occupiesSlot.",
+    "'Web and Swing clients' as one component: the code has two separate clients with different paths. The web page calls REST (reservation.html:385 to ReservationController), and the Swing ReservationSummary calls LibraryFacade in-process (ReservationSummary.java:99). Merged into one box, a single component appears to use both paths."
+  ],
+  "missing": [
+    "Dependency from the domain model (Area.getAvailableSeats) to Room and User registries (StudyRoomRegistry.getSeatsForArea), which is part of the availability check.",
+    "Dependency from ReservationManager to NotificationManager for the booking confirmation (attach Observer and notifyObservers, ReservationManager.java:98, 120-123). The only drawn rm --> nm edge is the cancel notice.",
+    "The NotificationService interface (controller/NotificationService.java): NotificationManager requires it, NotificationServiceAdapter provides it, and the adapter then calls ExternalEmailGateway. This is the boundary to the external service.",
+    "The Observer interface that NotificationManager provides and Reservation (Subject) uses.",
+    "A visible marking of the components likely affected by a new rule (Student/Seat rule methods in the domain model, ReservationRegistry queries, ReservationController/request DTO, clients)."
+  ],
+  "uml": [
+    "No provided or required interfaces are shown. In a UML component diagram, NotificationService and Observer should be interfaces (lollipop and socket, or «interface» with realization and usage dependency). The diagram uses only plain dependency arrows.",
+    "The adapter and the external email gateway are folded into one component. The external system (ExternalEmailGateway) should be a separate element with a stereotype such as «external» or drawn as a separate component, and the adapter should realize NotificationService.",
+    "'Reservation domain model' and 'Room and User registries' are groupings of classes drawn as components. That is acceptable at this level, but each should name the classes it contains (as the domain box does) so its ownership is traceable. Otherwise use packages."
+  ],
+  "fixes": [
+    "Model the notification boundary with UML interfaces. NotificationManager requires NotificationService, NotificationServiceAdapter provides it and uses a separate external ExternalEmailGateway element. Show Observer as provided by NotificationManager and used by the domain model, and replace the dom --> nm dependency with that.",
+    "Correct the rule placement. Change the note so that ReservationManager holds the orchestration and request checks, and mark the domain model (Student.hasActiveOrConfirmedReservationForDateAndSlot, Seat.isAvailable) as also holding booking rules. A new rule may go in either place.",
+    "Add the booking-path dependencies that are missing: ReservationManager to NotificationManager (attach Observer and notify on create), and domain model (Area) to StudyRoomRegistry (getSeatsForArea).",
+    "Drop the edges that are not booking: 'sends cancel notice', 'finds pending reminders', 'sendReminders'. Keep the scheduler only with its expiry edge.",
+    "Split the clients into a Web client (REST) and a Swing client (in-process facade call), and mark the affected components in the diagram (for example a note or keyword listing domain model, ReservationRegistry, ReservationController/request DTO, clients, NotificationManager)."
+  ]
+}

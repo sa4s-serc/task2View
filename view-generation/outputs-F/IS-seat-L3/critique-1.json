@@ -1,0 +1,38 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components in the booking process, their responsibilities, interactions and dependencies",
+     "answered": "partly",
+     "why": "The booking path Swing/REST -> LibraryFacade -> ReservationManager -> strategy/models/registries -> PersistenceManager -> MySQL is drawn and is correct. Responsibilities are only implied by names and one note. Some real dependencies are missing: the Room and seat model depends on the registries for availability (Seat.isAvailable calls ReservationRegistry.findReservationsBySeat, Seat.java:44-52), and StudyRoomManager, which serves the availability queries before booking, is left out."},
+    {"detail": "which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications",
+     "answered": "partly",
+     "why": "Request handling, rule application (ReservationManager plus note) and storage are answered. Availability is only half-shown: the edge 'checks availability' ends at the room model, but the check really runs against stored reservations through ReservationRegistry, and the pre-booking availability lists (StudyRoomManager.getAvailableStudyRooms/getAvailableTimeSlots/getRoomDetail) are missing. For external services, the actual external element (ExternalEmailGateway behind the NotificationService interface) is merged into a 'Notification boundary' box together with the scheduler, so the diagram never shows where the system's edge to the external service is."},
+    {"detail": "which parts need to be modified and which other components may be affected",
+     "answered": "partly",
+     "why": "The diagram highlights ReservationManager as the place to change. The affected components (the request shape via facade and boundaries, availability listings in StudyRoomManager that must agree with new rules, registries if new queries are needed, NotificationManager for new states/messages) appear only in README prose and are not marked in the view. StudyRoomManager is not shown at all."}
+  ],
+  "level": "right",
+  "level_why": "Twelve components at package/role granularity suits a 'balanced' level for a developer. Two cuts would sharpen it, and they make room for the missing StudyRoomManager without growing the view. First, the facade -> NotificationManager 'sendReminders' edge is reminder scheduling, not booking. Second, the scheduler's 'manageReservationEnd' path is reservation expiry; it could be dropped, or kept with only the scheduler and adapter split. DTOs, UserManager and factories are rightly omitted.",
+  "unsupported": [
+    "Note text 'one active booking per slot' misstates the rule: validateUniqueness rejects a second ACTIVE or CONFIRMED reservation by the same student for the same date and slot (ReservationManager validateUniqueness, message 'You already have an active or confirmed reservation...'). It is a per-student rule, not a per-slot one.",
+    "Edge label 'injects email adapter' (sched -> notifMgr) does not match the inventory label 'configures adapter'. In the code this is start-up wiring by NotificationConfiguration (@PostConstruct setNotificationService(new NotificationServiceAdapter())), not something the scheduler does, but the merged box makes it read as the scheduler's behaviour.",
+    "The edge 'checks availability' to Room and seat model suggests availability is a property of the room model alone; the code computes it from stored reservations through ReservationRegistry (Seat.java:44-52, Area.getAvailableSeats)."
+  ],
+  "missing": [
+    "Dependency Room and seat model -> Registries (Seat.isAvailable uses ReservationRegistry.findReservationsBySeat and occupiesSlot). This is where a new availability rule may land.",
+    "StudyRoomManager (controller), reached via LibraryFacade, computes available rooms, time slots and room/seat detail for the booking UI (StudyRoomManager.java:196-263). A new booking rule usually has to be reflected there too.",
+    "The NotificationService interface (controller/NotificationService.java), required by NotificationManager and realised by NotificationServiceAdapter -> ExternalEmailGateway. The external email gateway should be a separate element at the system edge, not merged with the scheduler.",
+    "Booking rules the note omits: the room must be active and open on the chosen date (weekdays only) (resolveRoom), and an explicitly chosen seat must belong to the area (validateSeatInArea). The note should list the rule kinds a developer will extend."
+  ],
+  "uml": [
+    "All relations are solid plain arrows with operation names. In a UML component diagram, usage between components should be a dependency (dashed arrow, optionally «use»), or be shown through required/provided interfaces.",
+    "No interfaces are modelled, although the code has exactly the interfaces this concern needs: NotificationService (required by NotificationManager, provided by the adapter) and AssignmentStrategy (required by ReservationManager, provided by FirstAvailableAssignment). Show them as provided/required interfaces (lollipop/socket) or as «interface» elements with realization.",
+    "The external email gateway and the database are external to the application but drawn as ordinary internal components. Put the application components inside a system boundary component, and keep the gateway and MySQL outside it (do not use a non-standard «database» stereotype; model MySQL as an external component or as a node/«artifact»).",
+    "'Notification boundary (scheduler, email adapter)' merges two unrelated components with opposite dependency directions, which produces the sched <-> notifMgr cycle. Split them."
+  ],
+  "fixes": [
+    "Split 'Notification boundary' into Notification scheduler and Email adapter. Model NotificationService as an interface required by NotificationManager and provided by the adapter, and draw ExternalEmailGateway as the external service outside a system boundary.",
+    "Add StudyRoomManager (facade -> StudyRoomManager -> room model/registries) as the pre-booking availability component, and add the Room and seat model -> Registries dependency, so it shows that the seat-availability check reads stored reservations.",
+    "Convert the relations to UML dependencies (dashed, «use») and show AssignmentStrategy as a required interface of ReservationManager, so the rule extension point is explicit.",
+    "Correct the booking-rules note: one active/confirmed reservation per student per date and slot; room active and open weekdays; seat must be in the area; seat must be free; default seat via strategy.",
+    "Drop the facade -> NotificationManager 'sendReminders' edge (not part of booking), and mark the components likely to be affected by a rule change (facade/boundaries for request shape, StudyRoomManager, Registries, NotificationManager), for example with a note."
+  ]}

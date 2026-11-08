@@ -1,0 +1,26 @@
+{"concern_details": [
+  {"detail": "main architectural components and their responsibilities", "answered": "yes", "answered_by": ["ui", "ctl", "dom", "per", "mysql"],
+   "why": "Four internal components map one-to-one to the Boundary, Control, Entity and Database packages, plus the external MySQL store; the names state the role and inventory.json gives each a one-line responsibility that matches the code."},
+  {"detail": "decomposition into layers or subsystems", "answered": "yes", "answered_by": ["ui", "ctl", "dom", "per", "mysql"],
+   "why": "Components are named as layers (Presentation, Application logic, Domain, Persistence) and the provided/required interface chain makes the stacking explicit."},
+  {"detail": "main dependencies among them", "answered": "yes", "answered_by": ["IApp", "IDomain", "IPersist", "IJdbc", "ui", "dom"],
+   "why": "Each «use» dependency to a provided interface (ui->IApp, ctl->IDomain, dom->IPersist, per->IJdbc) matches imports in the code, and the layer-skipping ui->dom dependency on entity types is shown. No dependency the code has is missing at this level: Control and Boundary never import Database, and Database does not import Entity."},
+  {"detail": "separation of user interface, application logic, domain entities and persistence, and how they collaborate", "answered": "yes", "answered_by": ["ui", "ctl", "dom", "per", "IApp", "IDomain", "IPersist"],
+   "why": "The four concerns are separate components that collaborate only through the interfaces shown, and the one leak (GUIs using ReportCategory) is drawn explicitly. One limit: the view does not say that domain services and entities share a component, but the Domain name ('Entities and services') says it."}
+ ],
+ "level": "right",
+ "level_why": "Five components and four interfaces, one per layer, with no classes; individual GUIs, controllers and entity/state classes are left out, which suits an overview for an architect planning evolution.",
+ "findings": [
+  {"severity": "minor", "kind": "unsupported", "element": "IApp",
+   "claim": "The Use-case API is described as the facade SystemServicesController, but the login screen bypasses it: UserLoginGUI creates UserLoginController directly. The ui->IApp dependency is still correct at component level, but the facade is not the GUIs' only entry point into the Control component.",
+   "evidence": ["src/main/java/Boundary/UserLoginGUI.java:3", "src/main/java/Boundary/UserLoginGUI.java:111", "src/main/java/Control/SystemServicesController.java:22"],
+   "fix": "In inventory.json/README, list Control.UserLoginController as a member of the Use-case API too, or say that login bypasses the SystemServicesController facade."},
+  {"severity": "minor", "kind": "uml", "element": null,
+   "claim": "The ui->dom dependency (from 'ui' to 'dom' in inventory.json relations) uses the free label 'uses entity types' instead of the «use» keyword that every other dependency has, so its kind is less explicit.",
+   "evidence": ["src/main/java/Boundary/ReportCreationGUI.java:4", "src/main/java/Boundary/ReceivedReportsGUI.java:4"],
+   "fix": "Mark it «use» like the others and move 'entity types' to a note, or show it as «use» with a short name if the generator permits."},
+  {"severity": "minor", "kind": "unsupported", "element": "mysql",
+   "claim": "The MySQL component's evidence cites persistence.xml:1 (the XML declaration). The actual driver and connection URL that support 'MySQL reports_db' and the JDBC interface are a few lines further down.",
+   "evidence": ["src/main/resources/META-INF/persistence.xml:23-27"],
+   "fix": "Cite persistence.xml:23-27 as the evidence for mysql and IJdbc."}
+ ]}

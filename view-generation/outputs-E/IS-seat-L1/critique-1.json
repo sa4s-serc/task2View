@@ -1,0 +1,37 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main system components involved in seat booking",
+      "answered": "yes",
+      "why": "The seven components match the code's booking path: the Swing wizard (ReservationSummary.java:100), ReservationController (:29), LibraryFacade, ReservationManager, StudyRoomManager, the registries/JPA layer and NotificationManager with its adapter. ReservationManager is correctly shown as the place to change. One gap: the browser client (static/reservation.html, app.js) that drives the REST path is left out, so the REST entry point has no caller."
+    },
+    {
+      "detail": "how they interact",
+      "answered": "partly",
+      "why": "Labelled edges show who calls whom for makeReservation. But two booking paths are drawn unevenly. The Swing edge carries both booking and availability calls. The REST edge carries only makeReservation, although the web flow also gets rooms, time slots and room detail through StudyRoomController -> LibraryFacade.getRoomDetail (StudyRoomController.java:44,54,65). The REST box is also labelled only '/api/reservations'. The notification edge is labelled 'notifyObservers', but that is a method of the Reservation entity. ReservationManager attaches NotificationManager to the Reservation and the Reservation calls update() (ReservationManager.java:120-123, Reservation.java:181-185), so a developer would look for the call in the wrong place. Nothing says that the availability check made while booking runs inside ReservationManager (availableSeats/selectSeat, lines 89-92) and not in StudyRoomManager. The view suggests the opposite."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven components with one verb per edge suits an overview for a developer who needs to find where to change booking. Strategy, state classes, DTOs and factories are correctly left out. Nothing needs to be cut. The additions below are relabels, plus at most one merged element (the web client folded into the REST entry point), so the view stays at overview level.",
+  "unsupported": [
+    "Edge 'ReservationManager --> Notification : notifyObservers': ReservationManager does depend on NotificationManager (attach), but notifyObservers is called on the Reservation entity, which then calls NotificationManager.update (Reservation.java:181-185). As drawn, the label puts a call on ReservationManager that it does not make.",
+    "Box label 'REST controllers (Spring MVC, /api/reservations)': the booking flow over REST also uses StudyRoomController (/api study-room endpoints for rooms, time slots and room detail). The plural name together with that single path is inaccurate."
+  ],
+  "missing": [
+    "REST controllers -> LibraryFacade also needs 'get rooms / time slots / room detail' (StudyRoomController.java:44,54,65). The web booking flow uses it the same way the Swing wizard does.",
+    "The caller of the REST entry point, the browser client (static/reservation.html and app.js POST /api/reservations/create). It can be merged into the REST element as 'Web client + REST controllers' so the component budget holds.",
+    "The edge or element labels should say that ReservationManager itself checks free seats and picks one (via its assignment strategy) when booking. StudyRoomManager only serves the browsing screens. A developer changing seat selection needs to know which of the two to edit."
+  ],
+  "uml": [
+    "The relations are drawn as solid arrows (-->), which UML reads as directed associations. Calls between components should be dependencies, drawn dashed (..>), optionally with <<use>>. They could also be shown as provided/required interfaces, for example LibraryFacade providing a booking interface.",
+    "The source attaches the non-standard stereotypes <<accent>> to LibraryFacade and ReservationManager. They are hidden in the render, but the model then carries stereotypes that are not UML standard ones. Highlighting should not be done with stereotypes."
+  ],
+  "fixes": [
+    "Change every '-->' to a dependency '..>' (optionally <<use>>), or model LibraryFacade's booking operations as a provided interface that both entry points require.",
+    "Reroute or relabel notification: ReservationManager registers NotificationManager as an observer of the Reservation, and the Reservation notifies it. Either label the edge 'attach observer; Reservation notifies', or name the Notification element as the observer of Reservation.",
+    "Give the REST entry point the same availability calls as Swing ('get rooms, time slots, room detail' plus makeReservation). Rename it so it covers ReservationController and StudyRoomController, and fold in the web client (reservation.html/app.js) as its caller.",
+    "Make the ReservationManager label say that it checks seat availability and selects the seat at booking time, and make the StudyRoomManager label say 'availability for browsing screens', so the developer knows which one to change.",
+    "Remove the <<accent>> stereotype from the source and keep the highlight without a stereotype."
+  ]
+}

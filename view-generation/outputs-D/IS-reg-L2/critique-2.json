@@ -1,0 +1,45 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main components involved in registration and their responsibilities",
+      "answered": "yes",
+      "why": "The seven lifelines (registration.html/app.js, RestExceptionHandler, AuthenticationController, LibraryFacade, UserManager, UserRegistry with PersistenceManager/JPA folded in, MySQL) match the code path, and the legend gives each one a one-line responsibility. I checked AuthenticationController.java:22-31, LibraryFacade.register, UserManager.java:65-97, UserRegistry.java:26-67, PersistenceManager.java:19-43 and RestExceptionHandler.java:19-28. All of them are consistent with the view."
+    },
+    {
+      "detail": "how they interact when a new user creates an account",
+      "answered": "partly",
+      "why": "The success path (01-20) follows UserManager.register exactly: validate, then the email lookup, then the role-dependent identifier lookup, then registerUser, then toDTO. The four early exits are in the right order. However, the drawing contradicts itself on how a failure reaches the client. Each 'break' ends at the facade. In UML that means the rest of the enclosing interaction is skipped. Yet the response for that failure (21-24) is drawn later, in a separate fragment placed after the success reply 20. So a reader cannot follow one failing request from end to end. The tester cannot tell from the diagram that exits 05/09/13 lead to 400 and exit 17 leads to 500, except through the caption 'after any break above'."
+    },
+    {
+      "detail": "main integration points to exercise in the tests",
+      "answered": "yes",
+      "why": "Five numbered notes mark the integration points. IP1: the form-encoded @RequestParam contract (app.js sets application/x-www-form-urlencoded). IP2: the facade boundary shared with the Swing form. IP3: the uniqueness lookups. IP4: the transactional INSERT against reservationsdb_test, which I confirmed in src/test/resources/META-INF/persistence.xml. IP5: the mapping from exceptions to HTTP status. Each one corresponds to a real seam in the code. IP4 could also state that a failed persist is rolled back and returns false rather than propagating (PersistenceManager.java:31-38), because that is what makes the 500 case testable."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines and 24 messages fit one feature for an integration tester. Every message is either a component boundary crossing or a decision the tests must cover. The factories, the DTO and the entity classes were dropped, and PersistenceManager/JpaUtil were merged into UserRegistry. Both are good choices. Nothing needs to be dropped. The only weakness is how the exception exits are modelled (see uml), not how many there are.",
+  "unsupported": [
+    "Message 22 'ctl -> handler : handleInvalidRequest(e)' is drawn as a synchronous call from AuthenticationController. The controller has no reference to RestExceptionHandler (AuthenticationController.java:22-31 only calls LibraryFacade). The handler is a @RestControllerAdvice that Spring MVC invokes after the exception leaves the controller (RestExceptionHandler.java:15-22). The call should come from the framework, or be shown as the exception leaving ctl and being handled by the handler, not as a call made by ctl.",
+    "Message 24 'ctl --> page : 500' is drawn as a reply from the controller. AuthenticationController never returns a 500. The RuntimeException propagates out of it, and Spring's default error handling produces the status, which is unverified (as the README admits). Draw the exception leaving ctl and label the 500 as framework behaviour, or attach it to a note.",
+    "Messages 07, 11 and 15 have no replies from db. That is fine, but message 15 'INSERT in transaction' together with reply 16 'boolean' hides the fact that PersistenceManager.save swallows the RuntimeException and rolls back (PersistenceManager.java:31-38). Without that, the 'save failed' break looks as if it could only be caused by a DB error that propagates."
+  ],
+  "missing": [
+    "End-to-end traceability for each failure. The 400 response bodies are the IllegalArgumentException messages from UserManager (for example 'Email is already associated with an account.' at line 78, 'Identifier is already in use.' at line 85, the validation messages at lines 54-57 and 173-221), and the integration tests will assert on them. The guard or reply labels could give the message for the two uniqueness exits at least.",
+    "The rollback on save failure (PersistenceManager.save catches the exception, rolls back and returns false). It belongs in the IP4 note, since it is the observable behaviour the 500 test relies on."
+  ],
+  "uml": [
+    "'group' is not a UML interaction operator. The 'exception exit, after any break above' fragment should be a standard combined fragment. The usual approach is to handle the failure inside each break operand: a reply carrying the exception goes back to ctl, the handler handles it, and the 400 or 500 reaches page. An alternative is a single 'alt' at the top level with one operand per outcome.",
+    "The break operands cover only the facade and mgr lifelines, but their effect, the HTTP error, happens on ctl, handler and page outside the break. In UML, a break skips the remainder of the enclosing fragment, so fragment 21-24, which sits after it, is never reached. As drawn, the break semantics and the later group contradict each other. The break should span every lifeline involved in the failure, including the response to page.",
+    "Message 21 'exception propagates' comes after reply 20 '200 UserDTO' in time order, but the two are mutually exclusive outcomes of the same request. Sequence diagrams order messages in time, so this needs a guard (alt/break), not a later position.",
+    "The mgr and facade activation bars run on through every break as if execution continues after the throw. If the breaks are kept, the activations should end on the exception reply inside each break.",
+    "Messages 22 and 24 are attributed to ctl, but the senders are framework-level (see unsupported). Either add a lifeline for the Spring MVC dispatcher, or show the exception reply from ctl going to a lifeline or gate on the boundary and let the handler respond."
+  ],
+  "fixes": [
+    "Replace the trailing non-standard 'group' and the narrow breaks with standard fragments that follow each failure end to end. For example: one top-level 'alt' with operands [valid & unique & saved] -> 200, [invalid input | email exists | identifier in use] -> handler -> 400 {error}, and [save failed] -> 500. Another option is breaks that span all lifelines down to page.",
+    "Stop drawing RestExceptionHandler as called by AuthenticationController, and stop drawing the 500 as a controller reply. Show the exception leaving ctl, with handleInvalidRequest invoked by the framework (for example from a 'Spring MVC' lifeline, or as a found message) and the 500 marked as Spring's default error handling.",
+    "Extend the IP4 note to say that PersistenceManager.save catches the exception, rolls back and returns false, which is what triggers the RuntimeException and the 500.",
+    "End the mgr and facade activations on the exception replies.",
+    "Optionally put the expected error message for each exit (email in use, identifier in use) on the guard or exception reply, so each test case can assert the 400 body."
+  ]
+}

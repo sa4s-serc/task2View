@@ -1,0 +1,97 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+
+' ---- body ----
+title UML component diagram: seat booking in the study-room reservation application
+
+  [Web UI\n(static pages, app.js)] as web
+  [Swing desktop UI] as swing
+[NotificationScheduler\n(every 60 s)] as sched
+  [ReservationController\n/api/reservations] as rest
+  [StudyRoomController\n/api/rooms] as roomctl
+  [RestExceptionHandler\n(rule errors to HTTP 400)] as exh
+[LibraryFacade] as facade
+package "Booking logic" {
+  [ReservationManager\n(booking rules; create, cancel,\ncheck-in, end of slot)] as resmgr <<accent>>
+  [Domain entities\n(Area, Seat, Student, Reservation)] as dom <<accent>>
+  [AssignmentStrategy\n(FirstAvailableAssignment)] as strat <<accent>>
+  [StudyRoomManager\n(availability queries for UI)] as roommgr <<alert>>
+}
+  [ReservationRegistry\n(occupiesSlot)] as resreg <<accent>>
+  [StudyRoomRegistry] as roomreg
+  [UserRegistry] as userreg
+  [PersistenceManager (JPA)\n-> MySQL reservationsdb] as pm
+  [NotificationManager] as notif <<alert>>
+  [NotificationServiceAdapter\n+ ExternalEmailGateway stub] as adapter
+interface "Observer" as obs
+interface "NotificationService" as nsvc
+
+web ..> rest : HTTP/JSON
+web ..> roomctl : HTTP/JSON
+swing ..> facade : direct call
+sched ..> facade : end of slot, reminders
+rest ..> facade : create, cancel, check-in
+roomctl ..> facade : availability
+exh ..> rest : maps exceptions
+facade ..> resmgr : all reservation ops
+facade ..> roommgr : availability queries
+facade ..> notif : sendReminders
+resmgr ..> roomreg : resolve room, seat
+resmgr ..> userreg : resolve student
+resmgr ..> dom : availability, uniqueness
+resmgr ..> strat : pick seat
+resmgr ..> resreg : save, update
+resmgr ..> notif : attach observer
+roommgr ..> dom : seat availability
+roommgr ..> resreg : room bookings
+roommgr ..> roomreg : read rooms
+dom ..> resreg : find seat bookings
+dom ..> roomreg : list area seats
+dom ..> obs : notify observers
+notif ..|> obs
+resreg ..> pm : persist
+roomreg ..> pm : persist
+userreg ..> pm : persist
+notif ..> nsvc : send
+adapter ..|> nsvc
+
+note right of adapter
+  Components are logical groupings of classes
+  (singleton registries and managers), not
+  deployable units.
+end note
+
+legend right
+  <<accent>> = likely to change for new booking rules
+  <<alert>> = likely affected by a changed rule
+  Dashed arrows are use dependencies.
+endlegend
+@enduml

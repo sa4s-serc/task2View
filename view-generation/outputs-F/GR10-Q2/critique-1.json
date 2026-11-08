@@ -1,0 +1,42 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "required runtime environments and software artifacts",
+     "answered": "partly",
+     "why": "Java 23 JVM, MySQL server, the application jar, hibernate-core 6.6.50.Final, mysql-connector-j 9.4.0 and forms_rt 7.0.3 are all shown with versions that match pom.xml. But a DevOps engineer cannot tell from the view how to launch the application. The pom has no shade or assembly plugin and no manifest Main-Class, and three classes have a main() (HomePageGUI.java:75, UserLoginGUI.java:91, UserRegistrationGUI.java:145). So the jar is not runnable as built: the three library jars have to be supplied on the classpath and one main class has to be picked. That launch fact sits only in a note and the README assumptions, not in the model. Also, persistence.xml is drawn as a separate artifact beside the jar, but src/main/resources/META-INF/persistence.xml is packaged inside the jar."},
+    {"detail": "where the application runs and where its data is stored",
+     "answered": "partly",
+     "why": "The view does say the app runs in a desktop JVM and the data is in schema reports_db on MySQL. But it draws the database as a separate «device» 'Database host', while the code only supports the database on the same machine: the JDBC URL is jdbc:mysql://127.0.0.1:3306/reports_db, and the README grants reports_user only @'localhost'. The note 'each user runs their own JVM and connects directly to MySQL' suggests a shared remote database, which the shipped configuration cannot reach unless persistence.xml is edited and rebuilt and the MySQL grant is changed. The view should show the default co-located topology and state what must change for a remote database."},
+    {"detail": "how the main runtime elements communicate",
+     "answered": "yes",
+     "why": "jar -> Hibernate (JPA) -> mysql-connector-j -> MySQL over JDBC/TCP 3306 matches JpaUtil.java:13 and persistence.xml. Notation problems are listed under uml."},
+    {"detail": "technologies and runtime dependencies between the application and the database",
+     "answered": "partly",
+     "why": "JPA/Hibernate, the JDBC driver, port 3306, the schema name, the DB user and hbm2ddl.auto=update are shown. Missing from the model: the driver class com.mysql.cj.jdbc.Driver, the full JDBC URL, and the fact that URL, user and password are hard-coded in persistence.xml inside the jar, so pointing at another database means a rebuild. This should go in a «deployment spec» with these properties. The view also does not say that the MySQL database and user must exist first; that is only in a note."}
+  ],
+  "level": "right",
+  "level_why": "For a 'detailed' DevOps view, it is right to show the execution environments, the deployed jars with versions and the schema. JUnit and transitive libraries are correctly left out. The build host and Maven Central go beyond the runtime aspect, but there is no prebuilt artifact or CI, so a new environment has to build with Maven + JDK 23. They can stay, kept minimal. Nothing needs cutting. What is missing is precision (topology and launch/config facts), not more elements.",
+  "unsupported": [
+    "A separate «device» 'Database host' and the note's implied multi-user remote MySQL: the code configures 127.0.0.1:3306 (persistence.xml:24), and the README grants reports_user only @'localhost', so the code supports a single machine running both the JVM and MySQL.",
+    "persistence.xml drawn as an independently deployed artifact in the JVM: it is a resource under src/main/resources/META-INF and is packaged inside municipal-report-management-1.0-SNAPSHOT.jar.",
+    "jar -> persistence.xml 'reads settings': the file is read by the JPA bootstrap/Hibernate (Persistence.createEntityManagerFactory in JpaUtil.java:13), not as a runtime link between two deployed artifacts."
+  ],
+  "missing": [
+    "How the application is started: no Main-Class in the manifest and no fat jar (pom.xml has only maven-compiler-plugin), so hibernate-core, mysql-connector-j and forms_rt must be on the classpath, and an entry point (e.g. Boundary.HomePageGUI) must be chosen explicitly.",
+    "Connection configuration as a deployment specification: driver com.mysql.cj.jdbc.Driver, URL jdbc:mysql://127.0.0.1:3306/reports_db, user reports_user, password hard-coded, hbm2ddl.auto=update, persistence unit Municipal_Report_Management_System, RESOURCE_LOCAL transactions.",
+    "The precondition that MySQL database reports_db and user reports_user with GRANT ALL on reports_db.* must be created before first run (README SQL), and that the grant is localhost-only."
+  ],
+  "uml": [
+    "persistence.xml should be an artifact with the standard «deployment spec» stereotype attached to the jar artifact (or shown with its properties), not an ordinary artifact linked by a solid arrow.",
+    "jar -> hibernate-core and hibernate-core -> mysql-connector-j are drawn as solid directed associations. Between artifacts these should be dashed dependencies (optionally «use»).",
+    "jdbc ---> mysql runs from an artifact to an execution environment on another node. In UML a communication path is an undirected association between nodes (JVM/Application host to MySQL server), labelled with the protocol (JDBC/TCP 3306).",
+    "maven ..> jar 'builds, packages' is a non-standard dependency from a node to an artifact. Drop it, or use a plain dependency, and leave deployment to nesting/«deploy».",
+    "Maven Central is shown as a «device». It is a remote repository service; a plain node (or «executionEnvironment») with a communication path is more accurate.",
+    "The forms_rt artifact has no relation; add a «use» dependency from the jar, as for the other libraries."
+  ],
+  "fixes": [
+    "Model the default topology the code supports: MySQL on the same device as the JVM (127.0.0.1, localhost-only grant). Optionally add a note saying that a remote database requires editing persistence.xml, rebuilding, and changing the MySQL grant. Remove or reword the 'each user connects directly' claim.",
+    "Replace the persistence.xml artifact with a «deployment spec» attached to the jar, listing the driver class, JDBC URL, user, hard-coded password and hbm2ddl.auto=update, and show that it is packaged inside the jar.",
+    "Show how the application is launched: the jar has no Main-Class and no bundled dependencies, so the three library jars must be on the classpath, with main class Boundary.HomePageGUI (or say which of the three mains to use).",
+    "Fix the relation kinds: use dashed «use» dependencies between artifacts (including jar -> forms_rt), use an undirected communication path between the JVM/app node and the MySQL node labelled JDBC/TCP 3306, and drop the non-standard 'builds, packages' arrow.",
+    "Move the 'create database and user first' precondition into the view as a deployment requirement on the MySQL node, not only in a note."
+  ]}

@@ -1,0 +1,127 @@
+@startuml
+title Data model: persisted entities of the municipal report system (UML class diagram)
+top to bottom direction
+skinparam nodesep 70
+skinparam ranksep 60
+skinparam classAttributeIconSize 0
+<style>
+root { FontName Helvetica; FontColor #334155; }
+classDiagram {
+  class { BackgroundColor #F8FAFC; LineColor #475569; }
+}
+.accent { BackgroundColor #DBEAFE; }
+.muted { BackgroundColor #F1F5F9; }
+</style>
+
+abstract class "User\n«table users»" as user <<accent>> {
+  userId : Long {id}
+  name : String
+  lastName : String
+  phoneNumber : String
+  role : String {discriminator}
+}
+class "Credentials\n«embeddable»" as cred {
+  email : String {unique}
+  password : String
+}
+class "Citizen\nrole=CITIZEN" as citizen
+class "MunicipalOperator\nrole=MUNICIPAL_OPERATOR" as oper
+class "Report\n«table reports»" as report <<accent>> {
+  reportId : Long {id}
+  title : String
+  description : String
+  category : ReportCategory
+  dateReport : Date
+  imageAttached : String
+  currentStatusName : String
+  citizenEditable : boolean
+}
+class "Location\n«embeddable»" as loc {
+  city : String
+  cap : String
+  street : String
+  streetNumber : String
+  municipalArea : String
+}
+enum "ReportCategory" as cat {
+  BROKEN_STREETLIGHT
+  DAMAGED_ROAD
+  ABANDONED_WASTE
+  GENERAL_HAZARD
+  DAMAGED_STREET_FURNITURE
+}
+interface "ReportStatus\n(not persisted)" as status <<muted>> {
+  updateStatus(report)
+  isStatusNotifiable()
+}
+class "StatusUpdate\n«table status_updates»" as upd {
+  updateId : Long {id}
+  updateDate : Date
+  newStatus : String
+}
+class "InternalNote\n«table internal_notes»" as note {
+  noteId : Long {id}
+  text : String
+  dateEntry : Date
+}
+class "Notification\n«table notifications»" as notif {
+  notificationId : Long {id}
+  sentDate : Date
+  message : String
+  notifiedStatus : String
+}
+
+class "PersistenceService" as ps <<muted>> {
+  save(object)
+  update(object)
+  findById(class, id)
+  findByFields(class, fields)
+  findByAttribute(...)
+}
+class "UserService" as us <<muted>>
+class "ReportService" as rs <<muted>>
+class "Control package\n(10 controllers)" as ctl <<muted>>
+class "Boundary package\n(GUI screens)" as gui <<muted>>
+
+user <|-- citizen
+user <|-- oper
+user *-- "1" cred : embeds
+report *-- "1" loc : embeds
+report ..> cat : category
+report ..> status : state
+report "*" --> "1" citizen : reported by
+report "*" ---> "0..1" oper : assigned to
+report *-- "*" upd : history
+report *-- "*" note : notes
+upd "*" --> "1" oper : updated by
+note "*" --> "1" oper : written by
+notif "*" --> "1" report : about
+notif "*" --> "1" citizen : sent to
+
+rs ..> ps : persists via
+us ..> ps : persists via
+rs ..> report : reads, writes
+rs ..> notif : creates
+rs ..> note : reads notes
+rs ..> upd : reads history
+us ..> user : creates, finds
+ctl ..> rs : uses
+ctl ..> us : uses
+gui ..> ctl : calls
+
+cred -[hidden]- loc
+status -[hidden]- cat
+note -[hidden]- notif
+rs -[hidden]- us
+note -[hidden]-> ps
+
+note right of status
+  Implemented by Submitted, Assigned,
+  InProgress, Resolved. Only the state
+  name is stored (Report.currentStatusName).
+end note
+note bottom of ps
+  JPA/Hibernate, MySQL reports_db,
+  hbm2ddl.auto=update
+end note
+@enduml

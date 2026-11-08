@@ -1,0 +1,33 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components in the registration process, their responsibilities, interactions and dependencies",
+     "answered": "yes",
+     "why": "The six lifelines follow the real call chain: AuthenticationController.register:29-30 -> LibraryFacade.register (pass-through, merged) -> UserManager.register:65-97 -> UserRegistry (institutionalEmailExists, findStudentByStudentNumber/findLibrarianByCode, registerUser) -> PersistenceManager.save, plus the per-role factory (UserManager.java:89-90). The messages make the dependencies and order clear."},
+    {"detail": "which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness, and persist the new user",
+     "answered": "partly",
+     "why": "Request handling, role guards, the two uniqueness lookups, factory choice and persistence are all shown correctly. But the validation self-message (03) says only 'validate role, name, password; [Student] ID format / [Librarian] code'. It leaves out checks that UserManager makes in the same step: surname format, and the email format and institutional domain (validateEmail -> REGEX_EMAIL_ISTITUZIONALE '...unina.it', UserManager.java:26,152-153,201-212, called from validateStudent/validateLibrarian:175,185). It also leaves out the alphanumeric identifier check used for both roles (validateIdentifier:214-221). A tester reading the view would not know that a non-unina.it email is a validation failure (400) and not a uniqueness case."},
+    {"detail": "how they collaborate when invalid or already existing data is provided",
+     "answered": "yes",
+     "why": "There are separate branches for invalid data/role, email already associated, identifier already in use, and save failure. Each has the message text from the code (UserManager.java:78,85,94). They return to AuthenticationController, and one HTTP response goes to the client. The note gives the RestExceptionHandler mapping: IllegalArgumentException -> 400 {error} (RestExceptionHandler.java:19-22). The unmapped save RuntimeException is correctly flagged as Spring's default and is not claimed as a 400."},
+    {"detail": "main integration points and interactions the tests should cover",
+     "answered": "yes",
+     "why": "The view shows each integration point: client->controller over HTTP, the controller's exception-to-HTTP mapping, UserManager->UserRegistry (two lookups plus registerUser), UserManager->factory per role, and UserRegistry->PersistenceManager.save with its boolean result as the [not saved]/[saved] guard (PersistenceManager.java:19-43). The Swing path, which bypasses the controller, is noted. The only gap is the validation scope described above."}
+  ],
+  "level": "right",
+  "level_why": "6 lifelines and 14 numbered messages with three nested alts suit a balanced view for an integration tester. Merging the LibraryFacade pass-through into UserManager, putting the lookup calls to PersistenceManager.findFirstByFields in a note, and using guards instead of reply arrows all keep it at the given level. Nothing needs cutting. The fix asked for below is a label change, not an added element, so the view stays at the same level.",
+  "unsupported": [
+    "Message 03's label suggests that validation covers only role, name, password and the role-specific identifier. The code also validates the surname and the email (format, max length, unina.it domain) in the same step (UserManager.java:173-212). The label understates what is validated, so it is not an invented element, but it is inaccurate."
+  ],
+  "missing": [
+    "Email validity (institutional unina.it domain, format) and surname as part of the 'invalid data' branch. This is a main invalid-input case for the tests, and validateEmail in UserManager.java:201-212 shows it."
+  ],
+  "uml": [
+    "The single lifeline 'Student / Librarian Factory' stands for two classes. In the code, a new factory is created per call depending on role (UserManager.java:89). A lifeline should represent one participant, so name it by the interface it is used through ('factory : UserFactory') and keep the role guard on createUser.",
+    "UserManager's activation extends past AuthenticationController's reply to the client (deactivate um after message 14). The callee's execution should end when it returns to the controller, which is before the HTTP response."
+  ],
+  "fixes": [
+    "Widen the validation self-message 03 to cover all personal data: 'validate role, name/surname, institutional email (@unina.it), password; [Student] ID [A-Z]\\d{8} / [Librarian] alphanumeric code'. The tester can then see that a non-institutional email takes the [invalid data or role] -> 400 path.",
+    "Rename the factory lifeline to one participant typed by the interface ('factory : UserFactory'), keeping the [Student] StudentFactory / [Librarian] LibrarianFactory guard on createUser.",
+    "End UserManager's activation at its return to AuthenticationController, before message 14."
+  ]
+}

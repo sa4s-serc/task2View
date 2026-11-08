@@ -1,0 +1,38 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main system components involved in seat booking",
+      "answered": "yes",
+      "why": "The seven components match the code's layers on the booking path: Swing boundary, Spring REST controllers, LibraryFacade, ReservationManager (+ strategy), StudyRoomManager, entity registries/JPA, and NotificationManager/NotificationServiceAdapter. Nothing essential to makeReservation is absent at overview level."
+    },
+    {
+      "detail": "how they interact",
+      "answered": "partly",
+      "why": "The makeReservation chain UI/REST -> Facade -> ReservationManager -> registries -> notification is right. But the UI->Facade and REST->Facade edges say only 'makeReservation', so the 'queries availability' edge Facade->StudyRoomManager has no visible caller. In the code the wizard calls getAvailableStudyRooms (DateAndRoomSelection.java:214), getAvailableTimeSlots (TimeSlotSelection.java:87) and getRoomDetail (AreaSelection.java:85), and /api/rooms does the same (StudyRoomController.java:41-65), all before booking. The view also suggests that seat availability at booking time belongs to StudyRoomManager. In fact ReservationManager checks it itself, through availableSeats/selectSeat, Seat.isAvailable and the assignment strategy (ReservationManager.java:85-91, 378-400), and never calls StudyRoomManager. A developer changing booking needs that distinction. Also, the notification goes out through the observer on the Reservation entity (attach + notifyObservers, ReservationManager.java:119-122), and the view does not say so."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven components with one-line responsibilities suit an overview for a developer. Nothing needs cutting: DTOs, UserManager, factories and the scheduler are already left out, and Notification belongs because every successful booking triggers it. Nothing finer (strategy, state classes, registries as separate boxes) should be added.",
+  "unsupported": [
+    "The 'Study Room Manager (... seat availability)' wording, together with the lack of any ReservationManager->StudyRoomManager link, suggests that StudyRoomManager owns the availability decision for a booking. The code shows StudyRoomManager only serves availability for display (getRoomDetail etc.). The binding check happens in ReservationManager.availableSeats/selectSeat over StudyRoomRegistry and Seat.isAvailable.",
+    "The UI->Facade and REST->Facade edges are labelled only 'makeReservation'. The code shows that both front ends also call the facade's availability operations (getAvailableStudyRooms, getAvailableTimeSlots, getRoomDetail) as steps of the same booking flow."
+  ],
+  "missing": [
+    "The availability lookups from both front ends to the facade (room, time slot, room/area detail), which come before makeReservation in the wizard and in /api/rooms. Add them to the existing edge labels; no new elements are needed.",
+    "That the final seat validation and automatic assignment (FirstAvailableAssignment strategy when seatId=0) happen inside ReservationManager against the domain, not in StudyRoomManager. Rewording the ReservationManager and StudyRoomManager labels is enough.",
+    "The order of interaction (browse availability first, then book, then save and notify). A short note or numbered edge labels would let the diagram answer 'how they interact' as control flow."
+  ],
+  "uml": [
+    "The relations are drawn as solid open-arrow lines labelled with operation names. In a UML component diagram, usage between components is a dashed dependency, optionally «use», or goes through provided/required interfaces. Use dashed dependencies, or show LibraryFacade's provided interface, which both front ends require.",
+    "NotificationService is a real Java interface (realized by NotificationServiceAdapter, required by NotificationManager). If Notification is kept as one component, that is fine at overview. But 'observer, email adapter' describes patterns, and the arrow 'notifies on change' is not a UML relation kind. Keep it as a «use» dependency.",
+    "A custom stereotype <<accent>> is attached to two components only for styling. It is hidden in the render, but it is a non-standard stereotype in the model source. Apply the highlight without a stereotype, or drop it."
+  ],
+  "fixes": [
+    "Label the UI->Facade and REST->Facade edges with both kinds of call: browse availability (rooms, time slots, room detail) and makeReservation. Then the Facade->StudyRoomManager edge has a visible trigger, and the flow reads as browse, then book.",
+    "Correct the responsibilities: StudyRoomManager 'lists rooms, time slots, seat status for display'; ReservationManager 'validates request, checks seat availability, assigns seat via strategy, saves, notifies'.",
+    "Draw the inter-component relations as UML dashed dependencies («use»), or through a provided interface on LibraryFacade, instead of solid association-style arrows.",
+    "Add a short note or step numbers that give the order of the control flow (1 browse availability, 2 makeReservation, 3 save via registries, 4 notify observer).",
+    "Remove the non-standard <<accent>> stereotype from the model elements."
+  ]
+}

@@ -1,0 +1,22 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "required runtime environments and software artifacts", "answered": "yes", "why": "Java 23 JVM, the application jar, the dependency jars with versions matching pom.xml (hibernate-core 6.6.50.Final, mysql-connector-j 9.4.0, forms_rt 7.0.3), persistence.xml and the MySQL server are all shown, and the diagram says the MySQL version is not specified. The launch note covers the missing Main-Class and the classpath launch. Small gaps: Maven is a build-time requirement (README 'Requirements'), and the dependency box lists only direct dependencies, not that Hibernate brings transitive jars (jakarta.persistence-api etc.) that must also be on the classpath."},
+    {"detail": "where the application runs and where its data is stored", "answered": "yes", "why": "Both the Swing client JVM and MySQL are on one workstation, which matches the JDBC URL jdbc:mysql://127.0.0.1:3306/reports_db and the 'reports_user'@'localhost' grant. Data is in schema reports_db inside the MySQL execution environment."},
+    {"detail": "how the main runtime elements communicate", "answered": "yes", "why": "A single communication path, JDBC over TCP :3306 on loopback, between the JVM and MySQL. The code has no other runtime link (no server tier, no network API)."},
+    {"detail": "technologies and runtime dependencies between the application and the database", "answered": "yes", "why": "Hibernate/JPA (persistence unit loaded in JpaUtil), the Connector/J driver (com.mysql.cj.jdbc.Driver), credentials hard-coded in persistence.xml, hbm2ddl.auto=update, and the manual CREATE DATABASE/USER/GRANT steps are all given. The note also says a remote host means editing the config, rebuilding and changing the grant."}
+  ],
+  "level": "right",
+  "level_why": "Seven elements: one device, two execution environments and four artifacts, with versions, port, protocol, launch and DB preparation. That is what a DevOps engineer needs to stand the system up. Application layers are rightly left out, and the three library jars are rightly merged into one artifact.",
+  "unsupported": [],
+  "missing": [
+    "Maven as the build tool needed to produce the jar (README 'Requirements: Java 23, Maven, MySQL'). Today it appears only in the README. It could go in the launch note.",
+    "Hibernate's transitive dependencies must also be on the runtime classpath. The 'dependency jars' artifact names only the three direct dependencies from pom.xml."
+  ],
+  "uml": [
+    "persistence.xml is drawn as a separate artifact deployed in the JVM, next to the jar. It is packaged inside the jar (src/main/resources/META-INF). In UML it should be nested in the jar artifact, or shown as a <<deploymentSpec>> attached to the jar, so that it does not look like a separately deployed file. The label says 'packaged in jar', but the notation contradicts it.",
+    "The app-to-persistence.xml <<use>> dependency is redundant once persistence.xml is nested in the jar or modelled as its deployment specification."
+  ],
+  "fixes": [
+    "Nest persistence.xml inside the jar artifact, or model it as a <<deploymentSpec>> of the jar, and drop the separate <<use>> arrow to it.",
+    "Add Maven (build-time) to the launch note, and say that Hibernate's transitive jars are also needed on the classpath (for example via mvn dependency:copy-dependencies)."
+  ]}

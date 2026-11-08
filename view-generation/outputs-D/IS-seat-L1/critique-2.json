@@ -1,0 +1,36 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main system components involved in seat booking",
+     "answered": "yes",
+     "why": "The booking path is all there and checks out against the code: the web client (app.js POST /api/reservations/create) and Swing (ReservationSummary.confirm) both go to LibraryFacade.makeReservation and then ReservationManager.makeReservation. ReservationManager uses UserRegistry and StudyRoomRegistry to resolve inputs, Area.getAvailableSeats and Student.hasActiveOrConfirmedReservationForDateAndSlot to check, AssignmentStrategy/FirstAvailableAssignment to pick a seat, ReservationRegistry/PersistenceManager to save, and the Reservation Observer with NotificationManager to notify. ReservationManager is marked as the component to modify. One gap: the shared request contract (ReservationRequestDTO and the returned ReservationDTO) is not shown. The REST controller, Swing and the facade all build or pass it, so it is the first thing a developer has to change when booking inputs change."},
+    {"detail": "how they interact",
+     "answered": "partly",
+     "why": "The happy path is clear: the facade delegates, and numbered steps 1-5 plus the note give the order inside ReservationManager. The failure path is wrong or missing, and for someone changing booking rules it is half of the control flow. ReservationManager throws IllegalArgumentException/IllegalStateException for validation, uniqueness and availability failures. These bubble up to RestExceptionHandler (@RestControllerAdvice, HTTP 400) or are caught by ReservationSummary.confirm, which calls showError. The view instead draws a call-like dependency from REST controllers to RestExceptionHandler. It also never says that a failed save throws a RuntimeException, which is not mapped to 400. The steps also skip validateSeatInArea (before the lock) and validateUniqueness (inside the lock), which are the rules a modifier is most likely to touch. Only the note mentions them."}
+  ],
+  "level": "right",
+  "level_why": "For a developer about to change booking, showing the full booking path down to named classes (manager, strategy interface and implementation, observer path) is right, and unrelated flows are left out. Some elements could be dropped or merged without loss: NotificationConfiguration is startup wiring, not booking control flow, so it could go into a note. NotificationService plus NotificationServiceAdapter could merge into NotificationManager's outbound port, or one of them could be dropped. The MySQL node adds little beyond the registries' 'persists'. None of these removals is required, but they would leave room for the missing error path.",
+  "unsupported": [
+    "REST controllers ..> RestExceptionHandler 'errors -> HTTP 400': ReservationController neither references nor calls RestExceptionHandler. The handler is a @RestControllerAdvice that Spring invokes when an IllegalArgumentException/IllegalStateException escapes a controller. Those exceptions come from ReservationManager (resolve*, validateSeatInArea, validateUniqueness, availableSeats, selectSeat). The dependency as drawn misstates both who causes the error and which way the relation points.",
+    "Edge 'books seat' from Student to the clients is drawn as a dependency. The inventory's evidence for the Student element is the Student entity class, not a user of the UI. This is a minor point, but the actor is a UML user role, not the entity."
+  ],
+  "missing": [
+    "The error return path. ReservationManager throws IllegalArgumentException/IllegalStateException, which the web side maps to HTTP 400 through RestExceptionHandler and which Swing catches in ReservationSummary.confirm to show an error. A RuntimeException from createAndSave when a save fails is not mapped to 400.",
+    "The ReservationRequestDTO/ReservationDTO contract across ReservationController, ReservationSummary, LibraryFacade and ReservationManager, either as an interface on LibraryFacade or as a labelled element. Every booking change goes through it.",
+    "Validation rules as steps: validateSeatInArea (StudyRoomRegistry.findSeatById, outside the lock) and validateUniqueness (Student entity, inside synchronized(this)). The numbered edges jump from '1 resolve' to '2 check availability'.",
+    "Seat selection branching: with an explicit seatId, selectSeat checks seat.isAvailable and throws IllegalStateException; only seatId 0 delegates to AssignmentStrategy. REST defaults seatId to 0. The note says only 'seatId 0 = automatic seat', so the '3 pick seat' edge reads as always going through the strategy."
+  ],
+  "uml": [
+    "Required interfaces are drawn as plain dashed dependency arrows to the lollipop (ReservationManager ..> AssignmentStrategy, Domain entities ..> Observer, NotificationManager ..> NotificationService). In a UML component diagram the requiring side should use a socket (required interface) or a «use» dependency. As drawn, the arrow is indistinguishable from the other call-like dependencies.",
+    "'Domain entities (Reservation, Seat, Area, ...)' and 'Registries' are packages of classes drawn as components. This is acceptable as an abstraction, but a merged class group is better shown as a component that names its contents, or as a package. Make sure the label does not suggest a deployable unit.",
+    "Numbered labels (1-5) on dependency edges turn a structural relation into a sequence. Two numbers on one edge ('1 resolve, 4 save') are especially ambiguous. This is acceptable as an annotation, but the view should not rely on it as the only behavioural content. Alternatively, keep the numbers consistent and one per edge.",
+    "The RestExceptionHandler edge is modelled as a dependency from the controllers. Spring advice is better shown as a dependency from RestExceptionHandler on the exception types or the REST boundary, or explained in a note."
+  ]
+,
+  "fixes": [
+    "Replace 'REST controllers ..> RestExceptionHandler' with the actual error path: ReservationManager throws IllegalArgument/IllegalState, which RestExceptionHandler maps to HTTP 400 for the web client and ReservationSummary catches and shows for Swing. Note that a save failure (RuntimeException) is not mapped to 400.",
+    "Make the validation rules explicit in the numbered steps: resolve, validateSeatInArea, then inside synchronized: validateUniqueness, availableSeats, selectSeat (explicit seat check or AssignmentStrategy when seatId=0), save, notify. Use one number per edge.",
+    "Show the booking contract: give LibraryFacade a provided interface (makeReservation(ReservationRequestDTO): ReservationDTO) that the REST controller and Swing require, or name ReservationRequestDTO on those edges.",
+    "Use UML required-interface notation (socket or «use») for ReservationManager→AssignmentStrategy, Reservation→Observer and NotificationManager→NotificationService.",
+    "Trim non-booking wiring to make room: fold NotificationConfiguration into a note, and drop or merge either NotificationServiceAdapter or the MySQL node."
+  ]
+}

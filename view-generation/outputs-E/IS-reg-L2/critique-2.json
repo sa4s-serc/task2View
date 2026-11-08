@@ -1,0 +1,31 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "main components involved in registration and their responsibilities",
+     "answered": "yes",
+     "why": "All seven lifelines appear in the code path (registration.html/app.js -> AuthenticationController.register -> LibraryFacade.register -> UserManager.register -> Student/LibrarianFactory, UserRegistry -> PersistenceManager). Each lifeline header now gives a one-line responsibility, and those match the code: UserManager validates, checks uniqueness, chooses the factory and persists (UserManager.java:65-97); LibraryFacade only forwards (LibraryFacade register is a one-line delegation); PersistenceManager.save runs the transaction with rollback (PersistenceManager.java:19-43). RestExceptionHandler is visible, merged into the controller lifeline as 'exception to status'."},
+    {"detail": "how they interact when a new user creates an account",
+     "answered": "yes",
+     "why": "Messages 01-12 follow the code order: format validation first (validate plus validateStudent/validateLibrarian, lines 67-75), then the email and identifier lookups (77-86), then the factory (89-90), registerUser/save (92) and the save-failure throw (93-94). The nested alts now put each guard after the step that decides it. The three outcomes a tester will see are all drawn: 200 UserDTO, 400 {error} for bad format or duplicate, and an unmapped RuntimeException when save returns false. One small gap: the [save ok] / [save returned false] guard depends on a boolean returned by PersistenceManager.save -> UserRegistry -> UserManager, and no return message is drawn. This is acceptable because the README says internal success replies were dropped on purpose."},
+    {"detail": "main integration points to exercise in the tests",
+     "answered": "yes",
+     "why": "IP1-IP4 are marked on the messages and explained in the legend. They match real seams in the code: the HTTP form parameters (form-urlencoded @RequestParam, with a Swing client that bypasses the step), validation plus the exception-to-HTTP mapping (RestExceptionHandler.java:19-22 maps only IllegalArgumentException/IllegalStateException), the role-based factory choice (UserManager.java:89), and the JPA lookups and save transaction against MySQL. A tester can turn each IP directly into test cases."}
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines and twelve messages fit 'balanced'. The cuts are sensible: two uniqueness lookups are collapsed into one message, per-field validation rules are a guard rather than self-messages, internal success replies are dropped, and the Swing client is a legend remark. Nothing should be added that would push the view past balanced. There is also nothing worth cutting: LibraryFacade forwards only, but it is the shared entry point for REST and Swing, so it is a real integration seam.",
+  "unsupported": [
+    "Message 08 says 'Student -> StudentFactory, otherwise LibrarianFactory'. This matches UserManager.java:89. The legend wording 'unknown role rejected earlier' is also correct, because isValidRole at UserManager.java:54/169 accepts only Student or Librarian. No unsupported elements or relations were found.",
+    "'default 500' for the unmapped RuntimeException is inferred from Spring's default behaviour, not from code in the repository. It is plausible, and the README flags it as unverified."
+  ],
+  "missing": [
+    "Minor: the duplicate check is really two different lookups. The email lookup runs against User (any role). The identifier lookup runs against Student.studentNumber or Librarian.internalIdentifierCode depending on role (UserRegistry.java:37-60). The collapsed message 05 could say 'email (any role) / identifier (per role) used?' so that the tester designs both duplicate cases for each role. This is a label change, not an extra message."
+  ],
+  "uml": [
+    "Exception replies 04, 07 and 12 go from UserManager straight to the controller lifeline, but UserManager's caller is LibraryFacade. In UML a reply returns to the caller, so the arrows should end at the facade activation (or go facade -> controller). Here the 'via facade' label stands in for that. This is minor.",
+    "One lifeline stands for two classifiers ('AuthenticationController + RestExceptionHandler'). Strictly, a lifeline represents one participant. This is acceptable as a deliberate simplification at the balanced level, but it is not pure UML.",
+    "The 'IPn' prefixes in message labels are annotations, not UML notation. They are harmless because the legend explains them, and they are not stereotypes."
+  ],
+  "fixes": [
+    "Optional: end the exception replies (04, 07, 12) at LibraryFacade, or label them as propagating through it, so that the reply targets the caller as UML requires.",
+    "Optional: relabel message 05 as 'email (any role) / identifier (per role) used?' so both duplicate cases are visible for each role."
+  ]
+}

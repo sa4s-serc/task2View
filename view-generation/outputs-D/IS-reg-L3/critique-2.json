@@ -1,0 +1,48 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main components in the registration process, their responsibilities, interactions and dependencies",
+      "answered": "yes",
+      "why": "The seven lifelines match the code's chain: registration.html/app.js -> AuthenticationController (AuthenticationController.java:22-31) -> LibraryFacade.register (named in msg 02) -> UserManager.register (UserManager.java:65-97) -> UserRegistry -> PersistenceManager.save, plus UserFactory and RestExceptionHandler. Each lifeline's responsibility can be read from its messages. One small gap: the lookups (msgs 09, 12, 13) stop at UserRegistry, so the view does not show that they also depend on PersistenceManager.findFirstByFields (UserRegistry.java:44-67)."
+    },
+    {
+      "detail": "which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness of the account, and persist the new user",
+      "answered": "yes",
+      "why": "The view shows the controller handling the request, UserManager validating the data with a role alt (student number [A-Z]\\d{8} vs alphanumeric code, UserManager.java:173-187), the role-specific registry lookups and factory, the email check followed by the identifier check (UserManager.java:77-86), and registerUser -> save. Some validation rules that a tester needs to design invalid inputs are summarised too loosely. Msg 03 says 'role and password' but the code also requires the first name here and limits the password to 8-32 characters (UserManager.java:52-58). The 'email' in 04/05 is restricted to the unina.it domain (REGEX_EMAIL_ISTITUZIONALE, line 26), and names must be letters only, at most 20 characters."
+    },
+    {
+      "detail": "how the components collaborate when invalid or already existing data is provided",
+      "answered": "partly",
+      "why": "The invalid-data, email-exists, identifier-used and not-saved branches are all present, in the code's order, with the right exception types and the 400 vs default-500 split. The note on unique columns is correct (User.java:21, Student.java:19, Librarian.java:13 together with the rollback in PersistenceManager.save). Two problems remain. The error path is drawn as a call 'handle' from AuthenticationController to RestExceptionHandler, but the controller never calls the handler: the exception leaves the controller and Spring's dispatcher invokes the @RestControllerAdvice. The missing-parameter case is also incomplete. The note says Spring rejects the request before the controller runs, but it does not give the outcome: Spring's default 400 for a MissingServletRequestParameterException, not the {error} body, because RestExceptionHandler does not map it. That outcome is a separate test oracle."
+    },
+    {
+      "detail": "main integration points and interactions the tests should cover",
+      "answered": "partly",
+      "why": "The HTTP seam (page -> controller), the controller -> facade/UserManager seam, UserManager -> UserRegistry -> PersistenceManager, UserManager -> UserFactory and the exception mapping are all visible, and the Swing entry point is named in a note. Two seams are hidden. LibraryFacade is collapsed into a message label even though it is the shared entry point for both the web and Swing paths and an obvious place for a test double. The registry -> PersistenceManager lookup seam is also not drawn (see the first detail)."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines and 25 messages for a single feature fit an integration tester designing tests: each lifeline boundary is a testable seam, and each alt branch maps to a test case. Nothing needs to be dropped. The UserManager self-calls are the most detailed part, but they carry the role-specific rules the tester needs. Better precision in their labels (email domain, password length, name format) would serve the tester more than further abstraction.",
+  "unsupported": [
+    "Msg 07 'handle' as a synchronous message from AuthenticationController to RestExceptionHandler: AuthenticationController.register (lines 22-31) has no reference to the handler. The IllegalArgumentException propagates out of the controller, and Spring dispatches it to the @RestControllerAdvice method handleInvalidRequest (RestExceptionHandler.java:15-22). The controller does not call the handler.",
+    "Msg 03 label 'validate role and password': validate() also checks that the first name is present and limits the password to 8-32 characters (UserManager.java:52-58). The label understates what is checked at this step."
+  ],
+  "missing": [
+    "The outcome of a missing request parameter (an empty field dropped by app.js api(), lines 18-20): Spring's default 400 without the {error} body, never reaching UserManager or RestExceptionHandler. It needs to be stated in the note or drawn as a short branch.",
+    "The concrete format rules a tester needs for invalid-data cases: email ending in unina.it and shorter than 255 characters (UserManager.java:26, 153, 196-206), names letters only with at most 20 characters (lines 189-199), password 8-32 characters (lines 56-57).",
+    "The UserRegistry -> PersistenceManager.findFirstByFields lookups behind msgs 09, 12 and 13 (UserRegistry.java:44-67). They are a dependency the tests exercise, for example when stubbing or seeding the database. One collapsed message or a note is enough."
+  ],
+  "uml": [
+    "Activations are inconsistent. UserManager's and AuthenticationController's activations continue past the exception replies (06, 11, 15, 22), as if execution went on. The Librarian lookup (msg 13) starts no activation of its own on UserRegistry, so one activation spans both alt operands.",
+    "The exception-to-handler path is drawn as an ordinary synchronous call (msg 07) where no such call exists. Show the exception as the reply to the caller, then show the 400 as coming from RestExceptionHandler to the page with a note that Spring dispatches it, or put the mapping in a note.",
+    "Lifeline naming is mixed: ':UserFactory' uses the 'name : Type' form for an anonymous instance, while the other lifelines are bare class names with parenthesised extras ('PersistenceManager (JPA, database)', 'Web registration page (registration.html)'). Use one form, for example ':UserManager' or '<name> : <Type>', and move the extras into notes or the stereotype «boundary» for the page."
+  ],
+  "fixes": [
+    "Replace msg 07 'handle' (controller -> handler call) with a correct depiction: the exception propagates out of AuthenticationController, and Spring's dispatch invokes RestExceptionHandler, which returns 400 {error}. Draw it as the handler's reply to the page with a note, without a call from the controller.",
+    "Complete the missing-parameter note with its outcome: Spring's default 400 (MissingServletRequestParameterException), with no {error} body, not reaching UserManager.",
+    "Make the validation labels test-ready: 03 'validate role, first name, password 8-32'; 04/05 'names: letters ≤20, email @…unina.it <255, student ID [A-Z]\\d{8}' or 'code [A-Za-z0-9]+'.",
+    "Fix the activations: end UserManager's activation at each exception reply, and give msg 13 its own activation on UserRegistry.",
+    "Show in one collapsed message or a note that the registry lookups go to PersistenceManager.findFirstByFields. Optionally note that LibraryFacade is the shared seam for both the web and Swing paths."
+  ]
+}

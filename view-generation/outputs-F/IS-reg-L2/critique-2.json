@@ -1,0 +1,42 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main components involved in registration and their responsibilities",
+      "answered": "yes",
+      "why": "The lifelines match the code path: AuthenticationController (POST /api/auth/register), RestExceptionHandler (@RestControllerAdvice), LibraryFacade, UserManager, UserRegistry+PersistenceManager, and MySQL. The Swing entry is shown as a note, which is correct: Registration.java:134 calls LibraryFacade.register and catches RuntimeException at :140 to show a dialog. Responsibilities come only from the message labels (validate, lookups, create, transactional INSERT, error mapping). For a sequence diagram at balanced level that is enough. The merged UserRegistry + PersistenceManager lifeline is justified, because UserRegistry only delegates (UserRegistry.java:26-67)."
+    },
+    {
+      "detail": "how they interact when a new user creates an account",
+      "answered": "partly",
+      "why": "The order now follows UserManager.register (lines 67-96): validation first, then the email lookup, then the identifier lookup by role, then the factory, then registerUser, and the save result. Two points are wrong or left open. (a) Messages 07/10 show 'find user by email' returning 'user or null', but UserManager calls userRegistry.institutionalEmailExists(email), which returns a boolean (UserManager.java:77, UserRegistry.java:65-67). (b) The failure paths stop part-way. The 'email taken' and 'ID in use' breaks send the exception to RestExceptionHandler, but no response reaches the client. In the save-failure branch the RuntimeException ends at the controller, and no 500 reaches the client. The reader cannot see what the caller finally receives on three of the four failure paths."
+    },
+    {
+      "detail": "main integration points to exercise in the tests",
+      "answered": "partly",
+      "why": "The legend lists IP1-IP5, and these are the right seams. The marking on the messages is uneven. IP3 is on the email lookup (07) but not on the identifier lookup (12). IP4 is on 08 and 19 but not on 13. IP5 is on 05 and 26 but not on the duplicate-email/ID exceptions (11, 16). As a result, two of the most important negative test cases (duplicate email and duplicate identifier, which give HTTP 400 with distinct messages) are not tied to an integration point or to an observable response. IP1 also leaves out that the inputs are @RequestParam parameters (AuthenticationController.java:23-28), not a JSON body. That affects how the tester builds requests: a missing parameter is rejected by Spring before the controller runs."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines, with the factory folded into a self-message and DTO/entity/JpaUtil left out, fits a balanced view for an integration tester. The 26 messages go beyond a typical balanced count, but most of them are the failure branches the tester needs. To stay at the balanced level, the fixes below should be balanced by cuts: drop the plain DB replies 09, 14 and 20 (fold them into the registry replies 10, 15 and 21), and drop the pass-through return 23 (facade to controller UserDTO) if space is needed. Do not add lifelines.",
+  "unsupported": [
+    "Messages 07/10 'find user by email' -> 'user or null': UserManager calls UserRegistry.institutionalEmailExists(email), which returns boolean (UserManager.java:77; UserRegistry.java:65-67). findUserByEmail is called only inside UserRegistry.",
+    "Messages 05, 11, 16 (UserManager -> RestExceptionHandler) and 26 (UserManager -> AuthenticationController) are drawn as messages sent directly between these objects. In the code the exceptions propagate back up the call stack through LibraryFacade and AuthenticationController to Spring MVC, which dispatches to the advice. UserManager has no link to RestExceptionHandler. The README acknowledges this as a shortcut, but the diagram does not mark it as exception propagation."
+  ],
+  "missing": [
+    "The HTTP outcome of the duplicate-email and duplicate-identifier breaks: RestExceptionHandler returns 400 {\"error\": \"Email is already associated with an account.\"} or {\"error\": \"Identifier is already in use.\"} (RestExceptionHandler.java:19-22; UserManager.java:78, 85). Only the invalid-input break shows the 400 reply.",
+    "The response to the client in the save-failure branch: the RuntimeException('Server error: the user could not be saved...') (UserManager.java:94) is not covered by RestExceptionHandler, so the client gets Spring's default 500. The diagram stops at the controller. The branch could also note that the DB rolls back (PersistenceManager.java:31-38). A realistic trigger is the unique constraints on institutionalEmail/studentNumber/internalIdentifierCode (User.java:21, Student.java:19, Librarian.java:13), for example in a concurrent duplicate registration.",
+    "Consistent IP labels on the identifier lookup (12/13) and on the duplicate exceptions (11/16), so that each negative test case is tied to an integration point."
+  ],
+  "uml": [
+    "Exception flow is drawn as dashed reply messages from UserManager straight to RestExceptionHandler and to AuthenticationController. That is neither a reply to a call those lifelines made nor a call. Show propagation as return messages back up the chain (or one labelled 'throws IllegalArgumentException' return to the caller), and then the handler's reply to the client. At minimum, label these arrows as propagated exceptions.",
+    "In the break fragments and the save-fails operand, the activations of AuthenticationController, LibraryFacade and UserManager are never ended. The success operand ends them (22-24). The failure operands leave the callers active with no reply."
+  ],
+  "fixes": [
+    "Finish every failure path at the client: inside the 'email taken' and 'ID in use' breaks, add the handler's 400 {\"error\": message} reply. In the save-fails operand, add the 500 response from the controller to the client (unhandled RuntimeException).",
+    "Correct the email lookup: 07 institutionalEmailExists(email), 10 reply true/false.",
+    "Mark integration points consistently: IP3 on 12, IP4 on 13, IP5 on 11 and 16. In IP1, state that the fields are request parameters (@RequestParam), not a JSON body.",
+    "Draw exception propagation as UML return/propagation (back through the facade and controller, or explicitly labelled 'propagates'), not as messages sent from UserManager to the handler, and close the activations in the failure operands.",
+    "Keep the view balanced while making these additions: fold the DB replies 09, 14 and 20 into the registry replies, and drop the facade-to-controller pass-through return if needed."
+  ]
+}

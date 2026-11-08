@@ -1,0 +1,66 @@
+{
+  "concern_details": [
+    {
+      "detail": "main components involved in seat booking and their responsibilities",
+      "answered": "yes",
+      "answered_by": ["swing", "rest", "facade", "resmgr", "strategy", "roommgr", "notif", "domain", "persist"],
+      "why": "All components on the booking path are shown (Swing/REST front ends, LibraryFacade, ReservationManager, AssignmentStrategy, StudyRoomManager, NotificationManager, entity package with registries, PersistenceManager), and inventory.json gives each one a responsibility that matches the code (e.g. ReservationManager.makeReservation validates and saves at controller/ReservationManager.java:65-103). The responsibilities are in the inventory/README only, not on the diagram itself."
+    },
+    {
+      "detail": "how they interact with each other",
+      "answered": "yes",
+      "answered_by": ["IFacade", "IReservation", "IRoom", "IStrategy", "INotify", "IRegistry", "IStore"],
+      "why": "Provided/required interfaces with <<use>> dependencies show the chain front end -> facade -> ReservationManager/StudyRoomManager -> registries/domain -> persistence, plus ReservationManager -> strategy and -> notifications. Every edge matches a call in the code (LibraryFacade.java:118, ReservationManager.java:28-30,121,400, ReservationRegistry.java:17-20)."
+    },
+    {
+      "detail": "which parts of the system may be affected by the modification",
+      "answered": "partly",
+      "answered_by": ["resmgr", "domain", "strategy", "roommgr"],
+      "why": "The dependency structure lets the reader work out the impact, and the README names the affected parts (ReservationManager validation, Seat.isAvailable/Area.getAvailableSeats, strategy, StudyRoomManager display). The diagram itself does not mark which components are change points and which are only indirectly affected."
+    }
+  ],
+  "level": "right",
+  "level_why": "Nine components plus their interfaces, at package or major-class grain, with no methods, DTOs or individual entity classes. That fits a balanced level: enough to find where booking rules live (ReservationManager, domain availability checks, strategy) without going down to single validation steps.",
+  "findings": [
+    {
+      "severity": "minor",
+      "kind": "concern",
+      "element": "resmgr",
+      "claim": "The diagram does not show which components are affected by new booking rules. That information appears only in the README, so a reader of the PNG alone must infer it.",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:65-103", "JavaProject/src/main/java/it/unina/reservations/entity/Seat.java:44-51"],
+      "fix": "Add a note or a stereotype (e.g. <<change point>>) on Reservation Manager, Reservation Domain Model and Seat Assignment Strategy, and optionally <<indirectly affected>> on Study Room Manager."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "student",
+      "claim": "The Student actor depends directly on the Library Facade API, a Java in-process interface. In the code, students reach it only through the Swing screens or the REST controller. The cited evidence is the REST controller, not a direct use by the student.",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/ReservationController.java:29", "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/ReservationSummary.java:100"],
+      "fix": "Connect Student to Swing Booking Wizard and REST Reservation API (or drop the actor) instead of to IFacade."
+    },
+    {
+      "severity": "minor",
+      "kind": "unsupported",
+      "element": "domain",
+      "claim": "The domain -> Persistence API <<use>> relation is correct, but its evidence (Seat.java:44-51, Area.java:49-58) shows availability checks, not persistence use. The actual use is in the registries.",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/entity/ReservationRegistry.java:17-20", "JavaProject/src/main/java/it/unina/reservations/entity/StudyRoomRegistry.java:17-20"],
+      "fix": "Cite the registry constructors that create PersistenceManager as the evidence for this relation."
+    },
+    {
+      "severity": "minor",
+      "kind": "unsupported",
+      "element": "strategy",
+      "claim": "Line references are slightly off: the strategy is called at ReservationManager.java:400 (not 394), and makeReservation spans about lines 65-103 (not 73-110).",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:400", "JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:65"],
+      "fix": "Update the evidence line numbers in inventory.json."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "INotify",
+      "claim": "The notification is sent through the Observer pattern: ReservationManager attaches NotificationManager to the Reservation, and the Reservation calls notifyObservers. The diagram shows only a direct use of 'Reservation notifications' from ReservationManager, which hides that the domain Reservation is the notifier.",
+      "evidence": ["JavaProject/src/main/java/it/unina/reservations/controller/ReservationManager.java:120-122", "JavaProject/src/main/java/it/unina/reservations/controller/NotificationManager.java:15"],
+      "fix": "Optionally name the interface 'Observer' and add a domain ..> INotify use, or add a short note that the notification goes through Reservation.notifyObservers."
+    }
+  ]
+}

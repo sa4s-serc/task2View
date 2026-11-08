@@ -1,0 +1,29 @@
+I am giving you a software repository (the current folder) and a stakeholder's request, together with the
+request's inputs in the terms of ISO/IEC/IEEE 42010:2022. Produce one architecture view that addresses the
+stakeholder's concern, governed by the given viewpoint and model kind. Derive the architecture from the code
+in this folder; base every element and relation on it.
+
+Request (verbatim):
+I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes.
+
+Inputs (ISO/IEC/IEEE 42010:2022):
+- Entity of interest: application for booking study-room seats, with student and librarian users
+- Stakeholder: software developer
+- Stakeholder perspective: about to add new booking rules; needs the architecture behind seat booking; detail level: balanced
+- Concern: control_flow, connectivity
+  - main components in the booking process, their responsibilities, interactions and dependencies
+  - which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications
+  - which parts need to be modified and which other components may be affected
+- Aspect: structural, behavioural
+- Viewpoint: component
+- Model kind: UML component diagram
+
+Write the view as PlantUML source in ./view-out/IS-seat-L3/view.puml, and a short ./view-out/IS-seat-L3/README.md
+that says what the view shows and how it addresses each part of the concern.
+
+Use the uml-view skill in .claude/skills (it builds on the plantuml-diagrams skill there) and follow all its
+steps. Write view.puml, view.png, inventory.json and README.md in ./view-out/IS-seat-L3/.
+The detail level is given in the stakeholder perspective (balanced); draw at that level and run
+check_inventory.py with --level balanced --graph .claude/repo-graph.json.
+A static dependency graph of the repository is in .claude/repo-graph.json; query it with the skill's
+graph_query.py as the skill describes.

@@ -1,0 +1,98 @@
+@startuml
+title User Registration (Student / Librarian) - Dynamic View, Sequence Diagram
+
+actor "New User\n(Student or Librarian)" as U
+participant "Registration form\n(Swing Registration /\nweb registration.html + app.js)" as UI <<boundary>>
+participant "AuthenticationController\n(POST /api/auth/register)" as AC <<boundary, REST>>
+participant "RestExceptionHandler" as REH <<boundary>>
+participant "LibraryFacade\n(singleton)" as LF <<controller>>
+participant "UserManager\n(singleton)" as UM <<controller>>
+participant "StudentFactory /\nLibrarianFactory" as UF <<factory>>
+participant "UserRegistry\n(singleton)" as UR <<entity>>
+participant "PersistenceManager" as PM <<database>>
+database "Database\n(JPA / EntityManager)" as DB
+
+U -> UI : fill role, name, surname, email,\npassword, identifier; press Register / Sign Up
+activate UI
+
+alt Swing client
+  UI -> UI : check no field blank\n(else "Complete all fields")
+  UI -> LF : register(role, name, surname,\nemail, password, identifier)
+else Web client
+  UI -> AC : POST /api/auth/register\n(form-encoded params via api())
+  activate AC
+  AC -> LF : register(role, name, surname,\nemail, password, identifier)
+end
+activate LF
+LF -> UM : register(role, name, surname,\nemail, password, identifier)
+activate UM
+
+UM -> UM : validate(role, name, password)\n(role valid, name present, password 8..32)
+alt role == Student
+  UM -> UM : validateStudent(...)\n(name/surname letters, institutional @unina.it email,\nstudent number [A-Z]\\d{8})
+else role == Librarian
+  UM -> UM : validateLibrarian(...)\n(name/surname letters, institutional @unina.it email,\nalphanumeric code)
+end
+
+UM -> UR : institutionalEmailExists(email)
+activate UR
+UR -> PM : findFirstByFields(User, institutionalEmail)
+PM -> DB : query
+DB --> PM : User or none
+PM --> UR : User or null
+UR --> UM : boolean
+deactivate UR
+
+opt email not already used
+  UM -> UR : findStudentByStudentNumber(identifier) /\nfindLibrarianByCode(identifier)
+  activate UR
+  UR -> PM : findFirstByFields(...)
+  PM -> DB : query
+  DB --> PM : result
+  PM --> UR : Student/Librarian or null
+  UR --> UM : existing user or null
+  deactivate UR
+end
+
+alt validation failed, email or identifier already used
+  UM --> LF : throw IllegalArgumentException(message)
+  LF --> AC : exception propagates
+  AC --> REH : IllegalArgumentException
+  REH --> UI : HTTP 400 {"error": message}  (web)
+  UI --> U : show error (message dialog / error label)
+else data valid and unique
+  UM -> UF : createUser(name, surname, email,\npassword, identifier)
+  activate UF
+  UF --> UM : new Student / Librarian
+  deactivate UF
+  UM -> UR : registerUser(newUser)
+  activate UR
+  UR -> PM : save(newUser)
+  activate PM
+  PM -> DB : begin; persist; commit
+  alt persistence succeeds
+    DB --> PM : ok
+    PM --> UR : true
+  else persistence fails
+    DB --> PM : error (rollback)
+    PM --> UR : false
+  end
+  deactivate PM
+  UR --> UM : success
+  deactivate UR
+  alt success == false
+    UM --> LF : throw RuntimeException("Server error ...")
+    LF --> UI : exception propagates; error shown to user
+  else success == true
+    UM -> UM : toDTO(newUser)
+    UM --> LF : UserDTO
+    deactivate UM
+    LF --> AC : UserDTO
+    deactivate LF
+    AC --> UI : 200 UserDTO (JSON)  (web)
+    deactivate AC
+    UI --> U : "Registration complete! You can now sign in."\nredirect to Login (Login window / index.html)
+  end
+end
+deactivate UI
+@enduml

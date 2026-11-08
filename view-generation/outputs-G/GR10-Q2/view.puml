@@ -1,0 +1,77 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 340 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML deployment diagram: Municipal Report Management System (desktop client + MySQL)
+
+node "Build host" as build <<device>> {
+  node "Maven + JDK 23" as maven <<executionEnvironment>> {
+    artifact "pom.xml\n(municipal-report-management 1.0-SNAPSHOT)" as pom
+  }
+}
+node "Maven Central\nrepo.maven.apache.org" as central <<device>>
+
+node "User workstation\n(citizen or municipal operator)" as ws <<device>> {
+  node "Java 23 runtime (JVM)\nSwing desktop process" as jvm <<executionEnvironment>> {
+    artifact "Application classes\nBoundary, Control, Entity, Database" as app <<accent>>
+    artifact "persistence.xml\nunit Municipal_Report_Management_System" as pxml
+    artifact "hibernate-core 6.6.50.Final\n(JPA provider)" as hib
+    artifact "mysql-connector-j 9.4.0\n(JDBC driver)" as jdbc
+    artifact "forms_rt 7.0.3\n(Swing form runtime)" as forms
+  }
+}
+
+node "Database host\n(default: same machine, 127.0.0.1)" as dbhost <<device>> {
+  node "MySQL server\nport 3306" as mysql <<executionEnvironment>> {
+    artifact "Schema reports_db\n(user reports_user)" as schema <<accent>>
+  }
+}
+
+pom ..> central : resolves dependencies\n(HTTPS)
+app ..> jvm : <<deploy>>
+app --> hib : persists entities (JPA)
+hib --> jdbc : uses driver
+jdbc --> mysql : JDBC over TCP :3306
+schema ..> mysql : <<deploy>>
+app ..> pxml : <<use>> reads config
+app ..> forms : <<use>> loads forms
+
+note right of schema
+  Created and altered by Hibernate
+  (hbm2ddl.auto=update); the database
+  and user must exist beforehand.
+  Credentials are in persistence.xml.
+end note
+note bottom of ws
+  Entry points: HomePageGUI.main,
+  UserLoginGUI.main, UserRegistrationGUI.main
+end note
+
+legend right
+  Blue: the deployed application and its data store.
+  Dashed arrows: dependency or deployment.
+end legend
+@enduml

@@ -1,0 +1,81 @@
+{
+  "concern_details": [
+    {
+      "detail": "system components involved in user registration",
+      "answered": "yes",
+      "answered_by": ["entry", "facade", "mgr", "reg", "pm", "db"],
+      "why": "The lifelines follow the real call chain: Registration (Swing) / AuthenticationController -> LibraryFacade.register -> UserManager.register -> UserRegistry -> PersistenceManager -> MySQL (JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:134, boundary/SpringBoot/AuthenticationController.java:29-30, controller/LibraryFacade.java:39, controller/UserManager.java:77-92, entity/UserRegistry.java:27, resources/META-INF/persistence.xml:21). The factories are folded into UserManager, which suits the balanced level."
+    },
+    {
+      "detail": "how they interact",
+      "answered": "yes",
+      "answered_by": ["user", "entry", "facade", "mgr", "reg", "pm", "db"],
+      "why": "Synchronous calls and returns are in the right order: validate, uniqueness lookups, factory creation, registerUser/save, and the UserDTO return. One alt covers the failure path (IllegalArgumentException for invalid or duplicate input, RuntimeException when save returns false), which matches UserManager.java:67-96 and PersistenceManager.java:19-43."
+    }
+  ],
+  "level": "right",
+  "level_why": "Shows the architectural roles on the path with named operations (register, registerUser, save, findFirstByFields) and one success/failure alt. Factories, individual validators, DTO and entity classes, and JpaUtil are collapsed. That is balanced: enough for an integration tester to see the seams to drive and observe, without class-level detail.",
+  "findings": [
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "mgr",
+      "claim": "The uniqueness lookups (messages 05-09) sit before the alt, so the diagram says they always happen. In the code, a validation failure throws before any lookup, and a duplicate email throws before the identifier lookup. The 'not found' return on message 09 also contradicts the 'duplicate' guard of the else branch.",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:67-86"
+      ],
+      "fix": "Use an alt (or break fragment) right after the validation self-call for 'invalid input' and a second one after the lookups for 'duplicate'. Alternatively, relabel message 09 as 'existing user or null' and add a note that invalid input never reaches the lookups."
+    },
+    {
+      "severity": "minor",
+      "kind": "missing",
+      "element": "entry",
+      "claim": "The Swing form rejects blank fields itself ('Complete all fields') and never calls LibraryFacade, so this failure path ends at the entry lifeline. The view's single else branch suggests that every error comes from UserManager.",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:127-131"
+      ],
+      "fix": "Mention in the else guard or a short note that blank fields are caught by the Swing form before message 02 (the REST entry has no such check)."
+    },
+    {
+      "severity": "minor",
+      "kind": "missing",
+      "element": "entry",
+      "claim": "On the REST path, message 21 'error message' hides how failures reach an HTTP test client. RestExceptionHandler maps IllegalArgumentException to 400 with {error: message}. The RuntimeException for a failed save has no handler, so it becomes a default 500. An integration tester asserts on exactly these outcomes.",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19-22",
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:93-95"
+      ],
+      "fix": "Relabel message 21 as e.g. 'error dialog (Swing) / HTTP 400 {error} or 500 (REST)', and message 18 as 'confirmation (Swing) / 200 UserDTO JSON (REST)'."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "reg",
+      "claim": "Message 05 shows one call 'check email and identifier unused', but UserManager makes two calls to UserRegistry: institutionalEmailExists, then findStudentByStudentNumber or findLibrarianByCode, depending on role. The '2 lookups' remark sits on the reg->pm message instead.",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:77-83",
+        "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:44-66"
+      ],
+      "fix": "Name the operations on message 05 (institutionalEmailExists; findStudentByStudentNumber / findLibrarianByCode) or mark it as two calls."
+    },
+    {
+      "severity": "minor",
+      "kind": "unsupported",
+      "element": "pm",
+      "claim": "In inventory.json, the evidence for the pm->db relation ('SELECT / INSERT') cites only PersistenceManager.java:25 (em.persist). The SELECT side comes from findFirstByFields/createQuery, which is not cited. The db element cites persistence.xml:1 rather than the JDBC URL line.",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:172-183",
+        "JavaProject/src/main/resources/META-INF/persistence.xml:21"
+      ],
+      "fix": "Add PersistenceManager.java:172-183 (and the query at :156) to the pm->db evidence, and change the db evidence to persistence.xml:21."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "mgr",
+      "claim": "Exceptions (messages 19-20) are drawn as ordinary dashed reply messages with no marker that they are raised exceptions, not normal returns. Also, mgr's activation is not open in the else branch.",
+      "evidence": [],
+      "fix": "Prefix those labels with 'throw' (e.g. 'throw IllegalArgumentException'), or add a short note that the arrows stand for exception propagation."
+    }
+  ]
+}

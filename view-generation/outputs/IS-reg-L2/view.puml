@@ -1,0 +1,92 @@
+@startuml
+title User registration (UC1) - control flow and integration points
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 220
+
+actor "Student / Librarian\n(new user)" as U
+participant "Registration form\n<<boundary>>\nregistration.html (web) /\nSwing Registration" as UI
+participant "AuthenticationController\n<<boundary, Spring REST>>\nPOST /api/auth/register" as AC
+participant "RestExceptionHandler\n<<boundary>>" as REH
+participant "LibraryFacade\n<<controller, singleton>>" as LF
+participant "UserManager\n<<controller, singleton>>" as UM
+participant "UserFactory\n(StudentFactory | LibrarianFactory)\n<<controller/factory>>" as UF
+participant "UserRegistry\n<<entity registry>>" as UR
+participant "PersistenceManager\n<<database, JPA>>" as PM
+database "MySQL reservationsdb\n(User / Student / Librarian)" as DB
+
+U -> UI : fill role, name, surname,\ninstitutional email, password, identifier
+UI -> UI : [IP0] client check: all fields non-empty\n(Swing: "Complete all fields")
+
+alt Web client
+  UI -> AC : [IP1] HTTP POST /api/auth/register\n(form-urlencoded: role, name, surname,\nemail, password, identifier)
+else Swing client (no HTTP hop)
+  UI -> LF : [IP2] register(role, name, surname,\nemail, password, identifier)
+end
+
+AC -> LF : [IP2] register(role, name, surname,\nemail, password, identifier)
+LF -> UM : register(...)  (pure delegation)
+
+group Validation (no persistence access)
+  UM -> UM : validate(role, name, password)\nrole in {Student, Librarian}; password 8..32 chars
+  alt role = Student
+    UM -> UM : validateStudent: name/surname letters<=20,\nemail ...@unina.it, ID = [A-Z]\\d{8}
+  else role = Librarian
+    UM -> UM : validateLibrarian: name/surname, email,\ncode alphanumeric
+  end
+end
+
+group Uniqueness checks
+  UM -> UR : [IP3] institutionalEmailExists(email)
+  UR -> PM : findFirstByFields(User, institutionalEmail)
+  PM -> DB : SELECT
+  DB --> PM : row / none
+  PM --> UR : User | null
+  UR --> UM : boolean
+  UM -> UR : [IP3] findStudentByStudentNumber(id) |\nfindLibrarianByCode(id)
+  UR -> PM : findFirstByFields(Student | Librarian, ...)
+  PM -> DB : SELECT
+  DB --> PM : row / none
+  PM --> UR : entity | null
+  UR --> UM : entity | null
+end
+
+group Account creation and persistence
+  UM -> UF : [IP4] createUser(name, surname, email,\npassword, identifier)
+  UF --> UM : Student | Librarian (new User)
+  UM -> UR : [IP5] registerUser(newUser)
+  UR -> PM : save(newUser)
+  PM -> DB : [IP6] BEGIN; INSERT (JOINED inheritance;\nunique email); COMMIT
+  DB --> PM : ok / constraint error
+  PM --> UR : true | false (rollback on error)
+  UR --> UM : success
+end
+
+alt Validation or uniqueness failure
+  UM --> LF : IllegalArgumentException(message)\n(invalid field, email already used,\nidentifier already used)
+  LF --> AC : exception
+  AC --> REH : exception
+  REH --> UI : [IP7] HTTP 400 {"error": message}
+  UI --> U : show error (web: #error div;\nSwing: error dialog)
+else Persistence failure (save returned false)
+  UM --> LF : RuntimeException("Server error: ... not saved")
+  LF --> AC : exception
+  note right of AC : RestExceptionHandler maps only\nIllegalArgument/IllegalState/Security;\nRuntimeException is not mapped here\n(framework default, HTTP 500)
+  AC --> UI : error response
+  UI --> U : show error
+else Success
+  UM -> UM : toDTO(newUser)
+  UM --> LF : UserDTO (id, name, surname, email,\nrole, identifier, totalVisitCount)
+  LF --> AC : UserDTO
+  AC --> UI : [IP7] HTTP 200 UserDTO (JSON)
+  UI --> U : "Registration complete! You can now sign in."\nredirect to login (index.html / Swing Login)
+end
+
+legend right
+  IP0 UI input handling   IP1 HTTP/REST contract (boundary -> controller)
+  IP2 LibraryFacade entry point (also used directly by Swing)
+  IP3 UserManager -> UserRegistry (duplicate checks)
+  IP4 UserManager -> factory (role-specific entity)
+  IP5/IP6 UserRegistry -> PersistenceManager -> database (transaction, unique constraint)
+  IP7 response/error mapping (RestExceptionHandler, DTO)
+endlegend
+@enduml

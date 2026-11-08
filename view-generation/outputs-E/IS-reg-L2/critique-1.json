@@ -1,0 +1,38 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components involved in registration and their responsibilities",
+     "answered": "partly",
+     "why": "The seven lifelines are the right components and match the code (registration.html, AuthenticationController, LibraryFacade, UserManager, Student/LibrarianFactory, UserRegistry, PersistenceManager). Their responsibilities are only in inventory.json. The diagram itself shows class names and a few technology hints, so a tester reading the view cannot see, for example, that UserManager does validation, uniqueness checks and the choice of factory, or that the facade only forwards the call. RestExceptionHandler is not shown, although it turns exceptions into HTTP status codes and so decides what a test sees."},
+    {"detail": "how they interact when a new user creates an account",
+     "answered": "partly",
+     "why": "The happy-path order of messages 01-10 matches UserManager.register (lines 65-97). The control flow around the branches is wrong, though. The uniqueness check (05/06) is drawn inside the operand guarded [input valid and unique], so the guard assumes a result that the check has not produced yet. In the code the duplicate check runs first and then throws IllegalArgumentException before createUser. The view also leaves out the third outcome: registerUser returns false, UserManager throws RuntimeException, RestExceptionHandler does not map it, and the client gets Spring's default error (500). The view also does not show the exception reply path from UserManager back through the facade to the controller."},
+    {"detail": "main integration points to exercise in the tests",
+     "answered": "partly",
+     "why": "The integration points are listed only in README.md. The diagram does not mark them. Two of them are not drawn at all: the exception-to-HTTP mapping in RestExceptionHandler (400 for IllegalArgumentException, nothing for RuntimeException), and the PersistenceManager.save transaction, which catches the exception, rolls back and returns false. The second entry point (the Swing Registration.java calling LibraryFacade.register directly) appears only in a note, which is acceptable."}
+  ],
+  "level": "right",
+  "level_why": "The view has 7 lifelines and 11 messages, which fits 'balanced'. The two uniqueness lookups are collapsed into one message and internal return messages are dropped, which is a sensible cut. LibraryFacade only forwards the call, but it is the shared entry point for the REST and Swing clients, so keeping it is justified. The fixes below rearrange the existing messages and add one alt operand. Adding the RestExceptionHandler lifeline would make 8 lifelines, which is still within balanced. Do not add per-field validation rules or the separate email and identifier lookups.",
+  "unsupported": [
+    "The guard [input valid and unique] covers messages 05/06 (the uniqueness lookups). In the code (UserManager.java:77-86) these lookups decide the duplicate outcome, so they must come before the branch, not inside the operand that assumes their result.",
+    "The [invalid or duplicate] operand is drawn as the only failure, with a single 400 reply. The code has a further failure that this does not cover: a failed persist makes UserManager.java:93-94 throw RuntimeException, which RestExceptionHandler.java:19 does not handle, so the client does not get a 400."
+  ],
+  "missing": [
+    "A save-failure outcome: PersistenceManager.save catches RuntimeException, rolls back and returns false (PersistenceManager.java:19-43). UserManager then throws RuntimeException, which is unmapped and gives an HTTP 500 by Spring default. This is an integration point a tester must exercise.",
+    "RestExceptionHandler as the part that turns IllegalArgumentException/IllegalStateException into 400 {error} (RestExceptionHandler.java:18-22). Without it, the 400 reply has no visible source.",
+    "Separate failure points before the reply: format validation throws IllegalArgumentException in validate/validateStudent/validateLibrarian before any database access, and the duplicate check throws after the lookups. Tests need to see that these are two different stages, even if both produce 400.",
+    "The factory choice is made by role ('Student' builds a StudentFactory, anything else builds a LibrarianFactory; UserManager.java:69, 89). A guard or label should show it, because it drives the test cases for each role and for an unknown role.",
+    "Responsibilities in the diagram itself, for example a short note per lifeline or tagged role hints, instead of only in inventory.json."
+  ],
+  "uml": [
+    "An alt operand guard must be a condition that holds when the operand is entered. Here [input valid and unique] guards the very interactions that check uniqueness. Move 05/06 before the alt, or nest the alt fragments in order: after validation, after the uniqueness check, after the save.",
+    "Exceptions travel back to the controller with no message drawn, so 400 {error} appears from nowhere. Show the exception return (a dashed reply labelled with the exception) from UserManager to the controller or exception handler, or say in a note that the reply is an exception reply.",
+    "The factory is created per call (new StudentFactory()/new LibrarianFactory()). A «create» message to the factory lifeline, or a role guard on createUser, would be more accurate than an always-present 'User factory (Student / Librarian)' lifeline. This is minor."
+  ],
+  "fixes": [
+    "Restructure the control flow: draw validation (04) and the uniqueness lookups (05/06) before the branching. Then use an alt with three operands: [invalid format] returns 400 (IllegalArgumentException), [duplicate email/identifier] returns 400, and [unique] runs createUser, registerUser and save, which in turn branch on [save ok] 200 UserDTO and [save fails: rollback, false] RuntimeException, unmapped, 500.",
+    "Add RestExceptionHandler as a lifeline, or as a clearly labelled reply source, so the tester can see where exceptions become HTTP 400 and where they do not (RuntimeException).",
+    "Mark the integration points in the diagram, for example with numbered notes: HTTP form parameters at the controller, exception-to-HTTP mapping, role-based factory selection, and JPA lookups and the save transaction with rollback. Do not leave them only in the README.",
+    "Show each component's responsibility in the view, for example a short note per lifeline or a role hint under each name, especially UserManager (validate, check uniqueness, choose factory, persist) and LibraryFacade (pass-through entry shared with Swing).",
+    "Add a role guard to createUser ([role = Student] StudentFactory, [otherwise] LibrarianFactory) so that both roles get their own test cases."
+  ]
+}

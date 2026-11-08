@@ -1,0 +1,55 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+title UML use case diagram: Municipal problem reporting system
+
+actor "Citizen" as citizen
+actor "Municipal operator" as operator
+
+usecase "Report a problem" as ucCreate
+usecase "Track my reports\nand notifications" as ucTrack
+usecase "Review received reports" as ucReview
+usecase "Add internal note" as ucNote
+usecase "Update report status" as ucStatus
+usecase "Monitor activity trends" as ucMonitor
+
+citizen -- ucCreate
+citizen -- ucTrack
+operator -- ucReview
+operator -- ucStatus
+operator -- ucMonitor
+ucNote ..> ucReview : <<extend>>
+
+note as nNotify
+  A status update notifies the
+  citizen, who reads it under
+  "Track my reports and notifications".
+end note
+nNotify .. ucStatus
+nNotify .. ucTrack
+@enduml

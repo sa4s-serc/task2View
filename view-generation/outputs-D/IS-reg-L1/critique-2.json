@@ -1,0 +1,41 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "system components involved in user registration",
+      "answered": "yes",
+      "why": "Every component on the registration path has its own lifeline: registration.html/app.js, AuthenticationController, LibraryFacade, UserManager, UserRegistry/PersistenceManager and the JPA database. The code confirms each one (AuthenticationController.java:22-30, LibraryFacade register -> UserManager.register, UserManager.java:65-97, UserRegistry.java:26-67, PersistenceManager.save). RestExceptionHandler appears only in a note, but it decides the HTTP status the tester asserts on, so that is enough. The note also names the second entry point the tester uses (RegistrationTest and Swing Registration.java:134 call LibraryFacade.register directly)."
+    },
+    {
+      "detail": "how they interact",
+      "answered": "partly",
+      "why": "The happy path and the three IllegalArgumentException exits are correct and in code order (UserManager.java:67-96). Three gaps remain. (a) Every error and success reply jumps from UserManager straight to the form, so the view never shows how a reply goes back through LibraryFacade and AuthenticationController, or where RestExceptionHandler turns the exception into the HTTP response. That is the layer crossing an integration tester needs to see. (b) Each break ends at the form. The form's reaction (app.js api() throws Error(data.error), and registration.html calls showError('error', err.message) to fill the #error div) is never drawn back to the user, so the observable result of a failure is missing. Only the success path reaches the user. (c) Message 05 shows only validateStudent/validateLibrarian. The common validate(role, name, password) runs first (UserManager.java:52-58, 67), and its role, name and password-length errors are cases a tester has to cover."
+    }
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines and 22 messages, with endpoint, method and exact error-message names, fit an integration tester who writes end-to-end cases and asserts on status codes and messages. Nothing should be dropped. Folding the factories and DTO into UserManager self-calls is the right abstraction. The detail is uneven, though. The email lookup shows a database round trip, but the identifier lookup (13) collapses its own into 'SELECT as above'. The tester-visible error rendering and the controller/handler reply path are also collapsed. Spend the message budget there rather than on the duplicated DB detail.",
+  "unsupported": [
+    "Replies 06, 11, 14, 20 and 22 drawn from UserManager directly to the Registration form: no such call exists. In the code, UserManager.register returns or throws to LibraryFacade.register (LibraryFacade.java:39), which returns to AuthenticationController.register (AuthenticationController.java:29-30). For the 400 replies, RestExceptionHandler.handleInvalidRequest (RestExceptionHandler.java:19-22) builds the response that reaches the form.",
+    "Message 12 names two operations in one message ('Student: findStudentByStudentNumber / Librarian: findLibrarianByCode'), and messages 05 and 15 do the same. The code makes a single call chosen by the 'student' flag (UserManager.java:70-75, 81-83, 89). The view shows a combined message instead of the actual branch."
+  ],
+  "missing": [
+    "The common validate(role, name, password) step that runs before the role-specific validation (UserManager.java:52-58, 67). It is the source of the 'A valid role is required.', 'First name is required.' and password 8-32 character errors.",
+    "The error shown to the user on every failed path: app.js:49-51 throws Error(data.error or 'Error ' + status), and registration.html catches it and calls showError('error', err.message), which fills the #error div. Add form --> user error replies in each break and in [not saved].",
+    "The return path through AuthenticationController and RestExceptionHandler: IllegalArgumentException -> RestExceptionHandler.handleInvalidRequest -> 400 {\"error\": message} (RestExceptionHandler.java:19-22). The RuntimeException from a failed save (UserManager.java:93-95) is not mapped by any handler.",
+    "The database round trip for the identifier lookup: findStudentByStudentNumber / findLibrarianByCode -> PersistenceManager.findFirstByFields -> SELECT (UserRegistry.java:44-46, 58-60). Message 13 replies without the reg -> db call that message 08 shows for the email lookup.",
+    "Optional for completeness: the browser's own HTML5 'required' check (registration.html:21-39) blocks submit when a field is empty, before any request is sent. One note is enough, because a tester driving the UI hits it first."
+  ],
+  "uml": [
+    "Reply messages must return to the lifeline that sent the matching call. Replies 06, 11, 14, 20 and 22 go from UserManager to the form, but UserManager was called by LibraryFacade (message 04). A note cannot repair this. Draw the replies hop by hop (mgr --> facade --> api --> form), or model the exception through api/RestExceptionHandler.",
+    "Alternative behaviour by role is written into message text ('Student: ... Librarian: ...') on messages 05, 12 and 15. In UML a message is one operation call. Use an alt [role = Student] / [role = Librarian] combined fragment, or one generic operation with the role as an argument.",
+    "Exceptions are drawn as ordinary reply messages labelled with a status. UML has no exception-reply kind, so this is acceptable, but the reply should carry the returned value (e.g. 'ResponseEntity 400 {error}') from the correct sender, not a description such as 'unhandled error (RuntimeException, not 400)'.",
+    "Message 13 is a reply ('entity or null') to a call whose own database interaction is not drawn, unlike the parallel lookup 07-10. This is inconsistent rather than wrong."
+  ],
+  "fixes": [
+    "Route every reply back through the calling chain (UserManager --> LibraryFacade --> AuthenticationController --> form). Show RestExceptionHandler (as a lifeline, or as a self-call on the controller) mapping IllegalArgumentException to 400 {\"error\": message}, and show that the save-failure RuntimeException is unmapped.",
+    "Add form --> user replies on each error path: 'error message shown in #error' (app.js throws data.error; registration.html calls showError). The tester then sees the observable result of every case, not only the success case.",
+    "Add the common validate(role, name, password) check before the role-specific validation. Name its error classes in the [invalid input] guard or in the reply.",
+    "Replace the 'Student: ... / Librarian: ...' message labels on 05, 12 and 15 with one alt [Student] / [Librarian] fragment, or with a single message that takes the role as an argument.",
+    "Make the two lookups consistent. Either show the reg -> db SELECT for the identifier lookup, or collapse both DB round trips. Use the saved messages for the reply hops and error display above."
+  ]
+}

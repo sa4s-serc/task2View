@@ -1,0 +1,47 @@
+@startuml
+title Component view: seat booking (make / cancel / check-in)
+top to bottom direction
+skinparam shadowing false
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 55
+
+[Web Pages\n(HTML + app.js)] as web
+[Swing Booking Wizard] as swing
+[Reservation REST API\n(Spring MVC)] as rest
+[Expiry Scheduler\n(Spring @Scheduled)] as sched
+[LibraryFacade] as facade
+[ReservationManager\n(booking rules)] as rm
+[Seat Assignment\nStrategy] as strat
+[Notification Manager\n(Observer)] as nm
+[Reservation Model\n(Reservation, state, Student)] as rmodel
+[Room and Seat Model\n(Area, Seat, StudyRoom)] as room
+[Reservation Registry] as rreg
+[Room Registry] as roomreg
+[User Registry] as ureg
+[Persistence Manager\n(JPA)] as pm
+[Notification Gateway\n(email stub)] as gw
+
+web --> rest : HTTP /api/reservations
+swing --> facade : makeReservation
+rest --> facade : delegate
+sched --> facade : manageReservationEnd
+facade --> rm : book, cancel, check in
+rm --> strat : selectSeat
+rm --> rmodel : create, setState
+rm --> room : resolve, availability
+rm --> rreg : save, update
+rm --> roomreg : find room, seat
+rm --> ureg : find student
+rm ..> nm : notify (attach)
+rmodel --> nm : notifyObservers
+room --> rreg : isAvailable
+rmodel ..> rreg : find active
+rreg --> pm
+roomreg --> pm
+ureg --> pm
+nm --> gw : send email
+facade --> nm : sendReminders
+
+web -[hidden]-> swing
+@enduml

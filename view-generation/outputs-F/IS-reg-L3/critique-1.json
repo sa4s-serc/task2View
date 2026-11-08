@@ -1,0 +1,42 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components in the registration process, their responsibilities, interactions and dependencies",
+     "answered": "yes",
+     "why": "The six lifelines (client, AuthenticationController, UserManager via LibraryFacade, UserRegistry, PersistenceManager, Student/Librarian factory) match the call chain in AuthenticationController.java:29-30, LibraryFacade.java register, UserManager.register:65-97, UserRegistry:26-67 and PersistenceManager.save. Responsibilities follow from the message labels."},
+    {"detail": "which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness, and persist the new user",
+     "answered": "partly",
+     "why": "Request handling, validation and persistence are shown. Role-specific handling is hidden in two places. Validation is one self-message, but the code first runs a common validate() and then branches on role into validateStudent (with the student-ID regex) or validateLibrarian (UserManager.java:67-75). Factory selection also depends on role (StudentFactory vs LibrarianFactory, UserManager.java:89), but createUser carries no role guard. Uniqueness is drawn as one 'email / identifier exists?' call. The code makes two separate checks that each throw: institutionalEmailExists, then findStudentByStudentNumber or findLibrarianByCode (UserManager.java:77-86)."},
+    {"detail": "how they collaborate when invalid or already existing data is provided",
+     "answered": "partly",
+     "why": "Invalid, duplicate and save-failure branches exist. But the duplicate branch merges email-taken and identifier-taken into one case, although they are different integration paths with different messages and lookups. The exceptions are drawn as if UserManager answered the client directly. In the code they propagate through LibraryFacade and AuthenticationController, and RestExceptionHandler turns them into 400s. The view never shows that IllegalArgumentException becomes 400 while the RuntimeException from a failed save is not handled (so it is not 400)."},
+    {"detail": "main integration points and interactions the tests should cover",
+     "answered": "partly",
+     "why": "Most integration points can be read from the arrows. The exception-to-HTTP mapping at the controller boundary (RestExceptionHandler) is not drawn, though the README names it as a test point. The PersistenceManager boolean result that drives the save-failure branch is not shown, and neither are the per-role factory and lookup variants."}
+  ],
+  "level": "right",
+  "level_why": "Six lifelines and about a dozen messages suit the balanced level, and merging LibraryFacade into UserManager is reasonable. Nothing needs to be cut. The gaps are a few merges that went too far: the two uniqueness checks and the role-dependent branch. Splitting them adds two or three messages or an alt and keeps the view balanced. Field-by-field validation rules are rightly left out.",
+  "unsupported": [
+    "Messages 04, 07, 11 and 12 go from UserManager straight to the Client. In the code, UserManager returns or throws to LibraryFacade/AuthenticationController, and Spring (RestExceptionHandler for IllegalArgumentException) builds the HTTP response. Neither inventory.json (um->ctl for UserDTO) nor the code supports a direct UserManager->Client message.",
+    "'email / identifier exists?' as a single call to UserRegistry: there is no such operation. The code calls institutionalEmailExists(email) and then findStudentByStudentNumber or findLibrarianByCode (UserManager.java:77-83), with a separate throw after each.",
+    "The 'save fails' branch is drawn without the boolean that triggers it. PersistenceManager.save catches the RuntimeException, rolls back and returns false (PersistenceManager.java:31-38), and UserManager throws on false (UserManager.java:92-95). The diagram shows no return from save/registerUser."
+  ],
+  "missing": [
+    "Role-dependent branching: the alt/opt on role around student-ID validation (regex [A-Z]\\d{8}, UserManager.java:29,177) versus librarian-code validation, and the choice of StudentFactory vs LibrarianFactory (UserManager.java:89).",
+    "Two separate uniqueness checks with separate failures: email already used (message 'Email is already associated with an account.') and identifier already used ('Identifier is already in use.').",
+    "Exception propagation back through AuthenticationController, with the mapping in RestExceptionHandler: IllegalArgumentException/IllegalStateException become 400 {\"error\": msg}, while the 'could not be saved' RuntimeException is not mapped (Spring default 500). A note or a reply label on the ctl->client arrow is enough.",
+    "Return messages from PersistenceManager (User or null, true/false) and UserRegistry back to UserManager, which drive the alt guards."
+  ],
+  "uml": [
+    "Replies and exceptions skip lifelines: a reply should go back to the caller (UserManager -> AuthenticationController -> Client). Draw them on that path.",
+    "Synchronous calls 05/06 and 09/10 have no reply messages. The activations are ended (deactivate) without a return, so the guard values the alts test never appear.",
+    "createUser(...) to the factory has no activation and no reply returning the User. In the code the factory is instantiated (new) per role, so a create message (<<create>> / arrow to the participant head) or a role guard would be more accurate.",
+    "The AuthenticationController activation ends inside the nested alt (deactivate ctl inside [saved]), so its execution looks shorter than on the error paths. Close it after the outermost alt."
+  ],
+  "fixes": [
+    "Route all replies and exceptions back along the call chain (UserManager -> AuthenticationController -> Client) and state the mapping in RestExceptionHandler: IllegalArgumentException -> 400 {error}; the save-failure RuntimeException is not mapped (500).",
+    "Split the uniqueness check into two calls, institutionalEmailExists(email) and findStudentByStudentNumber/findLibrarianByCode(identifier), each with its own [already used] alt branch and error message.",
+    "Make the role branch visible: an alt [Student]/[Librarian] (or role guards) on the role-specific validation (student-ID format vs librarian code) and on the choice of StudentFactory vs LibrarianFactory.",
+    "Add reply messages from PersistenceManager/UserRegistry (User|null, true/false) so the guards on the duplicate and save-failure branches come from drawn returns.",
+    "Give createUser an activation and a reply (newUser), and close the AuthenticationController activation after the outer alt."
+  ]
+}

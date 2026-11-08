@@ -1,0 +1,120 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root { FontName Helvetica; FontSize 14; FontColor #1F2937 }
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 360 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 90
+skinparam ranksep 60
+hide empty members
+skinparam classAttributeIconSize 0
+
+title UML class diagram: persisted report data and its dependents (detailed)
+
+class "Boundary GUIs" as gui <<muted>>
+class "Controllers" as ctrl <<muted>>
+class "ReportService" as rsvc <<muted>>
+class "UserService" as usvc <<muted>>
+class "PersistenceService" as ps <<muted>>
+
+abstract class "User  (table users)" as User {
+  userId: Long {PK}
+  name: String {≤ 50}
+  lastName: String {≤ 50}
+  phoneNumber: String {≤ 20}
+  discriminator: CITIZEN | MUNICIPAL_OPERATOR
+}
+class "Credentials  (embedded in users)" as Cred {
+  email: String {unique, ≤ 100}
+  password: String {≤ 100}
+}
+class "Citizen" as Citizen
+class "MunicipalOperator" as Op
+class "Report  (table reports)" as Report <<accent>> {
+  reportId: Long {PK}
+  title: String {≤ 50}
+  description: String {≤ 1000}
+  category: ReportCategory {enum text}
+  dateReport: Date
+  imageAttached: String
+  currentStatusName: String
+  citizenEditable: boolean
+}
+class "Location  (embedded in reports)" as Loc {
+  city: String {≤ 80}
+  cap: String {5}
+  street: String {≤ 100}
+  streetNumber: String {≤ 10}
+  municipalArea: String {≤ 80}
+}
+class "StatusUpdate  (table status_updates)" as SU {
+  updateId: Long {PK}
+  updateDate: Timestamp
+  newStatus: String {≤ 30}
+}
+class "InternalNote  (table internal_notes)" as Note {
+  noteId: Long {PK}
+  text: String {≤ 1000}
+  dateEntry: Timestamp
+}
+class "Notification  (table notifications)" as Notif {
+  notificationId: Long {PK}
+  sentDate: Timestamp
+  message: String {≤ 1000}
+  notifiedStatus: String {≤ 50}
+}
+
+User <|-- Citizen
+User <|-- Op
+User *-- "1" Cred : credentials
+Report *-- "1" Loc : location
+Report "0..*" ---> "1" Citizen : citizenReporting
+Report "0..*" --> "0..1" Op : operator
+Report "1" *-- "0..*" SU : statusUpdates
+Report "1" *-- "0..*" Note : internalNotes
+SU "0..*" --> "1" Op : operator
+Note "0..*" --> "1" Op : operator
+Notif "0..*" --> "1" Report : report
+Notif "0..*" --> "1" Citizen : destinatario
+
+gui ..> ctrl : invokes
+ctrl ..> rsvc : calls
+ctrl ..> usvc : calls
+rsvc ..> ps : reads/writes
+usvc ..> ps : reads/writes
+rsvc ..> Report : manages
+rsvc ..> SU : records
+rsvc ..> Note : records
+rsvc ..> Notif : creates
+usvc ..> User : registers
+
+note right of Report
+  Status values: submitted, assigned,
+  in_progress, resolved. Current status is
+  kept as text. Categories: BROKEN_STREETLIGHT,
+  DAMAGED_ROAD, ABANDONED_WASTE, GENERAL_HAZARD,
+  DAMAGED_STREET_FURNITURE. State objects are
+  rebuilt on load (@Transient).
+end note
+note bottom of Notif
+  Created only when the new status
+  is assigned or resolved.
+end note
+legend bottom
+  Blue = central entity. Grey = dependents of the persisted data.
+  Filled diamond = cascade-owned (cascade ALL, orphan removal for notes/updates).
+  Plain arrow = foreign key reference.
+endlegend
+@enduml

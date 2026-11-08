@@ -1,0 +1,110 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root { FontName Helvetica; FontSize 14; FontColor #1F2937 }
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 360 }
+</style>
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+title Data model (UML class diagram): persisted entities of the municipal report system and their dependents
+
+abstract class User <<persistent>> {
+  userId: Long {id}
+  name, lastName, phoneNumber
+  credentials: Credentials
+}
+class Credentials <<embeddable>> {
+  email {unique}
+  password
+}
+class Citizen
+class MunicipalOperator
+class Report <<persistent>> {
+  reportId: Long {id}
+  title, description
+  category: ReportCategory
+  dateReport, imageAttached
+  currentStatusName: String
+  citizenEditable: boolean
+}
+class Location <<embeddable>> {
+  city, cap, street
+  streetNumber, municipalArea
+}
+class StatusUpdate <<persistent>> {
+  updateId: Long {id}
+  updateDate
+  newStatus: String
+}
+class InternalNote <<persistent>> {
+  noteId: Long {id}
+  text
+  dateEntry
+}
+class Notification <<persistent>> {
+  notificationId: Long {id}
+  sentDate, message
+  notifiedStatus
+}
+class ReportService
+class UserService
+class PersistenceService {
+  save(o), update(o)
+  findById(cls, id)
+  findByFields(cls, map)
+}
+
+User <|-- Citizen
+User <|-- MunicipalOperator
+User *-- "1" Credentials
+Report *-- "1" Location
+Citizen "1" <-- "0..*" Report : reporter
+MunicipalOperator "0..1" <-- "0..*" Report : assignee
+Report "1" *-- "0..*" StatusUpdate : history
+Report "1" *-- "0..*" InternalNote : notes
+MunicipalOperator "1" <-- "0..*" StatusUpdate : author
+MunicipalOperator "1" <-- "0..*" InternalNote : author
+Report "1" <-- "0..*" Notification : about
+Citizen "1" <-- "0..*" Notification : recipient
+
+ReportService ..> Report : reads, writes
+ReportService ..> Notification : creates, reads
+ReportService ..> InternalNote : creates, reads
+ReportService ..> StatusUpdate : reads
+UserService ..> User : registers, finds
+ReportService ..> PersistenceService : persists via
+UserService ..> PersistenceService : persists via
+
+note bottom of Report
+  category (enum ReportCategory): BROKEN_STREETLIGHT,
+  DAMAGED_ROAD, ABANDONED_WASTE, GENERAL_HAZARD,
+  DAMAGED_STREET_FURNITURE.
+  Status text: submitted, assigned, in_progress,
+  resolved; state objects are rebuilt on load.
+  Location and Credentials columns sit in the
+  reports and users tables; Citizen and operator
+  share table users (discriminator role).
+end note
+note bottom of PersistenceService
+  Services are called by the Control classes;
+  the GUIs reach them only through Control.
+  Store: MySQL reports_db via Hibernate
+  (hbm2ddl update).
+end note
+legend bottom
+  Profile declared here: <<persistent>> = JPA entity (own table), <<embeddable>> = columns embedded in the owner's table.
+  Solid arrows = foreign-key associations; dashed = code dependency.
+endlegend
+@enduml

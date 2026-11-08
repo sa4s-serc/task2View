@@ -1,0 +1,50 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "main data entities stored and their relationships",
+      "answered": "yes",
+      "why": "All seven JPA entities in persistence.xml (User, Citizen, MunicipalOperator, Report, StatusUpdate, InternalNote, Notification) and the two embeddables (Credentials, Location) are drawn. Their associations have the right multiplicities: reports.citizen_id is not null, reports.operator_id is nullable, and status_updates, internal_notes and notifications carry not-null FKs. Two gaps for a DB engineer: the attributes and FK roles use Java field names, not the physical column names (report_date, attached_image, current_status, created_date, citizen_id, operator_id, report_id); and the discriminator column is shown as 'discriminator' when the code names it 'role' (User.java @DiscriminatorColumn name=\"role\", length 30)."
+    },
+    {
+      "detail": "information persisted throughout the lifecycle of a report",
+      "answered": "partly",
+      "why": "The persisted fields are all present, and the notes give the status values and the rule that notifications are created only for assigned/resolved. Several lifecycle facts are missing. A report is created as 'submitted' with no StatusUpdate row, because Report's constructor calls initializeStatusSubmitted without registerStatusUpdate, so the history table never holds the initial state. operator_id is set on the first status update (ReportService.updateReportStatus calls assignOperator, then updateStatus). citizen_editable is derived from current_status and is rewritten on load (Report.rebuildCurrentStatus). Notifications are not cascade-owned by Report, so they outlive it and block deleting a report through the not-null FK. Nullability is not shown either: report_date and attached_image are nullable, every other column is NOT NULL."
+    },
+    {
+      "detail": "how users, reports, locations, categories, states, state changes, internal notes and notifications are related",
+      "answered": "partly",
+      "why": "Users, reports, locations, state changes, notes and notifications are related correctly. Category and state appear only as a typed attribute plus a note. ReportCategory is used as an attribute type but is not drawn, so the type is undefined in the model. The view also does not say that the state value is duplicated across reports.current_status, status_updates.new_status (length 30) and notifications.notified_status (length 50), as free text with no FK or check constraint. A schema change has to keep these consistent."
+    },
+    {
+      "detail": "which parts of the application depend on the persisted information",
+      "answered": "partly",
+      "why": "The GUI → Controllers → ReportService/UserService → PersistenceService chain is correct. But the most important dependency for a schema change is missing: PersistenceService.findByFields builds JPQL from entity field paths passed in as strings. The callers are ReportService ('citizenReporting.userId', 'report.reportId', 'category', 'location.municipalArea', 'currentStatusName'), UserService ('credentials.email', 'credentials.password'), and even ActivityMonitoringGUI, which puts 'currentStatusName' and 'location.municipalArea' directly into the query criteria (lines 545, 572). Renaming an attribute or column therefore breaks these string paths with no compile error. Status literals are also hard-coded in Report, Notification and ActivityMonitoringGUI. ReceivedReportsGUI, ReportCreationGUI and ReportCreationController import the ReportCategory enum, whose names are stored as text. The view also leaves out that ReportService reads MunicipalOperator/Citizen (findById in updateReportStatus and registerNewReport)."
+    }
+  ],
+  "level": "right",
+  "level_why": "For a detailed data-model view, attributes with lengths and keys, multiplicities, ownership and a short dependent chain are the right granularity, at 14 classes. Nothing needs cutting. The 'Boundary GUIs' and 'Controllers' groups are coarse but acceptable at this level, as long as the field-path dependency is stated. The gaps are about accuracy and completeness (physical names, nullability, the undrawn enum, string-path coupling), not about granularity. Adding per-GUI or per-controller classes would go beyond what is needed.",
+  "unsupported": [
+    "User attribute 'discriminator: CITIZEN | MUNICIPAL_OPERATOR': the code has no such field. The discriminator is a column named 'role' (VARCHAR 30) declared through @DiscriminatorColumn."
+  ],
+  "missing": [
+    "Physical column names and the discriminator column 'role'. These are needed to change the MySQL schema (hbm2ddl=update derives them from @Column/@JoinColumn).",
+    "Nullability per column (only report_date, attached_image and reports.operator_id are nullable) and the unique constraint on users.email, which is shown. Also the fact that the status strings are free text with no constraint.",
+    "ReportCategory as an «enumeration» (stored with EnumType.STRING, length 50), with its five literals.",
+    "The string field-path dependency: ReportService, UserService and ActivityMonitoringGUI query by entity attribute paths through PersistenceService.findByFields, so renaming an attribute or column breaks them at runtime.",
+    "Lifecycle facts: no StatusUpdate row for the initial 'submitted' state; operator_id set when status first advances; Notification not cascaded with Report (an FK blocks deleting a report)."
+  ],
+  "uml": [
+    "'Boundary GUIs' and 'Controllers' each stand for a whole package (Boundary.*, Control.*) but are drawn as classes. They should be UML packages, or be named as representative classes.",
+    "ReportCategory is used as an attribute type but not declared. Declare it as an «enumeration» classifier, or the model has an unresolved type. '{enum text}' is not a valid UML constraint for this.",
+    "Table names are embedded in class names ('Report  (table reports)'). Put them in a tagged value, a note or a stereotype from an applied profile, and keep the class name equal to the entity name.",
+    "The source uses non-standard stereotypes «accent» and «muted» only for styling. They are hidden in the render but are not UML stereotypes, so drop them from the model."
+  ],
+  "fixes": [
+    "Use the physical column names (or show both field and column), rename the discriminator to 'role', and add nullability ({nullable} or [0..1] on report_date, attached_image).",
+    "Add a note or dependency labels saying that ReportService, UserService and ActivityMonitoringGUI query by attribute paths ('citizenReporting.userId', 'report.reportId', 'credentials.email/password', 'category', 'location.municipalArea', 'currentStatusName'), so renames break them at runtime.",
+    "Declare ReportCategory as an «enumeration» with its five literals and type the category attribute with it. Say that status is free text, duplicated in reports.current_status, status_updates.new_status and notifications.notified_status.",
+    "State the lifecycle facts: no history row for the initial 'submitted' state, operator_id set on the first status change, citizen_editable derived from status, and notifications not cascaded with the report (a not-null FK blocks deleting a report).",
+    "Model 'Boundary GUIs' and 'Controllers' as packages, and remove the styling stereotypes and the table names from the class names."
+  ]
+}

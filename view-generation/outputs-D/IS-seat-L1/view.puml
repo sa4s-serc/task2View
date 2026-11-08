@@ -1,0 +1,85 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 240 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML component diagram: seat booking (make reservation) control flow
+
+actor "Student" as student
+
+component "Web client\n(static HTML + app.js)" as web
+component "Desktop client\n(Swing)" as swing
+component "REST controllers\n(Spring MVC)" as rest
+component "RestExceptionHandler" as exh
+component "LibraryFacade" as facade
+component "ReservationManager" as resmgr <<accent>>
+component "StudyRoomManager" as roommgr
+component "FirstAvailableAssignment" as first
+component "Domain entities\n(Reservation, Seat, Area, ...)" as entities
+component "Registries\n(Reservation, StudyRoom, User)" as registries
+component "NotificationManager" as notifmgr
+component "NotificationServiceAdapter" as adapter
+component "NotificationConfiguration" as nconf
+component "MySQL database\n(JPA / Hibernate)" as db <<muted>>
+
+interface "AssignmentStrategy" as IStrategy
+interface "Observer" as IObserver
+interface "NotificationService" as INotif
+
+student   ..> web   : books seat
+student   ..> swing : books seat
+web       ..> rest  : POST /api/reservations/create
+swing     ..> facade : makeReservation
+rest      ..> facade : makeReservation
+rest      ..> exh   : errors -> HTTP 400
+facade    ..> resmgr  : makeReservation
+facade    ..> roommgr : list rooms, slots, seats
+resmgr    ..> registries : 1 resolve, 4 save
+resmgr    ..> entities   : 2 check availability
+resmgr    ..> IStrategy  : 3 pick seat
+IStrategy -right- first
+resmgr    ....> entities   : 5 attach observer
+entities  ..> IObserver  : notifies
+IObserver -right- notifmgr
+notifmgr  ..> INotif     : send message
+INotif -right- adapter
+nconf     ..> notifmgr   : sets service
+roommgr   ..> registries : read rooms
+registries ..> db        : persists
+
+note bottom of resmgr
+  makeReservation: validate student, room,
+  area, slot; then synchronized block:
+  uniqueness, seat selection, save, notify.
+  seatId 0 = automatic seat.
+  Numbers show the order.
+end note
+
+legend right
+  Blue: the component to modify.
+  Grey: external persistence.
+  Dashed arrows: dependencies.
+end legend
+@enduml

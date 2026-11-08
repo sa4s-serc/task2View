@@ -1,0 +1,36 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "main components involved in seat booking and their responsibilities",
+     "answered": "yes",
+     "why": "Every component on the makeReservation path is there, each with a one-line responsibility: both UIs, LibraryFacade, ReservationManager, AssignmentStrategy, StudyRoomManager, the two model groups, the registries and persistence. The note listing today's rules matches ReservationManager.resolveRoom, resolveTimeSlot, validateUniqueness and selectSeat (ReservationManager.java:65-101, 173-197, 357-400). The view does not show that the booking request enters as ReservationRequestDTO, which is the data a new rule would most likely extend."},
+    {"detail": "how they interact with each other",
+     "answered": "partly",
+     "why": "The main call chain UI -> LibraryFacade -> ReservationManager -> strategy/models/registries is right. Two things are wrong or missing. StudyRoomManager has no edge to the study-room model, but it calls room.isOpenOnDate and computes seat availability per area (StudyRoomManager.java:231, 282-290), so the view hides that availability is computed in two places. NotificationManager -> Registries 'reads reservations' comes from the reminder/expiry job (NotificationManager.java:73-82, getEndingReservations), which is not part of booking. The arrows are also bare 'calls'/'notifies' with no interface, so the developer cannot see which operations (makeReservation(ReservationRequestDTO), selectSeat(List<Seat>)) form the contract."},
+    {"detail": "which parts of the system may be affected by the modification",
+     "answered": "partly",
+     "why": "Highlighting ReservationManager, AssignmentStrategy and the two models is a good start. But the diagram leaves out the shared availability logic a new rule would have to stay consistent with: Seat.isAvailable/Area.getAvailableSeats and ReservationRegistry.occupiesSlot (ACTIVE/CONFIRMED) are used both by ReservationManager and by StudyRoomManager, which feeds the wizard's seat counts and seat lists (AreaSelection.java:86, TimeSlotSelection.java:87). StudyRoomManager is therefore also affected, yet it is not marked. The impact on the UIs and REST controller through ReservationRequestDTO appears only as a README inference, not in the view. The existing MakeReservationTest is not mentioned anywhere."}
+  ],
+  "level": "too detailed",
+  "level_why": "For a balanced view of one feature, the bottom of the stack has more parts than the concern needs, while the decision-relevant middle has too little. PersistenceManager and the MySQL database add nothing to where rules go or what they affect; they can be merged into the Registries box (as '(JPA/MySQL)') or dropped. The NotificationManager -> Registries edge belongs to the reminder scheduler and should go. The Reservation model -> NotificationManager edge repeats ReservationManager -> NotificationManager (ReservationManager attaches the observer and triggers notifyObservers, ReservationManager.java:120-123), so keep just one. That brings the view to about 10 elements and 11 relations, with room for the one missing edge without going past balanced.",
+  "unsupported": [
+    "NotificationManager -> Registries 'reads reservations' as part of seat booking: the code reads ReservationRegistry only in the end-of-reservation/reminder routine (NotificationManager.java:73-82), not on the makeReservation path.",
+    "Reservation model -> NotificationManager 'notifies observers' as a static dependency: Reservation depends only on the Observer interface via Subject (Reservation.java:16, 181); the NotificationManager instance is attached at runtime by ReservationManager (ReservationManager.java:121). The edge should target the Observer interface or be dropped in favour of ReservationManager -> NotificationManager."
+  ],
+  "missing": [
+    "StudyRoomManager -> Study-room model dependency (StudyRoomManager.java:231 isOpenOnDate, 282-290 per-seat availability for RoomDetailDTO), and StudyRoomManager marked as affected, because availability shown to students has to follow the same rules as booking.",
+    "The booking request contract: LibraryFacade/ReservationManager offering makeReservation(ReservationRequestDTO) (LibraryFacade.java:136, ReservationManager.java:65), required by the Swing wizard (ReservationSummary.java:100) and ReservationController (ReservationController.java:29). A rule that needs new input changes this DTO and both callers.",
+    "The shared 'slot occupied' rule in ReservationRegistry.occupiesSlot (ReservationRegistry.java:120-123), used by Seat.isAvailable, Student uniqueness and StudyRoomManager: Registries should be marked as affected or the note should name it."
+  ],
+  "uml": [
+    "AssignmentStrategy is a Java interface with one implementation, FirstAvailableAssignment (README admits this). Draw it as an interface that ReservationManager requires and FirstAvailableAssignment (or a strategy component) provides, using ball-and-socket or an «interface» element, not as a plain component.",
+    "Relations are solid open-arrow lines (PlantUML '-->'), which read as associations. Inter-component usage in a UML component diagram is a dashed dependency (optionally «use»), or an assembly connector between required and provided interfaces.",
+    "No provided/required interfaces appear anywhere, even though LibraryFacade exists precisely to be the provided interface. Add at least the booking interface on LibraryFacade/ReservationManager.",
+    "The model groups and registries are sets of classes shown as components with no stereotype. That is acceptable, but the merged 'Registries' box should say it is a grouping (for example by naming the three classes as parts), so it does not read as one deployable component."
+  ],
+  "fixes": [
+    "Show and mark the shared availability logic: add StudyRoomManager -> Study-room model, mark StudyRoomManager as affected, and name ReservationRegistry.occupiesSlot / Seat.isAvailable as rule points in the note.",
+    "Model the booking contract as an interface: makeReservation(ReservationRequestDTO) provided by LibraryFacade/ReservationManager and required by the Swing wizard and REST controller, so the impact on callers appears in the view rather than only in the README.",
+    "Draw AssignmentStrategy as an interface required by ReservationManager and implemented by FirstAvailableAssignment, and change the solid arrows to dashed dependencies (or assembly connectors).",
+    "Remove the off-feature NotificationManager -> Registries edge, and either drop Reservation model -> NotificationManager or retarget it to the Observer interface.",
+    "Merge PersistenceManager and the MySQL database into the Registries box (or drop them) to keep the view at the balanced level."
+  ]}

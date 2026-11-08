@@ -1,0 +1,66 @@
+{
+  "concern_details": [
+    {
+      "detail": "main components involved in registration and their responsibilities",
+      "answered": "yes",
+      "answered_by": ["ui", "facade", "um", "reg", "db"],
+      "why": "The lifelines name the two entry points (Swing Registration form, POST /api/auth/register), LibraryFacade, UserManager, UserRegistry+PersistenceManager and MySQL. The messages show what each one does: the form checks for blank fields, the facade delegates, UserManager validates, checks uniqueness and creates the user through a factory, the registry looks users up and persists them, and the database stores them. This matches Registration.java:116-142, LibraryFacade.java:37-40, UserManager.java:65-97 and UserRegistry.java:26-67."
+    },
+    {
+      "detail": "how they interact when a new user creates an account",
+      "answered": "yes",
+      "answered_by": ["user", "ui", "facade", "um", "reg", "db"],
+      "why": "Messages 01-17 follow the success path in the order the code runs it: blank check, register delegation, validation, email and identifier lookups, factory creation, registerUser/persist, then the UserDTO comes back. Nested alt fragments cover invalid input and duplicates. The save-failure path is placed slightly wrong (see minor findings), but the flow is still clear."
+    },
+    {
+      "detail": "main integration points to exercise in the tests",
+      "answered": "yes",
+      "answered_by": ["ui", "facade", "um", "reg", "db"],
+      "why": "Each boundary that can be tested is a message between lifelines: the entry point to LibraryFacade (03), LibraryFacade to UserManager (04), UserManager to UserRegistry for the lookups (06, 08) and the persist (12), the registry to MySQL (07, 09, 13), and errors coming back to the caller (18-23). The README lists these as integration points. One gap: the error responses for the REST entry point are not shown (minor finding)."
+    }
+  ],
+  "level": "right",
+  "level_why": "Balanced level: the view shows the participating parts and the operations they call (register, institutionalEmailExists, findStudentByStudentNumber/findLibrarianByCode, registerUser), plus the main alternative paths. Per-field validation rules are folded into one self-call (05). Helpers such as UserDTO, JpaUtil and WizardStyle are left out. It neither goes down to code detail nor stays at box-level abstraction.",
+  "findings": [
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": null,
+      "claim": "The save-failure path is in the wrong fragment. 'failed' is in the else operand of alt [unique], so the diagram says it happens without registerUser (12) ever being called, and message 14 only ever returns 'true'. In the code, registerUser is called; PersistenceManager.save catches the error, rolls back and returns false; then UserManager throws RuntimeException.",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:92-95",
+        "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:31-38"
+      ],
+      "fix": "After message 12/13, add an alt [saved] / [save failed] fragment: return true leads to the UserDTO path; return false leads to RuntimeException('Server error...') propagating to the caller. Change the outer guard to [duplicate]."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": null,
+      "claim": "The duplicate check is drawn as two lookups followed by one 'not found' reply. In the code, if the email already exists, UserManager throws immediately and the identifier lookup (08/09) never runs. The two duplicate cases, which a tester would test separately, are merged.",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:77-86"
+      ],
+      "fix": "Return a result after message 06 (email exists: true/false) and label the else guard '[email or identifier already used]', or add a short note that the email check short-circuits."
+    },
+    {
+      "severity": "minor",
+      "kind": "missing",
+      "element": "ui",
+      "claim": "'error message' (20, 23) does not show how errors reach a REST caller. RestExceptionHandler maps IllegalArgumentException (invalid input, duplicates) to HTTP 400 {\"error\": msg}. The save-failure RuntimeException is not handled there, so Spring's default 500 applies. This mapping is something an integration tester at the REST entry point would assert.",
+      "evidence": [
+        "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19-22",
+        "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:140-142"
+      ],
+      "fix": "Change the labels to 'error dialog (form) / HTTP 400 {error} (REST)' and mention 500 for the save failure, or add a note on the entry-point lifeline."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "ui",
+      "claim": "Activation slip: the ui activation ends at message 20 (inside the [unique] alt), so in the [invalid] operand messages 22-23 arrive at and leave a lifeline that is not active.",
+      "evidence": [],
+      "fix": "End the ui activation (and facade/um) after the outer alt, or deactivate it once per operand consistently."
+    }
+  ]
+}
