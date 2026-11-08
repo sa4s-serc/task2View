@@ -10,8 +10,7 @@ The view source is view.puml next to the inventory. Checks:
   two-way       every element declared in view.puml is in the inventory, and every inventory element is drawn
   relations     every inventory relation is drawn, and every drawn relation is in the inventory
   concern       every concern detail says which elements answer it, or why it is not answered
-  budget        element count against the uml-view budget for the model kind and the detail level (--level, the
-                level given in the inputs, overrides the inventory's own detail_level)
+  level         with --level (the level given in the inputs): the inventory's detail_level must match it
   graph         with --graph: every element's "members" resolve to symbols; every drawn relation between two
                 elements with members has at least one code dependency between them; dependencies between drawn
                 elements that are not drawn are listed as "undrawn" (reported, not an error: draw them or say in
@@ -29,10 +28,6 @@ import re
 import sys
 from pathlib import Path
 
-BUDGET = {  # uml-view SKILL.md §1.3: (overview, balanced, detailed); None = no fixed cap
-    "component": (7, 12, 20), "deployment": (7, 12, 20), "use case": (8, 8, None),
-    "class": (7, 10, 15), "sequence": (5, 7, 7),
-}
 DECL = re.compile(r'^\s*(?:component|node|artifact|participant|actor|usecase|class|interface|enum|entity|'
                   r'boundary|control|database|collections|queue|package|frame|rectangle|abstract(?:\s+class)?)'
                   r'\s+("[^"]*"|[\w.:]+)(?:\s+<<[^>]*>>)?(?:\s+as\s+([\w.]+))?', re.I)
@@ -119,12 +114,22 @@ def graph_issues(inv: dict, graph_path: Path, issues: list) -> None:
         a, b = r.get("from"), r.get("to")
         if a in members and b in members and a != b:
             drawn_pairs.add(frozenset((a, b)))
+            if members[a] <= members[b] or members[b] <= members[a]:
+                continue  # an element and a part of it, e.g. a component and the interface it provides
             if not between(a, b):
                 issues.append(("graph", f"{a}->{b} is drawn but the code has no dependency between their members"))
-    aliases = sorted(members)
+    for a, x in [tuple(p) for p in list(drawn_pairs)]:
+        for y, z in ((a, x), (x, a)):
+            for b in members:  # y is drawn to a part of b (e.g. b's provided interface): y and b are connected
+                if b not in (y, z) and members[z] <= members[b]:
+                    drawn_pairs.add(frozenset((y, b)))
+    parent = {e["alias"]: e.get("parent") for e in inv.get("elements", [])}
+    kinds = {e["alias"]: e.get("kind") for e in inv.get("elements", [])}
+    aliases = sorted(a for a in members if kinds.get(a) != "interface")  # interfaces count via their providers
     for i, a in enumerate(aliases):
         for b in aliases[i + 1:]:
-            if frozenset((a, b)) in drawn_pairs or members[a] >= members[b] or members[b] >= members[a]:
+            if (frozenset((a, b)) in drawn_pairs or members[a] >= members[b] or members[b] >= members[a]
+                    or parent.get(a) == b or parent.get(b) == a):
                 continue  # drawn, or one element contains the other
             found = between(a, b)
             if found:
@@ -180,22 +185,9 @@ def main() -> int:
             if a not in elements:
                 issues.append(("concern", f"'{d.get('detail')}': {a} is not an inventory element"))
 
-    kind = str(inv.get("model_kind", "")).lower()
     level = str(inv.get("detail_level", "")).lower()
-    if args.level:
-        if level and level != args.level:
-            issues.append(("budget", f"inventory says detail_level {level}, but the given level is {args.level}"))
-        level = args.level
-    caps = next((v for k, v in BUDGET.items() if k in kind), None)
-    levels = ["overview", "balanced", "detailed"]
-    if caps and level in levels:
-        cap = caps[levels.index(level)]
-        count = len(elements) if "sequence" not in kind else len({a for a, e in elements.items()
-                                                                    if e.get("kind") != "message"})
-        if cap is not None and count > cap:
-            issues.append(("budget", f"{count} elements for a {level} {kind} view; budget is {cap}"))
-    else:
-        issues.append(("budget", "set model_kind and detail_level (overview, balanced or detailed)"))
+    if args.level and level != args.level:
+        issues.append(("level", f"inventory says detail_level '{level}', but the given level is {args.level}"))
 
     if args.graph:
         graph_issues(inv, Path(args.graph), issues)

@@ -1,0 +1,36 @@
+You are reviewing an architecture view that someone else produced for a stakeholder. The repository is the
+current folder. The view is in ./view-out/{case}/: view.puml (source), view.png (rendered), inventory.json (each
+element and relation with its evidence in the code), README.md, and model.json for component views. Look at the
+PNG and read the source.
+
+The request and its inputs (ISO/IEC/IEEE 42010:2022):
+Request: {request}
+- Entity of interest: {entity}
+- Stakeholder: {stakeholder}
+- Stakeholder perspective: {perspective}
+- Concern: {concern}
+{details}
+- Aspect: {aspect}
+- Viewpoint: {viewpoint}
+- Model kind: {model_kind}
+
+Check the view item by item; do not give an overall verdict.
+1. For each concern detail: is it answered by the view (yes, partly, no), and by which element ids?
+2. Is the level of detail right for the given detail level (too detailed, right, too abstract)?
+3. Findings. Each finding is about one element or relation (give its id from inventory.json, or null if it is
+   about something missing) and has a severity:
+   - blocking, only for: a concern detail the view does not answer; an element or relation the code contradicts;
+     something the concern needs that the code shows but the view leaves out; a detail level clearly different
+     from the given one; a UML error that changes what the diagram means.
+   - minor: everything else (wording, naming, small notation slips, nice-to-have additions).
+   For "unsupported" and "missing" findings, cite the code that shows it as path:line (relative to the repository
+   root). A finding about the code without a citation that exists will be ignored.
+Do not comment on colours, fonts or layout; a tool checks layout. Do not ask for additions that would take the
+view past the given detail level. If nothing is blocking, say so with an empty list of blocking findings; that
+is the expected outcome for a view that answers the concern at the given level.
+
+Write only ./view-out/{case}/{out} and do not change any other file. Use exactly this JSON shape:
+{{"concern_details": [{{"detail": "...", "answered": "yes" | "partly" | "no", "answered_by": ["id"], "why": "..."}}],
+  "level": "too detailed" | "right" | "too abstract", "level_why": "...",
+  "findings": [{{"severity": "blocking" | "minor", "kind": "concern" | "level" | "unsupported" | "missing" | "uml",
+                "element": "id or null", "claim": "...", "evidence": ["path:line"], "fix": "..."}}]}}

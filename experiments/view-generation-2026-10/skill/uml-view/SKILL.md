@@ -18,23 +18,14 @@ tags; the tags are explained in `DERIVATION.md`. Where this skill and `plantuml-
    concern needs two views; say so in the README and draw the one the model kind names. [GD, NIR, OAI]
 2. **Set two dials from the inputs** [CL, DW]:
    - *Detail* is given in the stakeholder perspective as `detail level: overview | balanced | detailed`. Use
-     that level; do not choose another one. If it seems wrong for the concern, still draw at the given level and
+     that level; do not choose another one. Overview: the main parts and how they connect; balanced: the parts
+     involved in the concern with their interfaces; detailed: the parts of one area the stakeholder will change,
+     with their interfaces and rules. If it seems wrong for the concern, still draw at the given level and
      say in the README what a different level would add. Only if no level is given, take it from the
      perspective: whole system / high level → **overview**; one feature or area → **balanced**; a change the
      stakeholder is about to make → **detailed** for that area only.
    - *Wording* from the stakeholder: business/analyst roles get domain terms and no technology names;
      engineering roles get technology and protocol names. [DW, WS, A42]
-3. **Element budget** (defaults from the sources; over budget → split or drop, never shrink) [CL, VHU, GD]:
-
-   | model kind | overview | balanced | detailed |
-   |---|---|---|---|
-   | component / deployment nodes | ≤ 7 | ≤ 12 | ≤ 20 |
-   | sequence | ≤ 5 lifelines, ≤ 8 messages | ≤ 7, ≤ 12 | ≤ 7, ≤ 25 |
-   | use case | ≤ 8 use cases | ≤ 8 | split by actor group |
-   | class | ≤ 7 classes | ≤ 10 | ≤ 15 per subject area |
-
-   The budget is a prompt to cut, not a target to fill; a smaller view that answers the concern is better. [CC, CL]
-
 ## Examples
 `examples/` holds worked examples from spring-petclinic, a repository unrelated to yours: a request, the view, its
 inventory and why it was drawn that way. Before drawing, read the example for your model kind (and both component
@@ -96,6 +87,22 @@ notation, not the content. See `examples/README.md`.
   alias, in reading order. [GD, NIR, A365]
 - Title = model kind + scope. A legend only if colour or line style carries meaning. [GD, ART, RCH, NIR]
 
+### Component views: build them from a model
+For a UML component diagram, do not write the PlantUML by hand. Write `view-out/<case>/model.json` (shape in the
+docstring of `scripts/component_model.py`) and run
+`python3 -I .claude/skills/uml-view/scripts/component_model.py build view-out/<case>/model.json --graph .claude/repo-graph.json`.
+It checks the model and draws the PlantUML and inventory.json. UML 2.5.1 (Clause 11) in short:
+- A component is a replaceable unit of the system that hides its contents behind interfaces: a package or group
+  of classes with one responsibility, not a single class (a single class is a module-view element; the checker
+  notes it).
+- Components meet through interfaces: a provided interface (lollipop) is what a component offers, a required
+  interface (`«use»` dependency) what it needs from another. Name interfaces after what they offer (an API, a
+  repository, a form), not after one method.
+- Use a plain dependency only when no interface exists, with a 1–4 word label, never a method call.
+- Nest components with `parent` to show a subsystem and its parts; mark databases and outside systems
+  `"external": true`.
+Fix every error it reports; then render view.png from view.puml with plantuml.
+
 ### UML overrides (rules from the sources that are rejected because they break UML 2.5.1)
 - Stereotypes only from the UML 2.5.1 standard profile (e.g. «device», «executionEnvironment», «artifact»,
   «deploy», «manifest», «include», «extend», «create», «use», «call», «interface», «enumeration») or a profile
@@ -123,7 +130,7 @@ notation, not the content. See `examples/README.md`.
 3. Run `python3 -I .claude/skills/uml-view/scripts/check_inventory.py view-out/<case>/inventory.json --level <given
    detail level>` (add `--graph .claude/repo-graph.json` when the graph exists) and fix what it reports: evidence
    that does not exist, elements or relations drawn but not in the inventory (or the reverse), concern details
-   with no answer, elements over the budget, members that match nothing, and drawn relations with no code
+   with no answer, a detail level different from the given one, members that match nothing, and drawn relations with no code
    dependency behind them. For each "undrawn" dependency, draw it if the concern needs it, otherwise list it under
    `omitted` with the reason. Exit 0 means clean.
 4. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
@@ -146,6 +153,6 @@ Written up from what the agent had to rediscover in earlier runs (they hold for 
 - The takeaway sentence, the stakeholder, and the detail level chosen and why.
 - For each concern detail: where the view answers it, or why it does not (and which other view would).
 - A pointer to `inventory.json` (do not repeat it) and the final `check_inventory.py` result.
-- Omitted on purpose (what was left out to stay within budget or level, including undrawn dependencies).
+- Omitted on purpose (what was left out to stay at the given level, including undrawn dependencies).
 - Assumptions and "(unconfirmed)" items. [CH, DW, MP]
 - Check result: final puml-check and check_inventory.py results; after a revision, what changed and why.

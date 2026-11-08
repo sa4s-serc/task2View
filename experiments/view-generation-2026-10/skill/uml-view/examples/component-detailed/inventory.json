@@ -1,21 +1,11 @@
 {
  "model_kind": "UML component diagram",
  "detail_level": "detailed",
- "takeaway": "Visit scheduling is one controller (VisitController) that applies the date rules, attaches the visit through the Owner aggregate and saves it via OwnerRepository by cascade; there is no separate visit service or repository.",
  "elements": [
-  {
-   "alias": "user",
-   "name": "Clinic user (browser)",
-   "responsibility": "Opens the visit form from the owner page and posts it",
-   "evidence": [
-    "src/main/resources/templates/owners/ownerDetails.html:73",
-    "src/main/resources/templates/pets/createOrUpdateVisitForm.html:30-39"
-   ]
-  },
   {
    "alias": "owners",
    "name": "Owners & Pets",
-   "responsibility": "Same component as in component-overview, opened up for the visit path",
+   "responsibility": "Owners, pets and visits (package owner)",
    "evidence": [
     "src/main/java/org/springframework/samples/petclinic/owner/package-info.java:16"
    ],
@@ -24,36 +14,21 @@
    ]
   },
   {
-   "alias": "visitsApi",
-   "name": "GET/POST /owners/{ownerId}/pets/{petId}/visits/new",
-   "responsibility": "Provided HTTP interface for showing and submitting the visit form",
-   "evidence": [
-    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:90-97"
-   ]
-  },
-  {
-   "alias": "visitCtl",
-   "name": "VisitController",
-   "responsibility": "Loads owner and pet, creates Visit, applies date rules (minVisitDate = today+1; reject date not after today), saves",
+   "alias": "visitBooking",
+   "name": "Visit booking",
+   "responsibility": "Visit form, date rules, attaches and saves the visit",
    "evidence": [
     "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:63-112"
    ],
    "members": [
     "org.springframework.samples.petclinic.owner.VisitController"
-   ]
-  },
-  {
-   "alias": "visitForm",
-   "name": "Visit form view",
-   "responsibility": "Thymeleaf form (date, description) plus previous visits; re-rendered with field errors",
-   "evidence": [
-    "src/main/resources/templates/pets/createOrUpdateVisitForm.html:30-45"
-   ]
+   ],
+   "parent": "owners"
   },
   {
    "alias": "ownerAgg",
    "name": "Owner aggregate",
-   "responsibility": "Owner.addVisit(petId, visit) → Pet.addVisit; Visit defaults date to tomorrow, description @NotBlank max 255",
+   "responsibility": "Owner > Pet > Visit; addVisit attaches a visit to a pet",
    "evidence": [
     "src/main/java/org/springframework/samples/petclinic/owner/Owner.java:176-186",
     "src/main/java/org/springframework/samples/petclinic/owner/Pet.java:56-83",
@@ -63,12 +38,44 @@
     "org.springframework.samples.petclinic.owner.Owner",
     "org.springframework.samples.petclinic.owner.Pet",
     "org.springframework.samples.petclinic.owner.Visit"
-   ]
+   ],
+   "parent": "owners"
   },
   {
    "alias": "ownerRepo",
-   "name": "OwnerRepository",
-   "responsibility": "Spring Data JPA repository for Owner; findById, save",
+   "name": "Owner repository",
+   "responsibility": "Loads and saves owners; visits saved by cascade",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java:36-60"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.owner.OwnerRepository"
+   ],
+   "parent": "owners"
+  },
+  {
+   "alias": "db",
+   "name": "Clinic database (visits table)",
+   "responsibility": "",
+   "evidence": [
+    "src/main/resources/db/h2/schema.sql:58-65"
+   ]
+  },
+  {
+   "alias": "visitForm",
+   "name": "Visit form (/visits/new)",
+   "kind": "interface",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:90-97"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.owner.VisitController"
+   ]
+  },
+  {
+   "alias": "ownerRepoApi",
+   "name": "Owner repository API",
+   "kind": "interface",
    "evidence": [
     "src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java:36-60"
    ],
@@ -77,64 +84,79 @@
    ]
   },
   {
-   "alias": "db",
-   "name": "Clinic database",
-   "responsibility": "visits table, FK pet_id → pets",
+   "alias": "jpa",
+   "name": "JPA",
+   "kind": "interface",
    "evidence": [
-    "src/main/resources/db/h2/schema.sql:58-65"
+    "src/main/java/org/springframework/samples/petclinic/owner/Owner.java:67-70"
+   ]
+  },
+  {
+   "alias": "user",
+   "name": "Clinic user (browser)",
+   "kind": "actor",
+   "evidence": [
+    "src/main/resources/templates/owners/ownerDetails.html:73",
+    "src/main/resources/templates/pets/createOrUpdateVisitForm.html:30-39"
    ]
   }
  ],
  "relations": [
   {
-   "from": "user",
-   "to": "visitsApi",
-   "label": "HTTP form post",
-   "evidence": [
-    "src/main/resources/templates/pets/createOrUpdateVisitForm.html:30"
-   ]
-  },
-  {
-   "from": "visitsApi",
-   "to": "visitCtl",
-   "label": "(provided interface)",
-   "evidence": [
-    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:90-97"
-   ]
-  },
-  {
-   "from": "visitCtl",
+   "from": "visitBooking",
    "to": "visitForm",
-   "label": "renders, shows errors",
+   "label": "provides",
    "evidence": [
-    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:92",
-    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:104-106"
+    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:63-112"
    ]
   },
   {
-   "from": "visitCtl",
-   "to": "ownerAgg",
-   "label": "addVisit(petId, visit)",
+   "from": "visitBooking",
+   "to": "ownerRepoApi",
+   "label": "<<use>>",
    "evidence": [
-    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:108"
-   ]
-  },
-  {
-   "from": "visitCtl",
-   "to": "ownerRepo",
-   "label": "findById, save(owner)",
-   "evidence": [
-    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:66",
-    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:109"
+    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:63-112"
    ]
   },
   {
    "from": "ownerRepo",
-   "to": "db",
-   "label": "INSERT visit (cascade)",
+   "to": "ownerRepoApi",
+   "label": "provides",
    "evidence": [
-    "src/main/java/org/springframework/samples/petclinic/owner/Pet.java:56-59",
-    "src/main/java/org/springframework/samples/petclinic/owner/Owner.java:67-70"
+    "src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java:36-60"
+   ]
+  },
+  {
+   "from": "ownerRepo",
+   "to": "jpa",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java:36-60"
+   ]
+  },
+  {
+   "from": "db",
+   "to": "jpa",
+   "label": "provides",
+   "evidence": [
+    "src/main/resources/db/h2/schema.sql:58-65"
+   ]
+  },
+  {
+   "from": "user",
+   "to": "visitForm",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/resources/templates/owners/ownerDetails.html:73",
+    "src/main/resources/templates/pets/createOrUpdateVisitForm.html:30-39"
+   ]
+  },
+  {
+   "from": "visitBooking",
+   "to": "ownerAgg",
+   "label": "adds visit",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:108"
    ]
   }
  ],
@@ -142,13 +164,13 @@
   {
    "detail": "the HTTP entry point",
    "answered_by": [
-    "visitsApi"
+    "visitForm"
    ]
   },
   {
    "detail": "where the date rules are enforced",
    "answered_by": [
-    "visitCtl",
+    "visitBooking",
     "ownerAgg"
    ]
   },
@@ -191,6 +213,10 @@
   {
    "name": "OwnerRepository -> Owner aggregate dependency",
    "reason": "the repository is typed on Owner; at this level the save path through VisitController says more"
+  },
+  {
+   "name": "Visit form view (Thymeleaf template)",
+   "reason": "part of the provided interface visitForm; templates are not components"
   }
  ]
 }

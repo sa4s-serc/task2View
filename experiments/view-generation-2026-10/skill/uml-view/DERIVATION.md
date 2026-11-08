@@ -52,10 +52,14 @@ Collected 2026-10-30 from about 130 published skills, in three groups. The full 
   Briechle et al. (arXiv 2605.20055) validate LLM-written models against deterministic extraction. The agent
   still does the grouping, recorded as `members`, because the graph is class level and copying it gives the
   code-level views that failed in Miryala et al. (ICSA 2026).
+- **Component views built from a model (condition G).** The agent writes a UML component model and a script
+  checks it and draws it, so the diagram is valid by construction: AMIGO (MODELS-C 2026) and AutoPCM (ECSA 2026)
+  keep well-formedness in code, not in the LLM; Palladio's component model, where components meet only through
+  provided and required interfaces, is the template.
 - **README tied to each concern detail.** The sources write general docs. Ours states, for each concern detail, where the view answers it.
 
 ## Conflicts between sources and how they were settled
 - **Orthogonal vs polyline lines:** polyline when edges have labels (GD measured this; UMCP did not).
-- **Element cap of 12 vs 30:** budget by detail level (CL), with CC's warning that the budget is a reason to cut, not a target.
+- **Element cap of 12 vs 30:** used as a budget by detail level in conditions D–F; removed in G (a count is a crude proxy for what the concern needs); the detail level is described by what it shows.
 - **Unlabelled edge vs mandatory label:** a short verb label is required, but never a bare "uses".
 - **Activation bars always vs when needed:** when needed (GD), since UML does not require them.

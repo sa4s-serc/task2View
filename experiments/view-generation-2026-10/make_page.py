@@ -17,7 +17,8 @@ FIELDS = ["stakeholder", "perspective", "concern", "aspect", "viewpoint", "model
 CONDITIONS = {"outputs": "A: agent", "outputs-B": "B: + skill and feedback loop", "outputs-C": "C: + memory",
               "outputs-D": "D: revised skill + separate critic",
               "outputs-E": "E: D + detail level given in the perspective",
-              "outputs-F": "F: E + static dependency graph"}
+              "outputs-F": "F: E + static dependency graph",
+              "outputs-G": "G: F + component views from a checked model, tighter critic"}
 
 
 def esc(s: object) -> str:
@@ -81,6 +82,12 @@ def critic_html(d: str, case: str) -> str:
         except (OSError, ValueError):
             continue
         answered = ", ".join(x.get("answered", "?") for x in cr.get("concern_details", []))
+        if "findings" in cr:  # condition G: findings marked blocking or minor, no overall verdict
+            sev = [f.get("severity") for f in cr["findings"]]
+            rows.append(f"<li>review {n}: {sev.count('blocking')} blocking ({esc(loop.get(f'blocking_{n}'))} checked), "
+                        f"{sev.count('minor')} minor; level {esc(cr.get('level'))}; concern details {esc(answered)} "
+                        f"(<a href=\"{d}/{case}/critique-{n}.json\">critique</a>)</li>")
+            continue
         rows.append(f"<li>review {n}: {esc(cr.get('verdict'))}; level {esc(cr.get('level'))}; "
                     f"concern details {esc(answered)} (<a href=\"{d}/{case}/critique-{n}.json\">critique</a>)</li>")
     first = f' · <a href="{d}/{case}/v1/view.png">first version</a>' if loop.get("revised") else ""

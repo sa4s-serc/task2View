@@ -18,9 +18,14 @@ Conditions (--condition):
   F  E with a static dependency graph of the repository (.claude/repo-graph.json, built before the session with
      the Phase 0 repository card, tree-sitter): the agent finds the concern's code with graph_query.py, gives
      each element its members, and check_inventory.py checks the drawn relations against the graph (outputs-F/)
+  G  F with component views built from a checked UML component model (model.json -> component_model.py, which
+     draws the PlantUML), and a tighter critic (critic-G.txt): item-by-item findings marked blocking or minor,
+     findings about the code count only if their citation exists, the program (not the critic) asks for the one
+     revision when a checked blocking finding remains, and the version with fewer checked blocking findings is
+     kept (outputs-G/)
 
 B and C ran with the skills as of commit 91dc18a, D with skills, critic.txt and check_inventory.py as of
-e381c51, E as of 137e9ac; built-in auto memory is off for every run.
+e381c51, E as of 137e9ac, F as of 00a3ef1; built-in auto memory is off for every run.
 
     cd Task2View/code && .venv/bin/python ../experiments/view-generation-2026-10/run_generate.py [--condition B] [--only GR10-Q1] [--dry-run]
 """
@@ -30,6 +35,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -47,7 +53,7 @@ SKILLS = {"uml-view": HERE / "skill" / "uml-view", "plantuml-diagrams": HERE / "
 TOOLS = ["Bash(python3 -I .claude/skills/*)", "Bash(python3 .claude/skills/*)", "Bash(.claude/skills/*)",
          "Bash(plantuml *)"]
 ENV = {**os.environ, "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
-VIEW_FILES = ["view.puml", "view.png", "inventory.json", "README.md"]
+VIEW_FILES = ["view.puml", "view.png", "inventory.json", "README.md", "model.json"]
 GRAPH = Path(".claude") / "repo-graph.json"
 
 
@@ -91,7 +97,7 @@ def build_graph(workdir: Path) -> None:
 
 def build_prompt(case: str, c: dict, entities: dict, cond: str) -> str:
     extra = "" if cond == "A" else (HERE / f"prompt-{cond}.txt").read_text()
-    return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities, with_level=cond in ("E", "F"))
+    return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities, with_level=cond in ("E", "F", "G"))
 
 
 class SessionFailed(RuntimeError):
@@ -158,6 +164,61 @@ def critic_loop(case: str, c: dict, entities: dict, workdir: Path, logs: Path, s
     return loop
 
 
+def cites_code(evidence, repo: Path) -> bool:
+    """True if at least one path:line or path:start-end citation exists in the repository."""
+    for e in evidence if isinstance(evidence, list) else [evidence]:
+        m = re.match(r"^(?P<path>[^:]+):(?P<a>\d+)(?:-(?P<b>\d+))?$", str(e).strip())
+        f = repo / m["path"] if m else None
+        if f and f.is_file() and 1 <= int(m["a"]) <= int(m["b"] or m["a"]) <= sum(1 for _ in f.open(errors="replace")):
+            return True
+    return False
+
+
+def blocking(critique: Path, repo: Path) -> list[dict] | None:
+    """The critique's blocking findings that hold: a concern detail answered "no" counts; a finding about the code
+    ("unsupported", "missing") counts only if it cites code that exists. None if the critique is unreadable."""
+    try:
+        cr = json.loads(critique.read_text())
+    except (OSError, ValueError):
+        return None
+    found = [f for f in cr.get("findings", []) if f.get("severity") == "blocking"
+             and (f.get("kind") not in ("unsupported", "missing") or cites_code(f.get("evidence", []), repo))]
+    named = {f.get("claim", "") for f in found}
+    found += [{"severity": "blocking", "kind": "concern", "element": None, "claim": f"not answered: {d.get('detail')}",
+               "fix": d.get("why", "")} for d in cr.get("concern_details", [])
+              if d.get("answered") == "no" and f"not answered: {d.get('detail')}" not in named]
+    return found
+
+
+def critic_loop_g(case: str, c: dict, entities: dict, workdir: Path, logs: Path, session: str) -> dict:
+    """Condition G: the program decides on the revision from the critic's checked blocking findings."""
+    produced = workdir / "view-out" / case
+    critic = (HERE / "critic-G.txt").read_text()
+    tools = lambda out: ["Read", "Grep", "Glob", f"Write(view-out/{case}/{out})"]
+    claude(fill(critic, case, c, entities, True, out="critique-1.json"), workdir, logs / f"{case}.critic-1.jsonl",
+           CRITIC_MODEL, tools("critique-1.json"))
+    first = blocking(produced / "critique-1.json", workdir)
+    loop = {"blocking_1": None if first is None else len(first), "revised": False, "kept": "v1"}
+    if not first or not session:
+        return {**loop, "note": "critique unreadable" if first is None else "no checked blocking finding"}
+    listed = "\n".join(f"- [{f.get('kind')}] {f.get('element') or '(missing)'}: {f.get('claim')} Fix: {f.get('fix')}"
+                        for f in first)
+    claude(fill((HERE / "revise-G.txt").read_text(), case, c, entities, True, findings=listed), workdir,
+           logs / f"{case}.revise.jsonl", MODEL, TOOLS, resume=session)
+    if not (produced / "v1" / "view.puml").exists():
+        return {**loop, "note": "revision did not keep v1; kept what it wrote"}
+    claude(fill(critic, case, c, entities, True, out="critique-2.json"), workdir, logs / f"{case}.critic-2.jsonl",
+           CRITIC_MODEL, tools("critique-2.json"))
+    second = blocking(produced / "critique-2.json", workdir)
+    better = second is not None and len(second) < len(first)
+    loop.update(revised=True, blocking_2=None if second is None else len(second), kept="v2" if better else "v1")
+    if not better:
+        for f in VIEW_FILES:
+            if (produced / "v1" / f).exists():
+                shutil.copy(produced / "v1" / f, produced / f)
+    return loop
+
+
 def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     out_dir = HERE / ("outputs" if cond == "A" else f"outputs-{cond}") / case
     if (out_dir / "view.puml").exists():
@@ -175,7 +236,7 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     if cond != "A":
         for name, path in SKILLS.items():
             shutil.copytree(path, workdir / ".claude" / "skills" / name, dirs_exist_ok=True)
-    if cond == "F":
+    if cond in ("F", "G"):
         build_graph(workdir)
     memory = HERE / "memory" / f"{c['entity_of_interest']}.md"
     if cond == "C":
@@ -194,17 +255,23 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     if not (produced / "view.puml").exists():
         log(f"stop: {case} wrote no view.puml; see {logs.name}/{case}.jsonl")
         return False
-    lvl = cond in ("E", "F")
-    loop = critic_loop(case, c, entities, workdir, logs, session, lvl) if cond in ("D", "E", "F") else None
+    lvl = cond in ("E", "F", "G")
+    loop = (critic_loop_g(case, c, entities, workdir, logs, session) if cond == "G" else
+            critic_loop(case, c, entities, workdir, logs, session, lvl) if cond in ("D", "E", "F") else None)
     shutil.copytree(produced, out_dir, dirs_exist_ok=True)
     if loop:
         (out_dir / "loop.json").write_text(json.dumps(loop, indent=2), encoding="utf-8")
     if lvl and (out_dir / "inventory.json").exists():
-        graph = ["--graph", str(workdir / GRAPH)] if cond == "F" else []
+        graph = ["--graph", str(workdir / GRAPH)] if cond in ("F", "G") else []
         check = subprocess.run([sys.executable, "-I", str(SKILLS["uml-view"] / "scripts" / "check_inventory.py"),
                                 str(out_dir / "inventory.json"), "--repo", str(workdir),
                                 "--level", c["perspective"]["detail_level"], *graph], capture_output=True, text=True)
         (out_dir / "inventory-check.txt").write_text(check.stdout, encoding="utf-8")
+    if cond == "G" and (out_dir / "model.json").exists():
+        check = subprocess.run([sys.executable, "-I", str(SKILLS["uml-view"] / "scripts" / "component_model.py"),
+                                "check", str(out_dir / "model.json"), "--graph", str(workdir / GRAPH)],
+                               capture_output=True, text=True)
+        (out_dir / "model-check.txt").write_text(check.stdout, encoding="utf-8")
     (out_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
     if shutil.which("plantuml") and not (out_dir / "view.png").exists():
         with (out_dir / "view.puml").open("rb") as src_puml, (out_dir / "view.png").open("wb") as png:
@@ -215,7 +282,7 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--condition", choices=["A", "B", "C", "D", "E", "F"], default="A")
+    parser.add_argument("--condition", choices=["A", "B", "C", "D", "E", "F", "G"], default="A")
     parser.add_argument("--only")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
