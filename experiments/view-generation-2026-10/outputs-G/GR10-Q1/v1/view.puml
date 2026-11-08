@@ -1,0 +1,25 @@
+@startuml
+skinparam componentStyle uml2
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+title cmp Municipal report management desktop application, components
+
+component "Presentation (Swing GUIs)" as ui
+component "Application logic (Controllers)" as ctl
+component "Domain (Entities and services)" as dom
+component "Persistence (JPA)" as per
+component "MySQL reports_db" as mysql
+interface "Use-case services API" as IApp
+interface "Domain services API" as IDomain
+interface "Persistence API" as IPersist
+interface "JDBC (MySQL)" as IJdbc
+
+ctl - IApp
+dom - IDomain
+per - IPersist
+mysql - IJdbc
+ui ..> IApp : <<use>>
+ctl ..> IDomain : <<use>>
+dom ..> IPersist : <<use>>
+per ..> IJdbc : <<use>>
+@enduml

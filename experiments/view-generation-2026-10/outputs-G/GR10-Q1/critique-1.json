@@ -1,0 +1,85 @@
+{
+  "concern_details": [
+    {
+      "detail": "main architectural components and their responsibilities",
+      "answered": "partly",
+      "answered_by": ["ui", "ctl", "dom", "per", "mysql"],
+      "why": "The four components and the external database match the packages Boundary, Control, Entity and Database. The parenthetical names (Swing GUIs, Controllers, Entities and services, JPA) hint at what each one does, but the one-line responsibilities are only in inventory.json and model.json, not in the diagram the stakeholder reads."
+    },
+    {
+      "detail": "decomposition into layers or subsystems",
+      "answered": "yes",
+      "answered_by": ["ui", "ctl", "dom", "per", "mysql"],
+      "why": "The diagram reads as a four-layer stack (presentation, application logic, domain, persistence) above the MySQL store, and it matches the package structure."
+    },
+    {
+      "detail": "main dependencies among them",
+      "answered": "partly",
+      "answered_by": ["IApp", "IDomain", "IPersist", "IJdbc"],
+      "why": "The chain ui -> IApp -> ctl -> IDomain -> dom -> IPersist -> per -> IJdbc -> mysql matches the code (GUIs instantiate SystemServicesController, controllers instantiate ReportService/UserService, those instantiate PersistenceService, which uses JPA). The direct Presentation -> Domain dependency (GUIs use Entity.ReportCategory) is left out."
+    },
+    {
+      "detail": "separation of user interface, application logic, domain entities and persistence, and how they collaborate",
+      "answered": "partly",
+      "answered_by": ["ui", "ctl", "dom", "per", "IApp", "IDomain", "IPersist"],
+      "why": "The separation into four parts and the facade-style interfaces between them are shown. However, the diagram shows strict layering, and the code does not follow it: the UI reaches into the domain for entity types. The README admits this but the view does not show it."
+    }
+  ],
+  "level": "right",
+  "level_why": "For an overview, five components, four interfaces and the dependencies between them are about right. Individual GUIs, controllers, entities and status states are left out, as an overview should do.",
+  "findings": [
+    {
+      "severity": "blocking",
+      "kind": "missing",
+      "element": null,
+      "claim": "Presentation depends directly on Domain: ReportCreationGUI and ReceivedReportsGUI import and use Entity.ReportCategory. The view leaves this out and shows stricter layering than the code has. That matters for the separation concern and for an architect planning evolution.",
+      "evidence": [
+        "src/main/java/Boundary/ReportCreationGUI.java:4",
+        "src/main/java/Boundary/ReportCreationGUI.java:682",
+        "src/main/java/Boundary/ReceivedReportsGUI.java:4",
+        "src/main/java/Boundary/ReceivedReportsGUI.java:430"
+      ],
+      "fix": "Add a «use» dependency from ui to dom, for example labelled 'entity types (ReportCategory)', so the layering violation is visible."
+    },
+    {
+      "severity": "minor",
+      "kind": "concern",
+      "element": "dom",
+      "claim": "Component responsibilities appear only in inventory.json and model.json. The diagram shows only names, so the 'responsibilities' part of the first concern detail is answered only through the name hints.",
+      "evidence": [],
+      "fix": "Add a short responsibility to each component, for example as a note or a second line in the name, as in the inventory."
+    },
+    {
+      "severity": "minor",
+      "kind": "uml",
+      "element": "mysql",
+      "claim": "model.json marks the MySQL database as external, but the diagram draws it as an ordinary component, with nothing to set it apart from the application components or mark the system boundary.",
+      "evidence": ["src/main/resources/META-INF/persistence.xml:27"],
+      "fix": "Mark it as external, for example with a «database» or «external» stereotype, or draw a system boundary around the four application components."
+    },
+    {
+      "severity": "minor",
+      "kind": "unsupported",
+      "element": "IJdbc",
+      "claim": "The evidence persistence.xml:1 points to the XML declaration. The JDBC connection to MySQL reports_db is configured at lines 26-27 (with the driver at the jakarta.persistence.jdbc.driver property).",
+      "evidence": ["src/main/resources/META-INF/persistence.xml:26"],
+      "fix": "Cite src/main/resources/META-INF/persistence.xml:26-27 for IJdbc and mysql."
+    },
+    {
+      "severity": "minor",
+      "kind": "unsupported",
+      "element": "ui",
+      "claim": "The ui -> IApp evidence HomePageGUI.java:75 does not support the relation. That line is the application's main() method, and HomePageGUI never references SystemServicesController. Of the cited lines, only ReportCreationGUI.java:70 shows a GUI creating the facade.",
+      "evidence": ["src/main/java/Boundary/ActivityMonitoringGUI.java:72", "src/main/java/Boundary/InternalNoteGUI.java:61"],
+      "fix": "Cite import/instantiation lines of SystemServicesController in the GUIs as evidence for ui ..> IApp."
+    },
+    {
+      "severity": "minor",
+      "kind": "concern",
+      "element": "dom",
+      "claim": "The Domain component combines JPA-annotated entities with ReportService/UserService, which construct PersistenceService directly. The domain is therefore coupled to persistence (jakarta.persistence annotations, concrete PersistenceService), not separated from it by an abstraction. This is worth noting for evolution planning.",
+      "evidence": ["src/main/java/Entity/ReportService.java:3", "src/main/java/Entity/ReportService.java:22", "src/main/java/Entity/Report.java:3"],
+      "fix": "Optionally say in the Persistence API name or a note that IPersist is a concrete generic class (PersistenceService), not an abstraction, and that the entities carry JPA annotations."
+    }
+  ]
+}

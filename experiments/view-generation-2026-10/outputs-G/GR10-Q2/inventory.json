@@ -1,0 +1,37 @@
+{"model_kind": "UML deployment diagram", "detail_level": "detailed",
+"elements": [
+{"alias":"build","name":"Build host","responsibility":"Machine that compiles and tests with Maven","evidence":["pom.xml:1-5","README.md:45-50"]},
+{"alias":"maven","name":"Maven + JDK 23","responsibility":"Build execution environment (Java 23 source/target)","evidence":["pom.xml:13-14"]},
+{"alias":"pom","name":"pom.xml","responsibility":"Build descriptor and dependency list","evidence":["pom.xml:1-75"]},
+{"alias":"central","name":"Maven Central","responsibility":"Dependency repository","evidence":["pom.xml:18-23"]},
+{"alias":"ws","name":"User workstation","responsibility":"Machine where the Swing desktop app runs for citizens and operators","evidence":["src/main/java/Boundary/HomePageGUI.java:75"]},
+{"alias":"jvm","name":"Java 23 runtime (JVM)","responsibility":"Process hosting the Swing GUI, controllers and persistence","evidence":["src/main/java/Boundary/HomePageGUI.java:75-85","pom.xml:13-14"]},
+{"alias":"app","name":"Application classes","responsibility":"Boundary, Control, Entity, Database code","evidence":["src/main/java/Boundary/HomePageGUI.java:75","src/main/java/Database/JpaUtil.java:15"],"members":["src/main/java/"]},
+{"alias":"pxml","name":"persistence.xml","responsibility":"JPA unit, JDBC URL, credentials, schema auto-update","evidence":["src/main/resources/META-INF/persistence.xml:10-40"]},
+{"alias":"hib","name":"hibernate-core 6.6.50.Final","responsibility":"JPA provider","evidence":["pom.xml:47-52","src/main/resources/META-INF/persistence.xml:12"]},
+{"alias":"jdbc","name":"mysql-connector-j 9.4.0","responsibility":"JDBC driver","evidence":["pom.xml:41-45","src/main/resources/META-INF/persistence.xml:23-24"]},
+{"alias":"forms","name":"forms_rt 7.0.3","responsibility":"Runtime for .form Swing GUI bindings","evidence":["pom.xml:34-38"]},
+{"alias":"dbhost","name":"Database host","responsibility":"Machine running MySQL; 127.0.0.1 by default","evidence":["src/main/resources/META-INF/persistence.xml:26-27","README.md:24-32"]},
+{"alias":"mysql","name":"MySQL server","responsibility":"Database server on port 3306","evidence":["src/main/resources/META-INF/persistence.xml:26-27"]},
+{"alias":"schema","name":"Schema reports_db","responsibility":"Persistent data store, auto-updated by Hibernate","evidence":["src/main/resources/META-INF/persistence.xml:26-36","README.md:24-32"]}
+],
+"relations": [
+{"from":"pom","to":"central","label":"resolves dependencies (HTTPS)","evidence":["pom.xml:18-23"]},
+{"from":"app","to":"jvm","label":"deploy","evidence":["src/main/java/Boundary/HomePageGUI.java:75"]},
+{"from":"app","to":"hib","label":"persists entities (JPA)","evidence":["src/main/java/Database/JpaUtil.java:15-17"]},
+{"from":"hib","to":"jdbc","label":"uses driver","evidence":["src/main/resources/META-INF/persistence.xml:23-24"]},
+{"from":"jdbc","to":"mysql","label":"JDBC over TCP :3306","evidence":["src/main/resources/META-INF/persistence.xml:26-27"]},
+{"from":"schema","to":"mysql","label":"deploy","evidence":["src/main/resources/META-INF/persistence.xml:35-36"]},
+{"from":"app","to":"pxml","label":"reads config","evidence":["src/main/java/Database/JpaUtil.java:15"]},
+{"from":"app","to":"forms","label":"loads forms","evidence":["pom.xml:34-38"]}
+],
+"concern_details": [
+{"detail":"required runtime environments and software artifacts","answered_by":["jvm","app","pxml","hib","jdbc","forms","mysql","maven","pom"]},
+{"detail":"where the application runs and where its data is stored","answered_by":["ws","jvm","dbhost","mysql","schema"]},
+{"detail":"how the main runtime elements communicate","answered_by":["app","hib","jdbc","mysql"]},
+{"detail":"technologies and runtime dependencies between the application and the database","answered_by":["hib","jdbc","pxml","schema"]}
+],
+"omitted": [
+{"name":"Entity, Control, Boundary classes individually","reason":"class level, not deployment"},
+{"name":"junit-jupiter test dependency","reason":"test scope only; tests need a running MySQL (README)"}
+]}

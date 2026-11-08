@@ -1,0 +1,456 @@
+{
+ "model_kind": "UML class diagram",
+ "detail_level": "detailed",
+ "elements": [
+  {
+   "alias": "user",
+   "name": "User",
+   "responsibility": "Abstract persisted user (table users, single-table inheritance, role discriminator)",
+   "evidence": [
+    "src/main/java/Entity/User.java:20-67"
+   ],
+   "members": [
+    "Entity.User"
+   ]
+  },
+  {
+   "alias": "cred",
+   "name": "Credentials",
+   "responsibility": "Embedded email/password columns of users",
+   "evidence": [
+    "src/main/java/Entity/Credentials.java:10-16"
+   ],
+   "members": [
+    "Entity.Credentials"
+   ]
+  },
+  {
+   "alias": "citizen",
+   "name": "Citizen",
+   "responsibility": "User subtype that files reports",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:9-11"
+   ],
+   "members": [
+    "Entity.Citizen"
+   ]
+  },
+  {
+   "alias": "oper",
+   "name": "MunicipalOperator",
+   "responsibility": "User subtype that manages reports",
+   "evidence": [
+    "src/main/java/Entity/MunicipalOperator.java:9-11"
+   ],
+   "members": [
+    "Entity.MunicipalOperator"
+   ]
+  },
+  {
+   "alias": "report",
+   "name": "Report",
+   "responsibility": "Central persisted entity (table reports)",
+   "evidence": [
+    "src/main/java/Entity/Report.java:29-112"
+   ],
+   "members": [
+    "Entity.Report"
+   ]
+  },
+  {
+   "alias": "loc",
+   "name": "Location",
+   "responsibility": "Embedded address columns of reports",
+   "evidence": [
+    "src/main/java/Entity/Location.java:10-25"
+   ],
+   "members": [
+    "Entity.Location"
+   ]
+  },
+  {
+   "alias": "cat",
+   "name": "ReportCategory",
+   "responsibility": "Enum stored as string in reports.category",
+   "evidence": [
+    "src/main/java/Entity/ReportCategory.java:6-12",
+    "src/main/java/Entity/Report.java:49-51"
+   ],
+   "members": [
+    "Entity.ReportCategory"
+   ]
+  },
+  {
+   "alias": "status",
+   "name": "ReportStatus",
+   "responsibility": "Transient state behaviour; only state name persisted in reports.current_status",
+   "evidence": [
+    "src/main/java/Entity/ReportStatus.java:6-10",
+    "src/main/java/Entity/Report.java:69-76"
+   ],
+   "members": [
+    "Entity.ReportStatus",
+    "Entity.Submitted",
+    "Entity.Assigned",
+    "Entity.InProgress",
+    "Entity.Resolved"
+   ]
+  },
+  {
+   "alias": "upd",
+   "name": "StatusUpdate",
+   "responsibility": "State-change history (table status_updates)",
+   "evidence": [
+    "src/main/java/Entity/StatusUpdate.java:20-54"
+   ],
+   "members": [
+    "Entity.StatusUpdate"
+   ]
+  },
+  {
+   "alias": "note",
+   "name": "InternalNote",
+   "responsibility": "Operator internal note (table internal_notes)",
+   "evidence": [
+    "src/main/java/Entity/InternalNote.java:20-54"
+   ],
+   "members": [
+    "Entity.InternalNote"
+   ]
+  },
+  {
+   "alias": "notif",
+   "name": "Notification",
+   "responsibility": "Notification to citizen on status change (table notifications)",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:19-54"
+   ],
+   "members": [
+    "Entity.Notification"
+   ]
+  },
+  {
+   "alias": "ps",
+   "name": "PersistenceService",
+   "responsibility": "Generic JPA save/update/find access",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:51-198",
+    "src/main/resources/META-INF/persistence.xml:11-40"
+   ],
+   "members": [
+    "Database.*"
+   ]
+  },
+  {
+   "alias": "us",
+   "name": "UserService",
+   "responsibility": "User persistence and lookup",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:12-89"
+   ],
+   "members": [
+    "Entity.UserService"
+   ]
+  },
+  {
+   "alias": "rs",
+   "name": "ReportService",
+   "responsibility": "Report, note, status, notification persistence and queries",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:21-398"
+   ],
+   "members": [
+    "Entity.ReportService"
+   ]
+  },
+  {
+   "alias": "ctl",
+   "name": "Control package",
+   "responsibility": "Controllers using the services",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:23-29"
+   ],
+   "members": [
+    "Control.*"
+   ]
+  },
+  {
+   "alias": "gui",
+   "name": "Boundary package",
+   "responsibility": "GUI screens calling controllers",
+   "evidence": [
+    "src/main/java/Boundary/SubmittedReportsGUI.java:54"
+   ],
+   "members": [
+    "Boundary.*"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "citizen",
+   "to": "user",
+   "label": "inherits",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:11"
+   ]
+  },
+  {
+   "from": "oper",
+   "to": "user",
+   "label": "inherits",
+   "evidence": [
+    "src/main/java/Entity/MunicipalOperator.java:11"
+   ]
+  },
+  {
+   "from": "user",
+   "to": "cred",
+   "label": "embeds",
+   "evidence": [
+    "src/main/java/Entity/User.java:47-67"
+   ]
+  },
+  {
+   "from": "report",
+   "to": "loc",
+   "label": "embeds",
+   "evidence": [
+    "src/main/java/Entity/Report.java:56-57"
+   ]
+  },
+  {
+   "from": "report",
+   "to": "cat",
+   "label": "category",
+   "evidence": [
+    "src/main/java/Entity/Report.java:49-51"
+   ]
+  },
+  {
+   "from": "report",
+   "to": "status",
+   "label": "state",
+   "evidence": [
+    "src/main/java/Entity/Report.java:75-76"
+   ]
+  },
+  {
+   "from": "report",
+   "to": "citizen",
+   "label": "reported by",
+   "evidence": [
+    "src/main/java/Entity/Report.java:87-89"
+   ]
+  },
+  {
+   "from": "report",
+   "to": "oper",
+   "label": "assigned to",
+   "evidence": [
+    "src/main/java/Entity/Report.java:94-96"
+   ]
+  },
+  {
+   "from": "report",
+   "to": "upd",
+   "label": "history",
+   "evidence": [
+    "src/main/java/Entity/Report.java:112"
+   ]
+  },
+  {
+   "from": "report",
+   "to": "note",
+   "label": "notes",
+   "evidence": [
+    "src/main/java/Entity/Report.java:101-108"
+   ]
+  },
+  {
+   "from": "upd",
+   "to": "oper",
+   "label": "updated by",
+   "evidence": [
+    "src/main/java/Entity/StatusUpdate.java:52-54"
+   ]
+  },
+  {
+   "from": "note",
+   "to": "oper",
+   "label": "written by",
+   "evidence": [
+    "src/main/java/Entity/InternalNote.java:45-47"
+   ]
+  },
+  {
+   "from": "notif",
+   "to": "report",
+   "label": "about",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:52-54"
+   ]
+  },
+  {
+   "from": "notif",
+   "to": "citizen",
+   "label": "sent to",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:48-50"
+   ]
+  },
+  {
+   "from": "rs",
+   "to": "ps",
+   "label": "persists via",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:22"
+   ]
+  },
+  {
+   "from": "us",
+   "to": "ps",
+   "label": "persists via",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:20"
+   ]
+  },
+  {
+   "from": "rs",
+   "to": "report",
+   "label": "reads, writes",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:113"
+   ]
+  },
+  {
+   "from": "rs",
+   "to": "notif",
+   "label": "creates",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:390-398"
+   ]
+  },
+  {
+   "from": "us",
+   "to": "user",
+   "label": "creates, finds",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:89"
+   ]
+  },
+  {
+   "from": "ctl",
+   "to": "rs",
+   "label": "uses",
+   "evidence": [
+    "src/main/java/Control/ReportDetailsController.java:20"
+   ]
+  },
+  {
+   "from": "ctl",
+   "to": "us",
+   "label": "uses",
+   "evidence": [
+    "src/main/java/Control/UserLoginController.java:18"
+   ]
+  },
+  {
+   "from": "gui",
+   "to": "ctl",
+   "label": "calls",
+   "evidence": [
+    "src/main/java/Boundary/ReportCreationGUI.java:70"
+   ]
+  },
+  {
+   "from": "rs",
+   "to": "note",
+   "label": "reads notes",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:213"
+   ]
+  },
+  {
+   "from": "rs",
+   "to": "upd",
+   "label": "reads history",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:248"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main data entities stored and their relationships",
+   "answered_by": [
+    "user",
+    "report",
+    "upd",
+    "note",
+    "notif",
+    "loc",
+    "cred"
+   ]
+  },
+  {
+   "detail": "information persisted throughout the lifecycle of a report",
+   "answered_by": [
+    "report",
+    "upd",
+    "note",
+    "notif",
+    "status"
+   ]
+  },
+  {
+   "detail": "how users, reports, locations, categories, states, state changes, internal notes and notifications are related",
+   "answered_by": [
+    "user",
+    "report",
+    "loc",
+    "cat",
+    "status",
+    "upd",
+    "note",
+    "notif"
+   ]
+  },
+  {
+   "detail": "which parts of the application depend on the persisted information",
+   "answered_by": [
+    "ps",
+    "us",
+    "rs",
+    "ctl",
+    "gui"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Individual controllers and GUI screens",
+   "reason": "grouped into Control/Boundary packages to stay on the data-model level"
+  },
+  {
+   "name": "JpaUtil",
+   "reason": "EntityManager factory helper, no data content"
+  },
+  {
+   "name": "Submitted/Assigned/InProgress/Resolved",
+   "reason": "folded into ReportStatus note; not persisted"
+  },
+  {
+   "name": "ReportService helper/mapping methods and DTO maps",
+   "reason": "not persisted data"
+  },
+  {
+   "name": "ReportCategory used by controllers/GUIs/ReportService",
+   "reason": "category is shown on Report; per-consumer category edges omitted for density"
+  },
+  {
+   "name": "UserService -> Citizen/MunicipalOperator",
+   "reason": "covered by UserService -> User (subtypes inherit)"
+  }
+ ]
+}

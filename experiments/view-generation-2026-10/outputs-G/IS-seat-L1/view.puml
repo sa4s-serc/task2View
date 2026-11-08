@@ -1,0 +1,42 @@
+@startuml
+skinparam componentStyle uml2
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+title cmp Seat booking, main components
+
+actor "Student" as student
+actor "Librarian" as librarian
+component "Swing booking wizard" as swing
+component "Reservation REST API" as rest
+component "Library facade" as facade
+component "Reservation manager" as resmgr
+component "Study room manager" as roommgr
+component "Notification" as notif
+component "Domain model and registries" as domain
+component "Persistence" as persist
+component "Reservations database" as db
+interface "Library use-case API" as IFacade
+interface "Reservation operations" as IReservation
+interface "Room and seat availability" as IRoom
+interface "Registries" as IRegistry
+interface "Persistence manager" as IPersist
+interface "JDBC / JPA" as IDb
+
+facade - IFacade
+resmgr - IReservation
+roommgr - IRoom
+domain - IRegistry
+persist - IPersist
+db - IDb
+swing ..> IFacade : <<use>>
+rest ..> IFacade : <<use>>
+facade ..> IReservation : <<use>>
+facade ..> IRoom : <<use>>
+resmgr ..> IRegistry : <<use>>
+roommgr ..> IRegistry : <<use>>
+domain ..> IPersist : <<use>>
+persist ..> IDb : <<use>>
+student ..> IFacade : <<use>>
+librarian ..> IFacade : <<use>>
+resmgr ..> notif : notifies observers
+@enduml

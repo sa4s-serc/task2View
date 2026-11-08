@@ -129,7 +129,7 @@ skill and its render, check and look loop; C as B plus a notes file per reposito
 revised skill (checked inventory, examples, no self-review) and a separate critic on a different model, one
 revision, better version kept; E as D with the detail level given in the stakeholder perspective instead of
 chosen by the agent; F as E with a static dependency graph of the repository, which the agent queries to find the
-concern's code and against which the drawn relations are checked. Layout issues are counted by puml-check, which
+concern's code and against which the drawn relations are checked; G as F with component views built from a checked UML component model (components meet through provided and required interfaces; the PlantUML is generated), no element budget, and a tighter critic whose blocking findings must cite code and which only triggers a revision when a checked blocking finding remains. Layout issues are counted by puml-check, which
 B to F also used while working, so they favour those conditions; per node normalises for size. The judgement is
 the blind rating.</p>
 <h2 id="pipeline">The current design (condition F)</h2>

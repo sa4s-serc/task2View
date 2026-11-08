@@ -1,0 +1,189 @@
+{
+ "title": "Municipal report management desktop application, components",
+ "detail_level": "overview",
+ "components": [
+  {
+   "id": "ui",
+   "name": "Presentation (Swing GUIs)",
+   "responsibility": "Desktop screens for login, registration, dashboard, report creation, review, status update and notes",
+   "members": [
+    "Boundary.*"
+   ],
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75",
+    "src/main/java/Boundary/ReportCreationGUI.java:70"
+   ],
+   "provides": [],
+   "requires": [
+    "IApp"
+   ]
+  },
+  {
+   "id": "ctl",
+   "name": "Application logic (Controllers)",
+   "responsibility": "Receives GUI requests, coordinates use cases and delegates to domain services",
+   "members": [
+    "Control.*"
+   ],
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:9-22",
+    "src/main/java/Control/ReportCreationController.java:4-21"
+   ],
+   "provides": [
+    "IApp"
+   ],
+   "requires": [
+    "IDomain"
+   ]
+  },
+  {
+   "id": "dom",
+   "name": "Domain (Entities and services)",
+   "responsibility": "Report, user and notification entities, report status states, and the report and user services",
+   "members": [
+    "Entity.*"
+   ],
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:3-22",
+    "src/main/java/Entity/UserService.java:3-20"
+   ],
+   "provides": [
+    "IDomain"
+   ],
+   "requires": [
+    "IPersist"
+   ]
+  },
+  {
+   "id": "per",
+   "name": "Persistence (JPA)",
+   "responsibility": "Stores and loads entities through JPA EntityManager",
+   "members": [
+    "Database.*"
+   ],
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:30",
+    "src/main/java/Database/JpaUtil.java:17"
+   ],
+   "provides": [
+    "IPersist"
+   ],
+   "requires": [
+    "IJdbc"
+   ]
+  },
+  {
+   "id": "mysql",
+   "name": "MySQL reports_db",
+   "external": true,
+   "responsibility": "Relational store",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:1"
+   ],
+   "provides": [
+    "IJdbc"
+   ]
+  }
+ ],
+ "interfaces": [
+  {
+   "id": "IApp",
+   "name": "Use-case API",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:22"
+   ],
+   "members": [
+    "Control.SystemServicesController"
+   ]
+  },
+  {
+   "id": "IDomain",
+   "name": "Domain API",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:22"
+   ],
+   "members": [
+    "Entity.ReportService",
+    "Entity.UserService"
+   ]
+  },
+  {
+   "id": "IPersist",
+   "name": "Persistence API",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:30"
+   ],
+   "members": [
+    "Database.PersistenceService"
+   ]
+  },
+  {
+   "id": "IJdbc",
+   "name": "JDBC (MySQL)",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:1"
+   ]
+  }
+ ],
+ "actors": [],
+ "external_components": [],
+ "dependencies": [
+  {
+   "from": "ui",
+   "to": "dom",
+   "label": "uses entity types",
+   "evidence": [
+    "src/main/java/Boundary/ReportCreationGUI.java:4",
+    "src/main/java/Boundary/ReceivedReportsGUI.java:4"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main architectural components and their responsibilities",
+   "answered_by": [
+    "ui",
+    "ctl",
+    "dom",
+    "per"
+   ]
+  },
+  {
+   "detail": "decomposition into layers or subsystems",
+   "answered_by": [
+    "ui",
+    "ctl",
+    "dom",
+    "per"
+   ]
+  },
+  {
+   "detail": "main dependencies among them",
+   "answered_by": [
+    "ui",
+    "ctl",
+    "dom",
+    "per"
+   ]
+  },
+  {
+   "detail": "separation of user interface, application logic, domain entities and persistence, and how they collaborate",
+   "answered_by": [
+    "ui",
+    "ctl",
+    "dom",
+    "per"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Individual GUIs and controllers",
+   "reason": "overview level"
+  },
+  {
+   "name": "Entity classes and status states",
+   "reason": "overview level"
+  }
+ ]
+}

@@ -1,0 +1,44 @@
+@startuml
+skinparam componentStyle uml2
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+title cmp Seat booking: components and interactions (balanced)
+
+actor "Student" as student
+component "Swing Booking Wizard" as swing
+component "REST Reservation API" as rest
+component "Library Facade" as facade
+component "Reservation Manager" as resmgr
+component "Seat Assignment Strategy" as strategy
+component "Study Room Manager" as roommgr
+component "Notification Manager" as notif
+component "Reservation Domain Model" as domain
+component "Persistence Manager" as persist
+interface "Library Facade API" as IFacade
+interface "Reservation use cases" as IReservation
+interface "Room availability" as IRoom
+interface "AssignmentStrategy" as IStrategy
+interface "Reservation notifications" as INotify
+interface "Registries" as IRegistry
+interface "Persistence API" as IStore
+
+facade - IFacade
+resmgr - IReservation
+strategy - IStrategy
+roommgr - IRoom
+notif - INotify
+domain - IRegistry
+persist - IStore
+swing ..> IFacade : <<use>>
+rest ..> IFacade : <<use>>
+facade ..> IReservation : <<use>>
+facade ..> IRoom : <<use>>
+resmgr ..> IStrategy : <<use>>
+resmgr ..> IRegistry : <<use>>
+resmgr ..> INotify : <<use>>
+roommgr ..> IRegistry : <<use>>
+domain ..> IStore : <<use>>
+student ..> IFacade : <<use>>
+resmgr ..> domain : checks availability
+roommgr ..> domain : reads seat status
+@enduml

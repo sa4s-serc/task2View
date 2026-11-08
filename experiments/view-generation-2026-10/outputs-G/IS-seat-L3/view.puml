@@ -1,0 +1,55 @@
+@startuml
+skinparam componentStyle uml2
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+title cmp Seat booking in the study-room reservation application
+
+actor "Student" as student
+component "REST boundary" as web
+component "Swing booking wizard" as swing
+component "Library facade" as facade
+component "Reservation manager" as resMgr
+component "Seat assignment strategy" as strategy
+component "Reservation domain model" as domain <<entity>>
+component "Registries" as registry
+component "Persistence manager" as persist
+component "MySQL database" as db
+component "Notification manager" as notifMgr
+component "Email notification adapter" as mailAdapter
+component "Notification scheduler" as scheduler
+interface "Library facade API" as IFacade
+interface "Reservation operations" as IReservations
+interface "Assignment strategy" as IAssign
+interface "Availability and lifecycle rules" as IDomain
+interface "Reservation observer" as IObserverImpl
+interface "Registry API" as IRegistry
+interface "Persistence API" as IPersist
+interface "JDBC (MySQL)" as IDb
+interface "Reminder API" as INotifier
+interface "Notification service" as INotifySvc
+
+facade - IFacade
+resMgr - IReservations
+strategy - IAssign
+domain - IDomain
+registry - IRegistry
+persist - IPersist
+db - IDb
+notifMgr - INotifier
+notifMgr - IObserverImpl
+mailAdapter - INotifySvc
+web ..> IFacade : <<use>>
+swing ..> IFacade : <<use>>
+facade ..> IReservations : <<use>>
+facade ..> INotifier : <<use>>
+resMgr ..> IAssign : <<use>>
+resMgr ..> IDomain : <<use>>
+resMgr ..> IRegistry : <<use>>
+resMgr ..> IObserverImpl : <<use>>
+domain ..> IRegistry : <<use>>
+registry ..> IPersist : <<use>>
+persist ..> IDb : <<use>>
+notifMgr ..> INotifySvc : <<use>>
+scheduler ..> IFacade : <<use>>
+student ..> IFacade : <<use>>
+@enduml

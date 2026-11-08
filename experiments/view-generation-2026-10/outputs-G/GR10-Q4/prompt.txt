@@ -1,0 +1,32 @@
+I am giving you a software repository (the current folder) and a stakeholder's request, together with the
+request's inputs in the terms of ISO/IEC/IEEE 42010:2022. Produce one architecture view that addresses the
+stakeholder's concern, governed by the given viewpoint and model kind. Derive the architecture from the code
+in this folder; base every element and relation on it.
+
+Request (verbatim):
+I am a software analyst, and I would like a use case diagram showing the functionalities provided by the system.
+
+Inputs (ISO/IEC/IEEE 42010:2022):
+- Entity of interest: desktop application for reporting and managing problems in a municipal area
+- Stakeholder: software analyst
+- Stakeholder perspective: what the system offers its users, without knowing the user roles yet; detail level: overview
+- Concern: general
+  - main types of users that interact with the system
+  - goals each of them can achieve through it
+  - how the functionalities are related to each other
+- Aspect: functional
+- Viewpoint: use case
+- Model kind: UML use case diagram
+
+Write the view as PlantUML source in ./view-out/GR10-Q4/view.puml, and a short ./view-out/GR10-Q4/README.md
+that says what the view shows and how it addresses each part of the concern.
+
+Use the uml-view skill in .claude/skills (it builds on the plantuml-diagrams skill there) and follow all its
+steps. Write view.puml, view.png, inventory.json and README.md in ./view-out/GR10-Q4/.
+The detail level is given in the stakeholder perspective (overview); draw at that level and run
+check_inventory.py with --level overview --graph .claude/repo-graph.json.
+A static dependency graph of the repository is in .claude/repo-graph.json; query it with the skill's
+graph_query.py as the skill describes.
+If the model kind is a UML component diagram, do not write view.puml by hand: write ./view-out/GR10-Q4/model.json
+and run component_model.py build on it (with --graph .claude/repo-graph.json), as the skill describes; it writes
+view.puml and inventory.json.
