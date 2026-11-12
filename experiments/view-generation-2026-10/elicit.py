@@ -6,17 +6,14 @@ For each case of inputs.yaml:
                simulated stakeholder (default) that knows only the case's long request text (original_request
                when there is one, else request); the agent sees only `request`
   3. proposal  the agent proposes the views: one viewpoint per view from elicit/viewpoints.yaml, every concern in
-               exactly one view, with alternatives when another viewpoint is about as plausible
-  4. record    a 42010 input record per view (case id, then case-2, case-3 ...) in inputs-elicited.yaml
-
-Architect checkpoint: a case whose proposal lists an alternative viewpoint is ambiguous. It goes into
-architect-checkpoint.md with a fixed checklist; the architect's answers go into architect.yaml (same folder) and
-override the proposal on the next run. Until then the case is generated with the agent's proposal and marked
-`checkpoint: pending`.
+               at least one view, and any other viewpoint that answers a concern about as well ("also")
+  4. record    every proposed viewpoint becomes a view: no choice is forced where two are plausible, so a task
+               may get several views (case, case-2, ...); views with the same viewpoint are merged. One 42010
+               input record per view in inputs-elicited.yaml
 
     cd Task2View/code && .venv/bin/python ../experiments/view-generation-2026-10/elicit.py [--only CASE] [--ask] [--redo]
 
-The hand-made inputs.yaml stays the reference; compare.py-style agreement is printed at the end.
+The hand-made inputs.yaml stays the reference: the hand-made viewpoint is printed next to the proposed ones.
 """
 
 from __future__ import annotations
@@ -82,7 +79,21 @@ def ask_person(qs: list[dict], prefill: dict) -> dict:
     return answers
 
 
-def records(case: str, c: dict, answers: dict, views: list[dict], vps: dict, checkpoint: str) -> dict:
+def expand(views: list[dict]) -> list[dict]:
+    """Every proposed viewpoint becomes a view; views with the same viewpoint are merged."""
+    out: dict[str, dict] = {}
+    for v in views:
+        for vp, why, role in [(v["viewpoint"], v.get("reason"), "chosen")] + \
+                [(a["viewpoint"], a.get("reason"), "also") for a in v.get("also", [])]:
+            w = out.setdefault(vp, {"viewpoint": vp, "concern": v["concern"], "concern_details": [], "reasons": [],
+                                    "role": role})
+            w["concern_details"] += [d for d in v["concern_details"] if d not in w["concern_details"]]
+            w["reasons"].append(why)
+            w["role"] = "chosen" if "chosen" in (w["role"], role) else "also"
+    return sorted(out.values(), key=lambda w: w["role"] != "chosen")
+
+
+def records(case: str, c: dict, answers: dict, views: list[dict], vps: dict) -> dict:
     """One 42010 input record per proposed view, in the shape of inputs.yaml."""
     out = {}
     for i, v in enumerate(views, 1):
@@ -99,49 +110,11 @@ def records(case: str, c: dict, answers: dict, views: list[dict], vps: dict, che
             "aspect": vp["aspect"],
             "viewpoint": v["viewpoint"],
             "model_kind": vp["model_kind"],
-            "elicitation": {"reason": v.get("reason"), "alternatives": v.get("alternatives", []),
-                            "views_for_request": len(views), "checkpoint": checkpoint,
+            "elicitation": {"reasons": v["reasons"], "role": v["role"], "views_for_request": len(views),
                             "detail_level_stated": answers.get("detail_level") in ("overview", "balanced", "detailed")},
         }
     return out
 
-
-CHECKLIST = """Checklist (answer in architect.yaml under the case id):
-1. Does every concern have a view that answers it?
-2. Is each view's viewpoint the right one for its concerns? If not, which one (ids above)?
-3. Is the detail level right for this stakeholder and purpose?
-4. Does any concern need information that is not in the code (intent, rationale, runtime behaviour)?"""
-
-
-def checkpoint_md(pending: dict) -> str:
-    parts = ["# Architect checkpoint\n",
-             "Cases where the agent found more than one plausible viewpoint. Viewpoint ids: "
-             + ", ".join(yaml.safe_load((EL / "viewpoints.yaml").read_text())["viewpoints"]) + ".\n",
-             "Reply in `architect.yaml`, e.g.\n```yaml\nIS-seat-L1:\n  decision: approve   # or change\n"
-             "  views:            # only for change: the views you want, each with its concerns\n"
-             "    - viewpoint: component\n      concern_details: [\"...\"]\n"
-             "  detail_level: overview   # optional\n  not_in_code: \"...\"   # optional\n```\n"]
-    for case, (c, answers, views) in pending.items():
-        parts.append(f"\n## {case}\n\n**Request:** {c['request']}\n\n**Stakeholder's answers:** role "
-                     f"{answers.get('stakeholder')}; purpose {answers.get('perspective')}; detail level "
-                     f"{answers.get('detail_level')}\n")
-        for v in views:
-            parts.append(f"\n**Proposed view: {v['viewpoint']}** ({v['concern']})  \nConcerns: "
-                         + "; ".join(v["concern_details"]) + f"  \nWhy: {v.get('reason')}\n")
-            for a in v.get("alternatives", []):
-                parts.append(f"- alternative **{a['viewpoint']}**: {a['reason']}\n")
-        parts.append("\n" + CHECKLIST + "\n")
-    return "".join(parts)
-
-
-def apply_architect(views: list[dict], answers: dict, decision: dict) -> tuple[list[dict], dict]:
-    if decision.get("detail_level"):
-        answers = {**answers, "detail_level": decision["detail_level"]}
-    if decision.get("decision") == "change" and decision.get("views"):
-        views = [{"viewpoint": v["viewpoint"], "concern": v.get("concern", views[0]["concern"]),
-                  "concern_details": v["concern_details"], "reason": "architect", "alternatives": []}
-                 for v in decision["views"]]
-    return views, answers
 
 
 def main() -> int:
@@ -155,9 +128,7 @@ def main() -> int:
     vps = yaml.safe_load((EL / "viewpoints.yaml").read_text())["viewpoints"]
     vp_text = "\n".join(f"- {k}: {v['model_kind']}; shows {v['shows']}; frames aspects {', '.join(v['frames'])}"
                         for k, v in vps.items())
-    arch_file = HERE / "architect.yaml"
-    architect = yaml.safe_load(arch_file.read_text()) or {} if arch_file.exists() else {}
-    elicited, pending = {}, {}
+    elicited = {}
     for case, c in sheet["cases"].items():
         if args.only and case != args.only:
             continue
@@ -182,27 +153,18 @@ def main() -> int:
         proposal = step("proposal", lambda: ask_model((EL / "propose.txt").read_text().format(
             entity=entity, request=c["request"], answers=json.dumps(answers, indent=2), viewpoints=vp_text),
             AGENT_MODEL))
-        views = [v for v in proposal["views"] if v.get("viewpoint") in vps]
-        ambiguous = any(v.get("alternatives") for v in views)
-        if case in architect:
-            views, answers = apply_architect(views, answers, architect[case])
-            checkpoint = f"architect: {architect[case].get('decision')}"
-        else:
-            checkpoint = "pending" if ambiguous else "not needed"
-            if ambiguous:
-                pending[case] = (c, answers, views)
-        elicited.update(records(case, c, answers, views, vps, checkpoint))
-        print(f"{case}: " + " + ".join(v["viewpoint"] for v in views) + f"  [{checkpoint}]  "
-              f"(hand-made: {c['viewpoint']})", flush=True)
+        for v in proposal["views"]:
+            v["also"] = [a for a in v.get("also", []) if a.get("viewpoint") in vps]
+        views = expand([v for v in proposal["views"] if v.get("viewpoint") in vps])
+        elicited.update(records(case, c, answers, views, vps))
+        print(f"{case}: " + " + ".join(f"{v['viewpoint']}{'' if v['role'] == 'chosen' else ' (also)'}" for v in views)
+              + f"   hand-made: {c['viewpoint']}", flush=True)
     target = HERE / "inputs-elicited.yaml"
     old = yaml.safe_load(target.read_text()) if target.exists() and args.only else {}
     cases = {**(old or {}).get("cases", {}), **elicited}
-    target.write_text("# Written by elicit.py (Phase 1); do not edit by hand. Corrections go into architect.yaml.\n"
+    target.write_text("# Written by elicit.py (Phase 1); do not edit by hand.\n"
                       + yaml.safe_dump({"entities_of_interest": sheet["entities_of_interest"], "cases": cases},
                                        sort_keys=False, allow_unicode=True, width=110), encoding="utf-8")
-    if pending:
-        (HERE / "architect-checkpoint.md").write_text(checkpoint_md(pending), encoding="utf-8")
-        print(f"{len(pending)} case(s) need the architect: architect-checkpoint.md")
     return 0
 
 

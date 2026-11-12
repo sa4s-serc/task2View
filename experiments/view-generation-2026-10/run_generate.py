@@ -24,10 +24,10 @@ Conditions (--condition):
      revision when a checked blocking finding remains, and the version with fewer checked blocking findings is
      kept (outputs-G/)
   H  F on the inputs elicited in Phase 1 (inputs-elicited.yaml, written by elicit.py: fixed 42010 questions, a
-     stakeholder's answers, the agent's proposed views, an architect checkpoint when more than one viewpoint is
-     plausible), so one request may give two views (case, case-2); the skill adds the reviewer's rules (one
-     viewpoint per view, use-case boundary, plain words instead of codes, styling stereotypes hidden) and
-     check_view.py; no element budget; component views drawn by hand as in F (outputs-H/)
+     stakeholder's answers, the agent's proposed views; every plausible viewpoint becomes a view, so one request
+     may give several views: case, case-2, ...); the skill adds the reviewer's rules (one viewpoint per view,
+     use-case boundary, plain words instead of codes, styling stereotypes hidden) and check_view.py; no element
+     budget; component views drawn by hand as in F (outputs-H/)
 
 B and C ran with the skills as of commit 91dc18a, D with skills, critic.txt and check_inventory.py as of
 e381c51, E as of 137e9ac, F as of 00a3ef1; built-in auto memory is off for every run.
