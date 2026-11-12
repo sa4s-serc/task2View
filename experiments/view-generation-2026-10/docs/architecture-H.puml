@@ -1,0 +1,58 @@
+@startuml
+title View generation, two phases (condition H)
+left to right direction
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 13
+skinparam ArrowFontSize 12
+skinparam rectangleRoundCorner 10
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam rectangle {
+  BackgroundColor #F8FAFC
+  BorderColor #475569
+}
+skinparam card {
+  BackgroundColor #FFFFFF
+  BorderColor #94A3B8
+}
+skinparam package {
+  BorderColor #94A3B8
+  FontColor #334155
+}
+
+card "**Request**\n(stakeholder's own words)" as req
+card "**Repository**" as repo
+actor "Stakeholder" as sh
+actor "Architect" as arch
+
+package "Phase 1: ISO 42010 inputs" {
+  rectangle "**1. Pre-fill**\n(agent)\n\nanswers the 5 fixed\nquestions from the\nrequest; «not stated»\nwhere it does not say" as pre
+  rectangle "**2. Ask, one round**\n\n5 fixed questions, each\nexplains its 42010 term:\nrole, purpose, concerns,\ndetail level, aspect\nper concern" as ask
+  rectangle "**3. Propose views**\n(agent)\n\none viewpoint per view,\nfrom 6 code-recoverable\nviewpoints; every concern\nin one view; two views\nwhen aspects differ" as prop
+  rectangle "**4. Architect checkpoint**\n(only if more than one\nviewpoint is plausible)\n\nfixed 4-item checklist" as cp
+}
+
+package "Phase 2: one run per view (F + reviewer's rules)" {
+  rectangle "**5. Static graph**\n(tree-sitter, no LLM)" as graph
+  rectangle "**6. Generator agent**\n(uml-view skill)\n\nfind code, group into\nelements, inventory,\ndraw PlantUML" as gen
+  rectangle "**7. Checks** (scripts)\n\nevidence exists, diagram =\ninventory, arrows in graph,\nlayout, use-case boundary,\nno codes in labels" as chk
+  rectangle "**8. Critic agent**\n(fresh session)\n\nconcerns answered?\nright detail level?\nsupported by code?" as critic
+}
+card "**View(s)**\n\nview.png / .puml\ninventory.json\nREADME.md" as out
+
+req --> pre
+pre --> ask
+sh --> ask : confirms or\ncorrects
+ask --> prop
+prop --> cp : ambiguous
+arch --> cp : decides
+prop --> graph : clear
+cp --> graph
+repo --> graph
+graph --> gen
+gen --> chk
+chk --> gen : fix
+chk --> critic
+critic --> gen : one revision
+critic --> out : keep the better
+@enduml

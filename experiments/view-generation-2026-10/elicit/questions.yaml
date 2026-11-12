@@ -1,0 +1,41 @@
+# Fixed question bank for Phase 1 (the same five questions for every request; nothing is generated per request).
+# Each question explains its ISO/IEC/IEEE 42010:2022 term in one plain sentence (clause 3 definitions).
+# The agent pre-fills an answer from the request; the stakeholder confirms or corrects it, in one round.
+questions:
+  - id: stakeholder
+    term: stakeholder (42010 3.17)
+    explain: The person or role with an interest in the system.
+    ask: What is your role?
+    answer: text
+  - id: perspective
+    term: stakeholder perspective (42010 3.18)
+    explain: The point of view from which you look at the system, set by what you are about to do.
+    ask: What will you use the view for?
+    answer: text
+  - id: concerns
+    term: concern (42010 3.10)
+    explain: A question about the system that matters to you.
+    ask: Which questions should the view answer? One per line, in your own words.
+    answer: list
+  - id: detail_level
+    term: detail level (part of the perspective)
+    explain: How much of the system the view shows and how finely.
+    ask: Which detail level do you need?
+    answer: one of
+    options:
+      overview: the main parts of the whole system and how they connect
+      balanced: the parts involved in your concern, with their interfaces
+      detailed: the parts of one area you will change, with their interfaces and rules
+  - id: aspects
+    term: aspect (42010 3.9)
+    explain: The kind of information about the system a question is about.
+    ask: For each of your questions, what do you need to see? Pick one or more, or "not sure".
+    answer: per concern, one or more of
+    options:
+      users: who uses the system and what each user can achieve
+      code-structure: how the code is divided into parts or layers and which part depends on which
+      runtime-parts: the running parts of the system, what each offers and how they connect
+      data: what data is stored and how it is related
+      steps: the steps of one interaction, in order, including what happens on errors
+      runtime-environment: where the system runs and how its parts communicate
+      not-sure: I do not know

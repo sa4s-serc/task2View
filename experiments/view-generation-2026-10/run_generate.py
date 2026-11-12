@@ -23,6 +23,11 @@ Conditions (--condition):
      findings about the code count only if their citation exists, the program (not the critic) asks for the one
      revision when a checked blocking finding remains, and the version with fewer checked blocking findings is
      kept (outputs-G/)
+  H  F on the inputs elicited in Phase 1 (inputs-elicited.yaml, written by elicit.py: fixed 42010 questions, a
+     stakeholder's answers, the agent's proposed views, an architect checkpoint when more than one viewpoint is
+     plausible), so one request may give two views (case, case-2); the skill adds the reviewer's rules (one
+     viewpoint per view, use-case boundary, plain words instead of codes, styling stereotypes hidden) and
+     check_view.py; no element budget; component views drawn by hand as in F (outputs-H/)
 
 B and C ran with the skills as of commit 91dc18a, D with skills, critic.txt and check_inventory.py as of
 e381c51, E as of 137e9ac, F as of 00a3ef1; built-in auto memory is off for every run.
@@ -97,7 +102,7 @@ def build_graph(workdir: Path) -> None:
 
 def build_prompt(case: str, c: dict, entities: dict, cond: str) -> str:
     extra = "" if cond == "A" else (HERE / f"prompt-{cond}.txt").read_text()
-    return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities, with_level=cond in ("E", "F", "G"))
+    return fill((HERE / "prompt.txt").read_text() + extra, case, c, entities, with_level=cond in ("E", "F", "G", "H"))
 
 
 class SessionFailed(RuntimeError):
@@ -236,7 +241,7 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     if cond != "A":
         for name, path in SKILLS.items():
             shutil.copytree(path, workdir / ".claude" / "skills" / name, dirs_exist_ok=True)
-    if cond in ("F", "G"):
+    if cond in ("F", "G", "H"):
         build_graph(workdir)
     memory = HERE / "memory" / f"{c['entity_of_interest']}.md"
     if cond == "C":
@@ -255,14 +260,14 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     if not (produced / "view.puml").exists():
         log(f"stop: {case} wrote no view.puml; see {logs.name}/{case}.jsonl")
         return False
-    lvl = cond in ("E", "F", "G")
+    lvl = cond in ("E", "F", "G", "H")
     loop = (critic_loop_g(case, c, entities, workdir, logs, session) if cond == "G" else
-            critic_loop(case, c, entities, workdir, logs, session, lvl) if cond in ("D", "E", "F") else None)
+            critic_loop(case, c, entities, workdir, logs, session, lvl) if cond in ("D", "E", "F", "H") else None)
     shutil.copytree(produced, out_dir, dirs_exist_ok=True)
     if loop:
         (out_dir / "loop.json").write_text(json.dumps(loop, indent=2), encoding="utf-8")
     if lvl and (out_dir / "inventory.json").exists():
-        graph = ["--graph", str(workdir / GRAPH)] if cond in ("F", "G") else []
+        graph = ["--graph", str(workdir / GRAPH)] if cond in ("F", "G", "H") else []
         check = subprocess.run([sys.executable, "-I", str(SKILLS["uml-view"] / "scripts" / "check_inventory.py"),
                                 str(out_dir / "inventory.json"), "--repo", str(workdir),
                                 "--level", c["perspective"]["detail_level"], *graph], capture_output=True, text=True)
@@ -272,6 +277,10 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
                                 "check", str(out_dir / "model.json"), "--graph", str(workdir / GRAPH)],
                                capture_output=True, text=True)
         (out_dir / "model-check.txt").write_text(check.stdout, encoding="utf-8")
+    if cond == "H":
+        check = subprocess.run([sys.executable, "-I", str(SKILLS["uml-view"] / "scripts" / "check_view.py"),
+                                str(out_dir / "view.puml")], capture_output=True, text=True)
+        (out_dir / "view-check.txt").write_text(check.stdout, encoding="utf-8")
     (out_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
     if shutil.which("plantuml") and not (out_dir / "view.png").exists():
         with (out_dir / "view.puml").open("rb") as src_puml, (out_dir / "view.png").open("wb") as png:
@@ -282,11 +291,11 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--condition", choices=["A", "B", "C", "D", "E", "F", "G"], default="A")
+    parser.add_argument("--condition", choices=["A", "B", "C", "D", "E", "F", "G", "H"], default="A")
     parser.add_argument("--only")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    sheet = yaml.safe_load((HERE / "inputs.yaml").read_text())
+    sheet = yaml.safe_load((HERE / ("inputs-elicited.yaml" if args.condition == "H" else "inputs.yaml")).read_text())
     for case, c in sheet["cases"].items():
         if args.only and case != args.only:
             continue

@@ -66,6 +66,10 @@ notation, not the content. See `examples/README.md`.
    evidence is missing, mark the item "(unconfirmed)" and record it under Assumptions. [MSC, GD, CH]
 
 ## 3. Choose what to show (abstraction)
+- **One viewpoint per view.** Draw only the elements of the given viewpoint; do not add context elements from
+  another viewpoint (no GUI, controllers or services in a data model, no classes in a use case view). If a concern
+  detail needs another viewpoint, say in the README which view would answer it. (Reviewer finding 2026-11:
+  context elements read as excess detail; 42010 cl. 5: a view is governed by one viewpoint.)
 - **One abstraction level per view.** No classes inside a deployment view, no deployment nodes in a component
   view. [SW, CH, MP, RC, JR, GD, OAI]
 - Components are units the code enforces (modules, services, layers with an interface), not folders. Merge a
@@ -78,17 +82,21 @@ notation, not the content. See `examples/README.md`.
   where things run (build files, configs, connection strings). [CL, BMA, MSA]
 - Class views show key attributes and public operations the concern needs; hide private members. [CG, EG, GD]
 - Use case views: actors are real roles from the code (permissions, user types), use cases are user goals, not
-  screens or methods. [VHU, NIL]
+  screens or methods. Put the use cases inside a system boundary named after the system
+  (`rectangle "<system>" { ... }`), actors outside it (UML 2.5.1 cl. 18, the subject). [VHU, NIL]
 
 ## 4. Notation
 - Relations point from the caller/dependent to the dependency and carry a short verb label (1–4 words), plus the
   protocol for engineering audiences; never a bare "uses". [RCH, SW, GD]
 - One name per element, the same in the view, the README and the code. Declare every element up front with an
   alias, in reading order. [GD, NIR, A365]
+- **Plain words, no codes.** Every label reads on its own: no invented codes or numbering (IP1, UC3, C2) that need
+  a legend to decode. To mark what the concern asks about (e.g. integration points), say it in words in the label
+  or a note. (Reviewer finding 2026-11: "IP5" was not understood.)
 - Title = model kind + scope. A legend only if colour or line style carries meaning. [GD, ART, RCH, NIR]
 
-### Component views: build them from a model
-For a UML component diagram, do not write the PlantUML by hand. Write `view-out/<case>/model.json` (shape in the
+### Component views: build them from a model (only when the prompt asks for model.json)
+When the prompt asks for it, do not write the PlantUML of a UML component diagram by hand. Write `view-out/<case>/model.json` (shape in the
 docstring of `scripts/component_model.py`) and run
 `python3 -I .claude/skills/uml-view/scripts/component_model.py build view-out/<case>/model.json --graph .claude/repo-graph.json`.
 It checks the model and draws the PlantUML and inventory.json. UML 2.5.1 (Clause 11) in short:
@@ -109,7 +117,8 @@ Fix every error it reports; then render view.png from view.puml with plantuml.
   you declare in a note. No invented stereotypes such as «factory», «tables», «REST», «docker». (Rejects UMCP, SW,
   REL #52.)
 - Do not use a bare `hide stereotype`: it also hides UML keywords. The vendored templates hide only the
-  `<<accent>>`, `<<alert>>` and `<<muted>>` styling stereotypes; use those for emphasis, with a legend. (Amends
+  `<<accent>>`, `<<alert>>` and `<<muted>>` styling stereotypes; use those for emphasis, with a legend, and keep
+  the `hide <<name>> stereotype` line for each one you use so it is not printed. (Amends
   GD house style #53.)
 - Deployment elements are `node`, `node <<device>>`, `node <<executionEnvironment>>`, `artifact`; no `cloud`,
   `queue`, `rectangle` or `database` as UML elements (rejects A365, JAB, REL #54). `artifact ..> node : <<deploy>>`.
@@ -133,9 +142,11 @@ Fix every error it reports; then render view.png from view.puml with plantuml.
    with no answer, a detail level different from the given one, members that match nothing, and drawn relations with no code
    dependency behind them. For each "undrawn" dependency, draw it if the concern needs it, otherwise list it under
    `omitted` with the reason. Exit 0 means clean.
-4. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
+4. Run `python3 -I .claude/skills/uml-view/scripts/check_view.py view-out/<case>/view.puml` (use-case system
+   boundary, no codes in labels, styling stereotypes hidden) and fix what it reports. Exit 0 means clean.
+5. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
    [GD, DIO, YH]
-5. No renderer, no claim: if it did not render or you could not view it, say so. [GD, A365]
+6. No renderer, no claim: if it did not render or you could not view it, say so. [GD, A365]
 
 ## Tooling notes
 Written up from what the agent had to rediscover in earlier runs (they hold for any repository):
