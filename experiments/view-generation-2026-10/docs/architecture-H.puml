@@ -30,10 +30,10 @@ package "Phase 1: ISO 42010 inputs" {
   rectangle "**3. Propose views**\n(agent)\n\none viewpoint per view,\nfrom 6 code-recoverable\nviewpoints; every concern\ncovered; every plausible\nviewpoint becomes a view" as prop
 }
 
-package "Phase 2: one run per view (F + reviewer's rules)" {
+package "Phase 2: one run per view, in order (F + reviewer's rules)" {
   rectangle "**4. Static graph**\n(tree-sitter, no LLM)" as graph
-  rectangle "**5. Generator agent**\n(uml-view skill)\n\nfind code, group into\nelements, inventory,\ndraw PlantUML" as gen
-  rectangle "**6. Checks** (scripts)\n\nevidence exists, diagram =\ninventory, arrows in graph,\nlayout, use-case boundary,\nno codes in labels" as chk
+  rectangle "**5. Generator agent**\n(uml-view skill)\n\nfind code, group into\nelements, inventory,\ndraw PlantUML;\nreuses names of the task's\nearlier views" as gen
+  rectangle "**6. Checks** (scripts)\n\nevidence exists, diagram =\ninventory, arrows in graph,\nlayout, use-case boundary,\nno codes, house style,\nfits a screen, one reading\ndirection, grouping,\nsame names across views" as chk
   rectangle "**7. Critic agent**\n(fresh session)\n\nconcerns answered?\nright detail level?\nsupported by code?" as critic
 }
 card "**View(s)**\n\nview.png / .puml\ninventory.json\nREADME.md" as out

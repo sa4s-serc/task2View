@@ -93,6 +93,20 @@ notation, not the content. See `examples/README.md`.
 - **Plain words, no codes.** Every label reads on its own: no invented codes or numbering (IP1, UC3, C2) that need
   a legend to decode. To mark what the concern asks about (e.g. integration points), say it in words in the label
   or a note. (Reviewer finding 2026-11: "IP5" was not understood.)
+- **Readable on one screen** (Moody 2009; Störrle 2014/2017; Purchase 1997). check_view.py checks these:
+  - *One style for every view:* start from the plantuml-diagrams house style (`puml-new` or
+    `assets/lib/house.puml` pasted inline), Helvetica, no text below 12 pt, colours only from the house palette
+    and only when they carry meaning (with a legend).
+  - *One reading direction:* declare elements in reading order and point dependencies the same way. Structure
+    views read top to bottom (users and UI, then logic, then data); deployment views read left to right (client,
+    server, database); sequence lifelines left to right in calling order. Replies and callbacks are dashed.
+  - *Group before you list:* in component, package and deployment views, nest elements in their layer,
+    subsystem or node rather than placing many boxes side by side.
+  - *Fit, do not shrink:* the view must stay legible at 1600 px wide. If it does not, group or split by
+    concern; never drop what the concern needs and never shrink the font.
+- **Several views of one task tell one story** (42010 cl. 5: correspondences between views). When the prompt
+  names views already drawn for the same task, read their inventory.json: an element that stands for the same
+  code (the same members) keeps the same name, and the same styling; do not give one part two names.
 - Title = model kind + scope. A legend only if colour or line style carries meaning. [GD, ART, RCH, NIR]
 
 ### Component views: build them from a model (only when the prompt asks for model.json)
@@ -143,7 +157,10 @@ Fix every error it reports; then render view.png from view.puml with plantuml.
    dependency behind them. For each "undrawn" dependency, draw it if the concern needs it, otherwise list it under
    `omitted` with the reason. Exit 0 means clean.
 4. Run `python3 -I .claude/skills/uml-view/scripts/check_view.py view-out/<case>/view.puml` (use-case system
-   boundary, no codes in labels, styling stereotypes hidden) and fix what it reports. Exit 0 means clean.
+   boundary, no codes in labels, styling stereotypes hidden, house style; on the rendered view: fits a 1600 px
+   screen, one reading direction, grouping) and fix what it reports. Exit 0 means clean. When the task has other
+   views, also run `python3 -I .claude/skills/uml-view/scripts/check_consistency.py <their inventory.json files>
+   view-out/<case>/inventory.json` and fix the names in your view.
 5. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.
    [GD, DIO, YH]
 6. No renderer, no claim: if it did not render or you could not view it, say so. [GD, A365]

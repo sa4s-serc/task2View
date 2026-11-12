@@ -26,8 +26,10 @@ Conditions (--condition):
   H  F on the inputs elicited in Phase 1 (inputs-elicited.yaml, written by elicit.py: fixed 42010 questions, a
      stakeholder's answers, the agent's proposed views; every plausible viewpoint becomes a view, so one request
      may give several views: case, case-2, ...); the skill adds the reviewer's rules (one viewpoint per view,
-     use-case boundary, plain words instead of codes, styling stereotypes hidden) and check_view.py; no element
-     budget; component views drawn by hand as in F (outputs-H/)
+     use-case boundary, plain words instead of codes, styling stereotypes hidden) and check_view.py, readability rules
+     checked on the rendered view (house style, fits a 1600 px screen, one reading direction, grouping) and, for
+     the views of one task, shared names checked by check_consistency.py (later views read the earlier ones'
+     inventories); no element budget; component views drawn by hand as in F (outputs-H/)
 
 B and C ran with the skills as of commit 91dc18a, D with skills, critic.txt and check_inventory.py as of
 e381c51, E as of 137e9ac, F as of 00a3ef1; built-in auto memory is off for every run.
@@ -224,7 +226,12 @@ def critic_loop_g(case: str, c: dict, entities: dict, workdir: Path, logs: Path,
     return loop
 
 
-def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
+def task_of(case: str) -> str:
+    """Condition H: the views of one task are case, case-2, case-3 ..."""
+    return re.sub(r"-\d+$", "", case)
+
+
+def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool, earlier: list[tuple[str, dict]] = ()) -> bool:
     out_dir = HERE / ("outputs" if cond == "A" else f"outputs-{cond}") / case
     if (out_dir / "view.puml").exists():
         log(f"skip {case}: already generated")
@@ -232,6 +239,12 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
     src = Path(entities[c["entity_of_interest"]]["repository"]).expanduser()
     workdir = SUBJECTS / ("" if cond == "A" else cond) / case / src.name
     prompt = build_prompt(case, c, entities, cond)
+    if earlier:
+        listed = "\n".join(f"  - {e} ({ec['viewpoint']}): ./view-out/{e}/inventory.json" for e, ec in earlier)
+        prompt += ("\nThis task has more than one view. Views already drawn for it:\n" + listed + "\nRead their "
+                   "inventories first: an element that stands for the same code keeps the same name and styling. "
+                   "Then run check_consistency.py on all the inventories, as the skill describes, and fix what it "
+                   "reports in your view.\n")
     if dry:
         log(f"would run {case} in {workdir}\n{prompt}")
         return True
@@ -243,6 +256,12 @@ def run_case(case: str, c: dict, entities: dict, cond: str, dry: bool) -> bool:
             shutil.copytree(path, workdir / ".claude" / "skills" / name, dirs_exist_ok=True)
     if cond in ("F", "G", "H"):
         build_graph(workdir)
+    for e, _ in earlier:
+        done = HERE / f"outputs-{cond}" / e
+        (workdir / "view-out" / e).mkdir(parents=True, exist_ok=True)
+        for f in ("inventory.json", "view.puml"):
+            if (done / f).exists():
+                shutil.copy(done / f, workdir / "view-out" / e / f)
     memory = HERE / "memory" / f"{c['entity_of_interest']}.md"
     if cond == "C":
         memory.parent.mkdir(exist_ok=True)
@@ -297,15 +316,28 @@ def main() -> int:
     args = parser.parse_args()
     sheet = yaml.safe_load((HERE / ("inputs-elicited.yaml" if args.condition == "H" else "inputs.yaml")).read_text())
     for case, c in sheet["cases"].items():
-        if args.only and case != args.only:
+        if args.only and task_of(case) != args.only:
             continue
+        earlier = [(e, ec) for e, ec in sheet["cases"].items() if args.condition == "H" and e != case
+                   and task_of(e) == task_of(case) and list(sheet["cases"]).index(e) < list(sheet["cases"]).index(case)]
         try:
-            ok = run_case(case, c, sheet["entities_of_interest"], args.condition, args.dry_run)
+            ok = run_case(case, c, sheet["entities_of_interest"], args.condition, args.dry_run, earlier)
         except SessionFailed as e:
             log(f"stop: {case} not recorded; {e}. Delete its workdir before rerunning.")
             return 2
         if not ok:
             return 2
+    if args.condition == "H" and not args.dry_run:
+        tasks: dict[str, list[str]] = {}
+        for case in sheet["cases"]:
+            tasks.setdefault(task_of(case), []).append(case)
+        for task, views in tasks.items():
+            invs = [HERE / "outputs-H" / v / "inventory.json" for v in views]
+            if len(views) > 1 and all(i.exists() for i in invs):
+                check = subprocess.run([sys.executable, "-I", str(SKILLS["uml-view"] / "scripts" /
+                                        "check_consistency.py"), *map(str, invs)], capture_output=True, text=True)
+                for v in views:
+                    (HERE / "outputs-H" / v / "consistency-check.txt").write_text(check.stdout, encoding="utf-8")
     log("all cases done")
     return 0
 
