@@ -1,0 +1,25 @@
+{
+  "views": [
+    {
+      "viewpoint": "component",
+      "concern": "Booking components, responsibilities and dependencies",
+      "concern_details": [
+        "Which are the main components involved in the booking process and what is each one responsible for?",
+        "How do the components interact and depend on each other?",
+        "Which components handle booking requests?",
+        "Which components check seat availability?",
+        "Which components apply booking rules?",
+        "Which components manage and store reservations?",
+        "Which components interact with external services such as the notification service?",
+        "Which parts of the system need to be modified for the new booking rules, and which other components may be affected?"
+      ],
+      "reason": "Every concern is about which parts of the booking process exist, what each does, and how they connect. That covers request handling, availability checks, rule application, reservation storage and the external notification service. A component diagram frames all of these through its components, provided and required interfaces and connectors. All eight concerns choose runtime-parts. The three structural concerns choose it alongside code-structure. The storage concern chooses it alongside data, but it asks which component stores reservations, not what the entities are. One component view answers all eight, so no separate data view is needed. The interfaces and connectors also show which components a change to the booking rules would affect.",
+      "also": [
+        {
+          "viewpoint": "module",
+          "reason": "The developer will change code, and the concerns on responsibilities, dependencies and what to modify also chose code-structure. A package diagram shows which modules or layers hold the booking, availability and rules logic and which modules depend on them. That answers these three concerns about as well as the component view, from the code side."
+        }
+      ]
+    }
+  ]
+}
