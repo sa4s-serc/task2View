@@ -1,0 +1,43 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "Which runtime environments and software artifacts are required to run the system?",
+     "answered": "partly",
+     "why": "Java 23 appears only in a package title, and the three third-party libraries are merged into one box. The view does not show what the deployable artifact is: pom.xml has default jar packaging and no shade/assembly or manifest mainClass, so the dependency jars must be on the classpath, and three classes have main methods (HomePageGUI, UserLoginGUI, UserRegistrationGUI). MySQL appears with no version or setup prerequisite, although the README requires the database and user to be created by hand (CREATE DATABASE / CREATE USER / GRANT) before the first run. Hibernate creates only the tables (hbm2ddl.auto=update)."},
+    {"detail": "Where are the application and its data executed and stored?",
+     "answered": "partly",
+     "why": "It shows that the app is one process and the data is in schema reports_db on a MySQL server. The view never says that the server is expected on the same host: 127.0.0.1 is only in a note and the account is reports_user@localhost. It also does not say that relocating the database means editing persistence.xml inside the packaged jar and changing the MySQL account host. Because of how the libraries box is placed, a reader cannot tell whether the libraries run inside the app process."},
+    {"detail": "How do the main runtime elements communicate with each other?",
+     "answered": "yes",
+     "why": "It shows the in-process call chain from screens to controllers to domain services to persistence. Persistence reaches MySQL through the JPA provider and JDBC over TCP 3306. This matches the code: only ReportService and UserService use PersistenceService, and JpaUtil bootstraps the unit."},
+    {"detail": "Which technologies and runtime dependencies are involved in the communication between the application and the database?",
+     "answered": "partly",
+     "why": "It names JPA, Hibernate 6.6, Connector/J 9.4, JDBC and TCP 3306, and a note lists the persistence.xml settings. Three problems remain. The libraries box also contains forms_rt, a Swing layout runtime used only by Boundary, so it falsely puts a GUI library on the DB path. The persistence unit name (Municipal_Report_Management_System) is not shown. Driver class com.mysql.cj.jdbc.Driver and RESOURCE_LOCAL transactions appear only in the code."}
+  ],
+  "level": "right",
+  "level_why": "Nine elements suit a balanced view. Still, the four in-process layers (Swing screens, Controllers, Domain model and services, Persistence access) carry more weight than a DevOps reader needs, while deployment-relevant facts are hidden in labels. Merging Swing screens, Controllers and Domain into one 'Application logic and GUI' component, and keeping Persistence access separate, would leave room for the missing items without adding elements overall.",
+  "unsupported": [
+    "forms_rt 7.0.3 is in the same component as Hibernate and Connector/J, on the persistence --JPA--> libs --JDBC--> MySQL path. The code only uses forms_rt in Boundary (com.intellij.uiDesigner.core imports in HomePageGUI and UserLoginGUI), not for database access.",
+    "The libraries component is drawn outside the 'Desktop application (one Java 23 process)' boundary. In the code, the libraries are Maven compile-scope dependencies that are loaded into the same JVM, so they are not a separate runtime element.",
+    "'account reports_user@localhost' is a label on the MySQL server component. The code (persistence.xml) has only user reports_user and URL 127.0.0.1. The @localhost host part comes from the README setup SQL. If it is kept, it should be marked as the setup prerequisite."
+  ],
+  "missing": [
+    "The deployable artifact and how to launch it: a jar built by Maven (default packaging, no fat-jar or mainClass configured) plus the runtime dependency jars on the classpath, and the entry point (HomePageGUI.main; UserLoginGUI and UserRegistrationGUI also have main methods).",
+    "A prerequisite that the reports_db database and the reports_user account must be created by hand, as in the README. Hibernate hbm2ddl=update only creates or updates the tables.",
+    "A statement that the connection settings, including the plaintext password, are fixed inside the packaged persistence.xml with no external override. A new environment therefore needs that file changed and the app rebuilt or repackaged.",
+    "Where Hibernate and Connector/J run (inside the app JVM), and that forms_rt is a GUI runtime dependency, not a DB one."
+  ],
+  "uml": [
+    "The process boundary is drawn as a UML package. A package is a namespace, not a runtime element. Use a component (for example, the application as an enclosing component) or move the process boundary to the deployment view.",
+    "persistence.xml is drawn as a component. It is a configuration file and should be an <<artifact>> or a <<file>> artifact. Show the relation from Persistence access as a dashed <<use>> dependency on the artifact, or as a note.",
+    "The relations labelled 'calls', 'saves, queries', 'JPA' and 'JDBC, TCP 3306' are solid open-arrow lines with no UML meaning in a component diagram. Use dashed <<use>> dependencies, or better, provided and required interfaces (for example, a JPA EntityManager interface and a JDBC/MySQL protocol interface) joined by assembly connectors.",
+    "The reports_db schema is drawn as a component nested in the MySQL server component. A database schema is not a component. Model it as an artifact or a <<file>>/data element, or leave it out and name it in the server's label.",
+    "One component lists three unrelated libraries. Split them into separate components, or into <<library>>-style artifacts using standard notation, so that each dependency is correct."
+  ],
+  "fixes": [
+    "Split the libraries box. Put Hibernate ORM 6.6 (JPA provider) and MySQL Connector/J 9.4 (JDBC driver) inside the application boundary on the persistence path, and attach forms_rt 7.0.3 only to the Swing screens, or leave it out of the DB path.",
+    "Fix the notation. Make the application boundary a component instead of a package, make persistence.xml an artifact, and replace the plain solid arrows with <<use>> dependencies or provided/required interfaces (JPA, JDBC over TCP 3306) with assembly connectors. Do not model the schema as a component.",
+    "Add the deployable artifact and its launch: an application jar, the runtime dependency jars on the classpath, and the entry point HomePageGUI.main on Java 23.",
+    "Add a short note for the new environment. reports_db and reports_user must be created manually, and Hibernate only creates tables. The URL (127.0.0.1:3306), the user and the plaintext password are packaged in persistence.xml with no override, so moving the database needs a rebuild and a matching MySQL account host.",
+    "Merge Swing screens, Controllers and Domain model and services into one in-process application component to keep the view at the balanced level while adding the items above."
+  ]
+}

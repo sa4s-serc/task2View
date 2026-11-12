@@ -1,0 +1,32 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "How do the components interact when a new user creates an account?",
+     "answered": "partly",
+     "why": "The happy path is correct and traceable to the code: both entries (Swing Registration form, POST /api/auth/register), Library facade, User manager, User registry, Persistence manager, MySQL. The duplicate check and the INSERT also match the code. The failure interactions are incomplete or wrong, and a tester needs those to design negative tests. (a) Validation in User manager (msg 07, validate/validateStudent/validateLibrarian via require) throws IllegalArgumentException, and the view gives this no outcome: 07 is drawn as a self-call that never fails. That path maps to HTTP 400 over REST and to an error dialog on the form. (b) On save failure the User manager throws a plain RuntimeException. RestExceptionHandler only maps IllegalArgumentException and IllegalStateException (RestExceptionHandler.java:19), so over REST this becomes an unhandled 500. The [save failed] operand draws no REST reply at all. (c) The replies give the wrong components the work: the facade neither catches nor translates anything. The HTTP 400 comes from RestExceptionHandler, and the error or confirmation dialogs come from the form's own catch block (Registration.java:134-142)."}
+  ],
+  "level": "right",
+  "level_why": "Seven lifelines, each a component the tester exercises at a boundary, with roughly one message per call. That fits 'balanced'. Folding the email and identifier lookups into one message and drawing factories and DTOs as internals are sensible cuts. Nothing needs to be dropped. The fixes below change paths that are already there and add one alt operand. They do not add lifelines.",
+  "unsupported": [
+    "Msg 15 'HTTP 400' and msg 26 'UserDTO' drawn as replies from Library facade to the REST API: the facade only returns or propagates (LibraryFacade.java:37-39). The 400 is produced by RestExceptionHandler (a member of the 'rest' element) handling IllegalArgumentException, not by the facade.",
+    "Msgs 14 and 23 'error message shown' and msg 25 'confirmation shown' drawn as facade-to-form replies: the facade sends no such message. It propagates the exception or returns a UserDTO, and the form shows the JOptionPane itself (Registration.java:134-142).",
+    "Msgs 14/15 and 25/26 are both drawn in the same operand, so the diagram shows each outcome sent to the form and then to the REST API. In the code only the caller that entered receives it (the README admits this is an assumption)."
+  ],
+  "missing": [
+    "An input-validation failure outcome. UserManager.register calls validate and validateStudent or validateLibrarian, which throw IllegalArgumentException for role, name, password length (8-32), email and identifier rules (UserManager.java:44-74). The result is HTTP 400 {error} over REST and an error dialog on the form. This is the most-tested negative integration path, and the view leaves it out.",
+    "The REST result of a save failure: the RuntimeException thrown at UserManager.java:92 is not covered by RestExceptionHandler, so the client gets HTTP 500. That is a likely defect the tester should target, and the view draws no REST reply in [save failed].",
+    "The two distinct duplicate outcomes ('Email is already associated with an account.' and 'Identifier is already in use.'), each checked by its own lookup (institutionalEmailExists, then findStudentByStudentNumber or findLibrarianByCode, chosen by role). One guard note naming both conditions is enough at this level. The view collapses them, so the tester cannot see that the identifier lookup depends on the role.",
+    "The form's own outcome after an exception or success, which the form handles itself (catch RuntimeException, then showError; on success, an information dialog and a switch to Login)."
+  ],
+  "uml": [
+    "Replies for mutually exclusive callers sit in one interaction operand, which says both are sent in sequence. Split them with a nested alt [desktop] / [REST], or end the trace at the facade's return and show each boundary's handling in its own operand.",
+    "Exceptions are drawn as ordinary reply messages labelled with the exception class. That is acceptable, but the diagram should be consistent. Self-messages 07 and 16 that can throw should end in an alt or break fragment whose guard states the failure, rather than staying as unconditional self-calls.",
+    "Msg 08 'check email and identifier in use (2 calls)' is one synchronous message standing for two separate calls, and each call has its own SELECT. A loop fragment, or two messages, would be accurate UML. Otherwise state the collapse in a note so the reply 'match or none' is not read as a single round trip."
+  ],
+  "fixes": [
+    "Add a validation-failure outcome after msg 07: a break or alt [invalid input] in which the User manager throws IllegalArgumentException, which reaches the REST API as HTTP 400 and the form as an error dialog.",
+    "In [save failed], show the REST outcome. The RuntimeException is not handled by RestExceptionHandler, so the client gets HTTP 500. Keep the form's error dialog.",
+    "Fix who does what in the replies: the facade only propagates the exception or returns the UserDTO. Draw the form's dialog as a self-message on the form, and the HTTP 400 or 200 as a reply from the REST API to the found-message source (the client).",
+    "Separate the desktop and REST replies so a single trace never sends a reply to both callers, for example with a nested alt [desktop] / [REST] per outcome.",
+    "Make the duplicate check show both guarded failures, email in use and identifier in use (the identifier lookup chosen by role), as a guard or note on the [in use] operand, without adding lifelines."
+  ]
+}

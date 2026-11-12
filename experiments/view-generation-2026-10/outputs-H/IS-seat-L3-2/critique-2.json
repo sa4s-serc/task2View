@@ -1,0 +1,68 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "Which are the main components involved in the booking process and what is each one responsible for?",
+      "answered": "yes",
+      "why": "The diagram now shows every module with a one-line responsibility, grouped into four layers. Each module matches a class or class group in the code: LibraryFacade, ReservationManager, FirstAvailableAssignment/AssignmentStrategy, StudyRoomManager, NotificationManager, the entity classes, the three registries and PersistenceManager."
+    },
+    {
+      "detail": "How do the components interact and depend on each other?",
+      "answered": "partly",
+      "why": "The booking path and the registry and persistence dependencies match the code. One dependency is missing: Study Room Manager -> Study Room Registry. It is the manager's main dependency (StudyRoomManager:21, 200-289) and it supplies the rooms, time slots, areas and seats that the booking wizard offers. Because the edge is gone, Study Room Manager looks as if it reaches seats only through the Domain Model."
+    },
+    {
+      "detail": "Which components handle booking requests?",
+      "answered": "yes",
+      "why": "Swing / REST API -> Library Facade ('delegates booking') -> Reservation Manager is drawn. This matches ReservationController:29, LibraryFacade:118 and ReservationManager.makeReservation."
+    },
+    {
+      "detail": "Which components check seat availability?",
+      "answered": "partly",
+      "why": "Reservation Manager -> Domain Model (Seat.isAvailable, Area.getAvailableSeats) -> Reservation Registry (occupiesSlot) is shown, and that is the binding check (ReservationManager:150, 384; Seat.java:44-51). But Study Room Manager is labelled only 'free-seat counts', and the README says it is 'not a separate booking check'. In the code, StudyRoomManager.getRoomDetail (StudyRoomManager:263-295) builds the per-seat availability map that the seat-selection step shows. It calls Seat.isAvailable for every seat. The time-slot availability lists also come from Study Room Manager. A rule that limits which seats a student may take must therefore also be reflected there, or the wizard will offer seats that the booking will then reject."
+    },
+    {
+      "detail": "Which components apply booking rules?",
+      "answered": "yes",
+      "why": "The view shows where the rules live. Reservation Manager checks room open/active, area and seat in area (ReservationManager:112-200). The Domain Model holds the one-booking-per-slot check (Student.hasActiveOrConfirmedReservationForDateAndSlot, Student.java:42). The Reservation Registry holds occupiesSlot. The Seat Assignment Strategy chooses the seat. Two small gaps in the Reservation Manager label: it omits the time-slot validity check (resolveTimeSlot), and it does not say that the manager is where the uniqueness check is invoked (validateUniqueness). It is also the single synchronized place where checks run in order."
+    },
+    {
+      "detail": "Which components manage and store reservations?",
+      "answered": "yes",
+      "why": "Reservation Manager -> Reservation Registry ('saves bookings') -> Persistence Manager is shown, and Notification Manager -> Reservation Registry ('marks reminders') has been added. This matches NotificationManager:74-82. Study Room Manager also force-cancels and updates reservations when a room is deleted (StudyRoomManager:167-175), but that is not booking, so leaving it out is acceptable."
+    },
+    {
+      "detail": "Which components interact with external services such as the notification service?",
+      "answered": "yes",
+      "why": "Notification Manager -> NotificationService, realized by the Email Notification Adapter -> External email gateway (stub), is drawn. Reservation Manager -> Notification Manager (observer attach at ReservationManager:131) and the Scheduler 'triggers expiry, reminders' are also shown."
+    },
+    {
+      "detail": "Which parts of the system need to be modified for the new booking rules, and which other components may be affected?",
+      "answered": "partly",
+      "why": "The legend explains the blue and red marks, and Facade, REST and Swing are now marked as possibly affected. Study Room Manager is red, but with a misleading reason: the README calls it browsing or monitoring only. In fact it computes the seat and time-slot availability that the wizard offers, so it is a likely change point for any rule that restricts availability. The README also leaves out RestExceptionHandler, which turns rule violations (IllegalArgumentException / IllegalStateException) into HTTP errors. It belongs inside the REST API group, so no new element is needed, only a mention."
+    }
+  ],
+  "level": "right",
+  "level_why": "Fifteen module-level elements in four layers, each with one responsibility line, fits a balanced view for a developer planning a change. DTOs, state classes and factories are left out, which is right. The External email gateway stub could be folded into the adapter, but it answers the 'external services' question, so keeping it is fine. No cuts are needed, and the one addition requested (an edge) does not raise the detail level.",
+  "unsupported": [
+    "README: 'Study Room Manager counts free seats for browsing ... it is not a separate booking check.' StudyRoomManager.getRoomDetail (StudyRoomManager:263-295) computes the per-seat availability that the seat-selection screen shows, through Seat.isAvailable. The view's label 'rooms, slots, free-seat counts' and the README understate its role in availability.",
+    "Layer 'Presentation' contains the Email Notification Adapter and the External email gateway stub. In the code these are in the boundary package (boundary/NotificationServiceAdapter, boundary/ExternalEmailGateway), but they are outbound integration code, not presentation. Calling the layer 'Boundary' (as the code does) would be accurate."
+  ],
+  "missing": [
+    "Dependency Study Room Manager -> Study Room Registry (rooms, time slots, areas and seats for the booking wizard; StudyRoomManager:21, 200-289). It was dropped 'to reduce crossings', but it is a real dependency that sits on the booking path.",
+    "Responsibility of Study Room Manager should include 'seat and time-slot availability shown in the booking wizard (getRoomDetail)', so the developer sees that it must follow new availability rules.",
+    "Reservation Manager label: add 'valid time slot' to the listed checks, and say that it calls the one-booking-per-slot check and runs all checks in one synchronized block (ReservationManager:85-100)."
+  ],
+  "uml": [
+    "A realization from a package (Email Notification Adapter) to an interface is not well-formed UML: only a classifier, not a package, can realize an interface. Either draw the adapter as a class / component-like classifier, or replace the realization with a «use» dependency from the interface's owning package and a note.",
+    "Single classes (Library Facade, Reservation Manager, Notification Scheduler, Persistence Manager) are drawn as UML packages. The legend explains this, so it is acceptable for the model kind, but strictly they are classes in Java packages controller/, entity/ and boundary/.",
+    "Dependencies carry free-text names with no keyword. The legend says they are use dependencies, which is acceptable. Using the standard «use» keyword on at least one edge, or in the legend sample, would make this exact."
+  ],
+  "fixes": [
+    "Add the dependency Study Room Manager ..> Study Room Registry. Relabel Study Room Manager to 'rooms, time slots, seat availability for the booking wizard'. Correct the README so that it lists Study Room Manager (getRoomDetail) under 'check seat availability' and as a likely change point for availability rules.",
+    "Complete the Reservation Manager label: 'validates room, area, time slot, seat; calls the one-booking-per-slot check; all in one synchronized block'.",
+    "Fix the realization: the adapter cannot be a package that realizes an interface. Make it a classifier, or use a plain dependency.",
+    "Rename layer 'Presentation' to 'Boundary' (or move the adapter and gateway into an 'Integration' layer), so that the email adapter is not presented as UI.",
+    "In the README 'affected' list, mention that REST error mapping (RestExceptionHandler, inside the REST API group) is where new rule violations surface to clients."
+  ]
+}

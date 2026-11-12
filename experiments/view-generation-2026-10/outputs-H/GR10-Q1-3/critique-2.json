@@ -1,0 +1,31 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "How do these parts collaborate to provide the main system functionalities?",
+     "answered": "partly",
+     "why": "The revision fixed most of what critique-1 raised. The status flow now has two Control->Entity calls in separate transactions, the notify decision sits on Control, the status flow has a rejection alt, and sign-in has replies. The Boundary->Control->Entity->Database->MySQL chain is clear for three representative flows. Two collaboration facts are still wrong or hidden. (1) In both alt fragments the guard looks as if Control decides it alone. In the code, Control first asks Entity. ReportCreationController.requestRegistrationReport calls userService.verifyUserCitizen (line 154) before registerNewReport. ReportStatusUpdateController.registerStatusUpdate calls userService.isMunicipalOperator (:41) and reportService.retrieveDetailsReport (:45) and checks the current status before applyNewStatus. Those Control->Entity checks are what decide [allowed] and [user is citizen], and the view leaves them out. (2) In the notification step, the guard [status notifiable] is the result of a Control->Entity call: NotificationController.verifyNotifiableStatus calls reportService.verifyNotifiableStatus and only then generateStatusChangeNotification (NotificationController:32-55). The view puts that check inside the opt that is guarded by its own result. Also, the sign-in path bypasses the SystemServicesController facade (UserLoginGUI imports UserLoginController directly, line 111), while the other screens go through it. This shows only in the README. An architect planning evolution would want to see it in the view, and one note is enough."}
+  ],
+  "level": "right",
+  "level_why": "The perspective calls for an overview. Lifelines are the four layers plus the user and the external MySQL, and there are three representative flows with about 30 messages and no classes, forms or facade drawn. That matches an overview. Nothing needs to be cut. The fixes below change or add one message per flow, within the same lifelines, so they stay at overview level. Do not add the remaining flows (registration, review, notes, monitoring) or per-class lifelines.",
+  "unsupported": [
+    "'check status, generate notification' drawn as one message inside opt [status notifiable]. In the code these are two Control->Entity calls: reportService.verifyNotifiableStatus (returns a boolean), then, only if it is true, reportService.generateStatusChangeNotification (NotificationController:32-55). The check happens before the guard is known, so it cannot sit inside the opt that the check itself decides.",
+    "Guard [invalid data] as the only rejection case in report creation. The code also rejects a non-citizen: verifyUserCitizen false returns null (ReportCreationController:154-156). The else guard should be the negation of the first guard: not a citizen or invalid data."
+  ],
+  "missing": [
+    "In report creation, the Control->Entity role check ('verify user is citizen', UserService.verifyUserCitizen, ReportCreationController:154) before the alt, because it decides the guard.",
+    "In the status update, the Control->Entity precondition checks before the alt ('check operator role and current report status': UserService.isMunicipalOperator and ReportService.retrieveDetailsReport, ReportStatusUpdateController:41-51), because they decide [allowed]. One merged message is enough at overview level.",
+    "In the notification step, the Control->Entity 'verify notifiable status' call with its boolean reply before the opt. Only 'generate notification' -> Database 'save notification' -> MySQL should stay inside the opt.",
+    "A note that sign-in calls the login controller directly while the other screens use the SystemServicesController facade (UserLoginGUI:111 compared with ReportCreationGUI:70 and ReportStatusUpdateGUI:66). This inconsistency in how Boundary reaches Control matters for evolution planning."
+  ],
+  "uml": [
+    "The opt guard [status notifiable] depends on a message drawn inside the same fragment. A guard must be evaluable when the fragment is entered, so move the verifying call and its reply before the opt.",
+    "The alt guards [data valid, user is citizen] / [invalid data] are not complementary. Use [else], or the logical negation ([not citizen or invalid data]).",
+    "Rejections are drawn as ordinary replies ('rejected with message'), but the code throws IllegalArgumentException, which the GUI catches (ReportCreationGUI:530, ReportStatusUpdateGUI:148). At overview level a reply is acceptable, but labelling it 'rejected (exception with message)' would be accurate.",
+    "Lifelines represent packages/layers rather than classifier instances. This is stated in the README as an overview abstraction and is acceptable, but the title should not say 'four layers' over six lifelines without making clear which four are the layers."
+  ],
+  "fixes": [
+    "Move the notifiable check out of the opt: Control -> Entity 'verify notifiable status', with reply 'notifiable?', then opt [status notifiable] containing only 'generate notification' -> Database 'save notification' -> MySQL 'insert in separate transaction'.",
+    "Before the status-update alt, add one Control -> Entity message 'check operator role and report status', with reply, so that the [allowed] guard follows from a drawn interaction.",
+    "Before the creation alt, add Control -> Entity 'verify user is citizen', with reply, and change the else guard to [else] or [not citizen or invalid data].",
+    "Add one note on the sign-in Boundary->Control message saying that login bypasses the SystemServicesController facade, which the other flows use.",
+    "Label the rejection replies as exceptions ('rejected: IllegalArgumentException message') so that they match how Control signals failure."
+  ]}

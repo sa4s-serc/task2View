@@ -1,0 +1,30 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "What are the main architectural components and what is each one responsible for?", "answered": "partly", "why": "The four package components (Boundary, Control, Entity, Database) are the right ones, but each box only gives a layer label. The responsibilities are written only in inventory.json and do not appear in the view. One short responsibility line per component is needed, for example 'one controller per use case behind SystemServicesController' or 'JPA entities plus ReportService/UserService'."},
+    {"detail": "How is the system decomposed into layers or subsystems?", "answered": "yes", "why": "Four layers stacked top to bottom (presentation, application, domain, persistence), and their names match the packages."},
+    {"detail": "What are the main dependencies among the components, layers or subsystems?", "answered": "partly", "why": "The downward dependencies and the Boundary->Entity shortcut are shown and correct. The only path drawn from Boundary to Control goes through 'Controller facade', but UserLoginGUI imports and instantiates UserLoginController directly (Boundary/UserLoginGUI.java:3,111), and SystemServicesController does not wrap login. That second dependency is missing from the view."},
+    {"detail": "How are user-facing functionality, application logic, domain entities and data persistence separated?", "answered": "partly", "why": "The view shows the four parts. It does not show that the Entity component mixes JPA-annotated entities with services that call PersistenceService (Entity/ReportService.java:3, UserService.java:3), which is the main separation weakness, and the box label 'entities and services' alone does not make this clear. The README claim that the UI only enters logic through the facade is false because of the login path."},
+    {"detail": "How do these parts collaborate to provide the main system functionalities?", "answered": "partly", "why": "Only static <<use>> dependencies are drawn. No main functionality (register/login, create report, review reports, update status, internal notes, activity monitoring) is tied to the path through the layers. The collaboration chain is described only in the README."}
+  ],
+  "level": "right",
+  "level_why": "For an overview, four package-level components, one external library and three provided interfaces is the right scale. No classes are drawn, and nothing needs to be cut. The fixes below add labels or one dependency, not finer elements.",
+  "unsupported": [
+    "The single 'Controller facade' interface, presented as the only way from Boundary into Control (in the README as well), is not fully supported: UserLoginGUI uses UserLoginController directly (Boundary/UserLoginGUI.java:3,111) and SystemServicesController (Control/SystemServicesController.java:11-17) has no login controller."
+  ],
+  "missing": [
+    "A Boundary -> Control dependency for login that bypasses the facade (UserLoginGUI -> UserLoginController), or a note on it.",
+    "Per-component responsibilities in the diagram itself (they are only in inventory.json).",
+    "Some sign of how the main use cases (report creation, status update, monitoring, registration/login) map onto the layer chain, for example a note listing the use cases the facade exposes."
+  ],
+  "uml": [
+    "'Report and user services' is drawn as one provided interface, but in the code it stands for two concrete classes (ReportService, UserService) and no Java interface exists. This is acceptable as a logical port, but the view should state that it is a logical interface.",
+    "The external JPA API is drawn as a plain component distinguished only by a styling stereotype. Mark it with a standard stereotype such as «library» (UML standard profile) or say 'external' in the name only, without relying on the hidden <<muted>> stereotype for meaning.",
+    "The label '<<use>> mapping' mixes a keyword with free text. Use «use» alone and put 'JPA annotations' in a note or in the label without the keyword duplication."
+  ],
+  "fixes": [
+    "Add the direct Boundary -> Control dependency for login (UserLoginGUI -> UserLoginController, outside the facade), and correct the README claim that the UI only enters Control through the facade.",
+    "Put a one-line responsibility in or under each of the four components (for example as a note), taken from inventory.json.",
+    "Add a short note on the facade listing the use cases it exposes (register, create report, review, details, status update, internal note, monitoring) so that collaboration for the main functionalities is visible.",
+    "Add a note on Entity saying that it holds both JPA entities and the ReportService/UserService that call PersistenceService, so the coupling of domain and persistence can be seen in the diagram.",
+    "Use the standard «library» stereotype for jakarta.persistence and drop the free text after «use»."
+  ]}

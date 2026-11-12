@@ -1,0 +1,57 @@
+@startuml
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+title Component diagram: seat booking in the study-room reservation application
+
+actor "Student" as student
+actor "REST client" as client
+package "Presentation" {
+  component "Booking wizard (Swing)" as wizard
+  component "Booking REST API" as rest
+}
+package "Booking logic" {
+  component "Library facade" as facade
+  component "Reservation manager" as resmgr
+  component "Study room manager" as roommgr
+  component "Seat assignment strategy" as strategy
+  component "Notification manager" as notifmgr
+}
+package "Domain and data" {
+  component "Reservation model and registries" as model
+  component "Persistence manager (JPA, Hibernate)" as persist
+}
+component "Email notification adapter" as email
+component "Reservation database (MySQL)" as db
+interface "Booking operations" as bookingApi
+interface "Seat assignment" as assignApi
+interface "Notification service" as notifApi
+interface "Observer" as observerApi
+
+student ..> wizard : <<use>>
+client ..> rest : <<use>>
+wizard ..> bookingApi : <<use>>
+rest ..> bookingApi : <<use>>
+facade - bookingApi
+facade ..> resmgr : makes reservation
+facade ..> roommgr : lists rooms and seats
+resmgr - assignApi
+strategy - assignApi
+resmgr ..> assignApi : <<use>>
+resmgr ..> model : saves, attaches observer
+roommgr ..> model : reads rooms and seats
+model ..> observerApi : <<use>>
+notifmgr - observerApi
+notifmgr ..> notifApi : <<use>>
+email - notifApi
+model ..> persist : saves and loads
+persist ..> db : JDBC
+note right of bookingApi
+  Booking operations:
+  getAvailableStudyRooms
+  getAvailableTimeSlots
+  getRoomDetail
+  makeReservation
+end note
+@enduml

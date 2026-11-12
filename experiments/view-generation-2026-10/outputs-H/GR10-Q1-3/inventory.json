@@ -1,0 +1,154 @@
+{
+ "model_kind": "UML sequence diagram",
+ "detail_level": "overview",
+ "elements": [
+  {
+   "alias": "screens",
+   "name": "Boundary (presentation: Swing screens)",
+   "responsibility": "Screens for login, registration, dashboard, report creation, review, status update, notes and monitoring; enter Control mostly through the SystemServicesController facade",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75",
+    "src/main/java/Boundary/ActivityMonitoringGUI.java:54"
+   ],
+   "members": [
+    "Boundary.*"
+   ]
+  },
+  {
+   "alias": "controllers",
+   "name": "Control (application: use-case controllers)",
+   "responsibility": "One controller per use case; SystemServicesController facade owns them and passes Map data to the domain services",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:11-29"
+   ],
+   "members": [
+    "Control.*"
+   ]
+  },
+  {
+   "alias": "domain",
+   "name": "Entity (domain: entities and services)",
+   "responsibility": "JPA-annotated domain entities plus ReportService and UserService, which call Database directly",
+   "evidence": [
+    "src/main/java/Entity/Report.java:3-20",
+    "src/main/java/Entity/ReportService.java:16"
+   ],
+   "members": [
+    "Entity.*"
+   ]
+  },
+  {
+   "alias": "storage",
+   "name": "Database (persistence: JPA access)",
+   "responsibility": "Generic persistence access over JPA/Hibernate to MySQL",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13",
+    "src/main/java/Database/JpaUtil.java:11",
+    "src/main/resources/META-INF/persistence.xml:1"
+   ],
+   "members": [
+    "Database.*"
+   ]
+  },
+  {
+   "alias": "user",
+   "name": "User (citizen or municipal operator)",
+   "responsibility": "Person using the Swing screens; citizen or municipal operator",
+   "evidence": [
+    "src/main/java/Entity/UserService.java:1"
+   ]
+  },
+  {
+   "alias": "mysql",
+   "name": "MySQL database (external)",
+   "responsibility": "Relational store reached through Hibernate",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:1"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "user",
+   "to": "screens",
+   "label": "enter credentials, submit forms",
+   "evidence": [
+    "src/main/java/Boundary/UserLoginGUI.java:170"
+   ]
+  },
+  {
+   "from": "screens",
+   "to": "controllers",
+   "label": "calls controllers",
+   "evidence": [
+    "src/main/java/Boundary/UserLoginGUI.java:170",
+    "src/main/java/Boundary/ReportCreationGUI.java:518",
+    "src/main/java/Boundary/ReportStatusUpdateGUI.java:134",
+    "src/main/java/Boundary/UserLoginGUI.java:170-180"
+   ]
+  },
+  {
+   "from": "controllers",
+   "to": "domain",
+   "label": "calls services",
+   "evidence": [
+    "src/main/java/Control/UserLoginController.java:30",
+    "src/main/java/Control/ReportCreationController.java:163",
+    "src/main/java/Control/ReportStatusUpdateController.java:86",
+    "src/main/java/Control/NotificationController.java:32",
+    "src/main/java/Control/NotificationController.java:55",
+    "src/main/java/Control/ReportStatusUpdateController.java:40-51"
+   ]
+  },
+  {
+   "from": "domain",
+   "to": "storage",
+   "label": "finds, saves, updates",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:113",
+    "src/main/java/Entity/ReportService.java:298",
+    "src/main/java/Entity/ReportService.java:398"
+   ]
+  },
+  {
+   "from": "storage",
+   "to": "mysql",
+   "label": "runs queries and transactions",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:30",
+    "src/main/resources/META-INF/persistence.xml:1"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "How do these parts collaborate to provide the main system functionalities?",
+   "answered_by": [
+    "user",
+    "screens",
+    "controllers",
+    "domain",
+    "storage",
+    "mysql"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "individual controllers, services, entities, forms",
+   "reason": "overview level; layers shown as lifelines"
+  },
+  {
+   "name": "remaining functions (registration, review, notes, monitoring)",
+   "reason": "follow the same Boundary-Control-Entity-Database chain as the three flows shown"
+  },
+  {
+   "name": "jakarta.persistence API",
+   "reason": "library, technology detail inside Database"
+  },
+  {
+   "name": "Boundary uses Entity.ReportCategory (enum)",
+   "reason": "data-type dependency, not a collaboration step; shown in the module and component views"
+  }
+ ]
+}

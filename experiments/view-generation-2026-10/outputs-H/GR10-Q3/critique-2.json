@@ -1,0 +1,29 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "What are the main data entities stored by the system?",
+     "answered": "yes",
+     "why": "All seven persistence-unit classes in persistence.xml are drawn with their key columns, ids and length/unique limits, which match the @Column annotations. Those classes are User (abstract, one users table with a role discriminator), Citizen, MunicipalOperator, Report, StatusUpdate, InternalNote and Notification. The two @Embeddable classes (Credentials, Location) are drawn as «dataType» and a note says they are stored as columns of their owner's table. The view also shows the string-stored ReportCategory enum and states that the state classes (Submitted, Assigned, InProgress, Resolved) are not tables (Report.currentStatus is @Transient; only current_status is a column)."},
+    {"detail": "How are users, reports, locations, categories, states, state changes, internal notes, and notifications related to each other?",
+     "answered": "yes",
+     "why": "Each relation matches the code, both in multiplicity and direction. Report->Citizen is 1 (citizen_id NOT NULL) and Report->MunicipalOperator is 0..1 (operator_id nullable). StatusUpdate->MunicipalOperator and InternalNote->MunicipalOperator are 1, as are Notification->Report and Notification->Citizen (all NOT NULL @ManyToOne). Report owns StatusUpdate and InternalNote through composition, which matches @OneToMany(cascade ALL, orphanRemoval). Report has no collection of notifications, so the Notification->Report association is correctly navigable one way only. Location is an embedded value. Category is a typed enum attribute. States are now shown as one value domain (ReportStatusValue) shared by the three status columns, with Notification limited to assigned and resolved, which matches Notification.isStatusNotifiable."},
+    {"detail": "Which information must be persisted throughout the lifecycle of a report?",
+     "answered": "yes",
+     "why": "The view shows attribute optionality: reportDate and attachedImage are [0..1] and everything else is mandatory, which matches nullable in the annotations. The lifecycle note gives the status order submitted -> assigned -> in_progress -> resolved and says one StatusUpdate is written per change (Report.registerStatusUpdate) and that an operator is required before a status change (Report.updateStatus). It says citizenEditable is true only while the report is submitted (Report.rebuildCurrentStatus), and that notifications are not cascaded. Each of these checks out against the code. The dependents (ReportService and UserService through PersistenceService/JpaUtil) are named in a note. This matches the code: Boundary GUIs go through Control controllers, and only those two services touch PersistenceService. One small gap: the view does not say that the schema is generated from these entity mappings (hibernate.hbm2ddl.auto=update, no DDL script). That tells the engineer that changing an annotation changes the MySQL schema."}
+  ],
+  "level": "right",
+  "level_why": "For a balanced data model aimed at a database engineer, the view shows the persisted classes with ids, key columns and their length/unique/optional constraints, associations with multiplicities, and short notes on the inheritance and embedded-value mappings. Code-level members, state classes, services, fetch strategies, FK column names and table names other than users are left out, which fits the balanced level. Nothing needs to be cut. The length limits are the finest detail in the view, but they are column constraints the engineer needs when changing the schema, so they belong. No addition is needed that would go past the balanced level.",
+  "unsupported": [
+    "ReportStatusValue is drawn as an enumeration, but no such type exists in the code. Report.current_status, StatusUpdate.new_status and Notification.notified_status are plain String columns (length 30/30/50), and the values come from STATUS_* String constants in Report.java and Notification.java. The Report note says the status columns hold the stored strings, which partly covers this. Even so, a database engineer could look for an enum type or an @Enumerated mapping that does not exist. The status columns are also not constrained by the database, unlike category, which uses @Enumerated(STRING)."
+  ],
+  "missing": [
+    "A one-line statement that the schema is generated from these JPA mappings (persistence.xml: hibernate.hbm2ddl.auto=update, MySQL reports_db, no DDL script in the repository). This matters to an engineer who is about to modify the persistence layer."
+  ],
+  "uml": [
+    "Credentials and Location are typed «dataType» but are attached with composition associations. A UML DataType is normally used as an attribute type (e.g. credentials: Credentials, location: Location), not as the part end of a composition. This is acceptable as drawn, and the legend explains it, but attributes would be more correct.",
+    "ReportStatusValue is a modelling enumeration with no counterpart in the code. Mark it as a value domain of String columns, for example with a note or a constraint on the type, so the model does not suggest an enum mapping."
+  ],
+  "fixes": [
+    "State on ReportStatusValue (or in its note) that it is the allowed-value domain of String columns enforced only in Java code, not an enum type or @Enumerated mapping. Unlike category, the database does not constrain these columns.",
+    "Add to the dependents note that the schema is derived from these entity mappings (hbm2ddl.auto=update, no DDL script).",
+    "Optionally, model Credentials and Location as typed attributes of User and Report instead of composition ends, keeping the «dataType» classes to show their columns."
+  ]}

@@ -1,0 +1,58 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML component diagram: Municipal Report Management System, runtime communication
+
+package "Desktop application (one Java 23 process)" as app {
+  [Swing screens] as gui
+  [Controllers] as ctrl
+  [Domain model and services] as domain
+  [Persistence access] as persist
+  [persistence.xml (packaged with the app)] as pxml
+}
+
+[Hibernate ORM 6.6, MySQL Connector/J 9.4, forms_rt 7.0.3] as libs
+
+component "MySQL server port 3306,\naccount reports_user@localhost" as mysql {
+  [Schema reports_db (user reports_user)] as schema
+}
+
+gui --> ctrl : calls
+ctrl --> domain : calls
+domain --> persist : saves, queries
+persist --> libs : JPA
+persist .right.> pxml : <<use>> unit settings
+libs ---> mysql : JDBC, TCP 3306
+
+note right of pxml
+  Driver, URL 127.0.0.1:3306/reports_db,
+  user, plaintext password and
+  hbm2ddl update are all set here.
+end note
+@enduml

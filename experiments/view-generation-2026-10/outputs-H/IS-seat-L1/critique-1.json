@@ -1,0 +1,31 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "What are the main system components involved in seat booking?", "answered": "yes",
+     "why": "The view has the right set of components, and the code backs them: both entry points (Swing ReservationSummary and REST ReservationController both call LibraryFacade.makeReservation), LibraryFacade, ReservationManager (validation and saving), StudyRoomManager (rooms, time slots and seat listing), the AssignmentStrategy used when no seat is chosen (ReservationManager.java:400), NotificationManager with its NotificationService adapter, the registries and entities, and PersistenceManager/JPA to MySQL. One problem: the REST component's responsibility names only the reservation endpoints. Availability for the booking flow is served by StudyRoomController (/api/rooms/available, /{roomId}/time-slots, /{roomId}/detail), which the developer would also touch."},
+    {"detail": "How do these components interact?", "answered": "partly",
+     "why": "The call directions are right for most of the chain. Two interactions are shown wrongly or too vaguely. (a) Notification: ReservationManager does not simply call NotificationManager. It attaches NotificationManager as an Observer to the Reservation and calls reservation.notifyObservers() (ReservationManager.java:120-122), so the model calls NotificationManager.update(). A developer changing booking needs to know that this trigger runs through the Observer. (b) The 'Booking operations' lollipop gives no hint of which operations the booking flow uses (getAvailableStudyRooms, getAvailableTimeSlots, getRoomDetail, makeReservation), so it is unclear which interactions belong to booking and which to the other facade uses (register, cancel, monitoring). The persistence end is also wrong (see unsupported)."}
+  ],
+  "level": "right",
+  "level_why": "Eleven components and four interfaces, with no classes or DTOs, suits a balanced view for a developer who will change booking. Keeping the seat assignment strategy and the notification adapter as separate parts is justified, because they are the extension points the developer may change. The persistence tail is the only part that is finer than it needs to be: Persistence manager, a JPA lollipop and the database are three elements for what the concern treats as one storage path. It could be collapsed (see fixes) without losing anything the concern needs. Nothing should be added beyond the corrections below.",
+  "unsupported": [
+    "'Reservation database (MySQL)' providing the 'JPA' interface: MySQL does not provide JPA. persistence.xml declares org.hibernate.jpa.HibernatePersistenceProvider as the JPA provider, and it reaches MySQL through JDBC (com.mysql.cj.jdbc.Driver, jdbc:mysql://localhost:3306/reservationsdb). JPA is provided inside the application by Hibernate, not by the database.",
+    "'Reservation manager ..> Notification manager : notifies student' as a direct notification call: the code only attaches NotificationManager.getInstance() as an Observer of the Reservation and then calls reservation.notifyObservers(). The notification call itself goes from the Reservation entity (model) to NotificationManager.update() (NotificationManager.java:40), through the Observer interface in entity/Observer.java.",
+    "'Student ..> Reservation REST API <<use>>': nothing in the code shows a human student using the REST API directly. The API is consumed by an HTTP client. The README admits this is an assumption."
+  ],
+  "missing": [
+    "The availability endpoints of the REST API (StudyRoomController /api/rooms/available, /{roomId}/time-slots, /{roomId}/detail) are part of seat booking but appear neither in the REST component's description nor in any relation label.",
+    "The Observer path for booking notification: Reservation (model) notifies NotificationManager through the Observer interface, which ReservationManager attaches at booking time.",
+    "Hibernate as the JPA provider between the persistence manager and MySQL (or, if the tail is collapsed, a correct label on the connection, such as JPA/Hibernate over JDBC)."
+  ],
+  "uml": [
+    "The database component is attached to the 'JPA' lollipop as a provided interface it does not realise. Model the database as using a JDBC/SQL connection, or make Hibernate the component that provides JPA.",
+    "An actor is drawn using a component that is a machine interface (REST API). Use an external client, or keep the student only on the Swing wizard.",
+    "'Booking operations' is an inferred provided interface, since LibraryFacade implements no Java interface. That is acceptable in UML, but it should list the booking operations it stands for (for example in a note or the label), otherwise the interaction cannot be traced."
+  ],
+  "fixes": [
+    "Fix the persistence end: remove 'MySQL provides JPA'. Either draw Persistence manager ..> 'JPA' provided by a Hibernate (JPA provider) component that connects to MySQL over JDBC, or collapse the tail to Persistence manager (JPA/Hibernate) ..> Reservation database (MySQL) with a 'JDBC' label.",
+    "Show the notification trigger correctly: Reservation manager 'attaches observer' to the model, and model ..> Notification manager through an 'Observer' interface ('reservation created'). Replace the direct 'notifies student' edge.",
+    "Name the booking operations on the 'Booking operations' interface (getAvailableStudyRooms, getAvailableTimeSlots, getRoomDetail, makeReservation) so it is clear which interactions are booking ones.",
+    "Change the REST component's description and evidence to include StudyRoomController's availability endpoints next to ReservationController /create.",
+    "Remove the Student ..> REST API edge or replace it with an external API client. Keep Student ..> Booking wizard."
+  ]}

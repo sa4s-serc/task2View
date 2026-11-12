@@ -1,0 +1,36 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "How do these components interact during user registration?",
+      "answered": "partly",
+      "why": "The participants and the main call chain (form -> LibraryFacade.register -> UserManager.register -> UserRegistry -> PersistenceManager -> DB, factory creation, save) match the code, and the success path is right. The failure paths are wrong or missing, though, and an integration tester needs them most. (a) UserManager.validate/validateStudent/validateLibrarian (UserManager.java:67-75) throw IllegalArgumentException before the registry is called. The view puts its single 'alt invalid' after the registry lookup, which suggests a DB query always runs before any rejection. (b) The duplicate check is two lookups in order, each with its own exception: institutionalEmailExists (findFirstByFields on User) throws 'Email is already associated...' (UserManager.java:77-79), and only then findStudentByStudentNumber or findLibrarianByCode, chosen by role, throws 'Identifier is already in use' (81-86). The view merges both into one query. (c) A failed save (PersistenceManager.save catches the exception, rolls back and returns false; UserManager.java:92-95 then throws RuntimeException) is left out, but Registration.java catches RuntimeException and shows it. (d) The form's 'Complete all fields' early return (Registration.java:126-130) is drawn as a self-call with no outcome."
+    }
+  ],
+  "level": "right",
+  "level_why": "Eight lifelines at component granularity (form, facade, manager, registry, factories, persistence, DB) fits 'balanced' for an integration tester: each lifeline is an integration boundary they can stub or assert on. Field-level validations are rightly collapsed into one self-call. The fixes below change the existing interactions or add alt operands; they add no new lifelines, so the view stays at the given level.",
+  "unsupported": [
+    "The 'alt invalid' operand comes after 'check email and identifier unused', so the code's validation failures (UserManager.validate*, lines 67-75) appear to happen after a registry/DB lookup. In the code they are thrown before any registry call.",
+    "'registry -> persistence : find first by field' / 'persistence -> db : query' is drawn as one lookup. The code makes two separate lookups in order (email on User, then studentNumber on Student or internalIdentifierCode on Librarian, UserRegistry.java:37-60), and the second runs only if the first finds nothing.",
+    "The note says the REST path is 'identical' from the facade onwards. That holds for the calls, but AuthenticationController.register (SpringBoot/AuthenticationController.java:22-30) has no exception handling, so on REST the error outcome is an unhandled exception and an HTTP error, not a shown message. The note should say so."
+  ],
+  "missing": [
+    "The validation failure exits before any registry access (UserManager.java:67-75 -> IllegalArgumentException -> form showError).",
+    "Separate outcomes for duplicate email (line 77-79) and duplicate identifier (lines 81-86), checked in that order, with the identifier lookup depending on role.",
+    "The save-failure path: PersistenceManager.save returns false after rollback, and UserManager throws RuntimeException('Server error...') (UserManager.java:92-95), which the form shows as an error.",
+    "The form's own 'Complete all fields' rejection (Registration.java:126-130), where no facade call is made."
+  ],
+  "uml": [
+    "One 'alt' with guards [invalid] / [new account] cannot represent the three exit points in the code. Use guarded operands in the order the code runs them, e.g. [fields invalid], [email in use], [identifier in use], [save failed], [else], or put each early exit in its own 'opt'/'break' fragment at the point where it is thrown.",
+    "The exception return 'manager --> facade : IllegalArgumentException' leaves manager's activation open in that operand; the activation only ends in the other operand. Each operand's return should end the activation, or use a 'break' fragment.",
+    "'User factories' is one lifeline standing for two classes that are instantiated with 'new' (UserManager.java:89). Model it as a create message to a 'factory : UserFactory' lifeline (StudentFactory or LibrarianFactory by role), or name the lifeline by the UserFactory interface.",
+    "'persistence -> db : query' and 'persistence -> db : insert' are synchronous calls with no reply. Add the replies (rows / insert result) or draw them as asynchronous signals so the message kinds are consistent."
+  ],
+  "fixes": [
+    "Move field validation into its own early-exit fragment before any registry call: manager -> manager : validate fields for role; [invalid] IllegalArgumentException -> facade -> form -> show error.",
+    "Split the duplicate check into two ordered lookups, each with its own exit: institutionalEmailExists (query User by email) -> [in use] 'Email already associated'; then, by role, findStudentByStudentNumber or findLibrarianByCode -> [in use] 'Identifier already in use'.",
+    "Add the save-failure operand: persistence save returns false (rollback) -> registry false -> manager throws RuntimeException 'Server error' -> form shows error.",
+    "Show the form's 'Complete all fields' guard as an opt/alt where no facade call is made, so the tester can see which errors never reach the backend.",
+    "Correct the REST note to say that exceptions are not handled in AuthenticationController, so REST clients receive an HTTP error, not a message; also fix the factory lifeline/create message and the missing DB replies."
+  ]
+}

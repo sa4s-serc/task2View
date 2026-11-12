@@ -8,6 +8,7 @@ h2{margin-top:2.5em;border-top:1px solid #ddd;padding-top:1em} .request{font-sty
 table{border-collapse:collapse;width:100%} th,td{text-align:left;vertical-align:top;padding:4px 6px;border-bottom:1px solid #eee}
 th{width:9em;color:#555;font-weight:600} ul{margin:0;padding-left:1.1em}
 img{max-width:100%;border:1px solid #ddd} pre{white-space:pre-wrap;font-size:13px;background:#f6f6f6;padding:8px}
+.hrow{margin-top:1.5em;padding-top:.8em;border-top:2px solid #1D4ED8;color:#1D4ED8}
 nav{position:sticky;top:0;background:#fff;padding:6px 0;border-bottom:1px solid #ddd}
 </style></head><body>
 <h1>View generation from 42010:2022 inputs</h1>
@@ -21,7 +22,22 @@ chosen by the agent; F as E with a static dependency graph of the repository, wh
 concern's code and against which the drawn relations are checked; G as F with component views built from a checked UML component model (components meet through provided and required interfaces; the PlantUML is generated), no element budget, and a tighter critic whose blocking findings must cite code and which only triggers a revision when a checked blocking finding remains. Layout issues are counted by puml-check, which
 B to F also used while working, so they favour those conditions; per node normalises for size. The judgement is
 the blind rating.</p>
-<h2 id="pipeline">The current design (condition F)</h2>
+<h2 id="design-h">The new design (condition H): elicited inputs, several views per task</h2>
+<p><img src="docs/architecture-H.png" alt="View generation in two phases, condition H"></p>
+<ol>
+<li><b>Phase 1, the ISO 42010 inputs.</b> The agent pre-fills five fixed questions from the request (role, purpose,
+concerns, detail level, and for each concern what the stakeholder needs to see); each question explains its 42010
+term. The stakeholder confirms or corrects them in one round (here a simulated stakeholder that knows only the
+request's long text). The agent then proposes the views: one viewpoint per view from six viewpoints whose content
+can be recovered from code (use case, module, component, data model, interaction, deployment); every concern is
+covered, and every plausible viewpoint becomes a view, so a task may get several views.</li>
+<li><b>Phase 2, one run per view</b>, in order within a task: F's generator, checks and critic, plus the reviewer's
+rules (one viewpoint per view, use-case system boundary, plain words instead of codes such as "IP5", styling
+stereotypes hidden), readability checks on the rendered view (house style, fits a 1600 px screen, one reading
+direction, grouping), and the same names for the same code across a task's views. No element budget.</li>
+</ol>
+<p>H appears below A to G in each case, with the inputs elicited for each view.</p>
+<h2 id="pipeline">The previous design (condition F)</h2>
 <p><img src="docs/architecture.png" alt="View generation pipeline, condition F"></p>
 <ol>
 <li><b>Request and repository.</b> The request gives the ISO 42010 inputs: stakeholder, perspective with the detail
@@ -43,7 +59,7 @@ supported by the code, is the UML correct. Its critique goes back to the generat
 <section id="GR10-Q1">
 <h2>GR10-Q1</h2>
 <p class="request">“I am a software architect, and I would like a high-level component view of the system.”</p><details><summary>original long request</summary><p>I am a software architect. I need to review the overall organization of the system before planning its future evolution. I want to understand the main architectural components, their responsibilities, how the system is decomposed into different layers or subsystems, and the main dependencies among them. I also need to identify how user-facing functionality, application logic, domain entities, and data persistence are separated and how these parts collaborate to provide the main system functionalities.</p></details>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>software architect</td></tr><tr><th>perspective</th><td>the whole system at a high level, before planning its evolution (detail level: overview)</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main architectural components and their responsibilities</li><li>decomposition into layers or subsystems</li><li>main dependencies among them</li><li>separation of user interface, application logic, domain entities and persistence, and how they collaborate</li></ul></td></tr><tr><th>aspect</th><td>structural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>software architect</td></tr><tr><th>perspective</th><td>the whole system at a high level, before planning its evolution (detail level: overview)</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main architectural components and their responsibilities</li><li>decomposition into layers or subsystems</li><li>main dependencies among them</li><li>separation of user interface, application logic, domain entities and persistence, and how they collaborate</li></ul></td></tr><tr><th>aspect</th><td>structural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q1/view.png"><img src="outputs/GR10-Q1/view.png" alt="GR10-Q1 A: agent"></a><p class="check">15 nodes, 24 edges; layout issues 6, 0.40 per node (edge-through-text 2, label-on-border 2, edge-through-own-label 1, busy 1)</p>
 <details><summary>README</summary><pre># GR10-Q1 – Component view (UML component diagram)
 
@@ -286,11 +302,110 @@ Files: `view.puml` (generated from `model.json` by `component_model.py`), `view.
 - The parenthesised label the reviewer suggested is rejected by `component_model.py` (labels must be 1–4 plain words), so it reads &quot;uses entity types&quot;.
 - Side effect: I shortened two interface names (&quot;Use-case services API&quot; → &quot;Use-case API&quot;, &quot;Domain services API&quot; → &quot;Domain API&quot;) to reduce overlap. The new edge changes the layout, and the two captions still overlap a little.
 </pre></details>
-<p class="links"><a href="outputs-G/GR10-Q1/view.puml">view.puml</a> · <a href="outputs-G/GR10-Q1/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/GR10-Q1/view.puml">view.puml</a> · <a href="outputs-G/GR10-Q1/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 3 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: module (UML package diagram)</h3>
+<a href="outputs-H/GR10-Q1/view.png"><img src="outputs-H/GR10-Q1/view.png" alt="GR10-Q1"></a>
+<p class="check">answers: <ul class="check"><li>What are the main architectural components and what is each one responsible for?</li><li>How is the system decomposed into layers or subsystems?</li><li>What are the main dependencies among the components, layers or subsystems?</li><li>How are user-facing functionality, application logic, domain entities and data persistence separated?</li></ul></p><p class="check">why this viewpoint: The stakeholder picked code-structure for these four concerns, which the module viewpoint (UML package diagram) frames. It shows the layers and subsystems (UI, application logic, domain, persistence), what each is responsible for, and which depends on which.</p>
+<p class="check">detail level overview; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/GR10-Q1/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly, partly, partly, partly (<a href="outputs-H/GR10-Q1/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes, yes, yes, yes (<a href="outputs-H/GR10-Q1/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Package view: municipal report management application (revision 1)
+
+**Takeaway:** the code is four flat packages, Boundary, Control, Entity and Database, that depend downward in that order. Entity mixes domain classes with persistence mapping, so the domain is not independent of persistence.
+
+Stakeholder: software architect reviewing the structure before planning evolution. Detail level: **overview** (as given). A balanced level would add the facade and controllers, the screens, and the entity classes. The previous version is in `v1/`.
+
+## How it answers the concern
+- **Components and responsibilities:** each package box names its layer role and responsibility: Boundary (presentation, Swing screens), Control (application, use-case controllers), Entity (domain, entities and services), Database (persistence, JPA access). A note on Boundary records that the SystemServicesController facade is the entry point of seven of ten screens, that the login screen uses its own controller, and that two screens call no controller. The facade is in the note, not a box, since it is a class and the view is at package level.
+- **Layers/subsystems:** the layer role is in each package name. The four packages are the real code namespaces; layers are not drawn as owning packages.
+- **Dependencies:** Boundary → Control; Boundary → Entity (only the `ReportCategory` enum); Control → Entity (the services and the `ReportCategory` enum); Entity → Database; Entity and Database → the external JPA API (`jakarta.persistence`).
+- **Separation:** the note on Entity says that its classes carry JPA annotations, that its services call Database directly, and that layers exchange `Map` data instead of domain objects. This shows where the separation is weaker than the layer names suggest.
+
+`inventory.json` has the evidence and members. `check_inventory.py --level overview --graph .claude/repo-graph.json`: 0 issues (one note: the external JPA API has no members to check). `check_view.py`: clean. `puml-check`: OK, no warnings.
+
+## Changes from the reviewer&#x27;s critique (details in `v1/`)
+- Removed the four layer wrapper packages and the Entity split into two packages; the code has one `Entity` namespace.
+- Relabelled Control → Entity as &quot;calls services, enum&quot;. The reviewer is right that controllers do not create or update entity objects. The Control → Entity edge stays because the code shows it: controllers import `ReportService`, `UserService` and, in `ReportCreationController`, `ReportCategory`. Both Entity services and the enum sit in the same package.
+- Added the JPA API as an external package, with Entity → JPA and Database → JPA dependencies, and a note on the facade and on `Map` data.
+- Dependency labels are plain verbs; no keyword stereotypes are used.
+
+## Omitted
+Individual classes, GUI forms, enums, the MySQL server and framework glue.
+
+## Assumptions
+- Dependencies are static, from the graph and imports; run-time wiring was not checked.
+- The seven-of-ten facade count comes from grepping `Boundary` for `SystemServicesController`; I did not trace every call.
+</pre></details>
+<p class="links"><a href="outputs-H/GR10-Q1/view.puml">view.puml</a> · <a href="outputs-H/GR10-Q1/prompt.txt">prompt</a></p></div><div><h3>H view: component (UML component diagram)</h3>
+<a href="outputs-H/GR10-Q1-2/view.png"><img src="outputs-H/GR10-Q1-2/view.png" alt="GR10-Q1-2"></a>
+<p class="check">answers: <ul class="check"><li>What are the main architectural components and what is each one responsible for?</li><li>How is the system decomposed into layers or subsystems?</li><li>What are the main dependencies among the components, layers or subsystems?</li><li>How are user-facing functionality, application logic, domain entities and data persistence separated?</li><li>How do these parts collaborate to provide the main system functionalities?</li></ul></p><p class="check">why this viewpoint: The &#x27;main architectural components&#x27; wording could also be read as running parts with provided and required interfaces. A component diagram at overview level would answer the responsibility and dependency concerns about as well for a desktop application, so it is produced alongside the module view.; The stakeholder was not sure which aspect applies. At overview level, &#x27;how parts collaborate&#x27; is best answered by the interfaces each part offers and needs and how they connect, which the component viewpoint frames. A sequence diagram would need one specific scenario, but the concern covers the main functionalities in general.</p>
+<p class="check">detail level overview; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/GR10-Q1-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly, yes, partly, partly, partly (<a href="outputs-H/GR10-Q1-2/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes, yes, yes, yes, partly (<a href="outputs-H/GR10-Q1-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Component view: Municipal report management application
+
+**Takeaway:** the application is four stacked components (screens, use-case controllers, domain entities and services, JPA persistence). Screens enter Control through two interfaces (the controller facade and the login controller), and only the domain talks to persistence.
+**Stakeholder:** software architect; **detail level:** overview (as given). A balanced level would add the individual controllers, services and entities.
+
+Files: `view.puml`, `view.png`, `inventory.json` (elements, relations, evidence). Names match view GR10-Q1. The first version is kept in `v1/`.
+
+## How the concern is addressed
+- Components and responsibilities: four boxes with a one-line responsibility note each (also in `inventory.json`).
+- Layers: presentation (Boundary), application (Control), domain (Entity), persistence (Database), top to bottom.
+- Dependencies: arrows go downward only. Boundary uses the controller facade and, for login, the login controller directly (`Boundary/UserLoginGUI.java:3,111`). Boundary also uses the domain&#x27;s report category enum. Domain and persistence use the external JPA API («library»).
+- Separation: UI reaches logic only through Control (facade or login controller). The note on Entity states that domain entities and services live together and that the services call PersistenceService directly, so domain and persistence are coupled.
+- Collaboration: the note on Control lists the use cases the facade exposes (register, create report, review, details, status update, internal note, monitoring). Each use case runs screen, controller, domain service, PersistenceService. Login follows the same chain through the login controller.
+
+## Omitted
+Classes, forms, enums; the MySQL database (outside the code, configured in `persistence.xml`); users (use case view); a sequence of each use case (sequence view).
+
+## Assumptions
+Interface names group the public classes of each package. &quot;Report and user services&quot; is a logical interface: the code has two concrete classes (ReportService, UserService) and no Java interface.
+
+## Revision after review (v1 to v2)
+- Added the login controller interface and the direct Boundary-to-Control login dependency. The reviewer was right: v1 claimed the facade is the only entry.
+- Added responsibility notes, the facade use-case list, and the Entity coupling note.
+- jakarta.persistence now uses «library» instead of the hidden muted style; «use» labels carry no extra text.
+- Marked the services interface as logical.
+- Not changed: the reviewer&#x27;s level judgement (right), so no components were added or removed. The tall layout stays; lollipop edges still touch interface names.
+
+## Check results
+puml-check: 4 edge-through-text warnings remain (provider lines touching interface names; render is legible). check_inventory: 0 issues (4 notes: dependencies through interfaces). check_view: clean. check_consistency with GR10-Q1: consistent.
+</pre></details>
+<p class="links"><a href="outputs-H/GR10-Q1-2/view.puml">view.puml</a> · <a href="outputs-H/GR10-Q1-2/prompt.txt">prompt</a></p></div><div><h3>H view: interaction (UML sequence diagram) (also plausible)</h3>
+<a href="outputs-H/GR10-Q1-3/view.png"><img src="outputs-H/GR10-Q1-3/view.png" alt="GR10-Q1-3"></a>
+<p class="check">answers: <ul class="check"><li>How do these parts collaborate to provide the main system functionalities?</li></ul></p><p class="check">why this viewpoint: Collaboration can also be read as the ordered messages exchanged among the parts in a scenario, such as reporting a problem. A sequence diagram would show this, so it is produced as an additional view.</p>
+<p class="check">detail level overview; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/GR10-Q1-3/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly (<a href="outputs-H/GR10-Q1-3/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details partly (<a href="outputs-H/GR10-Q1-3/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># UML sequence diagram: main functionalities across the layers (overview)
+
+**Takeaway:** every main function runs the same chain: Boundary screens call Control, Control calls Entity services, Entity calls Database, Database talks to MySQL. Control also decides when a follow-up call (the notification) is made.
+
+Stakeholder: software architect reviewing the organisation before planning evolution. Detail level: overview (given). Lifelines stand for whole layers (packages), not class instances, plus the user and the external MySQL database; this is the overview abstraction. Names match the module (GR10-Q1) and component (GR10-Q1-2) views.
+
+## How the view answers the concern
+&quot;How do these parts collaborate to provide the main functionalities?&quot; Three flows, lifelines left to right in calling order:
+- **Sign in**: Boundary calls the login controller directly (not the facade); Control asks Entity, which reads via Database. Results return to Control and then Boundary, so &quot;dashboard or error&quot; follows from the reply (session data or none).
+- **Citizen reports a problem**: `alt`: Control validates the data and the citizen role; if invalid it rejects with a message, otherwise Entity saves the report through Database in a transaction.
+- **Operator advances status**: `alt allowed` / `else not allowed`. Not allowed means: not an operator, report not found, or report already resolved (all checked in Control). When allowed, Control makes two separate calls to Entity: (1) apply the new status, one update transaction; (2) inside `opt status notifiable`, check the status and generate the notification, a second, separate transaction. The notify decision is made in Control (notification controller), not in Entity.
+
+Details are in `inventory.json` (check_inventory.py: 0 issues; notes: one undrawn dependency, two elements without members).
+
+## Omitted on purpose
+Individual controllers, services, entities, forms and the facade; the other functions (registration, review of received reports, notes, monitoring), which follow the same chain; the JPA library; Boundary&#x27;s direct use of the `ReportCategory` enum from Entity (data type, not a step; see the other views). A balanced level would name the facade, the per-use-case controllers and the notification controller.
+
+## Assumptions
+- Internal calls inside one layer are collapsed into one message.
+- Replies are drawn where a result drives the outcome.
+
+## Revision (after critique-1)
+Previous version is in `v1/`. Changed: status flow split into the two Control-to-Entity calls with separate transactions; the note replaced by an `opt [status notifiable]` fragment owned by Control; rejection `alt` added to the status flow; sign-in replies added; lifelines described as layers. Not adopted: renaming lifelines to `:Layer` form, to keep names identical to the other views.
+
+## Check results
+puml-check: OK (infos on group labels only); check_view.py: clean; check_consistency.py: consistent; check_inventory.py: 0 issues. Rendered to `view.png`.
+</pre></details>
+<p class="links"><a href="outputs-H/GR10-Q1-3/view.puml">view.puml</a> · <a href="outputs-H/GR10-Q1-3/prompt.txt">prompt</a></p></div></div></section>
 <section id="GR10-Q2">
 <h2>GR10-Q2</h2>
 <p class="request">“I am a DevOps engineer, and I would like a complete deployment view of the system.”</p><details><summary>original long request</summary><p>I am a DevOps engineer. I need to deploy and configure the system in a new execution environment. Before preparing the deployment, I need to understand which runtime environments and software artifacts are required, where the application and its data are executed and stored, and how the main runtime elements communicate with each other. I also need to identify the technologies and runtime dependencies involved in the communication between the application and the database.</p></details>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>DevOps engineer</td></tr><tr><th>perspective</th><td>runtime and operations; deploying the system in a new environment (detail level: detailed)</td></tr><tr><th>concern</th><td>deployment, connectivity</td></tr><tr><th>concern details</th><td><ul><li>required runtime environments and software artifacts</li><li>where the application runs and where its data is stored</li><li>how the main runtime elements communicate</li><li>technologies and runtime dependencies between the application and the database</li></ul></td></tr><tr><th>aspect</th><td>structural (runtime)</td></tr><tr><th>viewpoint</th><td>deployment</td></tr><tr><th>model kind</th><td>UML deployment diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>DevOps engineer</td></tr><tr><th>perspective</th><td>runtime and operations; deploying the system in a new environment (detail level: detailed)</td></tr><tr><th>concern</th><td>deployment, connectivity</td></tr><tr><th>concern details</th><td><ul><li>required runtime environments and software artifacts</li><li>where the application runs and where its data is stored</li><li>how the main runtime elements communicate</li><li>technologies and runtime dependencies between the application and the database</li></ul></td></tr><tr><th>aspect</th><td>structural (runtime)</td></tr><tr><th>viewpoint</th><td>deployment</td></tr><tr><th>model kind</th><td>UML deployment diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q2/view.png"><img src="outputs/GR10-Q2/view.png" alt="GR10-Q2 A: agent"></a><p class="check">11 nodes, 12 edges; layout issues 6, 0.55 per node (edge-crosses-nested-borders 2, edge-through-own-label 2, edge-through-cluster 1, busy 1)</p>
 <details><summary>README</summary><pre># GR10-Q2 – Deployment view (UML deployment diagram)
 
@@ -509,11 +624,83 @@ Individual classes (class level), the junit test dependency (tests need a live M
 - puml-check: renders, 0 warnings. 3 info notes (nested container edges, busy diagram).
 - check_inventory.py --level detailed: 0 issues (no graph was available, so run without `--graph`).
 </pre></details>
-<p class="links"><a href="outputs-G/GR10-Q2/view.puml">view.puml</a> · <a href="outputs-G/GR10-Q2/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/GR10-Q2/view.puml">view.puml</a> · <a href="outputs-G/GR10-Q2/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 2 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: deployment (UML deployment diagram)</h3>
+<a href="outputs-H/GR10-Q2/view.png"><img src="outputs-H/GR10-Q2/view.png" alt="GR10-Q2"></a>
+<p class="check">answers: <ul class="check"><li>Which runtime environments and software artifacts are required to run the system?</li><li>Where are the application and its data executed and stored?</li><li>How do the main runtime elements communicate with each other?</li><li>Which technologies and runtime dependencies are involved in the communication between the application and the database?</li></ul></p><p class="check">why this viewpoint: All four concerns were tagged runtime-environment (one also with runtime-parts), which the deployment viewpoint frames. Nodes and execution environments answer what is required to run the system. Placing artifacts on nodes shows where the application and its data run and are stored. Communication paths, labelled with protocols and drivers, show how runtime elements talk to each other and which technologies and dependencies link the application to the database. One deployment view therefore covers everything, which is the fewest views.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/GR10-Q2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly, partly, yes, partly (<a href="outputs-H/GR10-Q2/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes, yes, yes, yes (<a href="outputs-H/GR10-Q2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Deployment view: Municipal Report Management System
+
+**Takeaway:** the desktop app runs as a Swing process in a Java 23 JVM on the user&#x27;s workstation and talks over JDBC/TCP port 3306 (Hibernate + MySQL Connector/J) to a MySQL server holding schema `reports_db`. The configuration (127.0.0.1, account `reports_user@localhost`) makes the database co-located with the app by default.
+
+Stakeholder: DevOps engineer. Detail level: balanced (as given). UML deployment diagram in `view.puml` (rendered `view.png`); elements and evidence in `inventory.json`. The first version is kept in `v1/`.
+
+## How the concern is answered
+- **Runtime environments and artifacts:** Java 23 JVM (no executable jar in the pom: launch with the dependency classpath and main class `Boundary.HomePageGUI`), the application artifact, the libraries Hibernate 6.6, Connector/J 9.4 and forms_rt 7.0.3 (compile scope, used by the Swing forms at runtime), MySQL server and schema `reports_db`.
+- **Where executed and stored:** application in the JVM on the user workstation; data in `reports_db` on MySQL. The database host is drawn as a separate node but marked &quot;same machine by default&quot;; a separate host needs a new URL and a new MySQL grant (note in the view).
+- **Communication:** one path, a communication path between the JVM and the MySQL server, JDBC over TCP :3306. The code has no other network I/O.
+- **Technologies in the app-database link:** JPA via Hibernate, Connector/J driver, and `persistence.xml` drawn as a «deployment spec» of the app: driver, URL, user, plaintext password, `hbm2ddl update`. It is packaged with the app (`src/main/resources`), so changing it means rebuilding.
+
+## Omitted
+GUI/controller/entity structure (component view), JUnit (test scope only). A different detail level would add the layers inside the app.
+
+## Assumptions
+- Launch via main class `Boundary.HomePageGUI` is inferred: it is one of three GUI classes with `main` (also `UserLoginGUI`, `UserRegistrationGUI`); the home page is the natural entry point (unconfirmed).
+- That `persistence.xml` ends up inside the built artifact is inferred from Maven&#x27;s resource layout; the pom has no packaging config.
+- Separate Database host node is kept (UML needs a node for the MySQL environment), marked as co-located by default.
+
+## Revision after review (v1 -&gt; v2)
+- Communication is now a communication path JVM -- MySQL (v1: arrow from an artifact); app -&gt; libraries is a dashed «use»; removed the &quot;stores data&quot; dependency (nesting shows it).
+- `persistence.xml` became a «deployment spec» attached to the app and lists the settings.
+- Added forms_rt as a runtime library and corrected the earlier &quot;build-only&quot; claim (reviewer was right; compile scope, imported in the Boundary GUIs).
+- Added launch note, `reports_user@localhost` grant and co-location note.
+- Not applied: nothing rejected.
+
+## Check result
+puml-check: one `aspect` warning (ratio 1.25, a little tall, because the nested nodes stack). All overlap and edge-through-text warnings from the first draft of this revision are gone. check_inventory.py: 0 issues; check_view.py: clean.
+</pre></details>
+<p class="links"><a href="outputs-H/GR10-Q2/view.puml">view.puml</a> · <a href="outputs-H/GR10-Q2/prompt.txt">prompt</a></p></div><div><h3>H view: component (UML component diagram) (also plausible)</h3>
+<a href="outputs-H/GR10-Q2-2/view.png"><img src="outputs-H/GR10-Q2-2/view.png" alt="GR10-Q2-2"></a>
+<p class="check">answers: <ul class="check"><li>Which runtime environments and software artifacts are required to run the system?</li><li>Where are the application and its data executed and stored?</li><li>How do the main runtime elements communicate with each other?</li><li>Which technologies and runtime dependencies are involved in the communication between the application and the database?</li></ul></p><p class="check">why this viewpoint: The third concern also touched runtime-parts. A component diagram would show the running parts and their interfaces, and how they connect, about as well as the deployment communication paths do. It does not show nodes, execution environments or where data is stored, so it is only a partial alternative for that concern.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/GR10-Q2-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly, partly, yes, partly (<a href="outputs-H/GR10-Q2-2/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details yes, partly, yes, yes (<a href="outputs-H/GR10-Q2-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># GR10-Q2-2: Component view of runtime communication (revision 1)
+
+**Takeaway:** the application is one Java 23 process, started from `Boundary.HomePageGUI.main`. Its persistence access reaches the MySQL server (schema `reports_db`) through Hibernate and Connector/J over JDBC on TCP port 3306, with all settings fixed in the packaged `persistence.xml`.
+
+Stakeholder: DevOps engineer. Detail level: balanced (given). Model kind: UML component diagram. Files: `view.puml`, `view.png`, `inventory.json`. The previous version is in `v1/`. Names match the deployment view GR10-Q2.
+
+## How it addresses the concern
+- **Runtime environments and artifacts:** the Maven artifact `municipal-report-management-1.0-SNAPSHOT` (no executable jar, so dependency jars go on the classpath), the Java 23 JVM and its entry point, `persistence.xml`, the libraries, and the MySQL server. The setup prerequisite is in a note: `reports_db` and `reports_user@localhost` are created by hand (README SQL), and Hibernate only creates the tables.
+- **Where the application and data live:** the application and its libraries share one JVM. The data is in `reports_db` on the MySQL server. The URL is 127.0.0.1, so the server is expected on the same host. Moving it means editing `persistence.xml` and repackaging, because there is no external override (note).
+- **Communication:** in-process calls inside the application, then Hibernate (JPA), Connector/J (JDBC), then TCP 3306 to MySQL.
+- **Technologies on the database path:** Hibernate ORM 6.6, MySQL Connector/J 9.4 (driver `com.mysql.cj.jdbc.Driver`), JDBC, TCP 3306, persistence unit `Municipal_Report_Management_System`, RESOURCE_LOCAL, `hbm2ddl update`.
+
+## Changes after the review
+- Split the library box into Hibernate and Connector/J on the database path, inside the application. forms_rt is now attached only to the GUI.
+- The process boundary is a component (not a package). `persistence.xml` and the schema are artifacts. Plain arrows became `&lt;&lt;use&gt;&gt;` dependencies.
+- Added the deployable artifact, entry point, setup prerequisite and configuration notes.
+- Merged Swing screens, controllers and domain into one &quot;Application logic and GUI&quot; component.
+- Dropped the `@localhost` host part from the server label, since it comes from the README setup SQL. It appears only in the note as a prerequisite.
+
+## Reviewer points not followed
+- **Interface symbols (JPA, JDBC) with assembly connectors:** I tried them. Every layout made an edge cross the interface label, so the JPA and JDBC links are labelled `&lt;&lt;use&gt;&gt;` dependencies instead.
+- **The MySQL version** is not shown because nothing in the code or the build files states it.
+
+## Omitted on purpose
+Single classes, and direct screen-to-domain dependencies (screens use domain data types). Deployment nodes belong to GR10-Q2.
+
+## Assumptions
+The jar element carries the same members as in GR10-Q2, to keep names consistent. The inner components therefore have no member list, so the graph does not check their relations.
+
+## Check results
+puml-check: 0 warnings. check_inventory.py (balanced, with graph): 0 issues, one note about unchecked elements. check_view.py: clean. check_consistency.py with GR10-Q2: consistent.
+</pre></details>
+<p class="links"><a href="outputs-H/GR10-Q2-2/view.puml">view.puml</a> · <a href="outputs-H/GR10-Q2-2/prompt.txt">prompt</a></p></div></div></section>
 <section id="GR10-Q4">
 <h2>GR10-Q4</h2>
 <p class="request">“I am a software analyst, and I would like a use case diagram showing the functionalities provided by the system.”</p><details><summary>original long request</summary><p>I am a business analyst. I need to understand at a high level how a system for reporting and managing problems in a municipal area is expected to work. I know that the application should allow people to report issues in the territory and support the municipality in managing them, but I do not yet know the specific user roles or the functionalities available to each of them. I need to identify the main types of users that interact with the system, the main goals they can achieve through it, and how the different functionalities are related to each other.</p></details>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>software analyst</td></tr><tr><th>perspective</th><td>what the system offers its users, without knowing the user roles yet (detail level: overview)</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main types of users that interact with the system</li><li>goals each of them can achieve through it</li><li>how the functionalities are related to each other</li></ul></td></tr><tr><th>aspect</th><td>functional</td></tr><tr><th>viewpoint</th><td>use case</td></tr><tr><th>model kind</th><td>UML use case diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>software analyst</td></tr><tr><th>perspective</th><td>what the system offers its users, without knowing the user roles yet (detail level: overview)</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main types of users that interact with the system</li><li>goals each of them can achieve through it</li><li>how the functionalities are related to each other</li></ul></td></tr><tr><th>aspect</th><td>functional</td></tr><tr><th>viewpoint</th><td>use case</td></tr><tr><th>model kind</th><td>UML use case diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q4/view.png"><img src="outputs/GR10-Q4/view.png" alt="GR10-Q4 A: agent"></a><p class="check">16 nodes, 18 edges; layout issues 4, 0.25 per node (edge-through-own-label 2, bundled-edges 1, busy 1)</p>
 <details><summary>README</summary><pre># Use case view - Municipal Report Management System
 
@@ -732,11 +919,37 @@ Log out, window navigation, persistence/entities, report categories and fields (
 - puml-check: 1 advisory warning (aspect ratio 1.28 vs 1.78); no overlaps or edge-through-text.
 - check_inventory.py (--level overview, with graph): 0 issues, 1 note (use case elements have no code members, so they are not graph-checked).
 </pre></details>
-<p class="links"><a href="outputs-G/GR10-Q4/view.puml">view.puml</a> · <a href="outputs-G/GR10-Q4/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/GR10-Q4/view.puml">view.puml</a> · <a href="outputs-G/GR10-Q4/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 1 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: use-case (UML use case diagram)</h3>
+<a href="outputs-H/GR10-Q4/view.png"><img src="outputs-H/GR10-Q4/view.png" alt="GR10-Q4"></a>
+<p class="check">answers: <ul class="check"><li>What are the main types of users that interact with the system?</li><li>What main goals can each type of user achieve through the system?</li><li>How are the different functionalities related to each other?</li></ul></p><p class="check">why this viewpoint: The stakeholder picked the &#x27;users&#x27; aspect for all three concerns, which the use-case viewpoint frames. One UML use case diagram covers all three. Its actors show the main user types. Each actor&#x27;s associated use cases show the goals that user can achieve. Include and extend relationships between use cases show how the functionalities relate. The request explicitly asks for a use case diagram, and an overview level of detail fits one diagram of the system boundary. No other viewpoint frames the &#x27;users&#x27; aspect, so a single view is enough.</p>
+<p class="check">detail level overview; readability and notation check: clean;
+names across this task's views: one view</p><p class="check">critic loop: kept v2 · <a href="outputs-H/GR10-Q4/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details yes, partly, partly (<a href="outputs-H/GR10-Q4/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details yes, yes, partly (<a href="outputs-H/GR10-Q4/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Use case view: municipal problem reporting and management
+
+**Takeaway:** Citizens report problems and follow them; municipal operators review, update and annotate those reports and monitor activity.
+**Stakeholder:** business analyst. **Detail level:** overview (given), so only user goals are drawn.
+
+## How the concern is answered
+- *Main user types*: two actors, Citizen and Municipal operator, the two roles the dashboard code distinguishes (`UserDashboardGUI.java`).
+- *Goals per type*: each actor is linked to the goals it starts. Both roles register (the registration form offers Citizen and Municipal Operator), log in, and open report details. The citizen also reports a problem and follows their own reports. The operator also reviews received reports, updates status, adds internal notes and monitors trends.
+- *Relations between functions*: «extend» links show two optional steps on viewing report details: reading status notifications (the &quot;View Notifications&quot; button, citizen side) and adding an internal note (operator side). Updating status «include»s viewing report details. A note ties the operator&#x27;s status update to the citizen&#x27;s notification, which is the cross-actor relation.
+
+Evidence is in `inventory.json`. `check_inventory.py --level overview --graph .claude/repo-graph.json`: 0 issues (1 note, because use cases and actors have no code members). `check_view.py`: clean. `puml-check`: OK, 0 crossings. `view.png` was rendered from `view.puml`.
+
+## Omitted
+Screens, controllers, entities, the database, report categories and filters. A component or class view would show those.
+
+## Assumptions
+- Status-change notifications are created automatically when an operator updates a report (NotificationController.java:46); the note states this rather than drawing a link between use cases.
+
+## Revision 1 (reviewer critique)
+Previous version is in `v1/`. Changes: operator now registers; both actors are linked to &quot;View report details&quot;; notifications changed from «include» of &quot;Follow my reports&quot; to «extend» of &quot;View report details&quot;; the «extend» from &quot;Update report status&quot; to &quot;Review received reports&quot; was removed; a note was added for the status-update-to-notification link. All reviewer points were confirmed in the code, so none were rejected. Checks after the revision: puml-check OK (0 crossings, info only: 16 edges is busy), check_inventory.py 0 issues, check_view.py clean.
+</pre></details>
+<p class="links"><a href="outputs-H/GR10-Q4/view.puml">view.puml</a> · <a href="outputs-H/GR10-Q4/prompt.txt">prompt</a></p></div></div></section>
 <section id="GR10-Q3">
 <h2>GR10-Q3</h2>
 <p class="request">“I am a database engineer. I need to modify the persistence layer to support future changes to the management of municipal reports. Before modifying the database, I need to understand the main data entities stored by the system, the relationships among them, and which information must be persisted throughout the lifecycle of a report. In particular, I need to understand how users, reports, locations, categories, states, state changes, internal notes, and notifications are related, and which parts of the application depend on this persisted information.”</p>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>database engineer</td></tr><tr><th>perspective</th><td>the persistence layer, before changing how reports are managed (detail level: detailed)</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main data entities stored and their relationships</li><li>information persisted throughout the lifecycle of a report</li><li>how users, reports, locations, categories, states, state changes, internal notes and notifications are related</li><li>which parts of the application depend on the persisted information</li></ul></td></tr><tr><th>aspect</th><td>informational</td></tr><tr><th>viewpoint</th><td>data model</td></tr><tr><th>model kind</th><td>UML class diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>desktop application for reporting and managing problems in a municipal area</td></tr><tr><th>stakeholder</th><td>database engineer</td></tr><tr><th>perspective</th><td>the persistence layer, before changing how reports are managed (detail level: detailed)</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main data entities stored and their relationships</li><li>information persisted throughout the lifecycle of a report</li><li>how users, reports, locations, categories, states, state changes, internal notes and notifications are related</li><li>which parts of the application depend on the persisted information</li></ul></td></tr><tr><th>aspect</th><td>informational</td></tr><tr><th>viewpoint</th><td>data model</td></tr><tr><th>model kind</th><td>UML class diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/GR10-Q3/view.png"><img src="outputs/GR10-Q3/view.png" alt="GR10-Q3 A: agent"></a><p class="check">37 nodes, 66 edges; layout issues 15, 0.41 per node (bundled-edges 6, edge-through-text 4, detached-label 2, edge-crosses-nested-borders 1, many-crossings 1, busy 1)</p>
 <details><summary>README</summary><pre># GR10-Q3 – Data model view (UML class diagram)
 
@@ -980,11 +1193,70 @@ Individual controllers/GUIs (grouped), `JpaUtil`, state-class internals, DTO-map
 - `check_inventory.py --level detailed --graph .claude/repo-graph.json`: 0 issues (5 notes about undrawn dependencies, all listed as omitted).
 - `puml-check`: renders; 4 cosmetic warnings left (two detached labels, two bundled edges); the layout is wide (about 2:1).
 </pre></details>
-<p class="links"><a href="outputs-G/GR10-Q3/view.puml">view.puml</a> · <a href="outputs-G/GR10-Q3/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/GR10-Q3/view.puml">view.puml</a> · <a href="outputs-G/GR10-Q3/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 2 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: data-model (UML class diagram)</h3>
+<a href="outputs-H/GR10-Q3/view.png"><img src="outputs-H/GR10-Q3/view.png" alt="GR10-Q3"></a>
+<p class="check">answers: <ul class="check"><li>What are the main data entities stored by the system?</li><li>How are users, reports, locations, categories, states, state changes, internal notes, and notifications related to each other?</li><li>Which information must be persisted throughout the lifecycle of a report?</li></ul></p><p class="check">why this viewpoint: The stakeholder picked the data aspect for all three concerns, and the data-model viewpoint frames it. A class diagram shows the entities (users, reports, locations, categories, states, state changes, internal notes, notifications), their key attributes and their relationships. It also shows which attributes are kept as a report moves through its states, so one view covers all three concerns.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/GR10-Q3/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details yes, partly, partly (<a href="outputs-H/GR10-Q3/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes, yes, yes (<a href="outputs-H/GR10-Q3/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Persisted data model of the municipal report system (UML class diagram, balanced)
+
+**Takeaway:** a report is the central persisted entity; it belongs to one citizen, optionally to one operator, embeds its location and category, and owns its status history and internal notes, while notifications reference it and its citizen.
+
+Stakeholder: database engineer. Detail level: balanced (as given): the entities with their key columns and relations, no code-level members.
+
+## How the view answers the concern
+- **Main entities:** User (Citizen and MunicipalOperator, one `users` table with a `role` discriminator), Report, StatusUpdate, InternalNote, Notification; Credentials and Location are embedded columns, ReportCategory is a string-stored enum.
+- **Relations:** Report → Citizen (mandatory) and → MunicipalOperator (optional); Report composes StatusUpdate and InternalNote (cascade all, orphan removal); StatusUpdate and InternalNote → MunicipalOperator; Notification → Report and → Citizen.
+- **States:** ReportStatusValue lists the stored strings shared by `Report.currentStatus`, `StatusUpdate.newStatus` and `Notification.notifiedStatus` (the last limited to assigned and resolved, per `Notification.isStatusNotifiable`).
+- **Lifecycle data:** report fields and current status string (`submitted`, `assigned`, `in_progress`, `resolved`), one StatusUpdate per change (date, new status, operator), InternalNotes (text, date, operator), Notifications (date, message, notified status). The status classes are not persisted.
+- **Dependents:** named in a note on the view, not drawn (a component view would show them). From the code: `PersistenceService` (JPA via `JpaUtil`, MySQL `reports_db`, `persistence.xml`) is used only by `ReportService` and `UserService`, which the controllers and GUIs call.
+
+Evidence: `inventory.json`. `check_inventory.py --level balanced --graph`: 0 issues. `check_view.py`: clean. `puml-check`: remaining warnings are layout-only (one edge passing over a node, one label offset).
+
+## Omitted
+Status classes, service/controller/GUI classes, `PersistenceService`/`JpaUtil` (other viewpoints), the unused Credentials listing in `persistence.xml` (embeddable).
+
+## Assumptions
+Column types are Java types from the annotations, no schema script exists. Cardinalities come from `@ManyToOne` and `nullable`. Notifications are not cascaded from Report. A detailed level would add table names, indexes and fetch rules.
+
+## Revision 1 (after reviewer critique; previous version in `v1/`)
+- Added the status value domain (ReportStatusValue) and typed the three status columns with it; notifications limited to assigned and resolved.
+- Added multiplicities `[0..1]` on `reportDate` and `attachedImage`; legend says unmarked attributes are mandatory.
+- Replaced the lifecycle note: status order, one StatusUpdate per change, operator required first (`Report.java:202,369`), `citizenEditable` true only while submitted (`Report.java:391-431`), notifications not cascaded so they block report deletion.
+- Removed the Report to ReportCategory dependency (category stays a typed attribute) and the blue emphasis styling; `&lt;&lt;embeddable&gt;&gt;` became «dataType» with a legend entry; the Location note now sits on Location.
+- Added a note naming the dependents (ReportService, UserService via PersistenceService/JpaUtil).
+- Kept: the composition diamonds. They match `cascade = ALL, orphanRemoval` for status updates and notes; the legend limits the claim to those two and the lifecycle note states the notification restriction.
+- Result: `check_inventory.py` 0 issues (two undrawn notes are the removed category edge, listed under omitted); `check_view.py` clean; `puml-check` 4 layout warnings (labels near edges, bundled edges at Notification), down in shape from ratio 2.0 to 1.5.
+</pre></details>
+<p class="links"><a href="outputs-H/GR10-Q3/view.puml">view.puml</a> · <a href="outputs-H/GR10-Q3/prompt.txt">prompt</a></p></div><div><h3>H view: module (UML package diagram)</h3>
+<a href="outputs-H/GR10-Q3-2/view.png"><img src="outputs-H/GR10-Q3-2/view.png" alt="GR10-Q3-2"></a>
+<p class="check">answers: <ul class="check"><li>Which parts of the application depend on this persisted information?</li></ul></p><p class="check">why this viewpoint: The stakeholder picked the code-structure aspect for this concern, and the module viewpoint frames it. A package diagram shows how the code is divided into modules or layers and which of them depend on the persistence layer and its data. This is a different kind of structure from the entities, so it needs its own view.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v1 · <a href="outputs-H/GR10-Q3-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly (<a href="outputs-H/GR10-Q3-2/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details partly (<a href="outputs-H/GR10-Q3-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># UML package diagram: modules that depend on persisted report data
+
+**Takeaway:** the persisted entities are reached only through the data services (`ReportService`, `UserService`) and the persistence access; screens and controllers depend on them indirectly, and only `ReportCategory` is used directly.
+**Stakeholder:** database engineer. **Detail level:** balanced (given), so packages of the four layers are drawn, not classes.
+
+## How the concern is addressed
+- *Which parts depend on persisted information:* Screens → Use-case controllers → Data services → Persistence access/Persisted entities. A schema change therefore reaches the data services first; screens and controllers only see the `ReportCategory` enum directly.
+- *Main persisted entities:* the &quot;Persisted entities&quot; package lists users, citizens, operators, credentials, reports, locations, categories, status updates, internal notes and notifications.
+- *Lifecycle information:* &quot;Report status states&quot; shows that the state classes are rebuilt from the stored status text and are not persisted.
+- *Entity relationships:* not drawn here; the class view `GR10-Q3` shows them (foreign keys, embeddings).
+
+Details are in `inventory.json`. `check_inventory.py --level balanced --graph`: 0 issues. `check_view.py`: clean. `check_consistency.py` with GR10-Q3: consistent. `puml-check`: OK, no warnings.
+
+## Omitted
+Individual GUI/controller classes, generic persistence-access-to-entity dependency (the persistence unit lists the entities in `persistence.xml`), build files and tests. A detailed level would split the controllers and show each service operation.
+
+## Assumptions
+Packages are groupings of classes: `Entity` is split into three packages by role (the code keeps them in one Java package). The MySQL database is named in a note, not drawn.
+</pre></details>
+<p class="links"><a href="outputs-H/GR10-Q3-2/view.puml">view.puml</a> · <a href="outputs-H/GR10-Q3-2/prompt.txt">prompt</a></p></div></div></section>
 <section id="IS-reg-L1">
 <h2>IS-reg-L1</h2>
 <p class="request">“I am an integration tester, and I would like a dynamic view of the user registration functionality.”</p><details><summary>original long request</summary><p>I am an integration tester. I need to test the user registration functionality and understand which system components are involved and how they interact.</p></details>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>testing the user registration feature end to end (detail level: balanced)</td></tr><tr><th>concern</th><td>control_flow</td></tr><tr><th>concern details</th><td><ul><li>system components involved in user registration</li><li>how they interact</li></ul></td></tr><tr><th>aspect</th><td>behavioural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>testing the user registration feature end to end (detail level: balanced)</td></tr><tr><th>concern</th><td>control_flow</td></tr><tr><th>concern details</th><td><ul><li>system components involved in user registration</li><li>how they interact</li></ul></td></tr><tr><th>aspect</th><td>behavioural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L1/view.png"><img src="outputs/IS-reg-L1/view.png" alt="IS-reg-L1 A: agent"></a><p class="check">0 nodes, 0 edges; layout issues 10 (group-label-on-lifeline 4, message-crosses-lifeline 3, group-label-crosses-lifeline 2, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># View: User Registration - Dynamic View (UML sequence diagram)
 
@@ -1197,11 +1469,68 @@ DTOs, entity classes, UI helpers and the login screen. The three factory classes
 - puml-check: OK, 0 warnings (one info about the else label position).
 - check_inventory.py (--level balanced, with graph): exit 0, 0 issues (the note concerns the user and database lifelines, which have no code members).
 </pre></details>
-<p class="links"><a href="outputs-G/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs-G/IS-reg-L1/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs-G/IS-reg-L1/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 2 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: component (UML component diagram)</h3>
+<a href="outputs-H/IS-reg-L1/view.png"><img src="outputs-H/IS-reg-L1/view.png" alt="IS-reg-L1"></a>
+<p class="check">answers: <ul class="check"><li>Which system components are involved in user registration?</li></ul></p><p class="check">why this viewpoint: The stakeholder picked runtime-parts for this concern, which the component viewpoint frames. A component diagram shows the running parts that take part in registration, with the interfaces they offer and need.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v1</p><ul class="check"><li>review 1: accept; level right; concern details yes (<a href="outputs-H/IS-reg-L1/critique-1.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># User registration: components involved (UML component diagram)
+
+**Takeaway:** a registration, from the Swing form or the REST endpoint, passes through the Library facade to the User manager, which uses the User factories and the User registry, and the registry stores the account through the Persistence manager in the MySQL database.
+
+Stakeholder: integration tester. Detail level: balanced (the parts involved in registration with the calls between them; the given level, not changed).
+
+## How the view answers the concern
+- *Which system components are involved in user registration?* All of them are in `view.puml`: two entry points (Registration form, Authentication REST API), Library facade, User manager, User factories (Student or Librarian), User registry, Persistence manager and the MySQL database. Each arrow is a call a test can exercise; the two entry points are the places to start an integration test.
+
+Evidence for each element and relation is in `inventory.json`.
+
+## Omitted on purpose
+UserDTO and entity classes, Swing helpers (WizardStyle, WizardState), the Login screen that follows registration, JpaUtil. The Student, Librarian and User entities are folded into User registry.
+
+## Assumptions
+- The calling order inside User manager (validation, duplicate check, factory, save) is in the code but a component diagram does not show order; a sequence view would.
+- The REST endpoint&#x27;s caller is assumed to be a student or librarian client; no such client is in the repository.
+
+## Check results
+- puml-check: OK (no warnings; diagram is wide, 1845x362, because left-to-right avoided edges crossing layer titles in top-to-bottom).
+- check_inventory.py --level balanced --graph: 0 issues (1 note: users, database and layer packages have no members).
+- check_view.py: clean.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-reg-L1/view.puml">view.puml</a> · <a href="outputs-H/IS-reg-L1/prompt.txt">prompt</a></p></div><div><h3>H view: interaction (UML sequence diagram)</h3>
+<a href="outputs-H/IS-reg-L1-2/view.png"><img src="outputs-H/IS-reg-L1-2/view.png" alt="IS-reg-L1-2"></a>
+<p class="check">answers: <ul class="check"><li>How do these components interact during user registration?</li></ul></p><p class="check">why this viewpoint: The stakeholder picked both runtime-parts and steps. The concern asks how the components interact, and the request is for a dynamic view. A sequence diagram shows the ordered messages among the parts in the registration scenario, and it can include the error path. The component viewpoint already covers runtime-parts in the first view, so this concern needs the interaction viewpoint for the steps.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-reg-L1-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly (<a href="outputs-H/IS-reg-L1-2/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes (<a href="outputs-H/IS-reg-L1-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># UML sequence diagram: user registration (IS-reg-L1-2)
+
+**Takeaway:** a registration submitted in the Swing form goes form → library facade → user manager. The manager validates, then checks the email and then the identifier through the user registry (persistence manager, MySQL), has a user factory create the account and saves it. Each failure exits at the point where the code throws it and comes back to the form as an error.
+
+Stakeholder: integration tester. Detail level: balanced (components involved and the calls between them, no new lifelines).
+
+## Concern: how do the components interact during registration?
+- Main call chain and its arguments: the success path of `view.puml`.
+- Early exits, in code order, as `break` fragments: empty field (form only, no facade call); invalid fields (manager, before any registry call); email in use; identifier in use (a second lookup by student number or librarian code, chosen by role); save failed (persistence returns false after rollback, manager throws a server error).
+- The user factory is created by the manager for the role (`create` message).
+- The REST endpoint `POST /api/auth/register` is in a note: same facade call; its exception handler maps IllegalArgumentException to HTTP 400, while the save-failure RuntimeException is not handled there.
+
+Details: `inventory.json`; `check_inventory.py` 0 issues (note: user and database have no members). `check_consistency.py` against IS-reg-L1: consistent. `check_view.py` clean; `puml-check` no warnings.
+
+## Revision after critique-1 (previous version in `v1/`)
+Changed: validation failure moved before the registry lookup; the duplicate check split into email then identifier, each with its own exit; save-failure exit added; form&#x27;s &quot;Complete all fields&quot; exit added; factory shown with a create message; database replies added; exits drawn as `break` fragments so activations end correctly.
+Kept, because the code contradicts the critique: it said REST errors are an unhandled exception. `boundary/SpringBoot/RestExceptionHandler.java:19-22` handles IllegalArgumentException as HTTP 400 with an error body; only the save-failure RuntimeException is unhandled. The note says this.
+
+## Omitted
+Authentication REST API lifeline, DTOs, Swing helpers, login screen, JpaUtil; individual field validations are collapsed into one self-call.
+
+## Assumptions
+The Swing form is the main flow; &quot;User factories&quot; stays one lifeline standing for StudentFactory/LibrarianFactory so its name matches view IS-reg-L1.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-reg-L1-2/view.puml">view.puml</a> · <a href="outputs-H/IS-reg-L1-2/prompt.txt">prompt</a></p></div></div></section>
 <section id="IS-reg-L2">
 <h2>IS-reg-L2</h2>
 <p class="request">“I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the main components involved in registration, their responsibilities, and how they interact when a new user creates an account. I also need to identify the main integration points that should be exercised during the tests.”</p>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>designing integration tests for user registration (detail level: balanced)</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components involved in registration and their responsibilities</li><li>how they interact when a new user creates an account</li><li>main integration points to exercise in the tests</li></ul></td></tr><tr><th>aspect</th><td>behavioural, structural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>designing integration tests for user registration (detail level: balanced)</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components involved in registration and their responsibilities</li><li>how they interact when a new user creates an account</li><li>main integration points to exercise in the tests</li></ul></td></tr><tr><th>aspect</th><td>behavioural, structural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L2/view.png"><img src="outputs/IS-reg-L2/view.png" alt="IS-reg-L2 A: agent"></a><p class="check">0 nodes, 0 edges; layout issues 9 (group-label-on-lifeline 4, message-crosses-lifeline 3, group-label-crosses-lifeline 1, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># View: User registration (UC1) - UML sequence diagram
 
@@ -1444,11 +1773,91 @@ Evidence is in `inventory.json`. `check_inventory.py --level balanced --graph .c
 ## Check result
 `puml-check` reports the `aspect` ratio warning (1.1 vs 1.78) and a label-crossing warning on `[invalid]`. I accepted both: the diagram is a tall sequence of 23 messages, and a clear label matters more here. I did not run a separate fresh-context review.
 </pre></details>
-<p class="links"><a href="outputs-G/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs-G/IS-reg-L2/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs-G/IS-reg-L2/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 2 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: component (UML component diagram)</h3>
+<a href="outputs-H/IS-reg-L2/view.png"><img src="outputs-H/IS-reg-L2/view.png" alt="IS-reg-L2"></a>
+<p class="check">answers: <ul class="check"><li>What are the main components involved in user registration?</li><li>What is each of these components responsible for?</li><li>What are the main integration points that should be exercised in the integration tests?</li></ul></p><p class="check">why this viewpoint: The stakeholder picked runtime-parts for all three concerns, which the component viewpoint frames. Its diagram shows the running parts involved in registration, and each part&#x27;s responsibility can be written on it. The interfaces each part offers and needs, and the connectors between them, are the integration points to exercise in the tests.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-reg-L2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details yes, no, partly (<a href="outputs-H/IS-reg-L2/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes, yes, yes (<a href="outputs-H/IS-reg-L2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Component view: user registration (balanced)
+
+**Takeaway:** a new user registers through the desktop form, or an HTTP client calls the REST endpoint; both reach the Library facade, the User manager validates and checks duplicates through the User registry, and the Persistence manager saves to the MySQL account database.
+
+Stakeholder: integration tester. Detail level: balanced (given). Previous version kept in `v1/`.
+
+## How it answers the concern
+- **Components:** Registration form (desktop), Authentication REST API, Library facade, User manager, User registry, Persistence manager, Account database (MySQL), grouped by layer.
+- **Responsibilities:** now written inside each component box in the view (form blank-field check; User manager validation rules, duplicate checks, building the Student or Librarian, failure on save error; registry lookups; persistence transaction and rollback), and in `inventory.json`.
+- **Integration points:** the interfaces drawn, each now listing its operations: sign-up screen, `POST /api/auth/register`, `register(role, name, surname, email, password, identifier) : UserDTO` on the facade and manager, the four registry operations, `save` / `findFirstByFields`, and JDBC (MySQL). A note lists the paths to test: invalid input (HTTP 400 on REST), duplicate email / student number / librarian code, and save failure (`save` returns false, the manager throws RuntimeException, not mapped to 400).
+
+## Changes after review (critique-1)
+- Responsibilities and operation names added to the view.
+- Error contract added (RestExceptionHandler maps IllegalArgumentException to HTTP 400; it is part of the REST API component).
+- User factories folded into User manager: they are created with `new` inside `register()`, so not a replaceable seam.
+- REST endpoint now used by an external &quot;HTTP client&quot;, not the person at the form.
+- Database interface relabelled JDBC (MySQL); JPA is provided in-process by Hibernate.
+- Note no longer attached to User manager only; it is a free note linked to Persistence manager, where the failure seam originates.
+
+## Omitted
+User DTO/entities, login flow, UI styling helpers, factories as a separate component, direct dependency edges (drawn as interface pairs).
+
+## Assumptions
+Database is MySQL per `persistence.xml`. RestExceptionHandler also maps IllegalStateException (HTTP 400) and SecurityException (401); only the registration-relevant case is shown. Call order would need a sequence view.
+
+## Checks
+puml-check: no warnings. check_inventory.py --level balanced --graph: 0 issues (notes only for interface-mediated dependencies and external elements). check_view.py: clean.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-reg-L2/view.puml">view.puml</a> · <a href="outputs-H/IS-reg-L2/prompt.txt">prompt</a></p></div><div><h3>H view: interaction (UML sequence diagram)</h3>
+<a href="outputs-H/IS-reg-L2-2/view.png"><img src="outputs-H/IS-reg-L2-2/view.png" alt="IS-reg-L2-2"></a>
+<p class="check">answers: <ul class="check"><li>How do the components interact when a new user creates an account?</li></ul></p><p class="check">why this viewpoint: The stakeholder picked steps for this concern, which the interaction viewpoint frames. A sequence diagram shows the ordered messages exchanged among the registration components when a new user creates an account. It also gives the tester the call order and the success path to build test scenarios from.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-reg-L2-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly (<a href="outputs-H/IS-reg-L2-2/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details partly (<a href="outputs-H/IS-reg-L2-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># View IS-reg-L2-2: account creation interaction flow (UML sequence diagram)
+
+**Takeaway:** a registration enters through the desktop Registration form or the Authentication REST API, passes
+through the Library facade to the User manager, which checks for duplicates and saves through the User registry and
+Persistence manager into the Account database; failures return as errors to the caller.
+
+Stakeholder: integration tester. Detail level: **balanced** (the parts involved in registration, with the calls
+between them). Files: `view.puml`, `view.png`, `inventory.json`. Element names match view IS-reg-L2 (component).
+
+## How the view answers the concern
+- **How components interact when a new user creates an account:** messages 01-07 are entry, blank-field check and
+  validation; 09-13 are the duplicate lookups (a loop of two); 15-20 are creation and save; 21-22 are the save
+  outcome. The outer `alt` blocks give each outcome: invalid input (08), duplicate email or identifier (14), save
+  failure (21) and success (22).
+- **Callers are separated:** the last `alt desktop / REST` shows who receives the result. The form shows its own
+  dialog (24, Registration.java:134-142); the REST API answers the HTTP client (26) with 200, 400 or 500.
+- **Integration points to exercise** (each message between two lifelines): form or REST to facade (03, 05), facade
+  to User manager (06), User manager to User registry (09, 16), registry to Persistence manager (10, 17),
+  Persistence manager to database (11, 18), and the result returned to each caller (23, 25-26).
+
+## Omitted on purpose
+Users and HTTP client (drawn as found messages, to keep 7 lifelines), UserDTO and entity classes, user factories,
+field-level validation rules, JpaUtil, login after success. The repeated duplicate queries (email, then identifier)
+are collapsed into one message &quot;2 calls&quot;.
+
+## Assumptions
+- Account database has no code members (external), so its relation is not graph-checked.
+
+## Revision 1 (reviewer critique; previous version in `v1/`)
+Accepted, each checked against the code: added the invalid-input outcome (UserManager.validate throws
+IllegalArgumentException); added the REST result of a save failure: RuntimeException is not handled by
+RestExceptionHandler (it handles IllegalArgumentException, IllegalStateException, SecurityException), so a
+note states it ends as HTTP 500; the facade now only propagates (LibraryFacade.java:37-39), the form shows its own
+dialog and the REST API answers the HTTP client, in separate `desktop` / `REST` operands; the duplicate check is a
+loop of two lookups, the identifier lookup chosen by role. Nothing contradicted the code, so no point was rejected.
+Limits: the two duplicate messages (&quot;Email is already associated...&quot;, &quot;Identifier is already in use.&quot;) are one
+branch, not two; the 500 is derived from the handler&#x27;s exception list, not from a run (unconfirmed).
+
+## Check results
+puml-check: OK (info only: two REST-to-facade messages span the form lifeline). check_inventory.py
+`--level balanced --graph`: 0 issues. check_view.py: clean. check_consistency.py with IS-reg-L2: consistent.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-reg-L2-2/view.puml">view.puml</a> · <a href="outputs-H/IS-reg-L2-2/prompt.txt">prompt</a></p></div></div></section>
 <section id="IS-reg-L3">
 <h2>IS-reg-L3</h2>
 <p class="request">“I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the registration process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components handle the registration request, validate the user&#x27;s personal information and selected role, manage role-specific data such as the student ID or librarian identifier, verify the validity and uniqueness of the account, and persist the newly created user. I also need to understand how these components collaborate when invalid or already existing user data is provided, so that I can identify the main integration points and interactions that should be covered by the tests.”</p>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>designing integration tests for user registration, at the level of the architecture (detail level: balanced)</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components in the registration process, their responsibilities, interactions and dependencies</li><li>which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness of the account, and persist the new user</li><li>how they collaborate when invalid or already existing data is provided</li><li>main integration points and interactions the tests should cover</li></ul></td></tr><tr><th>aspect</th><td>behavioural, structural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>integration tester</td></tr><tr><th>perspective</th><td>designing integration tests for user registration, at the level of the architecture (detail level: balanced)</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components in the registration process, their responsibilities, interactions and dependencies</li><li>which components handle the request, validate personal data and role, manage role-specific data (student ID, librarian identifier), check validity and uniqueness of the account, and persist the new user</li><li>how they collaborate when invalid or already existing data is provided</li><li>main integration points and interactions the tests should cover</li></ul></td></tr><tr><th>aspect</th><td>behavioural, structural</td></tr><tr><th>viewpoint</th><td>dynamic</td></tr><tr><th>model kind</th><td>UML sequence diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-reg-L3/view.png"><img src="outputs/IS-reg-L3/view.png" alt="IS-reg-L3 A: agent"></a><p class="check">0 nodes, 0 edges; layout issues 12 (group-label-crosses-lifeline 5, group-label-on-lifeline 5, message-crosses-lifeline 1, message-spans-lifelines 1)</p>
 <details><summary>README</summary><pre># User registration – dynamic view (UML sequence diagram)
 
@@ -1678,11 +2087,79 @@ The Swing form and REST controller are shown as one lifeline because both call `
 ## Check results
 puml-check: OK (only 2 info lines about lifeline spans). check_inventory.py: check_inventory.py: exit 0 (clean; user and db have no members by design).
 </pre></details>
-<p class="links"><a href="outputs-G/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs-G/IS-reg-L3/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs-G/IS-reg-L3/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 2 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: component (UML component diagram)</h3>
+<a href="outputs-H/IS-reg-L3/view.png"><img src="outputs-H/IS-reg-L3/view.png" alt="IS-reg-L3"></a>
+<p class="check">answers: <ul class="check"><li>Which components handle the registration request, validate the user&#x27;s personal information and selected role, manage role-specific data (student ID or librarian identifier), verify the validity and uniqueness of the account, and persist the newly created user, and what is each component&#x27;s responsibility?</li><li>What are the interactions and dependencies among the components involved in registration?</li></ul></p><p class="check">why this viewpoint: Both concerns were tied to the runtime-parts aspect, which the component viewpoint frames. A component diagram shows the running parts that handle, validate, manage role data, check uniqueness and persist. It also shows each part&#x27;s responsibility, the interfaces it offers and needs, and the dependencies between parts. Those interfaces are the integration points the tester needs.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-reg-L3/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly, partly (<a href="outputs-H/IS-reg-L3/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes, yes (<a href="outputs-H/IS-reg-L3/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># User registration: components and dependencies (UML component diagram), revision 2
+
+**Takeaway:** a registration request enters through the Registration form or Registration API, reaches the User manager through the Library facade, which validates the data and checks duplicates through the User registry, creates the role-specific user via the User factories and saves it through the User registry and Persistence manager.
+
+Stakeholder: integration tester. Detail level: balanced (given). The first version is kept in `v1/`.
+
+## How the view answers the concern
+- **Handles the request:** Registration form (Swing; also does the blank-field check before submitting) and Registration API (provides `POST /api/auth/register`); both require the facade&#x27;s `register` interface.
+- **Validates personal data and role:** User manager (role, names, email, password, student ID format).
+- **Role-specific data:** User factories (provide `createUser`) create a Student with its student ID or a Librarian with its internal code; User accounts hold them.
+- **Validity and uniqueness:** User manager checks format and rejects duplicate email or identifier through the User registry&#x27;s find/save interface; User accounts carry unique columns as a database-level backstop.
+- **Persistence:** User registry to Persistence manager (JPA save with rollback, returns false on failure) to the external MySQL database.
+- **Invalid or existing data:** the note shows both paths. Validation and duplicate errors are an IllegalArgumentException: HTTP 400 through the REST error handler, an error dialog on the form. A failed save is a RuntimeException from the User manager: not mapped by the handler, so HTTP 500 on the API.
+- **Integration points to cover:** the form/API to facade interface; facade to User manager; User manager to `createUser`; User manager to the registry interface (duplicate checks, save); registry to persistence and database; error handler to API responses.
+
+Details: `inventory.json`. check_inventory.py (`--level balanced --graph`): 0 issues, only notes. check_view.py: clean. puml-check: 6 warnings remain (labels or edges touching boxes and package titles); one further layout attempt did not reduce them and was reverted.
+
+## Changes from the reviewer&#x27;s critique
+Added the REST error handler, the error paths and the form&#x27;s blank-field check; put responsibilities in the component text; switched to dependencies with «use» and provided interfaces; merged the two User manager to User registry arrows into one use of the registry interface; replaced the muted database with a node marked external.
+
+## Where I kept my version
+The reviewer suggested a dependency from the error handler to the Registration API. The code has none (Spring applies the handler by annotation, `RestExceptionHandler.java:15`), so it appears as a component and in the note only. The layer packages were kept: they group nine components and the checker expects grouping.
+
+## Omitted on purpose
+Login and authentication, UserDTO, UI style helpers, the User manager to account-entity mapping, JPA configuration detail.
+
+## Assumptions
+The form and the REST API are alternative entry points calling the same facade. Nothing unconfirmed.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-reg-L3/view.puml">view.puml</a> · <a href="outputs-H/IS-reg-L3/prompt.txt">prompt</a></p></div><div><h3>H view: interaction (UML sequence diagram)</h3>
+<a href="outputs-H/IS-reg-L3-2/view.png"><img src="outputs-H/IS-reg-L3-2/view.png" alt="IS-reg-L3-2"></a>
+<p class="check">answers: <ul class="check"><li>How do the components collaborate when invalid or already existing user data is provided?</li></ul></p><p class="check">why this viewpoint: This concern was tied to the steps aspect, which the interaction viewpoint frames. A sequence diagram shows the ordered messages among the components in the registration scenario. It covers the error paths for invalid data and for an already existing account, so the tester sees which interactions to cover.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-reg-L3-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly (<a href="outputs-H/IS-reg-L3-2/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes (<a href="outputs-H/IS-reg-L3-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># UML sequence diagram: registration with invalid or already existing data
+
+**Takeaway:** every registration check (format, email, identifier) runs in User manager, which queries the User registry through the Persistence manager. A rejection goes back as `IllegalArgumentException` through Library facade and Registration API, and the REST error handler turns it into HTTP 400. A duplicate that passes the lookups is stopped by the unique database columns. The save then fails and the client gets a default 500, because the handler does not map that exception.
+
+**Stakeholder:** integration tester. **Detail level:** balanced (given), seven lifelines. A different level would add the Swing form, MySQL and the account entities (more) or only the REST path (less). Lifeline names match view `IS-reg-L3`.
+
+## How the concern is answered
+- *Who handles the request:* Registration API, then Library facade, then User manager. A note says the Swing form calls the facade the same way.
+- *Validates personal data and role:* the first `alt`. The check covers role (Student or Librarian only), names, password, email and identifier characters. Only students need the pattern letter + 8 digits.
+- *Role-specific data:* the identifier lookup is role-scoped (students by student number, librarians by code). A student number equal to a librarian code is therefore not rejected, which is a test case. User factories create the Student or Librarian and return it.
+- *Validity and uniqueness:* the email lookup and the identifier lookup go User manager, User registry, Persistence manager.
+- *Persistence:* transactional save. The guard &quot;unique column violated&quot; is the second line of defence, for example for concurrent duplicate registrations. The response is 500 (RuntimeException not mapped by the handler).
+- *Invalid or existing data:* three rejection operands (format invalid, email taken, ID used) throw `IllegalArgumentException`. The first draws the full path to 400, and the others use a `ref` to it.
+- *Integration points:* API to facade, facade to manager, manager to registry, registry to persistence, manager to factories, and the exception-to-response mapping.
+
+Inventory: `inventory.json`. check_inventory.py (balanced, with graph): 0 issues. check_view.py: clean. check_consistency.py with `IS-reg-L3`: consistent. puml-check: 3 warnings, where nested `alt` labels are crossed by a lifeline. The labels are still readable in `view.png`.
+
+## Revision (v1 is kept in `v1/`)
+Addressed from critique-1: the save-failure guard and its 500 outcome (confirmed: unique columns at User.java:21, Student.java:19 and Librarian.java:13, and the handler maps only the three exception types); the error handler is entered by a found message from Spring instead of a reply from the controller; &quot;(same path to 400)&quot; labels replaced by `ref` frames; activation bars removed so no lifeline looks stuck active after an exception; role-scoped identifier lookup and role-specific format checks made explicit; the Swing note moved to Library facade.
+
+Kept as is: the lifeline stays named &quot;User factories&quot; (not &quot;factory : UserFactory&quot;). It stands for both factories, and the component view `IS-reg-L3` uses that name for the same code. A note says StudentFactory or LibrarianFactory is chosen by role.
+
+## Omitted on purpose
+Registration form (note only), MySQL, account entities, UserDTO, login. After the first rejection, the exception propagation is collapsed into `ref` frames.
+
+## Assumptions
+- The 500 is Spring&#x27;s default behaviour for an unmapped RuntimeException. The code shows only that no handler maps it.
+- A unique-column violation is shown as the trigger for the failed save. Other persistence errors would take the same branch.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-reg-L3-2/view.puml">view.puml</a> · <a href="outputs-H/IS-reg-L3-2/prompt.txt">prompt</a></p></div></div></section>
 <section id="IS-seat-L1">
 <h2>IS-seat-L1</h2>
 <p class="request">“I am a software developer. I need to modify the seat booking functionality and understand the main system components involved and how they interact.”</p>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to modify the seat booking feature (detail level: overview)</td></tr><tr><th>concern</th><td>control_flow</td></tr><tr><th>concern details</th><td><ul><li>main system components involved in seat booking</li><li>how they interact</li></ul></td></tr><tr><th>aspect</th><td>structural, behavioural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to modify the seat booking feature (detail level: overview)</td></tr><tr><th>concern</th><td>control_flow</td></tr><tr><th>concern details</th><td><ul><li>main system components involved in seat booking</li><li>how they interact</li></ul></td></tr><tr><th>aspect</th><td>structural, behavioural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L1/view.png"><img src="outputs/IS-seat-L1/view.png" alt="IS-seat-L1 A: agent"></a><p class="check">20 nodes, 24 edges; layout issues 5, 0.25 per node (edge-through-text 1, edge-through-cluster 1, edge-through-own-label 1, bundled-edges 1, busy 1)</p>
 <details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
 
@@ -1913,11 +2390,77 @@ DTOs; user management and factories; Notification scheduler and Launcher. Three 
 - `puml-check`: 5 warnings, none fixed. Four are interface labels placed close to their node, and one is an edge crossing the &quot;Reservation operations&quot; label. I did not edit the generated source.
 - `check_inventory.py --level overview --graph .claude/repo-graph.json`: exit 0, 0 issues, 4 notes (the undrawn dependencies above and the elements without members: database, actors).
 </pre></details>
-<p class="links"><a href="outputs-G/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs-G/IS-seat-L1/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs-G/IS-seat-L1/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 2 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: component (UML component diagram)</h3>
+<a href="outputs-H/IS-seat-L1/view.png"><img src="outputs-H/IS-seat-L1/view.png" alt="IS-seat-L1"></a>
+<p class="check">answers: <ul class="check"><li>What are the main system components involved in seat booking?</li><li>How do these components interact?</li></ul></p><p class="check">why this viewpoint: Both concerns were answered &#x27;not sure&#x27;, so the choice comes from their wording. &#x27;Main system components&#x27; and &#x27;how do these components interact&#x27; ask which running parts take part in seat booking and how they connect through interfaces. The component viewpoint frames exactly this, so one view covers both concerns. The developer needs a balanced overview of the parts and their connections, not a step-by-step message trace of one scenario.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-seat-L1/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details yes, partly (<a href="outputs-H/IS-seat-L1/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details yes, partly (<a href="outputs-H/IS-seat-L1/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Seat booking: component view (UML component diagram), revision 1
+
+**Takeaway:** a seat booking enters through the Swing wizard or the REST API, passes the Library facade to the Reservation manager, which validates it, picks a seat through the assignment strategy, saves via the registries and the Hibernate persistence layer (JDBC to MySQL), and triggers the student&#x27;s email through the Observer the model notifies.
+
+Stakeholder: software developer who will modify seat booking. Detail level: **balanced** (as given). A *detailed* level would add the validation steps, reservation states and DTOs; an *overview* would drop the interfaces.
+
+## How the view answers the concern
+- **Main components:** Booking wizard (Swing), Booking REST API (reservation create plus room/time-slot/detail availability endpoints), Library facade, Reservation manager, Study room manager, Seat assignment strategy, Notification manager, Reservation model and registries, Persistence manager (JPA, Hibernate), Email notification adapter, Reservation database (MySQL), in layers Presentation, Booking logic, Domain and data.
+- **Interactions:** labelled arrows give call direction. The &quot;Booking operations&quot; interface carries a note naming the four facade operations booking uses. Notification runs through the Observer: the Reservation manager attaches the Notification manager when saving, and the model notifies it through the &quot;Observer&quot; interface.
+
+Evidence is in `inventory.json`. Final `check_inventory.py --level balanced --graph .claude/repo-graph.json`: 0 issues (10 notes: undrawn minor dependencies, unchecked non-code elements). `check_view.py`: clean. `puml-check`: renders, 4 layout warnings (2 edges crossing a container label, 2 bundled edges at interfaces); the first version had 2, but this one removes the incorrect edges and adds the Observer path, so I kept it.
+
+## Changes after review (previous version in `v1/`)
+- Persistence tail corrected: the database no longer &quot;provides JPA&quot;. Persistence manager (JPA, Hibernate) reaches MySQL over JDBC (persistence.xml:8,24).
+- Notification trigger corrected: the direct &quot;notifies student&quot; edge is replaced by &quot;saves, attaches observer&quot; plus model to Notification manager via the Observer interface (ReservationManager.java:120-122, Reservation.java:182, NotificationManager.java:15,40).
+- Booking operations named in a note on the interface.
+- REST component renamed &quot;Booking REST API&quot; with StudyRoomController availability endpoints added to its description and evidence.
+- Student no longer uses the REST API; an external &quot;REST client&quot; actor does.
+
+Not adopted: collapsing the persistence tail further was optional; I kept the JPA/Hibernate label inside the Persistence manager and removed the JPA interface, which collapses it to two elements.
+
+## Omitted on purpose
+Librarian screens, user/authentication, monitoring, cancel/check-in; DTOs, factories, wizard helpers; minor dependencies (facade to notification manager, strategy to model, study room manager to notification manager). Edges drawn through interfaces appear as &quot;undrawn&quot; notes because the graph checker matches direct dependencies.
+
+## Assumptions
+- The Reservation manager reads rooms and seats through the registries directly, so there is no edge to the Study room manager.
+- The REST client is an unspecified HTTP consumer.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-seat-L1/view.puml">view.puml</a> · <a href="outputs-H/IS-seat-L1/prompt.txt">prompt</a></p></div><div><h3>H view: module (UML package diagram) (also plausible)</h3>
+<a href="outputs-H/IS-seat-L1-2/view.png"><img src="outputs-H/IS-seat-L1-2/view.png" alt="IS-seat-L1-2"></a>
+<p class="check">answers: <ul class="check"><li>What are the main system components involved in seat booking?</li><li>How do these components interact?</li></ul></p><p class="check">why this viewpoint: A developer modifying code may mean the code-level components. A package diagram would show the modules or layers behind seat booking and their dependencies, which answers the same &#x27;components and how they relate&#x27; concerns from the source-code side.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-seat-L1-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly, partly (<a href="outputs-H/IS-seat-L1-2/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details yes, partly (<a href="outputs-H/IS-seat-L1-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># UML package diagram: seat booking modules (IS-seat-L1-2, revision 1)
+
+**Takeaway:** a booking request goes from the Swing wizard or REST API through the Library facade (all in package `controller`) to the Reservation manager, which picks a seat with the Seat assignment strategy if none was given, saves through the entity registries, and notifies through the Notification manager; DTOs carry the data across the boundary/controller line.
+
+**Stakeholder:** software developer changing seat booking. **Detail level:** balanced (given).
+
+## How it answers the concern
+- *Main components:* the real Java packages `boundary` (Booking wizard (Swing), Booking REST API, Email notification adapter, Notification configuration), `controller` (Library facade, Reservation manager, Study room manager, Notification manager, «interface» Notification service, Seat assignment strategy), `dto` (Data transfer objects), `entity` (Reservation model and registries, Reservation state) and `database` (Persistence manager (JPA, Hibernate)). Facade and managers are classes inside `controller`.
+- *Interaction:* dashed arrows are «use» dependencies (stated once in the legend), from dependent to dependency. The email adapter realizes Notification service (hollow arrow), and Notification configuration installs it into the Notification manager. Both UIs and the controller depend on the DTOs.
+
+Files: `view.puml`, `view.png`, `inventory.json`; the first version is in `v1/`.
+
+## Changes after the review (critique-1.json)
+- Removed the invented layer packages (Presentation, Booking logic, Domain and data); containment now follows the code packages.
+- Facade and managers are classes in `controller`; Notification service is an interface; the email adapter realizes it.
+- Added the `dto` package, the Notification configuration wiring, and the Reservation state package.
+- Moved the email adapter from &quot;Presentation&quot; into `boundary`; qualified the label &quot;picks seat if none given&quot;.
+- **Kept differently:** the reviewer asked for «use» on each label. I stated «use» once in the legend instead, because the labels made the view 2160 px wide (text shrank to under 9 px). Labels stay as short verbs.
+
+## Omitted on purpose
+Notification scheduler, controller.factory and user manager (not seat booking); the MySQL database, users and REST client (not packages; see component view IS-seat-L1). Undrawn dependencies: facade and Study room manager to Notification manager, Swing screens to Notification configuration, per-class DTO use by each manager, and Reservation to the state classes. A detailed level would add the classes inside the managers and the DTO classes.
+
+## Assumptions
+&quot;Reservation model and registries&quot; stands for `entity.*` as in IS-seat-L1 (it includes the state package, drawn separately here because ReservationManager depends on it). The container packages `boundary`, `controller`, `entity`, `database` have no member list, so the checker cannot verify them.
+
+## Check results
+check_inventory.py (balanced, graph): 0 issues, 12 notes (undrawn, unchecked). check_view.py: clean. check_consistency.py with IS-seat-L1: consistent. puml-check: renders; two warnings remain (a label on a container border and two edges sharing a trunk from the facade); the view is about 2000 px wide, wider than the 1600 px target, because of the cross-package dependencies.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-seat-L1-2/view.puml">view.puml</a> · <a href="outputs-H/IS-seat-L1-2/prompt.txt">prompt</a></p></div></div></section>
 <section id="IS-seat-L2">
 <h2>IS-seat-L2</h2>
 <p class="request">“I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before changing the code, I need to understand the main components involved in this functionality, their responsibilities, and how they interact with each other. I also want to identify which parts of the system may be affected by the modification.”</p>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to add new booking rules to seat booking (detail level: balanced)</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main components involved in seat booking and their responsibilities</li><li>how they interact with each other</li><li>which parts of the system may be affected by the modification</li></ul></td></tr><tr><th>aspect</th><td>structural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to add new booking rules to seat booking (detail level: balanced)</td></tr><tr><th>concern</th><td>general</td></tr><tr><th>concern details</th><td><ul><li>main components involved in seat booking and their responsibilities</li><li>how they interact with each other</li><li>which parts of the system may be affected by the modification</li></ul></td></tr><tr><th>aspect</th><td>structural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L2/view.png"><img src="outputs/IS-seat-L2/view.png" alt="IS-seat-L2 A: agent"></a><p class="check">21 nodes, 29 edges; layout issues 12, 0.57 per node (edge-through-text 6, bundled-edges 3, edge-through-own-label 1, label-on-border 1, busy 1)</p>
 <details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
 
@@ -2169,11 +2712,78 @@ DTOs, user management/factories/authentication, notification scheduler and email
 - check_inventory.py --level balanced: 0 issues (notes: undrawn dependencies, listed above).
 - puml-check: renders; 6 `text-on-node` warnings (interface labels beside lollipops) and 1 edge-through-text, from the generated layout; not changed since further edits did not fit the generated notation. Image was inspected and is readable.
 </pre></details>
-<p class="links"><a href="outputs-G/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs-G/IS-seat-L2/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs-G/IS-seat-L2/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 2 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: component (UML component diagram)</h3>
+<a href="outputs-H/IS-seat-L2/view.png"><img src="outputs-H/IS-seat-L2/view.png" alt="IS-seat-L2"></a>
+<p class="check">answers: <ul class="check"><li>What are the main components involved in the seat booking functionality?</li><li>What is each of these components responsible for?</li><li>How do these components interact with each other?</li><li>Which parts of the system may be affected by modifying the seat booking functionality?</li></ul></p><p class="check">why this viewpoint: The stakeholder answered &quot;not sure&quot; to every aspect, so the choice rests on the wording of the concerns. They ask which components are involved, what each is responsible for, and how they interact. A component diagram answers all of these. It shows the parts, the interfaces each offers and needs, and the connections between them. The connections also show which neighbouring parts depend on the booking component, which answers the impact question. One view therefore covers all four concerns. The concerns ask about the interactions between components in general. They do not ask for the ordered steps of one scenario, so a sequence diagram is not needed.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-seat-L2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details yes, partly, partly, partly (<a href="outputs-H/IS-seat-L2/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes, yes, yes, yes (<a href="outputs-H/IS-seat-L2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Seat booking: component view (UML component diagram, balanced), revision 1
+
+**Takeaway:** every seat booking goes through the Library facade to the Reservation manager, but the booking rules are spread over the manager, the Seat assignment strategy and the model checks, so a new rule most likely changes those, with knock-on effects on the other components.
+
+Stakeholder: developer changing the booking rules. Detail level: balanced (given). A detailed level would add the manager&#x27;s validation steps (`ReservationManager.java:65-102`) and the registry queries. The first version is in `v1/`.
+
+## How the view answers the concern
+- **Main components:** three entry points (desktop screens, REST API, scheduler), Library facade, Reservation manager, Room availability manager, Notification manager, Seat assignment strategy, Registries, Reservation and seat model, Persistence (JPA, MySQL).
+- **Responsibilities:** each component box now carries its responsibility under its name. Rules live in three places: the Reservation manager (flow), the model (seat availability `Seat.java:45`, one booking per slot `Student.java:42`, opening days `StudyRoom.java:141`) and the Registries (shared occupancy rule `ReservationRegistry.occupiesSlot`, line 120).
+- **Interactions:** entry points call the facade; the facade delegates; the Reservation manager uses the Seat selection interface, creates the reservation, saves it through the Registries and notifies. The model queries the Registries and notifies through the Reservation observer interface; the Room availability manager cancels and saves reservations and notifies on room deletion (`StudyRoomManager.java:158-180`).
+- **Change impact:** marked in the diagram. Blue fill: likely changed (Reservation manager, Seat assignment strategy, model, Registries). Plain: may be affected (facade signature and the screens/REST API that pass request data, Room availability manager, Notification manager). Grey: persistence. Hidden coupling: `occupiesSlot` and the model availability checks are also used by the availability display, room deletion and statistics (`ReservationRegistry.java:67,92`, `StudyRoomManager.java:172`), so a rule placed there changes all of them. Tests: `MakeReservationTest`, `CancelReservationTest`, `PerformCheckInTest`, `ManageReservationEndTest`.
+
+## What changed after the review (v1 to now)
+- Added model to Registries, model to Reservation observer to Notification manager, Room availability manager to Notification manager, and widened the room manager&#x27;s registry edge to &quot;reads, cancels bookings&quot;.
+- Merged Persistence manager, JPA and the database into one element, so JPA is no longer provided by the database or both provided and required; dropped the non-standard «external».
+- Added responsibilities in the boxes, a change-impact legend and highlighting.
+- Corrected the desktop screens&#x27; evidence (`ReservationSummary.java:100`, `StudentDashboard.java:125,140`).
+- Student is linked to the screens by an association instead of «use».
+- Removed the Librarian: the librarian&#x27;s screens only create rooms and monitor (`LibrarianDashboard.java:82`, `CreateRoom.java:242`) and do not book seats. The entity includes librarians, but this booking view does not need them.
+- Kept: the Seat selection and Facade operations interfaces (Seat selection is the extension point for seat-choice rules). The email port (`NotificationService`) stays omitted as below balanced level.
+
+## Checks
+- `inventory.json` (evidence per element/relation): `check_inventory.py --level balanced --graph .claude/repo-graph.json` reports 0 issues (8 notes: undrawn dependencies and unchecked interfaces/actor). `check_view.py`: clean.
+- `puml-check`: 2 warnings (an edge touches the &quot;Domain and persistence&quot; title tab; the label &quot;saves status&quot; sits on a group border). Lengthening the edges raised the count, so I kept this version. v1 had 2 warnings too.
+- Omitted: DTOs, user management and factories, email adapter, Swing helper classes, Librarian, entity dependencies of the room manager, notification manager and strategy.
+
+## Assumptions
+- Room availability manager is its own component because it computes what users see and cancels bookings on room deletion.
+- The REST API caller is not drawn: the code shows no client.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-seat-L2/view.puml">view.puml</a> · <a href="outputs-H/IS-seat-L2/prompt.txt">prompt</a></p></div><div><h3>H view: module (UML package diagram) (also plausible)</h3>
+<a href="outputs-H/IS-seat-L2-2/view.png"><img src="outputs-H/IS-seat-L2-2/view.png" alt="IS-seat-L2-2"></a>
+<p class="check">answers: <ul class="check"><li>What are the main components involved in the seat booking functionality?</li><li>What is each of these components responsible for?</li><li>How do these components interact with each other?</li><li>Which parts of the system may be affected by modifying the seat booking functionality?</li></ul></p><p class="check">why this viewpoint: The developer will change code, and &quot;components&quot; could mean code modules as well as running parts. A package diagram would show how the code is divided and which modules depend on the booking module. That answers the responsibility, interaction and impact concerns equally well from the code-structure side, so the stakeholder should see both.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-seat-L2-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details yes, partly, yes, partly (<a href="outputs-H/IS-seat-L2-2/critique-1.json">critique</a>)</li><li>review 2: accept; level right; concern details yes, yes, yes, partly (<a href="outputs-H/IS-seat-L2-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Seat booking: UML package diagram (balanced), revision 1
+
+**Takeaway:** a booking passes from three entry packages through the Library facade into the Reservation manager, which runs the booking flow and relies on the Seat assignment strategy, the Registries and the Reservation and seat model. The rule predicates live in the model and registries, so a new booking rule mostly changes those two packages plus the Reservation manager.
+
+Stakeholder: developer changing the booking rules. Detail level: balanced (given): packages involved in booking, their dependencies and a short note each, no classes. A detailed level would show the individual rule methods and their call order. Names match the component view IS-seat-L2 (`check_consistency.py`: consistent). The earlier version is in `v1/`.
+
+## How the view answers the concern
+- **Main components:** the packages in four groups (Entry points, Booking logic, Booking data, Domain and persistence).
+- **Responsibilities:** each package carries a note with its responsibility. The Reservation manager note says the booking flow runs in `makeReservation`. The model note lists the rule predicates (`Seat.isAvailable`, `Area.getAvailableSeats`, one booking per slot in `Student`, `StudyRoom.isOpenOnDate`), and the Registries note names `ReservationRegistry.occupiesSlot`.
+- **Interactions:** labelled dependency arrows, top to bottom: entry points call the facade, the facade delegates to the managers, the managers use the registries, the model and the strategy, and the registries store data.
+- **Change impact:** each note ends with an &quot;Impact:&quot; line giving the reason. Notes replace the colour and custom stereotypes of v1.
+
+## Changes after the review
+- Added the Booking DTOs package, used by the screens, the REST API, the facade and the Reservation manager.
+- Added the dependencies from the Room availability manager and from the Seat assignment strategy to the model. The Room availability manager note says it shows availability with the same predicates, so it is likely affected.
+- Responsibility and impact notes replace colour, hidden stereotypes and the legend.
+- Package names are the readable names. The notes now sit inside each package so the tab shows the name.
+
+## Kept from v1 (reviewer point not taken)
+The reviewer suggested packages named after the real Java packages, with the single classes as members. I kept the names of the component view IS-seat-L2, because the same code must keep the same name across views. Library facade, Reservation manager and Reservation scheduler are single classes (`LibraryFacade`, `ReservationManager`, `NotificationScheduler`). The inventory `members` records which code each stands for.
+
+## Omitted on purpose
+UI helpers, user management and factories, the email gateway, the Librarian, the interfaces of the component view, and the Notification manager&#x27;s 16 dependencies on the model. The Observer link from model to notifications is shown as the Notification manager&#x27;s dependency on the registries only; the observer interface is a component-view element.
+
+## Check result
+`check_inventory.py --level balanced --graph`: 0 issues (notes only). `check_view.py`: clean. `check_consistency.py`: consistent. `puml-check`: layout warnings remain (edge through the &quot;Domain and persistence&quot; group title, labels on container borders, bundled edges). The diagram has 22 edges and the PNG is tall (2966x3531). I viewed the PNG and it is readable, but I did not reduce the layout warnings further.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-seat-L2-2/view.puml">view.puml</a> · <a href="outputs-H/IS-seat-L2-2/prompt.txt">prompt</a></p></div></div></section>
 <section id="IS-seat-L3">
 <h2>IS-seat-L3</h2>
 <p class="request">“I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes.”</p>
-<details open><summary>Inputs</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to add new booking rules; needs the architecture behind seat booking (detail level: balanced)</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components in the booking process, their responsibilities, interactions and dependencies</li><li>which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications</li><li>which parts need to be modified and which other components may be affected</li></ul></td></tr><tr><th>aspect</th><td>structural, behavioural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table><tr><th>entity of interest</th><td>application for booking study-room seats, with student and librarian users</td></tr><tr><th>stakeholder</th><td>software developer</td></tr><tr><th>perspective</th><td>about to add new booking rules; needs the architecture behind seat booking (detail level: balanced)</td></tr><tr><th>concern</th><td>control_flow, connectivity</td></tr><tr><th>concern details</th><td><ul><li>main components in the booking process, their responsibilities, interactions and dependencies</li><li>which components handle booking requests, check seat availability, apply booking rules, manage and store reservations, and interact with external services such as notifications</li><li>which parts need to be modified and which other components may be affected</li></ul></td></tr><tr><th>aspect</th><td>structural, behavioural</td></tr><tr><th>viewpoint</th><td>component</td></tr><tr><th>model kind</th><td>UML component diagram</td></tr></table></details>
 <div class="cols"><div><h3>A: agent</h3><a href="outputs/IS-seat-L3/view.png"><img src="outputs/IS-seat-L3/view.png" alt="IS-seat-L3 A: agent"></a><p class="check">28 nodes, 43 edges; layout issues 9, 0.32 per node (edge-through-text 6, label-on-border 1, bundled-edges 1, busy 1)</p>
 <details><summary>README</summary><pre># Seat booking – component view (UML component diagram)
 
@@ -2401,5 +3011,89 @@ Entities and registries are grouped into two components (domain model, registrie
 Reviewer findings accepted, as the code supports them: `NotificationManager` holds and calls a `NotificationService`, and `NotificationServiceAdapter` implements it. The view now shows the Email notification adapter *providing* the Notification service and the Notification manager *requiring* it. Nothing else changed.
 Modelling note: to keep the model checker&#x27;s code-dependency check satisfied, the interface class `NotificationService` (source file in the controller package) is listed as a member of the Email notification adapter, since that component provides the interface. Without this, the checker rejects the correct direction because the manager depends only on the interface, not on the adapter&#x27;s classes.
 </pre></details>
-<p class="links"><a href="outputs-G/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs-G/IS-seat-L3/prompt.txt">prompt</a></p></div></div></section>
+<p class="links"><a href="outputs-G/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs-G/IS-seat-L3/prompt.txt">prompt</a></p></div></div><h3 class="hrow">H: 2 view(s) from the elicited inputs (Phase 1)</h3><div class="cols"><div><h3>H view: component (UML component diagram)</h3>
+<a href="outputs-H/IS-seat-L3/view.png"><img src="outputs-H/IS-seat-L3/view.png" alt="IS-seat-L3"></a>
+<p class="check">answers: <ul class="check"><li>Which are the main components involved in the booking process and what is each one responsible for?</li><li>How do the components interact and depend on each other?</li><li>Which components handle booking requests?</li><li>Which components check seat availability?</li><li>Which components apply booking rules?</li><li>Which components manage and store reservations?</li><li>Which components interact with external services such as the notification service?</li><li>Which parts of the system need to be modified for the new booking rules, and which other components may be affected?</li></ul></p><p class="check">why this viewpoint: Every concern is about which parts of the booking process exist, what each does, and how they connect. That covers request handling, availability checks, rule application, reservation storage and the external notification service. A component diagram frames all of these through its components, provided and required interfaces and connectors. All eight concerns choose runtime-parts. The three structural concerns choose it alongside code-structure. The storage concern chooses it alongside data, but it asks which component stores reservations, not what the entities are. One component view answers all eight, so no separate data view is needed. The interfaces and connectors also show which components a change to the booking rules would affect.</p>
+<p class="check">detail level balanced; readability and notation check: clean;
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-seat-L3/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly, partly, yes, partly, partly, yes, partly, partly (<a href="outputs-H/IS-seat-L3/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details yes, partly, yes, partly, partly, yes, yes, partly (<a href="outputs-H/IS-seat-L3/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Seat booking: components and dependencies (UML component diagram), revision 1
+
+**Takeaway:** a booking request enters through the Swing client or REST API, passes the Library Facade, and is handled by the **Reservation Manager**. It applies the booking rules, uses the Reservation Domain Model for seat availability and the Seat Assignment Strategy to choose a seat, and stores the result through the registries in the MySQL database. Notifications reach the email gateway through the `NotificationService` interface.
+
+Stakeholder: software developer changing the booking rules. Detail level: **balanced** (as given); a detailed level would add the private validation steps of `makeReservation` and the individual state classes. Previous version: `v1/`. Evidence: `inventory.json`.
+
+## How the view answers the concern
+- **Components and responsibilities**: the key responsibilities are now written inside the Reservation Manager, Reservation Domain Model, Seat Assignment Strategy and Study Room Manager boxes. The rest are in `inventory.json`.
+- **Interactions and dependencies**: all usage is drawn as dashed dependencies, from caller to callee, top to bottom.
+- **Handle booking requests**: Swing Desktop Client, REST API, Library Facade, Reservation Manager.
+- **Check seat availability**: Reservation Domain Model (`Seat.isAvailable`, `Area.getAvailableSeats`), which depends on both the Reservation Registry and the Study Room Registry. Study Room Manager has a second, separate occupancy computation (`createSeatStatusMap`) that reads the Reservation Registry directly.
+- **Apply booking rules**: Reservation Manager (room, area, slot, seat choice), Reservation Domain Model (student uniqueness check, states, check-in tolerance), Seat Assignment Strategy (automatic seat), User Registry (student lookup).
+- **Manage and store reservations**: Reservation Manager, Reservation Registry, User Registry, MySQL database.
+- **External services**: Notification Manager requires the `NotificationService` interface; the Email Notification Adapter provides it and calls the external email gateway stub. The reservation to Notification Manager link is labelled as observer registration and notification. The Notification Scheduler triggers expiry and reminders.
+- **Change impact**: blue = likely changed (Reservation Manager, Seat Assignment Strategy, Domain Model, Reservation Registry). Red = may be affected (Study Room Manager occupancy display, Notification Manager messages for new states, User Registry for per-student rules). The Facade and clients are affected only if the request or its error messages change (stated in the legend).
+
+## Changes from v1 (reviewer critique)
+- Added dependencies: Study Room Manager to Reservation Registry, Domain Model to Study Room Registry, Reservation Manager to User Registry.
+- Modelled `NotificationService` as an interface (provided by the adapter, required by Notification Manager). Removed the direct manager-to-adapter arrow and moved the adapter out of Presentation into &quot;Notification integration&quot;.
+- Relabelled Reservation Manager to Notification Manager as &quot;registers observer, notifies&quot;.
+- Solid arrows replaced by dashed dependencies. Responsibilities added to the boxes. A second marking (red) added for affected components.
+- Merged the Persistence Manager into the database element, as the reviewer suggested.
+
+## Kept as before, and why
+- The «accent»/«alert»/«muted» styling stays: the legend explains it, and these are the template&#x27;s styling stereotypes, not UML stereotypes. The external email gateway keeps the name &quot;(stub)&quot; and grey styling. Putting it in its own boundary was not done because the diagram is already dense.
+- The Notification Manager is still drawn to the Domain Model (&quot;observes reservations&quot;). The code confirms it: `NotificationManager implements entity.Observer` and `Reservation extends Subject`.
+
+## Omitted on purpose
+User Manager and factories, DTOs, librarian functions, individual state classes, private validation steps. Undrawn dependencies are listed in `inventory.json` under `omitted` (for example `NotificationConfiguration` wiring, which is start-up only).
+
+## Assumptions
+The Domain Model groups the entities (Seat, Area, StudyRoom, TimeSlot, Student, Reservation, states, observer). The managers and registries are singletons, which is not shown.
+
+## Check results
+- `check_inventory.py --level balanced --graph .claude/repo-graph.json`: 0 issues (only notes on undrawn dependencies, all listed as omitted).
+- `check_view.py`: clean.
+- `puml-check`: remains with warnings. The diagram is taller than 16:9 (ratio 1.15), smallest text is 8.9 px at 1200 px width, and a few long edges from the application layer to the registries cross container titles. Fewer edges would lose reviewer-requested dependencies, so I kept them.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-seat-L3/view.puml">view.puml</a> · <a href="outputs-H/IS-seat-L3/prompt.txt">prompt</a></p></div><div><h3>H view: module (UML package diagram) (also plausible)</h3>
+<a href="outputs-H/IS-seat-L3-2/view.png"><img src="outputs-H/IS-seat-L3-2/view.png" alt="IS-seat-L3-2"></a>
+<p class="check">answers: <ul class="check"><li>Which are the main components involved in the booking process and what is each one responsible for?</li><li>How do the components interact and depend on each other?</li><li>Which components handle booking requests?</li><li>Which components check seat availability?</li><li>Which components apply booking rules?</li><li>Which components manage and store reservations?</li><li>Which components interact with external services such as the notification service?</li><li>Which parts of the system need to be modified for the new booking rules, and which other components may be affected?</li></ul></p><p class="check">why this viewpoint: The developer will change code, and the concerns on responsibilities, dependencies and what to modify also chose code-structure. A package diagram shows which modules or layers hold the booking, availability and rules logic and which modules depend on them. That answers these three concerns about as well as the component view, from the code side.</p>
+<p class="check">detail level balanced; readability and notation check: 1 issue(s);
+names across this task's views: consistent</p><p class="check">critic loop: kept v2 · <a href="outputs-H/IS-seat-L3-2/v1/view.png">first version</a></p><ul class="check"><li>review 1: revise; level right; concern details partly, yes, yes, partly, partly, partly, yes, partly (<a href="outputs-H/IS-seat-L3-2/critique-1.json">critique</a>)</li><li>review 2: revise; level right; concern details yes, partly, yes, partly, yes, yes, yes, partly (<a href="outputs-H/IS-seat-L3-2/critique-2.json">critique</a>)</li></ul>
+<details><summary>README</summary><pre># Seat booking: UML package diagram (module viewpoint, balanced)
+
+**Takeaway:** a booking request enters through the Swing client or REST API, passes the Library Facade and is decided in the Reservation Manager. It checks seats with the Reservation Domain Model and Reservation Registry. Reminder emails leave through the Notification Manager and its adapter.
+
+Stakeholder: developer adding booking rules. Detail level: balanced (as given): the modules involved in booking, grouped in their layer packages, with their dependencies. Files: `view.puml`, `view.png`, `inventory.json` (evidence per element and relation).
+
+## How the concern is answered
+- **Components and responsibilities:** each package box is a module; the layer packages are Presentation, Application, Domain and registries, Persistence. Responsibilities are in `inventory.json`.
+- **Interaction and dependencies:** the dashed arrows are dependencies, drawn from dependent to dependency and read top to bottom.
+- **Handle booking requests:** Swing Desktop Client, REST API, Library Facade, Reservation Manager.
+- **Check seat availability:** Reservation Domain Model (Seat.isAvailable), Reservation Registry (occupiesSlot: active or confirmed reservations block a seat) and Study Room Registry. Study Room Manager counts free seats for browsing and builds a seat status map for librarian monitoring, which reuses occupiesSlot; it is not a separate booking check.
+- **Apply booking rules:** rules are spread over four places: Reservation Manager (room open and active, area, seat in area), Reservation Domain Model (one booking per slot, via the Student check), Reservation Registry (occupiesSlot: which states block a seat) and Seat Assignment Strategy (seat choice). User Registry only looks up students.
+- **Manage and store reservations:** Reservation Manager (saves), Reservation Registry (stores), Persistence Manager (MySQL); Notification Manager also updates reservations (reminder flag). User Registry stores students, not reservations.
+- **External services:** Notification Manager, the NotificationService interface (realized by Email Notification Adapter), External email gateway (stub); Notification Scheduler triggers expiry and reminders.
+- **What to change and what is affected:** blue = likely changed (Reservation Manager, Seat Assignment Strategy, Domain Model, Reservation Registry); red = may be affected (Study Room Manager, Notification Manager, User Registry). Red also marks Library Facade, REST API and Swing client: they pass request data and error messages, so new rules needing new input reach them.
+
+Names and styling match the earlier component view (IS-seat-L3).
+
+## Omitted on purpose
+DTOs, the MySQL database, users, librarian use cases, login and registration, state classes, and undrawn dependencies listed in `inventory.json` under `omitted` (for example adapter to Swing start-up wiring, Notification Manager to Study Room Manager for room deletion).
+
+## Assumptions
+Modules are Java classes or packages shown as UML packages; the four layer packages follow the repository graph layers.
+
+## Revision after review (v1/ holds the previous version)
+- Every module now carries a one-line responsibility; rule locations (Student check, occupiesSlot) are labelled.
+- Added Notification Manager to Reservation Registry (marks reminders); Scheduler label now says expiry and reminders.
+- NotificationService is a UML interface with a realization from the adapter; booking-path dependencies are dashed. Legend states that arrows are use dependencies and that boxes are classes or groups of classes. Decision: I did not print «use» on each edge, because it widened the diagram past the one-screen limit.
+- Facade, REST API and Swing are marked as possibly affected.
+- README corrected: User Registry no longer listed under storing reservations; Study Room Manager occupancy described as monitoring.
+- Dropped the Study Room Manager to Study Room Registry edge (listed under omitted) to reduce crossings. Kept the three &quot;opens sessions&quot; edges: each is a real code dependency.
+
+## Check results
+- `puml-check`: 6 warnings (labels on container borders, edges crossing container titles); v1 had 3 but empty boxes. `check_view.py`: one issue left: the view is 2389 px wide, so text shrinks to 8 px on a 1600 px screen. Several layout attempts (stacking, left to right, norank) were no better, and the added responsibility text costs width. Not fixed.
+- `check_inventory.py --level balanced`: 0 issues. `check_consistency.py`: consistent.
+</pre></details>
+<p class="links"><a href="outputs-H/IS-seat-L3-2/view.puml">view.puml</a> · <a href="outputs-H/IS-seat-L3-2/prompt.txt">prompt</a></p></div></div></section>
 </body></html>

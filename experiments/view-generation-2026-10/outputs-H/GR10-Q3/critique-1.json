@@ -1,0 +1,39 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "What are the main data entities stored by the system?",
+     "answered": "yes",
+     "why": "All seven classes listed in persistence.xml (User, Citizen, MunicipalOperator, Report, StatusUpdate, InternalNote, Notification) are drawn. The two embeddables (Credentials, Location) and the string-stored ReportCategory enum are also drawn, with their key columns and length/unique limits from the @Column annotations. The notes say that Citizen and MunicipalOperator share one users table and that the status classes are not tables, which is what a database engineer needs to know."},
+    {"detail": "How are users, reports, locations, categories, states, state changes, internal notes, and notifications related to each other?",
+     "answered": "partly",
+     "why": "Users, reports, locations, categories, state changes, notes and notifications are related correctly, and the multiplicities match the @ManyToOne/@JoinColumn nullability: Report->Citizen 1, Report->MunicipalOperator 0..1, StatusUpdate/InternalNote->MunicipalOperator 1, Notification->Report 1 and ->Citizen 1. 'States' are only a free String column (Report.currentStatus, StatusUpdate.newStatus, Notification.notifiedStatus). The view never shows the values those columns can hold ('submitted', 'assigned', 'in_progress', 'resolved' in Report.java), and it never says that these three columns share that value domain. The note lists class names (Submitted, Assigned, In progress, Resolved), not the stored strings. Category is drawn twice, as an attribute and again as a dependency."},
+    {"detail": "Which information must be persisted throughout the lifecycle of a report?",
+     "answered": "partly",
+     "why": "The columns are shown, but not what the lifecycle requires of them. Missing: (a) which columns are optional. Code: reportDate, attachedImage and operator_id are nullable, and everything else is NOT NULL; the view gives no attribute multiplicities. (b) The status sequence submitted -> assigned -> in_progress -> resolved, with exactly one StatusUpdate written per transition (Report.registerStatusUpdate). A status update requires an assigned operator. (c) citizenEditable is persisted, but it is derived from the status: true only while 'submitted'. (d) A Notification is persisted only for the 'assigned' and 'resolved' statuses (Notification.isStatusNotifiable). (e) Notifications are not cascaded from Report, so the notifications.report_id foreign key blocks deleting a report. The README says (e), but the view does not."}
+  ],
+  "level": "right",
+  "level_why": "For a balanced data-model view aimed at a database engineer, the right content is entities with their key columns, length limits, ids and the associations with multiplicities, and that is what the view shows. It leaves out code-level members (methods, the transient currentStatus object, the status classes). Nothing needs to be cut. The additions requested (attribute optionality, status value domain, notifiable statuses) are constraints on columns already drawn, not new elements, so they stay within the balanced level.",
+  "unsupported": [
+    "Report ..> ReportCategory drawn as a dependency. The code (Report.java:49-51) has a persisted attribute with @Enumerated(STRING), NOT NULL, length 50; it is already shown as 'category: ReportCategory'. The dependency adds nothing and misstates the relation kind.",
+    "The note 'Status updates and notes are deleted with the report' is supported at the JPA level (cascade ALL, orphanRemoval). However, no code path deletes reports, and Notification is not cascaded. Read with the composition diamonds, the view suggests a whole report subtree can be deleted cleanly, which the notifications foreign key prevents."
+  ],
+  "missing": [
+    "The stored value domain of the status columns: Report.currentStatus, StatusUpdate.newStatus and Notification.notifiedStatus hold 'submitted' | 'assigned' | 'in_progress' | 'resolved' (Report.java STATUS_* constants). Notification.notifiedStatus is limited to 'assigned' | 'resolved' (Notification.java).",
+    "Attribute optionality. reportDate and attachedImage are nullable ([0..1]), and all other drawn columns are NOT NULL (Report.java, Location.java, User.java).",
+    "The lifecycle rules that constrain persisted data: one StatusUpdate per status transition, operator required before any status change, and citizenEditable = (currentStatus == 'submitted').",
+    "Notifications are not cascaded on Report deletion (no @OneToMany from Report), so the report_id foreign key blocks deleting a report.",
+    "Which parts of the application depend on the persisted data, which the original request asks for: only ReportService and UserService use PersistenceService/JpaUtil (MySQL reports_db, hbm2ddl=update). Controllers and GUIs reach the data only through them. This appears in the README only. A one-line note in the view would be enough, without drawing the components."
+  ],
+  "uml": [
+    "Report ..> ReportCategory uses a dependency for what is a typed attribute. Remove it, or replace it with a directed association, but do not draw both.",
+    "<<embeddable>> is a JPA term, not a standard UML stereotype. Model Credentials and Location as UML DataTypes («dataType»), or keep them as typed attributes with composition and explain the column mapping in the legend.",
+    "Hidden styling stereotypes (<<accent>>) are attached to model elements. They are not UML stereotypes. They are hidden, but they still have no standard meaning.",
+    "Attributes have no multiplicity, so nullable columns cannot be told apart from mandatory ones. Use [0..1] on reportDate and attachedImage.",
+    "The note 'Location is columns of the report table' is attached to User, so it annotates the wrong element. Attach it to Location."
+  ],
+  "fixes": [
+    "Show the status value domain: an enumeration or a {values} constraint listing 'submitted', 'assigned', 'in_progress', 'resolved'. Mark Report.currentStatus, StatusUpdate.newStatus and Notification.notifiedStatus as using it, with notifiedStatus limited to {assigned, resolved}.",
+    "Add attribute multiplicities: reportDate [0..1] and attachedImage [0..1]. Everything else is mandatory.",
+    "Replace the note under Report with the lifecycle persistence rules: one StatusUpdate per transition, an operator is required before a status change, citizenEditable is true only while 'submitted', and notifications are not cascaded so they block report deletion.",
+    "Remove the Report ..> ReportCategory dependency. Replace <<embeddable>> with «dataType», or explain the term in the legend, and move the Location note onto Location.",
+    "Add a short note naming the dependents of the persisted data: ReportService and UserService through PersistenceService/JpaUtil, with controllers and GUIs reaching the data only through them."
+  ]}

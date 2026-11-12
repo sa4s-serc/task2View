@@ -1,0 +1,98 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+
+' ---- body ----
+title UML sequence diagram: registration with invalid or already existing data
+hide footbox
+
+participant "REST error handler"  as eh
+participant "Registration API"    as api
+participant "Library facade"      as facade
+participant "User manager"        as um
+participant "User registry"       as reg
+participant "Persistence manager" as pm
+participant "User factories"      as fac
+
+[-> api : POST /register
+api -> facade : register
+note over api, facade
+  The Swing form calls the facade
+  the same way (shows a dialog)
+end note
+facade -> um : register
+um -> um : check role (Student or Librarian), names,\npassword, email, ID characters;\nstudent ID = letter + 8 digits
+alt format invalid
+  um --> facade : IllegalArgumentException
+  facade --> api : IllegalArgumentException
+  [-> eh : exception routed by Spring\n(controller does not call the handler)
+  eh -->[ : 400 with error message
+else format valid
+  um -> reg : email already used?
+  reg -> pm : find user by email
+  pm --> reg : user or none
+  reg --> um : yes or no
+  alt email taken
+    um --> facade : IllegalArgumentException
+    ref over facade, api, eh : same propagation as above: 400
+  else email free
+    um -> reg : ID already used?\n(student: by student number,\nlibrarian: by code, same role only)
+    reg -> pm : find student or librarian
+    pm --> reg : account or none
+    reg --> um : yes or no
+    alt ID used
+      um --> facade : IllegalArgumentException
+      ref over facade, api, eh : same propagation as above: 400
+    else ID free
+      um -> fac : createUser(name, surname,\nemail, password, ID)
+      fac --> um : Student or Librarian
+      um -> reg : register user
+      reg -> pm : save (transaction)
+      alt unique column violated
+        pm --> reg : false (rolled back)
+        reg --> um : false
+        um --> facade : RuntimeException
+        facade --> api : RuntimeException
+        api -->[ : 500 default error\n(handler does not map it)
+      else saved
+        pm --> reg : true
+        reg --> um : true
+        um --> facade : user data
+        facade --> api : user data
+        api -->[ : user data
+      end
+    end
+  end
+end
+note right of fac
+  StudentFactory or LibrarianFactory,
+  chosen by role
+end note
+@enduml

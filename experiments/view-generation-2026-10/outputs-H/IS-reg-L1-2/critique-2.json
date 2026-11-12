@@ -1,0 +1,26 @@
+{
+  "verdict": "accept",
+  "concern_details": [
+    {
+      "detail": "How do these components interact during user registration?",
+      "answered": "yes",
+      "why": "The success chain and every exit match the code, in code order. Registration.register() returns early on blank fields with 'Complete all fields' (Registration.java:126-130). It then calls LibraryFacade.register, which delegates to UserManager.register (LibraryFacade.java:37-39). UserManager runs validate plus validateStudent or validateLibrarian before any registry call (UserManager.java:67-75). Next comes institutionalEmailExists, then findStudentByStudentNumber or findLibrarianByCode chosen by role, each throwing its own IllegalArgumentException (77-86). A StudentFactory or LibrarianFactory then builds the user (89-90). registerUser calls PersistenceManager.save, which returns false after rollback, and UserManager throws RuntimeException 'Server error' (92-95). The form catches RuntimeException and shows the message (Registration.java:139-141). The REST note also checks out: AuthenticationController.register calls the facade with the same arguments; RestExceptionHandler maps IllegalArgumentException (and IllegalStateException) to 400; the save-failure RuntimeException is not mapped. An integration tester can read off each boundary to stub, plus the order and outcome of each failure. The one gap is that most messages carry informal labels instead of the real operation names (see fixes). That makes the view harder to map to test doubles, but it does not leave the concern unanswered."
+    }
+  ],
+  "level": "right",
+  "level_why": "For 'balanced' the view has 8 lifelines at component granularity: actor, Swing form, facade, manager, registry, persistence manager, factories, DB. Each is a real integration seam the tester can stub or assert on, and the 5 break fragments are each a distinct observable outcome. Individual field rules are rightly collapsed into one self-call. DTO mapping (toDTO), JpaUtil/EntityManager and the transaction begin/commit steps are rightly left out. The REST entry point sits in a note, not a second lifeline and flow, which keeps the size down. Nothing should be cut, and nothing should be added that would go past balanced.",
+  "unsupported": [],
+  "missing": [
+    "Real operation names on the internal calls, which the code shows and a tester needs in order to stub or verify them: 'email already used?' is institutionalEmailExists(email), 'find user by email' is findFirstByFields(User, institutionalEmail), 'identifier already used?' is findStudentByStudentNumber / findLibrarianByCode, 'register user' is registerUser(user), 'save' is save(user). These are label changes only, with no new elements."
+  ],
+  "uml": [
+    "The 'create' message to 'User factories' is followed directly by the reply 'new user'. In the code the factory is instantiated (new StudentFactory()/new LibrarianFactory()) and then sent a separate createUser(...) call that returns the User (UserManager.java:89-90). Show the creation message and then a synchronous createUser(...) call with its reply. Alternatively, name the lifeline 'factory : UserFactory' so that one lifeline stands for one role-typed instance.",
+    "Call messages use informal phrases ('email already used?', 'register user') where UML sequence diagrams expect operation names (with arguments optional). Use the operation names.",
+    "Exception propagation is drawn as reply messages labelled with the exception type. This is a common, acceptable convention. No change is needed beyond keeping it consistent, which it is."
+  ],
+  "fixes": [
+    "Relabel the internal call messages with the code's operation names: institutionalEmailExists(email), findStudentByStudentNumber / findLibrarianByCode(identifier), createUser(...), registerUser(user), save(user), findFirstByFields(...).",
+    "Split the factory interaction into creation of a 'factory : UserFactory' lifeline (StudentFactory or LibrarianFactory by role) followed by a createUser(...) call that returns the new User.",
+    "Optional: in the REST note, say that the unhandled save-failure RuntimeException reaches the client as Spring's default HTTP 500. That is the expected result a tester would assert."
+  ]
+}

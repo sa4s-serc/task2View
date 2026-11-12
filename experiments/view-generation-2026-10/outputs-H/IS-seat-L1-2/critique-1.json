@@ -1,0 +1,33 @@
+{"verdict": "revise",
+ "concern_details": [
+  {"detail": "What are the main system components involved in seat booking?",
+   "answered": "partly",
+   "why": "The right parts of the code are named (Swing wizard, REST controllers, LibraryFacade, ReservationManager, StudyRoomManager, assignment strategy, NotificationManager, entity registries, PersistenceManager). But in a module view the developer will use these names to find code, and five of the nine 'packages' are not packages. LibraryFacade, ReservationManager, StudyRoomManager, NotificationManager and NotificationService are classes in the single Java package it.unina.reservations.controller. The three layer packages (Presentation, Booking logic, Domain and data) do not exist in the code, which has boundary, controller, entity and database. The dto package is left out, yet every booking call between boundary and controller passes through it (ReservationRequestDTO, ReservationDTO, SeatDTO, AreaDetailDTO)."},
+  {"detail": "How do these components interact?",
+   "answered": "partly",
+   "why": "The dependency direction and the short verb labels show the main path: UI -> facade -> ReservationManager -> strategy/registries/NotificationManager -> persistence. Missing: the dependency of both UIs and the controller on dto, which is the data contract a developer changes when changing booking input. Missing: how the email adapter gets connected (boundary.NotificationConfiguration calls NotificationManager.setNotificationService(new NotificationServiceAdapter())). The labels also overstate one thing: 'picks seat' happens only when the request names no seat (ReservationManager falls back to assignmentStrategy)."}
+ ],
+ "level": "right",
+ "level_why": "About nine module elements in three groups suits a balanced view for a developer. The problem is not how many elements there are but that they mix granularities: whole Java packages (boundary.Swing, boundary.SpringBoot, controller.strategy, entity, database) are drawn next to single classes from controller, all shown as packages. Fix this by modelling controller as one package that contains its classes, not by adding elements. No cuts are needed. Adding dto as one package keeps the view at the balanced level.",
+ "unsupported": [
+  "Packages 'Library facade', 'Reservation manager', 'Study room manager' and 'Notification manager': the code has no such packages. They are classes (plus the NotificationService interface) in it.unina.reservations.controller.",
+  "Grouping packages 'Presentation', 'Booking logic' and 'Domain and data': the code has no such packages. The real top-level packages are boundary (with Swing and SpringBoot), controller (with strategy and factory), entity (with state), database and dto.",
+  "'Email notification adapter' placed in 'Presentation': NotificationServiceAdapter and ExternalEmailGateway are in package boundary and are an outbound notification adapter, not presentation."
+ ],
+ "missing": [
+  "Package dto (it.unina.reservations.dto): imported by LibraryFacade, StudyRoomManager, ReservationManager, NotificationManager, ReservationController, StudyRoomController and the Swing screens. Booking requests and results cross the boundary/controller line as ReservationRequestDTO and ReservationDTO.",
+  "The real package structure that contains the drawn elements: boundary (boundary.Swing, boundary.SpringBoot, and the adapter classes in boundary itself), controller (containing LibraryFacade, ReservationManager, StudyRoomManager, NotificationManager, NotificationService) with nested controller.strategy, entity with entity.state (ReservationManager imports entity.state.ActiveState for new reservations), and database.",
+  "The wiring dependency boundary.NotificationConfiguration -> controller.NotificationManager, which installs the email adapter (NotificationConfiguration.java:17). Without it the 'implements service' arrow does not explain how notifications reach email."
+ ],
+ "uml": [
+  "Classes are drawn as UML packages. In a package diagram, LibraryFacade, ReservationManager, StudyRoomManager and NotificationManager should be classes (and NotificationService an «interface») nested inside the controller package, or the diagram should stay at package level and show controller as one package.",
+  "The 'use' dependency label should be the standard keyword «use». The other free-text verb labels are acceptable as dependency names, but import dependencies between packages are normally shown as «import» or «use».",
+  "'implements service' is drawn as a plain dependency from the adapter package to the Notification manager package. If NotificationService is shown, draw NotificationServiceAdapter realizing it (dashed arrow with a hollow triangle). Otherwise use a plain «use» dependency from boundary to controller."
+ ],
+ "fixes": [
+  "Rebuild the containment on the real Java packages: boundary {Swing, SpringBoot, NotificationServiceAdapter/ExternalEmailGateway/NotificationConfiguration}, controller {LibraryFacade, ReservationManager, StudyRoomManager, NotificationManager, «interface» NotificationService, strategy}, entity, database. Drop the invented Presentation, Booking logic and Domain and data packages, or mark them clearly as a non-code layering note.",
+  "Draw the facade and managers as classes inside the controller package, not as packages, so the names match where the code is.",
+  "Add the dto package with «use» dependencies from boundary.Swing, boundary.SpringBoot and controller. It is the data contract a booking change most often touches.",
+  "Show how the email adapter is connected: NotificationServiceAdapter realizes NotificationService, and NotificationConfiguration depends on NotificationManager. Move these out of 'Presentation' into boundary.",
+  "Use the standard «use» keyword on the dependencies, and qualify 'picks seat' as 'picks seat if none chosen' to match ReservationManager's fallback to AssignmentStrategy."
+ ]}

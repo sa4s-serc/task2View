@@ -1,0 +1,42 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "Which runtime environments and software artifacts are required to run the system?",
+     "answered": "partly",
+     "why": "Java 23 JVM, the application artifact, persistence.xml, Hibernate 6.6 + Connector/J 9.4, MySQL server and schema reports_db are shown. Missing is the IntelliJ forms_rt 7.0.3 library. The pom gives it compile scope, and Boundary/HomePageGUI.java:4,35 and UserLoginGUI.java:5,43 use com.intellij.uiDesigner.core.GridLayoutManager at runtime, so the GUI cannot start without it. README.md wrongly lists it as 'build-only'. The view also does not say that the pom builds no runnable jar and has no main class, so the app must be launched with its dependency classpath and HomePageGUI as the entry point."},
+    {"detail": "Where are the application and its data executed and stored?",
+     "answered": "partly",
+     "why": "The app runs in the JVM on the user workstation and the data is in reports_db on MySQL, which is clear. But the diagram draws two separate devices while the code only supports co-location: the JDBC URL is jdbc:mysql://127.0.0.1:3306/reports_db and the documented grant is 'reports_user'@'localhost' (README.md MySQL setup). For a new environment with a separate DB host, a DevOps engineer must change both the URL in persistence.xml and the MySQL user's host. Only the device label hints at this, and it does not mention the grant."},
+    {"detail": "How do the main runtime elements communicate with each other?",
+     "answered": "yes",
+     "why": "The view shows one path: app -> JPA/Hibernate -> JDBC over TCP port 3306 -> MySQL. That matches the code, which has no other network I/O. The notation of this path is wrong (see uml), but the content answers the question."},
+    {"detail": "Which technologies and runtime dependencies are involved in the communication between the application and the database?",
+     "answered": "partly",
+     "why": "JPA/Hibernate ORM 6.6, MySQL Connector/J 9.4, TCP 3306 and hbm2ddl=update are shown. persistence.xml is drawn only by name. The view does not say that it holds the connection settings a DevOps engineer must change: driver com.mysql.cj.jdbc.Driver, URL, user reports_user, and a hard-coded plaintext password. It also does not say that this file is packaged inside the application jar (src/main/resources/META-INF), so changing it means rebuilding the app or overriding the settings."}
+  ],
+  "level": "right",
+  "level_why": "For a balanced deployment view, two nodes, two execution environments and a few artifacts are right, and the app's internals are correctly left out. One small cut: the 'stores data' dependency from MySQL to the schema repeats what nesting already shows and can go. persistence.xml should become a deployment specification attached to the app artifact, not a free-standing peer artifact. Adding forms_rt to the existing library artifact does not add an element.",
+  "unsupported": [
+    "Separate 'Database host' device as the deployed topology: the code only configures 127.0.0.1, and README grants reports_user only @'localhost'. A remote DB host is possible after reconfiguration but is not what the code sets up. The diagram should mark the separate host as optional or co-located by default.",
+    "persistence.xml drawn as an artifact deployed separately in the JVM: in the code it is a classpath resource (src/main/resources/META-INF/persistence.xml) packaged inside the application artifact.",
+    "README's statement that forms_rt is a build-only dependency: pom.xml gives it compile (runtime) scope, and the Boundary GUIs instantiate GridLayoutManager at runtime."
+  ],
+  "missing": [
+    "forms_rt 7.0.3 (IntelliJ GUI Designer runtime) as a required runtime library next to Hibernate and Connector/J (pom.xml:34-38; Boundary/*GUI.java imports com.intellij.uiDesigner.core).",
+    "The connection settings a DevOps engineer must configure, held in persistence.xml: driver class, JDBC URL host/port/schema, user reports_user and a hard-coded password. Also that they are bundled in the jar.",
+    "The MySQL account restriction 'reports_user'@'localhost' (README.md), which blocks a remote app host unless the grant is changed.",
+    "How the app is launched: the pom has no main class and no packaging setup, so launch is java with the full dependency classpath and Boundary.HomePageGUI as main (HomePageGUI.java:75). This can go in a note or in the app artifact's label."
+  ],
+  "uml": [
+    "Cross-node communication is drawn as a solid directed arrow from an artifact (libs) to an execution environment (mysql). In UML, runtime communication between nodes is a communication path, an undirected association between nodes or execution environments (e.g. jvm -- mysql : JDBC/TCP 3306). It should not be an arrow that starts at an artifact.",
+    "app --> libs is a solid arrow, which reads as an association between artifacts. A usage between artifacts should be a dashed dependency (..>, optionally «use»).",
+    "mysql ..> schema 'stores data' uses a dependency to express deployment. Nesting already shows deployment, so remove the dependency (or use «deploy» if it is drawn explicitly).",
+    "persistence.xml should use the standard «deployment spec» stereotype and be attached to the app artifact, not shown as a peer «artifact»."
+  ],
+  "fixes": [
+    "Replace libs --> mysql with a communication path between the JVM (or workstation) and the MySQL execution environment, labelled JDBC/TCP :3306. Make app -> libs a dashed «use» dependency and remove the mysql ..> schema dependency.",
+    "Add forms_rt 7.0.3 to the runtime library artifact (e.g. 'Hibernate 6.6, Connector/J 9.4, forms_rt 7.0.3'), and correct the README's 'build-only' claim.",
+    "Model persistence.xml as a «deployment spec» of the app artifact, listing what it configures (driver, URL 127.0.0.1:3306/reports_db, user reports_user, password, hbm2ddl=update). Note that it is packaged in the jar.",
+    "State that the app and DB are co-located by default (127.0.0.1 and 'reports_user'@'localhost'). A separate DB host needs a URL change and a MySQL grant change.",
+    "Add a short note on launch: no executable jar, so run with Java 23+, the dependency classpath and main class Boundary.HomePageGUI."
+  ]
+}

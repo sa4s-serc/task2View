@@ -1,0 +1,144 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+classDiagram {
+  class { BackgroundColor #F8FAFC }
+}
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML class diagram: persisted municipal report data (JPA entities)
+hide empty members
+skinparam classAttributeIconSize 0
+
+abstract class "User" as User {
+  userId: Long {id}
+  name: String {≤ 50}
+  lastName: String {≤ 50}
+  phoneNumber: String {≤ 20}
+  role: String {discriminator}
+}
+class "Credentials" as Credentials <<dataType>> {
+  email: String {unique, ≤ 100}
+  password: String {≤ 100}
+}
+class "Citizen" as Citizen
+class "MunicipalOperator" as MunicipalOperator
+
+class "Report" as Report {
+  reportId: Long {id}
+  title: String {≤ 50}
+  description: String {≤ 1000}
+  category: ReportCategory
+  reportDate: Date [0..1]
+  attachedImage: String [0..1]
+  currentStatus: ReportStatusValue
+  citizenEditable: boolean
+}
+class "Location" as Location <<dataType>> {
+  city: String {≤ 80}
+  cap: String {≤ 5}
+  street: String {≤ 100}
+  streetNumber: String {≤ 10}
+  municipalArea: String {≤ 80}
+}
+enum "ReportCategory" as ReportCategory {
+  BROKEN_STREETLIGHT
+  DAMAGED_ROAD
+  ABANDONED_WASTE
+  GENERAL_HAZARD
+  DAMAGED_STREET_FURNITURE
+}
+enum "ReportStatusValue" as ReportStatusValue {
+  submitted
+  assigned
+  in_progress
+  resolved
+}
+class "StatusUpdate" as StatusUpdate {
+  updateId: Long {id}
+  updateDate: Timestamp
+  newStatus: ReportStatusValue
+}
+class "InternalNote" as InternalNote {
+  noteId: Long {id}
+  text: String {≤ 1000}
+  createdDate: Timestamp
+}
+class "Notification" as Notification {
+  notificationId: Long {id}
+  sentDate: Timestamp
+  message: String {≤ 1000}
+  notifiedStatus: ReportStatusValue {assigned or resolved only}
+}
+
+User *-right- "1" Credentials
+User <|-- Citizen
+User <|-- MunicipalOperator
+
+Citizen "1" <-- "0..*" Report : reported by
+MunicipalOperator "0..1" <-- "0..*" Report : assigned to
+Report *-- "1" Location
+Report "1" *-- "0..*" StatusUpdate : status history
+Report "1" *-- "0..*" InternalNote : notes
+Report "1" <-- "0..*" Notification : about
+StatusUpdate "0..*" --> "1" MunicipalOperator : changed by
+InternalNote "0..*" --> "1" MunicipalOperator : written by
+Notification "0..*" ---> "1" Citizen : sent to
+
+
+note bottom of Report
+  Lifecycle rules in code:
+  submitted -> assigned -> in_progress -> resolved.
+  One StatusUpdate is written per change, and
+  an operator must be assigned first.
+  citizenEditable is true only while submitted.
+  Status columns hold the stored strings of
+  ReportStatusValue; state classes are not tables.
+  Notifications are not cascaded: their report
+  foreign key blocks deleting a report.
+end note
+note right of User
+  Citizen and operator share one table
+  (single table inheritance, column role).
+end note
+note bottom of Location
+  Location columns are stored in the report table.
+end note
+note bottom of Credentials
+  Credentials columns are stored in the users table.
+end note
+note as Dependents
+  Dependents of this data: ReportService and
+  UserService, through PersistenceService and
+  JpaUtil (MySQL reports_db). Controllers and
+  screens reach it only through them.
+end note
+legend bottom
+  «dataType»: value part stored as columns of its owner's table.
+  Black diamond: composition (status updates and notes are deleted with the report).
+  Attributes without a multiplicity are mandatory.
+endlegend
+@enduml

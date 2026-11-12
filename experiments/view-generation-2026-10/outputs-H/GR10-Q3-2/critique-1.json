@@ -1,0 +1,26 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "Which parts of the application depend on this persisted information?",
+     "answered": "partly",
+     "why": "The layer chain Screens -> Use-case controllers -> Data services -> Persisted entities / Persistence access matches the imports (Boundary imports only Control and Entity.ReportCategory; Control imports only ReportService, UserService and ReportCategory; only ReportService and UserService import Database.PersistenceService). But the view suggests that screens and controllers are shielded from the schema except for ReportCategory, which is wrong for someone changing the persistence layer. ReportService and UserService hand persisted fields upward as Map<String,Object> with field-named keys (for example ReportService.retrieveDetailsReport, retrieveHistoryReport and generateMonitoringResults, and SystemServicesController.displayReportDetails/monitorActivityTrends). Screens read those keys directly, e.g. ActivityMonitoringGUI reads report.get(\"title\"), get(\"category\"), get(\"municipalArea\") and userSessionData.get(\"role\"). Renaming or removing a column therefore reaches controllers and screens through these maps, and the view does not show that. It also does not say which service owns which entities (ReportService: Report, Location, StatusUpdate, InternalNote, Notification; UserService: User, Citizen, MunicipalOperator, Credentials). A database engineer needs that to find what a change to a given table affects."}
+  ],
+  "level": "right",
+  "level_why": "Six packages with no class-level detail fits the 'balanced' level. Listing the entities in a note rather than drawing them as classes is acceptable for this module-dependency concern. Nothing needs to be cut. The one addition asked for, naming the entities each service owns (in the Data services note, or by splitting the package into ReportService and UserService), stays within balanced.",
+  "unsupported": [
+    "'Data services', 'Persisted entities' and 'Report status states' are drawn as three separate UML packages, but in the code all of them are classes in the single Java package Entity (ReportService.java and UserService.java sit next to Report.java). The README states this split as an assumption, but the diagram itself shows three namespaces that do not exist. It should be marked as a logical grouping, for example by saying in a note or the package names that they are subsets of package Entity, or by nesting them inside an 'Entity' package."
+  ],
+  "missing": [
+    "The data coupling through Map<String,Object>: ReportService/UserService turn entity fields into keyed maps, and the controllers (SystemServicesController and the per-use-case controllers) and screens (e.g. ActivityMonitoringGUI, ReportCreationGUI, ReceivedReportsGUI) consume those keys. Without this, the view understates how far a schema change reaches.",
+    "Which persisted entities each data service manages (ReportService: Report, Location, StatusUpdate, InternalNote, Notification; UserService: User, Citizen, MunicipalOperator, Credentials, per their public operations such as registerInternalNote, generateStatusChangeNotification, registerUser, retrieveUserDataByCredentials)."
+  ],
+  "uml": [
+    "The dependencies between packages are drawn as solid arrows, which in UML read as directed associations. A package diagram should use dependencies, i.e. dashed arrows with an open head (-..> in PlantUML), with standard keywords such as «use» or «import» where they apply.",
+    "Custom stereotypes <<accent>> and <<muted>> are in the source only for styling. They are hidden in the rendering, but they are not standard UML stereotypes, and the meaning they carry (persisted vs. not stored) is conveyed only by colour and the legend. State it in the package name or a note instead, e.g. 'Report status states (transient)'."
+  ],
+  "fixes": [
+    "Change every package-to-package arrow to a UML dependency (dashed, open arrowhead, «use»/«import» where it applies).",
+    "Show that controllers and screens depend on persisted field names through the Map<String,Object> data that the data services return, e.g. relabel Controllers -> Data services and Screens -> Controllers to say 'report/user data as field-keyed maps', or add a note citing ReportService.retrieveDetailsReport and the keys read in ActivityMonitoringGUI. Also correct the takeaway that only ReportCategory reaches the upper layers.",
+    "In the Data services note (or by splitting the package into ReportService and UserService), state which entities each service loads and saves.",
+    "Make clear that Data services, Persisted entities and Report status states are logical subsets of the single code package Entity, e.g. by nesting them in an 'Entity' package.",
+    "Replace the styling-only stereotypes with explicit naming ('transient, rebuilt from current_status') so the persisted/not-persisted distinction does not depend on colour."
+  ]}

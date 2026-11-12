@@ -1,0 +1,39 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "What are the main architectural components and what is each one responsible for?",
+     "answered": "partly",
+     "why": "The five code-level parts (Boundary, Control, domain services, domain entities, Database) are the right components, but the diagram gives only names plus a parenthetical; responsibilities are only in inventory.json/README. Control's key structural fact, that SystemServicesController is a facade owning the per-use-case controllers and is the entry point 7 of 10 screens use, is not shown."},
+    {"detail": "How is the system decomposed into layers or subsystems?",
+     "answered": "partly",
+     "why": "Four layers are visible, but they are drawn as packages that own the code packages (e.g. 'Presentation layer' containing 'Boundary'), which the code does not have, and the single Java package Entity is drawn as two separate packages. The reader cannot tell that domain services and entities share one package, Entity, which matters for planning how the system will change."},
+    {"detail": "What are the main dependencies among the components, layers or subsystems?",
+     "answered": "partly",
+     "why": "Boundary->Control, Control->services, services->entities, services->Database and Boundary->entities are correct. Control->entities is labelled 'creates and updates', but the code does not support that: controllers only import the ReportCategory enum (one controller, ReportCreationController) and pass Map<String,Object>, never entity objects. Data reaches persistence through JPA annotations on the entities, which is not shown."},
+    {"detail": "How are user-facing functionality, application logic, domain entities and data persistence separated?",
+     "answered": "partly",
+     "why": "The view presents a clean separation in which 'persistence is only in Database'. The code shows it is weaker: 9 Entity classes carry JPA annotations (javax/jakarta.persistence), ReportService/UserService directly instantiate PersistenceService inside the Entity package, and layers exchange untyped Maps rather than domain objects. Those are the separation facts an architect planning the system's evolution needs, and the view hides them."}
+  ],
+  "level": "right",
+  "level_why": "Overview level: a handful of packages with no classes is appropriate, and splitting Entity into services and entities is justified by the concern. The four layer wrapper packages each contain only one or two packages and add no information beyond their names. Merge each wrapper into its code package (e.g. 'Boundary – presentation') rather than nesting. Do not add individual classes. The only addition needed is a single named facade inside Control, and that stays within the overview level.",
+  "unsupported": [
+    "Control ..> Domain entities labelled 'creates and updates': controllers never create or update entity objects; the only Entity type Control references is the enum ReportCategory (Control/ReportCreationController.java:3), and all controller–service traffic is Map<String,Object>.",
+    "Package containment 'Presentation layer' ⊃ Boundary, 'Application layer' ⊃ Control, 'Domain layer' ⊃ services/entities, 'Persistence layer' ⊃ Database: no such enclosing packages exist; the code has four flat top-level packages Boundary, Control, Entity, Database.",
+    "'Domain services (Entity)' and 'Domain entities (Entity)' as two packages: in the code both are the single package Entity (Entity/ReportService.java, Entity/UserService.java beside Entity/Report.java etc.)."
+  ],
+  "missing": [
+    "Persistence concerns inside the entities: 9 Entity classes are JPA-annotated and mapped via META-INF/persistence.xml, so entity → JPA mapping is part of persistence; the view implies Database is the only persistence code.",
+    "The SystemServicesController facade in Control (owns all other controllers, SystemServicesController.java:11-29) through which 7 of 10 screens reach Control; only UserLoginGUI bypasses it to use UserLoginController directly.",
+    "Inter-layer data is passed as Map<String,Object> (e.g. ReportService.retrieveReportsSubmitted returns List<Map<String,Object>>), so screens and controllers are decoupled from entities except for ReportCategory; a short note would answer the separation question."
+  ],
+  "uml": [
+    "Package nesting in UML means namespace ownership; using it for conceptual layers misstates the module structure. Either name the code packages with their layer role, or show layers as a note or comment rather than as owning packages.",
+    "Two packages are drawn for one real namespace (Entity). Show a single Entity package, optionally with its two parts as nested elements or a note, so that the package diagram matches the code namespaces.",
+    "Dependency labels are free-text verbs; acceptable, but if a keyword is used it should be a standard one («use», «import»), not invented ones."
+  ],
+  "fixes": [
+    "Remove or relabel Control ..> entities: it is a narrow dependency on the ReportCategory enum only (e.g. 'uses ReportCategory'), not 'creates and updates'.",
+    "Replace the layer wrapper packages with the four real code packages (Boundary, Control, Entity, Database), stating each one's layer role and responsibility in its name or in an attached note.",
+    "Show Entity as one package containing domain services and JPA entities, and add an Entity ..> JPA/persistence mapping dependency (or note) so the persistence leak into the domain is visible.",
+    "Show the SystemServicesController facade in Control as the screens' entry point, noting that UserLoginGUI bypasses it.",
+    "Add a note that layers exchange Map<String,Object> data instead of entity objects, so the separation question is answered in the view itself."
+  ]}

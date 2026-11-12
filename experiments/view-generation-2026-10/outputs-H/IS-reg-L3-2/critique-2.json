@@ -1,0 +1,28 @@
+{"verdict": "accept",
+ "concern_details": [
+  {"detail": "How do the components collaborate when invalid or already existing user data is provided?",
+   "answered": "yes",
+   "why": "All four failure outcomes are drawn and checked against the code: (1) a format or role error is raised in UserManager.validate/validateStudent/validateLibrarian (UserManager.java:52-58, 173-221) and travels back through LibraryFacade and AuthenticationController as IllegalArgumentException; RestExceptionHandler then maps it to 400 (RestExceptionHandler.java:19-22). (2) A duplicate email is caught by UserRegistry.institutionalEmailExists through PersistenceManager.findFirstByFields and gives 400. (3) A duplicate identifier is found by a role-scoped lookup (findStudentByStudentNumber or findLibrarianByCode) and gives 400. (4) A save that fails behind the lookups, e.g. on a unique column (User.java:21, Student.java:19, Librarian.java:13), returns false (PersistenceManager.java:31-38); UserManager then throws RuntimeException, which the handler does not map, so the client gets 500. The integration points (API-facade, facade-manager, manager-registry, registry-persistence, manager-factory, exception-to-response) can be read off directly. Small gaps: the format check does not say that the email must be in the unina.it domain (UserManager.java:26). That is a key negative test input. It is also not said that a librarian code only has to be alphanumeric, while a student ID must match [A-Z]\\d{8}."}
+ ],
+ "level": "right",
+ "level_why": "Balanced level: seven lifelines, each a real collaborating class or a pair of related classes, and one alt operand per distinct failure outcome. The ref frames collapse the repeated exception propagation instead of drawing it three times. The view leaves out entities, the DTO, MySQL and JpaUtil, as it should at this level. The success branch stays in, which is justified because it gives the tester the factory and save integration points and the contrast with the 500 branch. Nothing needs to be cut. The only additions suggested are short guard and label refinements that keep the diagram at the same level.",
+ "unsupported": [
+  "The guard 'unique column violated' is narrower than the code. PersistenceManager.save catches any RuntimeException and returns false (PersistenceManager.java:31-38), so any persistence failure takes this branch. The README states this as an assumption, but the guard on the diagram reads as the only trigger.",
+  "The '500 default error' is drawn as a reply that Registration API sends itself. In the code the controller just propagates the RuntimeException, and Spring's default error handling produces the 500. No class in the repo builds that response (README assumption)."
+ ],
+ "missing": [
+  "The email-format rule that matters most for tests: the address must end in unina.it (REGEX_EMAIL_ISTITUZIONALE, UserManager.java:26), together with the length < 255 limit. The self-message says only 'email'.",
+  "Role-specific identifier rules are only half stated. A student ID must match [A-Z]\\d{8} (uppercase only). A librarian code only needs to be [A-Za-z0-9]+ (UserManager.java:213-220). The view mentions only the student rule."
+ ],
+ "uml": [
+  "The ref fragments contain free text ('same propagation as above: 400') instead of the name of an interaction use. In UML, ref refers to a named Interaction. Factor the propagation into a named interaction (e.g. 'RejectWith400') and reference it by that name, including in the first operand.",
+  "The 'User factories' lifeline stands for two classifiers (StudentFactory, LibrarianFactory). A lifeline should represent one connectable element. A lifeline typed by the interface, e.g. 'factory : UserFactory', with the existing note naming the two implementations would be correct UML and keeps the same detail level.",
+  "The 500 reply leaves the Registration API lifeline after that lifeline has received a RuntimeException rather than a normal return. It would be more accurate as a reply from the framework boundary (lost/found message) with a note, matching how the handler path is drawn."
+ ],
+ "fixes": [
+  "Extend the format-check self-message (or add a note) with the test-relevant rules: email ends in unina.it and is under 255 chars; student ID [A-Z] + 8 digits; librarian code alphanumeric only; password 8-32 chars.",
+  "Change the guard 'unique column violated' to 'save fails (e.g. unique column violated)' to match PersistenceManager.save's catch-all.",
+  "Turn the three error propagations into a named interaction use (e.g. ref 'RejectWith400') instead of free-text ref frames.",
+  "Type the factory lifeline as 'factory : UserFactory' (implementation chosen by role, per the note), or justify the aggregate lifeline in the README.",
+  "Draw the 500 as produced by Spring's default handling (found/lost message with a note), not as a normal reply from Registration API."
+ ]}

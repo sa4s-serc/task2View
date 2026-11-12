@@ -1,0 +1,88 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+top to bottom direction
+
+' ---- body ----
+title cmp User registration, components and dependencies
+
+actor "Student or librarian" as user
+
+package "Presentation" {
+  component "Registration form\nBlank-field check, then submit" as form
+  component "Registration API\nReceives the register request" as api
+  component "REST error handler\nMaps errors to HTTP 400" as eh
+}
+package "Application" {
+  component "Library facade\nSingle entry to the logic" as facade
+  component "User manager\nChecks role, names, email, password,\nstudent ID format; rejects duplicates" as um
+  component "User factories\nStudent with student ID,\nLibrarian with internal code" as fac
+}
+package "Domain" {
+  component "User registry\nFinds by email, student ID,\nlibrarian code; saves" as reg
+  component "User accounts\nStudent and librarian data;\nunique email and identifiers" as acc
+}
+package "Persistence" {
+  component "Persistence manager\nJPA save with rollback,\nfalse on failure" as pm
+}
+node "MySQL database (external)" as db
+
+interface "POST /api/auth/register" as restReg
+interface "register" as facadeReg
+interface "createUser" as createIf
+interface "find and save user" as regIf
+
+user ..> form : <<use>>
+user ..> restReg : <<use>>
+api - restReg
+form ..> facadeReg : <<use>>
+api ..> facadeReg : <<use>>
+facade - facadeReg
+facade ..> um : delegate register
+um ..> createIf : <<use>>
+fac - createIf
+um ..> regIf : <<use>>
+reg - regIf
+fac ..> acc : creates
+reg ..> acc : stores
+reg ..> pm : find and save
+pm ..> db : JPA, MySQL
+
+note bottom of um
+  Invalid role, name, email, password
+  or identifier, or a duplicate email
+  or identifier, raises an
+  IllegalArgumentException: HTTP 400
+  on the API, error dialog on the form.
+  A failed save (registry reports false)
+  raises a RuntimeException: not mapped,
+  so HTTP 500 on the API. The REST error handler
+  is applied by Spring to the API (no direct call).
+end note
+@enduml

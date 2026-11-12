@@ -1,0 +1,85 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+' ---- body ----
+title Seat booking: components and dependencies
+
+actor "Student" as student
+
+package "Presentation" as presentation {
+  [Swing Desktop Client] as swing
+  [REST API] as rest
+  [Notification Scheduler] as sched
+  [Email Notification Adapter] as adapter
+}
+package "Application" as application {
+  [Library Facade] as facade
+  [Reservation Manager] as resman <<accent>>
+  [Seat Assignment Strategy] as strategy <<accent>>
+  [Study Room Manager] as roomman
+  [Notification Manager] as notifman
+}
+package "Domain and registries" as domainlayer {
+  [Reservation Domain Model] as domain <<accent>>
+  [Reservation Registry] as resreg <<accent>>
+  [Study Room Registry] as roomreg
+  [Persistence Manager] as persist
+}
+database "MySQL reservations database" as db
+component "External email gateway (stub)" as gateway <<muted>>
+
+student --> swing : books seats
+student --> rest : books seats
+swing --> facade : calls booking operations
+rest --> facade : calls booking operations
+sched --> facade : triggers expiry, reminders
+facade --> resman : delegates booking
+facade --> roomman : delegates browsing
+facade --> notifman : delegates reminders
+resman --> strategy : selects seat
+resman ---> domain : checks availability
+resman --> resreg : saves reservations
+resman ---> roomreg : looks up rooms
+resman --> notifman : sends notifications
+roomman --> domain : counts free seats
+roomman --> roomreg : reads rooms
+domain --> resreg : queries seat bookings
+notifman --> domain : observes reservations
+notifman --> adapter : sends via service interface
+adapter --> gateway : sends email
+resreg --> persist : persists
+roomreg --> persist : persists
+persist --> db : JPA, Hibernate
+
+legend right
+  Blue: parts most likely changed for new booking rules
+  Grey: external stub, not part of the application
+endlegend
+@enduml

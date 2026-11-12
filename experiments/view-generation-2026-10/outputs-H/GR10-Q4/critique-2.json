@@ -1,0 +1,31 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "What are the main types of users that interact with the system?",
+     "answered": "yes",
+     "why": "Two actors, Citizen and Municipal operator, match the two roles the code distinguishes (UserDashboardGUI.configureDashboardCitizen / configureDashboardOperator; the registration combo box offers exactly these two roles, UserRegistrationGUI.java:112-113)."},
+    {"detail": "What main goals can each type of user achieve through the system?",
+     "answered": "yes",
+     "why": "Each actor is associated with the goals its dashboard exposes: citizen creates and follows reports; operator reviews received reports, updates status and monitors trends (UserDashboardGUI.java:316-346); adding internal notes and reading notifications are reachable from the details dialogs. 'Log in' is a precondition rather than a goal, but it does not hide anything."},
+    {"detail": "How are the different functionalities related to each other?",
+     "answered": "partly",
+     "why": "The two «extend» links on 'View report details' are supported. But the only «include» is wrong: 'Update report status' does not have the user view report details. The code shows the operator picks a report from the received-reports list and goes straight to the update form (ReceivedReportsGUI.java:704-707, modeStatusUpdate). displayReportDetails is only an internal call that loads the current status (ReportStatusUpdateGUI.java:450). Also, the diagram does not show how users reach 'View report details': in the code it is opened from 'Follow my reports' (SubmittedReportsGUI.java:459) and from 'Review received reports' (ReceivedReportsGUI.java:711). Here it hangs off both actors directly, so the main navigation between functions is left out. The operator-to-citizen notification link appears only as a note."}
+  ],
+  "level": "right",
+  "level_why": "Ten user-goal use cases, two actors and three dependencies fit an overview for a business analyst. Screens, filters, history and image viewing are correctly left out. One cut is possible: 'Log in' is a session precondition, not a goal; dropping it (or merging it with 'Register an account' as account access) would sharpen the goal focus. Nothing more needs adding beyond fixing the relations.",
+  "unsupported": [
+    "«include» 'Update report status' -> 'View report details': in the code, the status-update path never shows the details dialog. The dashboard opens ReceivedReportsGUI in status-update mode, which is titled 'Select Report to Update' (UserDashboardGUI.java:575-579), and choosing a report calls openStatusUpdateGUIFromSelection directly instead of requestReportDetails (ReceivedReportsGUI.java:704-707). The displayReportDetails call at ReportStatusUpdateGUI.java:450 is an internal lookup of the current status. What the user actually does first is select a report from the received reports, which would be 'Update report status' «include» 'Review received reports'."
+  ],
+  "missing": [
+    "How 'View report details' is reached: the citizen opens it from the submitted-reports list (SubmittedReportsGUI.java:459) and the operator from the received-reports list (ReceivedReportsGUI.java:711). An «extend» from 'View report details' to 'Follow my reports' and to 'Review received reports' would show this. The direct actor associations to 'View report details' could then be dropped."
+  ],
+  "uml": [
+    "The «extend» relationships have no extension points or conditions. For example, 'Read status notifications' extends at 'View Notifications' and 'Add internal note' extends at the 'add note' option. Without these, a reader cannot tell when the optional behaviour applies. A short condition note on each «extend» is enough at overview level.",
+    "The «include» stereotype is used for an internal data lookup rather than for behaviour the base use case always performs as part of the user interaction. This misuses the include semantics (see unsupported)."
+  ],
+  "fixes": [
+    "Replace 'Update report status' «include» 'View report details' with 'Update report status' «include» 'Review received reports', since selecting a received report is mandatory before an update (ReceivedReportsGUI.java:704-707).",
+    "Model how report details are reached: 'View report details' «extend» 'Follow my reports' and «extend» 'Review received reports'. Remove the direct Citizen and Operator associations to 'View report details' so the relationship between functions is visible.",
+    "Add an extension point or condition to each «extend»: 'View Notifications' for 'Read status notifications' and 'add note' for 'Add internal note'.",
+    "Optionally drop 'Log in' as a use case, or fold it into account access, because it is a precondition rather than a user goal at overview level."
+  ]
+}

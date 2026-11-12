@@ -1,0 +1,249 @@
+{
+ "model_kind": "UML component diagram",
+ "detail_level": "overview",
+ "elements": [
+  {
+   "alias": "screens",
+   "name": "Boundary (presentation: Swing screens)",
+   "responsibility": "Screens for login, registration, dashboard, report creation, review, status update, notes and monitoring; enter Control mostly through the SystemServicesController facade",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75",
+    "src/main/java/Boundary/ActivityMonitoringGUI.java:54"
+   ],
+   "members": [
+    "Boundary.*"
+   ]
+  },
+  {
+   "alias": "controllers",
+   "name": "Control (application: use-case controllers)",
+   "responsibility": "One controller per use case; SystemServicesController facade owns them and passes Map data to the domain services",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:11-29"
+   ],
+   "members": [
+    "Control.*"
+   ]
+  },
+  {
+   "alias": "domain",
+   "name": "Entity (domain: entities and services)",
+   "responsibility": "JPA-annotated domain entities plus ReportService and UserService, which call Database directly",
+   "evidence": [
+    "src/main/java/Entity/Report.java:3-20",
+    "src/main/java/Entity/ReportService.java:16"
+   ],
+   "members": [
+    "Entity.*"
+   ]
+  },
+  {
+   "alias": "storage",
+   "name": "Database (persistence: JPA access)",
+   "responsibility": "Generic persistence access over JPA/Hibernate to MySQL",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13",
+    "src/main/java/Database/JpaUtil.java:11",
+    "src/main/resources/META-INF/persistence.xml:1"
+   ],
+   "members": [
+    "Database.*"
+   ]
+  },
+  {
+   "alias": "jpa",
+   "name": "jakarta.persistence (JPA API, external)",
+   "responsibility": "External JPA API used for entity mapping and entity managers",
+   "evidence": [
+    "src/main/java/Entity/Report.java:3",
+    "src/main/java/Database/JpaUtil.java:7"
+   ]
+  },
+  {
+   "alias": "ctlApi",
+   "name": "Controller facade",
+   "kind": "interface",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:11-29"
+   ]
+  },
+  {
+   "alias": "domApi",
+   "name": "Report and user services",
+   "kind": "interface",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:16",
+    "src/main/java/Entity/UserService.java:1"
+   ]
+  },
+  {
+   "alias": "dbApi",
+   "name": "PersistenceService",
+   "kind": "interface",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13"
+   ]
+  },
+  {
+   "alias": "loginApi",
+   "name": "Login controller",
+   "kind": "interface",
+   "evidence": [
+    "src/main/java/Control/UserLoginController.java:1"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "controllers",
+   "to": "ctlApi",
+   "label": "provides",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:11-29"
+   ]
+  },
+  {
+   "from": "domain",
+   "to": "domApi",
+   "label": "provides",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:16"
+   ]
+  },
+  {
+   "from": "storage",
+   "to": "dbApi",
+   "label": "provides",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13"
+   ]
+  },
+  {
+   "from": "screens",
+   "to": "ctlApi",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/java/Boundary/ActivityMonitoringGUI.java:54"
+   ]
+  },
+  {
+   "from": "screens",
+   "to": "domain",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/java/Boundary/ReceivedReportsGUI.java:4"
+   ]
+  },
+  {
+   "from": "controllers",
+   "to": "domApi",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/java/Control/ReportCreationController.java:4-5"
+   ]
+  },
+  {
+   "from": "domain",
+   "to": "dbApi",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:16"
+   ]
+  },
+  {
+   "from": "domain",
+   "to": "jpa",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/java/Entity/Report.java:3"
+   ]
+  },
+  {
+   "from": "storage",
+   "to": "jpa",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/java/Database/JpaUtil.java:7"
+   ]
+  },
+  {
+   "from": "controllers",
+   "to": "loginApi",
+   "label": "provides",
+   "evidence": [
+    "src/main/java/Control/UserLoginController.java:1"
+   ]
+  },
+  {
+   "from": "screens",
+   "to": "loginApi",
+   "label": "<<use>>",
+   "evidence": [
+    "src/main/java/Boundary/UserLoginGUI.java:3",
+    "src/main/java/Boundary/UserLoginGUI.java:111"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main components and responsibilities",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "domain",
+    "storage"
+   ]
+  },
+  {
+   "detail": "decomposition into layers",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "domain",
+    "storage"
+   ]
+  },
+  {
+   "detail": "main dependencies",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "domain",
+    "storage",
+    "jpa"
+   ]
+  },
+  {
+   "detail": "separation of UI, logic, domain, persistence",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "domain",
+    "storage"
+   ]
+  },
+  {
+   "detail": "collaboration for main functionality",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "domain",
+    "storage"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "individual classes, forms, enums",
+   "reason": "overview level"
+  },
+  {
+   "name": "MySQL database",
+   "reason": "external system configured in persistence.xml; kept out to stay with the code components"
+  },
+  {
+   "name": "Users",
+   "reason": "actors belong to a use case view"
+  }
+ ]
+}

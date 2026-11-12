@@ -1,0 +1,219 @@
+{
+ "model_kind": "UML package diagram",
+ "detail_level": "overview",
+ "elements": [
+  {
+   "alias": "persistence",
+   "name": "Persistence layer",
+   "responsibility": "Layer holding database access",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13"
+   ],
+   "members": []
+  },
+  {
+   "alias": "domain",
+   "name": "Domain layer",
+   "responsibility": "Layer holding domain services and entities",
+   "evidence": [
+    "src/main/java/Entity/Report.java:1"
+   ],
+   "members": []
+  },
+  {
+   "alias": "application",
+   "name": "Application layer",
+   "responsibility": "Layer holding use-case controllers",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:1"
+   ],
+   "members": []
+  },
+  {
+   "alias": "presentation",
+   "name": "Presentation layer",
+   "responsibility": "Layer holding the screens",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75"
+   ],
+   "members": []
+  },
+  {
+   "alias": "screens",
+   "name": "Boundary (Swing screens)",
+   "responsibility": "User-facing screens: login, registration, dashboard, report creation, review, status update, notes, monitoring",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75",
+    "src/main/java/Boundary/UserLoginGUI.java:91"
+   ],
+   "members": [
+    "Boundary.*"
+   ]
+  },
+  {
+   "alias": "controllers",
+   "name": "Control (use-case controllers)",
+   "responsibility": "Application logic: one controller per use case, plus a system services facade used by the screens",
+   "evidence": [
+    "src/main/java/Control/SystemServicesController.java:1",
+    "src/main/java/Control/ReportCreationController.java:1"
+   ],
+   "members": [
+    "Control.*"
+   ]
+  },
+  {
+   "alias": "services",
+   "name": "Domain services (Entity)",
+   "responsibility": "Report and user business operations over entities, using the persistence service",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:16",
+    "src/main/java/Entity/UserService.java:3"
+   ],
+   "members": [
+    "Entity.ReportService",
+    "Entity.UserService"
+   ]
+  },
+  {
+   "alias": "entities",
+   "name": "Domain entities (Entity)",
+   "responsibility": "Persistent domain model: reports, users, citizens, operators, notes, notifications, status states",
+   "evidence": [
+    "src/main/java/Entity/Report.java:1",
+    "src/main/java/Entity/User.java:1"
+   ],
+   "members": [
+    "Entity.Report",
+    "Entity.User",
+    "Entity.Citizen",
+    "Entity.Credentials",
+    "Entity.InternalNote",
+    "Entity.Location",
+    "Entity.MunicipalOperator",
+    "Entity.Notification",
+    "Entity.StatusUpdate",
+    "Entity.ReportCategory",
+    "Entity.ReportStatus",
+    "Entity.Assigned",
+    "Entity.InProgress",
+    "Entity.Resolved",
+    "Entity.Submitted"
+   ]
+  },
+  {
+   "alias": "storage",
+   "name": "Database (JPA access)",
+   "responsibility": "Generic persistence access over JPA/Hibernate to MySQL",
+   "evidence": [
+    "src/main/java/Database/PersistenceService.java:13",
+    "src/main/java/Database/JpaUtil.java:11",
+    "src/main/resources/META-INF/persistence.xml:1"
+   ],
+   "members": [
+    "Database.*"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "screens",
+   "to": "controllers",
+   "label": "delegates requests",
+   "evidence": [
+    "src/main/java/Boundary/ActivityMonitoringGUI.java:54"
+   ]
+  },
+  {
+   "from": "screens",
+   "to": "entities",
+   "label": "shows categories",
+   "evidence": [
+    "src/main/java/Boundary/ReceivedReportsGUI.java:4"
+   ]
+  },
+  {
+   "from": "controllers",
+   "to": "services",
+   "label": "invokes operations",
+   "evidence": [
+    "src/main/java/Control/ActivityMonitoringController.java:14"
+   ]
+  },
+  {
+   "from": "controllers",
+   "to": "entities",
+   "label": "creates and updates",
+   "evidence": [
+    "src/main/java/Control/ReportCreationController.java:1"
+   ]
+  },
+  {
+   "from": "services",
+   "to": "entities",
+   "label": "manipulates",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:16"
+   ]
+  },
+  {
+   "from": "services",
+   "to": "storage",
+   "label": "stores data",
+   "evidence": [
+    "src/main/java/Entity/ReportService.java:16"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main components and responsibilities",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "services",
+    "entities",
+    "storage"
+   ]
+  },
+  {
+   "detail": "decomposition into layers",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "services",
+    "entities",
+    "storage"
+   ]
+  },
+  {
+   "detail": "main dependencies",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "services",
+    "entities",
+    "storage"
+   ]
+  },
+  {
+   "detail": "separation of UI, logic, domain, persistence",
+   "answered_by": [
+    "screens",
+    "controllers",
+    "entities",
+    "storage"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "individual classes, forms, enums",
+   "reason": "overview level"
+  },
+  {
+   "name": "MySQL database",
+   "reason": "external system, not a module"
+  }
+ ]
+}

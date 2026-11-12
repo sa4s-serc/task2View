@@ -1,0 +1,33 @@
+@startuml
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+title Package diagram: Municipal report management application, layered structure
+
+package "Presentation layer" as presentation {
+  package "Boundary (Swing screens)" as screens {
+  }
+}
+package "Application layer" as application {
+  package "Control (use-case controllers)" as controllers {
+  }
+}
+package "Domain layer" as domain {
+  package "Domain services (Entity)" as services {
+  }
+  package "Domain entities (Entity)" as entities {
+  }
+}
+package "Persistence layer" as persistence {
+  package "Database (JPA access)" as storage {
+  }
+}
+
+screens ..> controllers : delegates requests
+screens ..> entities : shows categories
+controllers ..> services : invokes operations
+controllers ..> entities : creates and updates
+services ..> entities : manipulates
+services .down.> storage : stores data
+@enduml

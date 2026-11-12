@@ -1,0 +1,37 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "What are the main components involved in user registration?",
+     "answered": "yes",
+     "why": "The registration chain in the code is all there: Registration (Swing) and AuthenticationController (POST /api/auth/register), then LibraryFacade.register, UserManager.register, StudentFactory/LibrarianFactory, UserRegistry, PersistenceManager/JpaUtil and the MySQL database. It matches Registration.java:133, AuthenticationController.java:22-31, LibraryFacade.java:37-39, UserManager.java:65-97 and UserRegistry.java:26-60. Nothing is drawn that registration does not use."},
+    {"detail": "What is each of these components responsible for?",
+     "answered": "no",
+     "why": "The diagram shows only component names. The responsibilities are written in inventory.json, which the stakeholder does not see in the view. A tester reading the PNG cannot learn that the form rejects blank fields itself before calling the facade. They also cannot learn that User manager does the validation: role, name, password 8-32 chars, unina.it email pattern, student number [A-Z]\\d{8}. Nor that User manager rejects a duplicate email or identifier with IllegalArgumentException, picks the Student or Librarian factory, and throws RuntimeException when the save fails. Nor that User registry finds users by email, student number or librarian code, or that Persistence manager commits in a JPA transaction and returns false on rollback."},
+    {"detail": "What are the main integration points that should be exercised in the integration tests?",
+     "answered": "partly",
+     "why": "The interfaces are drawn, and the note lists the hops. But the interface names are generic ('Register operation', 'User registry API', 'Persistence API') and name no operation, so the tester cannot tell which calls to drive or stub. The code has register(role,name,surname,email,password,identifier) on the facade and the manager, institutionalEmailExists / findStudentByStudentNumber / findLibrarianByCode / registerUser on the registry, and save / findFirstByFields on the persistence manager. The note also leaves out the error-path seams: duplicate email or identifier, invalid input, and save failure that comes back as false. At the REST boundary, RestExceptionHandler maps IllegalArgumentException to HTTP 400, and the save-failure RuntimeException is not handled there. The Swing form shows the exception message instead."}
+  ],
+  "level": "right",
+  "level_why": "Eight components in three layers, each with one provided interface, is about right for a balanced view. One cut fits that level: User factories. UserManager creates them with 'new' inside register() (UserManager.java:88-89), so they are not a seam an integration test can exercise or replace. They are better shown inside User manager's responsibility (it builds a Student or Librarian), not as a separate component and interface. What the view lacks is content on the existing elements (responsibilities, operations), not more elements.",
+  "unsupported": [
+    "The 'New user ..> Register endpoint' <<use>> edge cites Registration.java (the Swing form) as evidence. Nothing in the code shows a person calling POST /api/auth/register; that endpoint is called by an HTTP client (an external caller), not by the person at the sign-up screen.",
+    "The 'JPA / JDBC' interface is drawn as provided by the MySQL database. JPA is provided in-process by Hibernate through JpaUtil (persistence.xml declares HibernatePersistenceProvider). The database provides only the JDBC/SQL connection (jdbc:mysql://localhost:3306/reservationsdb). The label should say JDBC (MySQL)."
+  ],
+  "missing": [
+    "Responsibilities of each component, shown in the view itself rather than only in inventory.json.",
+    "Operation names on the integration interfaces. Facade/manager: register(role, name, surname, email, password, identifier) returning UserDTO. Registry: institutionalEmailExists, findStudentByStudentNumber, findLibrarianByCode, registerUser. Persistence manager: save, findFirstByFields.",
+    "Error contract at the REST entry point. RestExceptionHandler (boundary/SpringBoot/RestExceptionHandler.java) turns IllegalArgumentException from validation or duplicate checks into HTTP 400 {error}. The save-failure RuntimeException is not mapped. Integration tests of the endpoint depend on this, and it is part of the REST API component's behaviour.",
+    "Save-failure path. PersistenceManager.save catches the exception, rolls back and returns false, and UserManager.register then throws RuntimeException. The note mentions 'saved through the database' but not this failure seam."
+  ],
+  "uml": [
+    "The integration-points note is attached to User manager only, but it describes the whole chain. Leave it unattached, or attach it to each interface it lists.",
+    "The provided interfaces show no operations. For a component diagram aimed at integration testing, list the key operations on the interface elements, using the UML interface notation with compartments where a lollipop is too small.",
+    "Otherwise the notation is valid: components, lollipop provided interfaces, dashed <<use>> dependencies to required interfaces, packages as layers, and the custom <<muted>> stereotype is hidden."
+  ],
+  "fixes": [
+    "Put each component's responsibility in the view (one short line per component, or a short notes/legend table), including the validation rules and duplicate checks in User manager and the blank-field check in the form.",
+    "Name the operations on each integration interface (register(...) : UserDTO; institutionalEmailExists / findStudentByStudentNumber / findLibrarianByCode / registerUser; save / findFirstByFields), so the tester knows which calls to drive or stub.",
+    "Add the error contract to the integration points. Mention RestExceptionHandler (IllegalArgumentException becomes HTTP 400). List the test-worthy paths in the note: invalid input, duplicate email, duplicate student number or librarian code, and save failure (save returns false, then RuntimeException).",
+    "Fold User factories into User manager, since they are created internally and are not a testable integration seam.",
+    "Fix the two unsupported details: draw the REST endpoint's user as an external HTTP client, not the person using the form, and label the database interface JDBC (MySQL), not JPA."
+  ]
+}

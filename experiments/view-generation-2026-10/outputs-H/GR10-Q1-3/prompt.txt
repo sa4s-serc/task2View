@@ -1,0 +1,33 @@
+I am giving you a software repository (the current folder) and a stakeholder's request, together with the
+request's inputs in the terms of ISO/IEC/IEEE 42010:2022. Produce one architecture view that addresses the
+stakeholder's concern, governed by the given viewpoint and model kind. Derive the architecture from the code
+in this folder; base every element and relation on it.
+
+Request (verbatim):
+I am a software architect, and I would like a high-level component view of the system.
+
+Inputs (ISO/IEC/IEEE 42010:2022):
+- Entity of interest: desktop application for reporting and managing problems in a municipal area
+- Stakeholder: software architect
+- Stakeholder perspective: reviewing the overall organization of the system before planning its future evolution; detail level: overview
+- Concern: Collaboration among parts for main functionalities
+  - How do these parts collaborate to provide the main system functionalities?
+- Aspect: behavioural
+- Viewpoint: interaction
+- Model kind: UML sequence diagram
+
+Write the view as PlantUML source in ./view-out/GR10-Q1-3/view.puml, and a short ./view-out/GR10-Q1-3/README.md
+that says what the view shows and how it addresses each part of the concern.
+
+Use the uml-view skill in .claude/skills (it builds on the plantuml-diagrams skill there) and follow all its
+steps. Write view.puml, view.png, inventory.json and README.md in ./view-out/GR10-Q1-3/.
+The detail level is given in the stakeholder perspective (overview); draw at that level and run
+check_inventory.py with --level overview --graph .claude/repo-graph.json.
+A static dependency graph of the repository is in .claude/repo-graph.json; query it with the skill's
+graph_query.py as the skill describes.
+Then run check_view.py on view.puml as the skill describes and fix what it reports.
+
+This task has more than one view. Views already drawn for it:
+  - GR10-Q1 (module): ./view-out/GR10-Q1/inventory.json
+  - GR10-Q1-2 (component): ./view-out/GR10-Q1-2/inventory.json
+Read their inventories first: an element that stands for the same code keeps the same name and styling. Then run check_consistency.py on all the inventories, as the skill describes, and fix what it reports in your view.

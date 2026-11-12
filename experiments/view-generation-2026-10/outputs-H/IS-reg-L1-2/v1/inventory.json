@@ -1,0 +1,175 @@
+{
+ "model_kind": "UML sequence diagram",
+ "detail_level": "balanced",
+ "elements": [
+  {
+   "alias": "user",
+   "name": "Student or librarian",
+   "responsibility": "Person creating an account; role chosen in the form or request",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65"
+   ]
+  },
+  {
+   "alias": "form",
+   "name": "Registration form (Swing)",
+   "responsibility": "Desktop form that collects role, name, surname, email, password, identifier",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:116-134"
+   ],
+   "members": [
+    "it.unina.reservations.boundary.Swing.Registration"
+   ]
+  },
+  {
+   "alias": "facade",
+   "name": "Library facade",
+   "responsibility": "Single entry point to the application logic",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-39"
+   ],
+   "members": [
+    "it.unina.reservations.controller.LibraryFacade"
+   ]
+  },
+  {
+   "alias": "manager",
+   "name": "User manager",
+   "responsibility": "Validates input, checks duplicates, creates and saves the user",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-96"
+   ],
+   "members": [
+    "it.unina.reservations.controller.UserManager"
+   ]
+  },
+  {
+   "alias": "factories",
+   "name": "User factories",
+   "responsibility": "Build a Student or Librarian account",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:89-90",
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java:8"
+   ],
+   "members": [
+    "it.unina.reservations.controller.factory.*"
+   ]
+  },
+  {
+   "alias": "registry",
+   "name": "User registry",
+   "responsibility": "Looks up and stores user accounts (User, Student, Librarian)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-28",
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:92"
+   ],
+   "members": [
+    "it.unina.reservations.entity.UserRegistry"
+   ]
+  },
+  {
+   "alias": "persistence",
+   "name": "Persistence manager",
+   "responsibility": "Saves and queries entities through JPA",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-20",
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:27"
+   ],
+   "members": [
+    "it.unina.reservations.database.*"
+   ]
+  },
+  {
+   "alias": "db",
+   "name": "MySQL database",
+   "responsibility": "Stores user accounts",
+   "evidence": [
+    "JavaProject/src/main/resources/META-INF/persistence.xml:1-8"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "user",
+   "to": "form",
+   "label": "fill in and submit",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:116"
+   ]
+  },
+  {
+   "from": "form",
+   "to": "facade",
+   "label": "register",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:134"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "manager",
+   "label": "register",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:39"
+   ]
+  },
+  {
+   "from": "manager",
+   "to": "registry",
+   "label": "check unused, register",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:78-92"
+   ]
+  },
+  {
+   "from": "manager",
+   "to": "factories",
+   "label": "create user",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:89-90"
+   ]
+  },
+  {
+   "from": "registry",
+   "to": "persistence",
+   "label": "find, save",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:27"
+   ]
+  },
+  {
+   "from": "persistence",
+   "to": "db",
+   "label": "query, insert",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:20",
+    "JavaProject/src/main/resources/META-INF/persistence.xml:1-8"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "How do these components interact during user registration?",
+   "answered_by": [
+    "user",
+    "form",
+    "facade",
+    "manager",
+    "factories",
+    "registry",
+    "persistence",
+    "db"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Authentication REST API",
+   "reason": "alternative entry point to the facade; shown in a note to stay within sequence size"
+  },
+  {
+   "name": "DTOs, Swing helpers, Login screen, JpaUtil",
+   "reason": "data carriers/helpers/glue"
+  }
+ ]
+}

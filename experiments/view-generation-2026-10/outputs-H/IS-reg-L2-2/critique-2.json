@@ -1,0 +1,24 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "How do the components interact when a new user creates an account?",
+     "answered": "partly",
+     "why": "Both entry points (Swing Registration form, POST /api/auth/register), the facade -> UserManager -> UserRegistry -> PersistenceManager -> MySQL chain, and the invalid-input, duplicate, save-failure and success outcomes are all shown and match the code (Registration.java:114-140, LibraryFacade.java:37-39, UserManager.java:65-97, PersistenceManager.save, RestExceptionHandler). The duplicate check is drawn wrongly, though. UserManager.java:77-86 calls institutionalEmailExists(email) and throws 'Email is already associated with an account.' right away. Only if the email is free does it call findStudentByStudentNumber or findLibrarianByCode, and that call throws 'Identifier is already in use.' The view draws a 'loop [2 lookups]' that always runs both lookups and is followed by a single 'in use' branch. That hides the two separate rejection points (and their different messages), which are exactly what an integration tester has to target with separate test cases."}
+  ],
+  "level": "right",
+  "level_why": "Balanced level: seven lifelines, one per component involved, each with code evidence. There is one call per integration point, the return values are named, and there are no class internals (factories, DTO, JpaUtil and validation rules are left out). The only redundancy is the note under the REST operand, which repeats what message 26 and the outcome branches already say; it could be cut to a one-line status mapping or merged into message 26. Nothing needs to be added beyond splitting the duplicate check.",
+  "unsupported": [
+    "'loop [2 lookups]' followed by one 'alt [in use]': the code has no loop. UserManager.register runs the email lookup (UserRegistry.institutionalEmailExists -> findUserByEmail -> findFirstByFields) and throws IllegalArgumentException immediately if the email is taken. The identifier lookup (findStudentByStudentNumber / findLibrarianByCode) runs only after that, so the second lookup never happens for a duplicate email.",
+    "Message 09 'look up email, then identifier by role' is not an operation of UserRegistry. The actual calls are institutionalEmailExists(email), then findStudentByStudentNumber(identifier) or findLibrarianByCode(identifier) (UserRegistry.java:42-67)."
+  ],
+  "missing": [
+    "Two separate duplicate outcomes, each its own integration-test case: a duplicate institutional email rejected after one SELECT ('Email is already associated with an account.'), and a duplicate student number or librarian code rejected after a second SELECT on the role-specific entity ('Identifier is already in use.'). Both end as HTTP 400 on REST and as an error dialog on desktop."
+  ],
+  "uml": [
+    "The 'loop' combined fragment is used for two different, sequential calls with different operations. In UML, loop means repeating the same interaction. Use two sequential messages, each followed by its own alt, or an opt/break fragment for each rejection.",
+    "Exceptions drawn as reply messages (08, 14, 21) are acceptable, but where an exception ends the interaction early a 'break' fragment would state more precisely that the rest of the flow is skipped. Optional."
+  ],
+  "fixes": [
+    "Replace 'loop [2 lookups]' + 'alt [in use]' with two sequential checks: institutionalEmailExists(email) -> findFirstByFields -> SELECT, then alt/break [email in use] IllegalArgumentException; then findStudentByStudentNumber / findLibrarianByCode(identifier) -> findFirstByFields -> SELECT, then alt/break [identifier in use] IllegalArgumentException.",
+    "Label the UserRegistry messages with the real operation names (institutionalEmailExists, findStudentByStudentNumber / findLibrarianByCode, registerUser) instead of the combined prose label.",
+    "Shorten the closing note to the status mapping only (UserDTO -> 200; IllegalArgumentException -> 400 {error}; RuntimeException -> 500, unhandled), or merge it into message 26, so it does not repeat the branches."
+  ]}

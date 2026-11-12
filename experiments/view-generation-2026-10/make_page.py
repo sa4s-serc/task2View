@@ -8,6 +8,7 @@ from __future__ import annotations
 import collections
 import html
 import json
+import re
 from pathlib import Path
 
 import yaml
@@ -42,8 +43,36 @@ def case_html(case: str, c: dict, entities: dict) -> str:
     return f"""<section id="{case}">
 <h2>{case}</h2>
 <p class="request">“{esc(c['request'])}”</p>{original}
-<details open><summary>Inputs</summary><table>{''.join(rows)}</table></details>
-<div class="cols">{columns}</div></section>"""
+<details open><summary>Inputs (hand-made, used by A to G)</summary><table>{''.join(rows)}</table></details>
+<div class="cols">{columns}</div>{h_html(case)}</section>"""
+
+
+def h_html(task: str) -> str:
+    """Condition H: the views Phase 1 proposed for this task, each with its elicited inputs."""
+    f = HERE / "inputs-elicited.yaml"
+    if not f.exists():
+        return ""
+    views = {k: v for k, v in yaml.safe_load(f.read_text())["cases"].items()
+             if re.sub(r"-\d+$", "", k) == task and (HERE / "outputs-H" / k / "view.png").exists()}
+    if not views:
+        return ""
+    blocks = []
+    for k, v in views.items():
+        out = HERE / "outputs-H" / k
+        details = "".join(f"<li>{esc(d)}</li>" for d in v.get("concern_details", []))
+        el = v.get("elicitation", {})
+        why = esc("; ".join(r for r in el.get("reasons", []) if r))
+        read = lambda n: esc((out / n).read_text().strip().splitlines()[-1]) if (out / n).exists() else "not run"
+        readme = esc((out / "README.md").read_text()) if (out / "README.md").exists() else "(none)"
+        blocks.append(f"""<div><h3>H view: {esc(v['viewpoint'])} ({esc(v['model_kind'])}){' (also plausible)' if el.get('role') == 'also' else ''}</h3>
+<a href="outputs-H/{k}/view.png"><img src="outputs-H/{k}/view.png" alt="{k}"></a>
+<p class="check">answers: <ul class="check">{details}</ul></p><p class="check">why this viewpoint: {why}</p>
+<p class="check">detail level {esc(v['perspective']['detail_level'])}; readability and notation check: {read('view-check.txt')};
+names across this task's views: {read('consistency-check.txt') if len(views) > 1 else 'one view'}</p>{critic_html('outputs-H', k)}
+<details><summary>README</summary><pre>{readme}</pre></details>
+<p class="links"><a href="outputs-H/{k}/view.puml">view.puml</a> · <a href="outputs-H/{k}/prompt.txt">prompt</a></p></div>""")
+    return (f"<h3 class=\"hrow\">H: {len(views)} view(s) from the elicited inputs (Phase 1)</h3>"
+            f"<div class=\"cols\">{''.join(blocks)}</div>")
 
 
 def measures(out: Path) -> dict | None:
@@ -119,6 +148,7 @@ h2{{margin-top:2.5em;border-top:1px solid #ddd;padding-top:1em}} .request{{font-
 table{{border-collapse:collapse;width:100%}} th,td{{text-align:left;vertical-align:top;padding:4px 6px;border-bottom:1px solid #eee}}
 th{{width:9em;color:#555;font-weight:600}} ul{{margin:0;padding-left:1.1em}}
 img{{max-width:100%;border:1px solid #ddd}} pre{{white-space:pre-wrap;font-size:13px;background:#f6f6f6;padding:8px}}
+.hrow{{margin-top:1.5em;padding-top:.8em;border-top:2px solid #1D4ED8;color:#1D4ED8}}
 nav{{position:sticky;top:0;background:#fff;padding:6px 0;border-bottom:1px solid #ddd}}
 </style></head><body>
 <h1>View generation from 42010:2022 inputs</h1>
@@ -132,7 +162,22 @@ chosen by the agent; F as E with a static dependency graph of the repository, wh
 concern's code and against which the drawn relations are checked; G as F with component views built from a checked UML component model (components meet through provided and required interfaces; the PlantUML is generated), no element budget, and a tighter critic whose blocking findings must cite code and which only triggers a revision when a checked blocking finding remains. Layout issues are counted by puml-check, which
 B to F also used while working, so they favour those conditions; per node normalises for size. The judgement is
 the blind rating.</p>
-<h2 id="pipeline">The current design (condition F)</h2>
+<h2 id="design-h">The new design (condition H): elicited inputs, several views per task</h2>
+<p><img src="docs/architecture-H.png" alt="View generation in two phases, condition H"></p>
+<ol>
+<li><b>Phase 1, the ISO 42010 inputs.</b> The agent pre-fills five fixed questions from the request (role, purpose,
+concerns, detail level, and for each concern what the stakeholder needs to see); each question explains its 42010
+term. The stakeholder confirms or corrects them in one round (here a simulated stakeholder that knows only the
+request's long text). The agent then proposes the views: one viewpoint per view from six viewpoints whose content
+can be recovered from code (use case, module, component, data model, interaction, deployment); every concern is
+covered, and every plausible viewpoint becomes a view, so a task may get several views.</li>
+<li><b>Phase 2, one run per view</b>, in order within a task: F's generator, checks and critic, plus the reviewer's
+rules (one viewpoint per view, use-case system boundary, plain words instead of codes such as "IP5", styling
+stereotypes hidden), readability checks on the rendered view (house style, fits a 1600 px screen, one reading
+direction, grouping), and the same names for the same code across a task's views. No element budget.</li>
+</ol>
+<p>H appears below A to G in each case, with the inputs elicited for each view.</p>
+<h2 id="pipeline">The previous design (condition F)</h2>
 <p><img src="docs/architecture.png" alt="View generation pipeline, condition F"></p>
 <ol>
 <li><b>Request and repository.</b> The request gives the ISO 42010 inputs: stakeholder, perspective with the detail

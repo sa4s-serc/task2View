@@ -1,0 +1,271 @@
+{
+ "model_kind": "UML class diagram",
+ "detail_level": "balanced",
+ "elements": [
+  {
+   "alias": "User",
+   "name": "User",
+   "responsibility": "abstract; table users, single-table inheritance on role; name, lastName, phone",
+   "evidence": [
+    "src/main/java/Entity/User.java:20-60"
+   ],
+   "members": [
+    "Entity.User"
+   ]
+  },
+  {
+   "alias": "Credentials",
+   "name": "Credentials",
+   "responsibility": "embedded email (unique) and password columns of users",
+   "evidence": [
+    "src/main/java/Entity/Credentials.java:9-17"
+   ],
+   "members": [
+    "Entity.Credentials"
+   ]
+  },
+  {
+   "alias": "Citizen",
+   "name": "Citizen",
+   "responsibility": "user role CITIZEN who files reports and receives notifications",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:7-9"
+   ],
+   "members": [
+    "Entity.Citizen"
+   ]
+  },
+  {
+   "alias": "MunicipalOperator",
+   "name": "MunicipalOperator",
+   "responsibility": "user role MUNICIPAL_OPERATOR who handles reports",
+   "evidence": [
+    "src/main/java/Entity/MunicipalOperator.java:7-9"
+   ],
+   "members": [
+    "Entity.MunicipalOperator"
+   ]
+  },
+  {
+   "alias": "Report",
+   "name": "Report",
+   "responsibility": "table reports; core of lifecycle; current status stored as string",
+   "evidence": [
+    "src/main/java/Entity/Report.java:29-113"
+   ],
+   "members": [
+    "Entity.Report"
+   ]
+  },
+  {
+   "alias": "Location",
+   "name": "Location",
+   "responsibility": "embedded address columns of reports",
+   "evidence": [
+    "src/main/java/Entity/Location.java:9-22"
+   ],
+   "members": [
+    "Entity.Location"
+   ]
+  },
+  {
+   "alias": "ReportCategory",
+   "name": "ReportCategory",
+   "responsibility": "enum of 5 categories stored as string in reports.category",
+   "evidence": [
+    "src/main/java/Entity/ReportCategory.java:6-12",
+    "src/main/java/Entity/Report.java:49-51"
+   ],
+   "members": [
+    "Entity.ReportCategory"
+   ]
+  },
+  {
+   "alias": "StatusUpdate",
+   "name": "StatusUpdate",
+   "responsibility": "table status_updates: history of status changes",
+   "evidence": [
+    "src/main/java/Entity/StatusUpdate.java:20-54"
+   ],
+   "members": [
+    "Entity.StatusUpdate"
+   ]
+  },
+  {
+   "alias": "InternalNote",
+   "name": "InternalNote",
+   "responsibility": "table internal_notes: operator notes on a report",
+   "evidence": [
+    "src/main/java/Entity/InternalNote.java:20-54"
+   ],
+   "members": [
+    "Entity.InternalNote"
+   ]
+  },
+  {
+   "alias": "Notification",
+   "name": "Notification",
+   "responsibility": "table notifications: message to citizen about a status",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:19-54"
+   ],
+   "members": [
+    "Entity.Notification"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "User",
+   "to": "Credentials",
+   "label": "embeds",
+   "evidence": [
+    "src/main/java/Entity/User.java:48-50"
+   ]
+  },
+  {
+   "from": "Citizen",
+   "to": "User",
+   "label": "specialises",
+   "evidence": [
+    "src/main/java/Entity/Citizen.java:7-9"
+   ]
+  },
+  {
+   "from": "MunicipalOperator",
+   "to": "User",
+   "label": "specialises",
+   "evidence": [
+    "src/main/java/Entity/MunicipalOperator.java:7-9"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "Citizen",
+   "label": "reported by",
+   "evidence": [
+    "src/main/java/Entity/Report.java:87-89"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "MunicipalOperator",
+   "label": "assigned to",
+   "evidence": [
+    "src/main/java/Entity/Report.java:94-96"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "Location",
+   "label": "embeds",
+   "evidence": [
+    "src/main/java/Entity/Report.java:56-57"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "ReportCategory",
+   "label": "has category",
+   "evidence": [
+    "src/main/java/Entity/Report.java:49-51"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "StatusUpdate",
+   "label": "status history",
+   "evidence": [
+    "src/main/java/Entity/Report.java:112-113"
+   ]
+  },
+  {
+   "from": "Report",
+   "to": "InternalNote",
+   "label": "notes",
+   "evidence": [
+    "src/main/java/Entity/Report.java:101-107"
+   ]
+  },
+  {
+   "from": "Notification",
+   "to": "Report",
+   "label": "about",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:52-54"
+   ]
+  },
+  {
+   "from": "StatusUpdate",
+   "to": "MunicipalOperator",
+   "label": "changed by",
+   "evidence": [
+    "src/main/java/Entity/StatusUpdate.java:52-54"
+   ]
+  },
+  {
+   "from": "InternalNote",
+   "to": "MunicipalOperator",
+   "label": "written by",
+   "evidence": [
+    "src/main/java/Entity/InternalNote.java:45-47"
+   ]
+  },
+  {
+   "from": "Notification",
+   "to": "Citizen",
+   "label": "sent to",
+   "evidence": [
+    "src/main/java/Entity/Notification.java:48-50"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "main persisted entities",
+   "answered_by": [
+    "User",
+    "Report",
+    "StatusUpdate",
+    "InternalNote",
+    "Notification"
+   ]
+  },
+  {
+   "detail": "relations among users, reports, locations, categories, states, state changes, notes, notifications",
+   "answered_by": [
+    "Report",
+    "Location",
+    "ReportCategory",
+    "StatusUpdate",
+    "InternalNote",
+    "Notification",
+    "Citizen",
+    "MunicipalOperator"
+   ]
+  },
+  {
+   "detail": "information persisted across the report lifecycle",
+   "answered_by": [
+    "Report",
+    "StatusUpdate",
+    "InternalNote",
+    "Notification"
+   ]
+  },
+  {
+   "detail": "which application parts depend on persisted data",
+   "not_answered": "component view; see README"
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Submitted/Assigned/InProgress/Resolved",
+   "reason": "state classes rebuilt on load, not persisted"
+  },
+  {
+   "name": "PersistenceService, JpaUtil, ReportService, UserService, controllers, GUIs",
+   "reason": "other viewpoints"
+  }
+ ]
+}

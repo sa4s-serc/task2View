@@ -1,0 +1,40 @@
+{"model_kind": "UML package diagram", "detail_level": "balanced",
+ "elements": [
+  {"alias": "Screens", "name": "Screens", "responsibility": "Swing windows for citizens and operators; call the controllers and pick report categories",
+   "evidence": ["src/main/java/Boundary/ReportCreationGUI.java:3-4", "src/main/java/Boundary/UserLoginGUI.java:3"], "members": ["Boundary.*"]},
+  {"alias": "Controllers", "name": "Use-case controllers", "responsibility": "one controller per use case plus the SystemServicesController facade; ask the data services for report and user data",
+   "evidence": ["src/main/java/Control/SystemServicesController.java:1-40", "src/main/java/Control/ReportCreationController.java:3-5"], "members": ["Control.*"]},
+  {"alias": "DataServices", "name": "Data services", "responsibility": "ReportService and UserService: load, save and update entities through the persistence access",
+   "evidence": ["src/main/java/Entity/ReportService.java:3", "src/main/java/Entity/UserService.java:3", "src/main/java/Entity/ReportService.java:113", "src/main/java/Entity/ReportService.java:398"],
+   "members": ["Entity.ReportService", "Entity.UserService"]},
+  {"alias": "Entities", "name": "Persisted entities", "responsibility": "JPA entities and embeddables stored in the database: users, reports, locations, categories, status updates, internal notes, notifications",
+   "evidence": ["src/main/resources/META-INF/persistence.xml:14-20", "src/main/java/Entity/Report.java:29-113"],
+   "members": ["Entity.User", "Entity.Citizen", "Entity.MunicipalOperator", "Entity.Credentials", "Entity.Report", "Entity.Location", "Entity.ReportCategory", "Entity.StatusUpdate", "Entity.InternalNote", "Entity.Notification"]},
+  {"alias": "StatusStates", "name": "Report status states", "responsibility": "state classes of a report; rebuilt from the stored status string, not persisted",
+   "evidence": ["src/main/java/Entity/Report.java:76", "src/main/java/Entity/Report.java:388-415"],
+   "members": ["Entity.ReportStatus", "Entity.Submitted", "Entity.Assigned", "Entity.InProgress", "Entity.Resolved"]},
+  {"alias": "Access", "name": "Persistence access", "responsibility": "generic find, save and update over the JPA persistence unit (MySQL reports_db)",
+   "evidence": ["src/main/java/Database/PersistenceService.java:13-17", "src/main/java/Database/JpaUtil.java:17", "src/main/resources/META-INF/persistence.xml:10"],
+   "members": ["Database.*"]}
+ ],
+ "relations": [
+  {"from": "Screens", "to": "Controllers", "label": "calls use cases", "evidence": ["src/main/java/Boundary/ReportCreationGUI.java:3", "src/main/java/Boundary/UserLoginGUI.java:3"]},
+  {"from": "Screens", "to": "Entities", "label": "picks report category", "evidence": ["src/main/java/Boundary/ReportCreationGUI.java:4", "src/main/java/Boundary/ReceivedReportsGUI.java:4"]},
+  {"from": "Controllers", "to": "DataServices", "label": "requests report and user data", "evidence": ["src/main/java/Control/ReportCreationController.java:4-5", "src/main/java/Control/ReportStatusUpdateController.java:3-4"]},
+  {"from": "Controllers", "to": "Entities", "label": "uses report category", "evidence": ["src/main/java/Control/ReportCreationController.java:3"]},
+  {"from": "DataServices", "to": "Entities", "label": "loads and saves", "evidence": ["src/main/java/Entity/ReportService.java:43", "src/main/java/Entity/ReportService.java:113", "src/main/java/Entity/ReportService.java:398"]},
+  {"from": "DataServices", "to": "Access", "label": "persists through", "evidence": ["src/main/java/Entity/ReportService.java:3", "src/main/java/Entity/UserService.java:3"]},
+  {"from": "Entities", "to": "StatusStates", "label": "holds current status", "evidence": ["src/main/java/Entity/Report.java:76", "src/main/java/Entity/Report.java:390"]}
+ ],
+ "concern_details": [
+  {"detail": "Which parts of the application depend on persisted information", "answered_by": ["Screens", "Controllers", "DataServices", "Access", "Entities"]},
+  {"detail": "main persisted entities", "answered_by": ["Entities"]},
+  {"detail": "relationships among users, reports, locations, categories, states, state changes, notes, notifications", "not_answered": "attribute-level relationships belong to a class view (see GR10-Q3); here the entities are one package"},
+  {"detail": "information persisted across a report's lifecycle", "answered_by": ["Entities", "StatusStates"]}
+ ],
+ "omitted": [
+  {"name": "Individual GUI and controller classes", "reason": "grouped into packages at balanced level"},
+  {"name": "Persistence access -> Persisted entities", "reason": "PersistenceService is generic over entity classes; only the persistence unit lists them"},
+  {"name": "Controllers -> Persisted entities beyond ReportCategory", "reason": "controllers reach entity data only through the data services"},
+  {"name": "persistence.xml, Maven build, tests", "reason": "configuration and build, not modules"}
+ ]}

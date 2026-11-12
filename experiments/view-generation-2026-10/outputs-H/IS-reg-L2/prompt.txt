@@ -1,0 +1,30 @@
+I am giving you a software repository (the current folder) and a stakeholder's request, together with the
+request's inputs in the terms of ISO/IEC/IEEE 42010:2022. Produce one architecture view that addresses the
+stakeholder's concern, governed by the given viewpoint and model kind. Derive the architecture from the code
+in this folder; base every element and relation on it.
+
+Request (verbatim):
+I am an integration tester. I need to design integration tests for the user registration functionality. Before defining the tests, I need to understand the main components involved in registration, their responsibilities, and how they interact when a new user creates an account. I also need to identify the main integration points that should be exercised during the tests.
+
+Inputs (ISO/IEC/IEEE 42010:2022):
+- Entity of interest: application for booking study-room seats, with student and librarian users
+- Stakeholder: integration tester
+- Stakeholder perspective: design integration tests for the user registration functionality, by first understanding the components involved, their responsibilities, how they interact, and the integration points to exercise; detail level: balanced
+- Concern: Registration components, responsibilities and integration points
+  - What are the main components involved in user registration?
+  - What is each of these components responsible for?
+  - What are the main integration points that should be exercised in the integration tests?
+- Aspect: structural (component-and-connector)
+- Viewpoint: component
+- Model kind: UML component diagram
+
+Write the view as PlantUML source in ./view-out/IS-reg-L2/view.puml, and a short ./view-out/IS-reg-L2/README.md
+that says what the view shows and how it addresses each part of the concern.
+
+Use the uml-view skill in .claude/skills (it builds on the plantuml-diagrams skill there) and follow all its
+steps. Write view.puml, view.png, inventory.json and README.md in ./view-out/IS-reg-L2/.
+The detail level is given in the stakeholder perspective (balanced); draw at that level and run
+check_inventory.py with --level balanced --graph .claude/repo-graph.json.
+A static dependency graph of the repository is in .claude/repo-graph.json; query it with the skill's
+graph_query.py as the skill describes.
+Then run check_view.py on view.puml as the skill describes and fix what it reports.

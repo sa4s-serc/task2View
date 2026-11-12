@@ -1,0 +1,29 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "What are the main components involved in user registration?",
+     "answered": "yes",
+     "why": "The view shows the whole registration chain the code has and nothing extra. Registration (Swing, Registration.java:133) and AuthenticationController (POST /api/auth/register, AuthenticationController.java:22-31) both call LibraryFacade.register (LibraryFacade.java:37-39). That calls UserManager.register (UserManager.java:65-97), which uses UserRegistry (UserRegistry.java:26-60), which uses PersistenceManager.save / findFirstByFields, which writes to the MySQL database. Folding the factories into User manager is consistent with the code: they are created with new inside register()."},
+    {"detail": "What is each of these components responsible for?",
+     "answered": "yes",
+     "why": "Each box now carries its responsibility, and the text matches the code. The form rejects blank fields and shows errors (Registration.java:125-139). The REST API maps validation errors to HTTP 400 (RestExceptionHandler.java:19-22). The facade only delegates. User manager does the checks the box lists: role, name, password 8-32 characters, unina.it email, student number [A-Z]\\d{8}, alphanumeric identifier, duplicate email or identifier. It builds the Student or Librarian and throws when the save fails. The registry does the lookups. Persistence manager runs a JPA transaction and returns false on rollback. One small gap: the User registry box says only 'looks up users' and leaves out that it also persists the new user (registerUser delegates to save). That operation does appear on its interface."},
+    {"detail": "What are the main integration points that should be exercised in the integration tests?",
+     "answered": "yes",
+     "why": "Both entry points (sign-up screen, POST /api/auth/register), the internal seams with their real operation names, and the JDBC/MySQL boundary are drawn. The note lists the test-worthy paths, which match the code: IllegalArgumentException becomes HTTP 400, duplicate email or identifier is rejected, and on save failure save returns false and the manager throws a RuntimeException that RestExceptionHandler does not map. Two small gaps remain. The note does not say how a save failure can be provoked: the DB declares unique columns (User.java:21, Student.java:19, Librarian.java:13), so a duplicate that slips past the pre-checks fails at commit. It also does not say what the Swing form does with errors: it shows the exception message (Registration.java:138-139)."}
+  ],
+  "level": "right",
+  "level_why": "Six components plus the database, in three layers, each with one provided interface and its key operations, is the balanced level the perspective asks for. Nothing is too fine-grained: DTOs, entities, factories and the login flow are left out. The only near-redundancy is that Library facade and User manager expose the same register operation. It is still worth keeping, because the facade is the shared entry point that both boundaries call, so it is a real seam for tests.",
+  "unsupported": [],
+  "missing": [
+    "How to trigger the save-failure path: the account tables have unique constraints on email, student number and librarian code (@Column(unique = true) in User.java:21, Student.java:19, Librarian.java:13). A constraint violation at commit is what makes PersistenceManager.save roll back and return false. A short line in the note would let the tester design that test.",
+    "User registry's responsibility line leaves out that it persists the new user (registerUser -> PersistenceManager.save, UserRegistry.java:26-28)."
+  ],
+  "uml": [
+    "The 'Paths worth testing' note is attached only to Persistence manager, but two of its three items are about User manager and the REST API. Leave it unattached, or link it to User manager and the REST API as well.",
+    "Notation is otherwise correct for a UML component diagram. It uses components, lollipop provided interfaces, dashed «use» dependencies to required interfaces, actors as external users, and packages as layers. The custom «muted» stereotype is only a hidden styling class, not a modelling stereotype."
+  ],
+  "fixes": [
+    "Add one line to the note: unique DB constraints on email, student number and librarian code are a way to trigger the save-failure path.",
+    "Add 'stores new users' to the User registry responsibility line.",
+    "Detach the note from Persistence manager (or also link it to User manager and the REST API), because it covers paths across the chain."
+  ]
+}

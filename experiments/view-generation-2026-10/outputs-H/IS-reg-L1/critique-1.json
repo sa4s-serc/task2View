@@ -1,0 +1,22 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "Which system components are involved in user registration?",
+     "answered": "yes",
+     "why": "Every component on the registration path in the code is drawn, and the calls between them match the code: Registration (Swing) and AuthenticationController POST /api/auth/register both call LibraryFacade.register (Registration.java:134, AuthenticationController.java:28-29). The facade passes the call to UserManager.register (LibraryFacade.java:39). UserManager checks for duplicates through UserRegistry, builds the user with StudentFactory or LibrarianFactory, and saves with UserRegistry.registerUser (UserManager.java:78-92). UserRegistry delegates to PersistenceManager.save/findFirstByFields (UserRegistry.java:27). PersistenceManager uses JPA/Hibernate on MySQL (persistence.xml). An integration tester can read off the two entry points and the chain down to the database. Nothing on the path is missing, and nothing off the path is drawn."}
+  ],
+  "level": "right",
+  "level_why": "At the balanced level the view has eight components, one actor and three layer packages. Each component maps to a class or package the tester can stub or exercise, and DTOs, entities, Swing helpers and JpaUtil are left out on purpose. One element could still be cut: 'User factories' is a creation helper that only User manager calls. It could be folded into User manager without losing anything a tester needs, but keeping it is defensible because it decides the Student/Librarian split.",
+  "unsupported": [
+    "The 'Student or librarian' actor is drawn calling POST /api/auth/register directly. The code shows only the Spring endpoint and no client that calls it (the README admits this). The caller of that endpoint is an unspecified HTTP client, not a person."
+  ],
+  "missing": [],
+  "uml": [
+    "The connectors are unlabelled-kind arrows between components and do not use provided/required interfaces or ports. That is acceptable as UML usage dependencies, but adding the «use» keyword, or showing the REST endpoint as a provided interface on Authentication REST API, would make the component-and-connector reading explicit.",
+    "The MySQL database is drawn as a plain component, which is acceptable. Do not add a non-standard «database» stereotype. If it needs to be marked as external, put it outside a system boundary instead."
+  ],
+  "fixes": [
+    "Relabel the caller of the REST endpoint as an external HTTP/REST client, or as 'Student or librarian (via REST client)', because no such client exists in the code.",
+    "Optionally fold 'User factories' into 'User manager' to tighten the view to the balanced level.",
+    "Optionally show the REST endpoint as a provided interface (POST /api/auth/register) on the Authentication REST API component, so the tester sees the testable interface in UML form."
+  ]
+}
