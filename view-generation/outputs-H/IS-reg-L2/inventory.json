@@ -1,0 +1,365 @@
+{
+ "model_kind": "UML component diagram",
+ "detail_level": "balanced",
+ "elements": [
+  {
+   "alias": "user",
+   "name": "New user (student or librarian)",
+   "responsibility": "Creates an account",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:116"
+   ]
+  },
+  {
+   "alias": "form",
+   "name": "Registration form (desktop)",
+   "responsibility": "Collects fields, rejects blanks, calls the facade, shows result or error",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:114-140"
+   ],
+   "members": [
+    "it.unina.reservations.boundary.Swing.Registration"
+   ]
+  },
+  {
+   "alias": "rest",
+   "name": "Authentication REST API",
+   "responsibility": "Exposes POST /api/auth/register; invalid-request errors become HTTP 400",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31",
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/RestExceptionHandler.java:19-22"
+   ],
+   "members": [
+    "it.unina.reservations.boundary.SpringBoot.AuthenticationController",
+    "it.unina.reservations.boundary.SpringBoot.RestExceptionHandler"
+   ]
+  },
+  {
+   "alias": "facade",
+   "name": "Library facade",
+   "responsibility": "Single entry point of the application layer; delegates registration",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-39"
+   ],
+   "members": [
+    "it.unina.reservations.controller.LibraryFacade"
+   ]
+  },
+  {
+   "alias": "um",
+   "name": "User manager",
+   "responsibility": "Validates input, rejects duplicate email or identifier, builds Student or Librarian (factories created internally), saves, returns UserDTO; throws if save fails",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97",
+    "JavaProject/src/main/java/it/unina/reservations/controller/factory/StudentFactory.java:10-18"
+   ],
+   "members": [
+    "it.unina.reservations.controller.UserManager",
+    "it.unina.reservations.controller.factory.*"
+   ]
+  },
+  {
+   "alias": "reg",
+   "name": "User registry",
+   "responsibility": "Finds users by email, student number or librarian code; registers a new user",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-60"
+   ],
+   "members": [
+    "it.unina.reservations.entity.UserRegistry"
+   ]
+  },
+  {
+   "alias": "pm",
+   "name": "Persistence manager",
+   "responsibility": "Saves and queries entities in JPA transactions",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-43",
+    "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java:19"
+   ],
+   "members": [
+    "it.unina.reservations.database.*"
+   ]
+  },
+  {
+   "alias": "db",
+   "name": "Account database (MySQL)",
+   "responsibility": "Stores user accounts",
+   "evidence": [
+    "JavaProject/src/main/resources/META-INF/persistence.xml:1"
+   ]
+  },
+  {
+   "alias": "screen",
+   "name": "Sign-up screen",
+   "responsibility": "Interface provided by Registration form (desktop)",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:114-140"
+   ]
+  },
+  {
+   "alias": "http",
+   "name": "Register endpoint",
+   "responsibility": "Interface provided by Authentication REST API",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31"
+   ]
+  },
+  {
+   "alias": "facadeApi",
+   "name": "Library facade API",
+   "responsibility": "Interface provided by Library facade",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-39"
+   ]
+  },
+  {
+   "alias": "regOp",
+   "name": "User manager API",
+   "responsibility": "Interface provided by User manager",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97"
+   ]
+  },
+  {
+   "alias": "regApi",
+   "name": "User registry API",
+   "responsibility": "Interface provided by User registry",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-60"
+   ]
+  },
+  {
+   "alias": "pmApi",
+   "name": "Persistence API",
+   "responsibility": "Interface provided by Persistence manager",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-43",
+    "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java:19"
+   ]
+  },
+  {
+   "alias": "pres",
+   "name": "Presentation",
+   "responsibility": "Layer grouping",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:20"
+   ]
+  },
+  {
+   "alias": "app",
+   "name": "Application",
+   "responsibility": "Layer grouping",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:20"
+   ]
+  },
+  {
+   "alias": "dom",
+   "name": "Domain and persistence",
+   "responsibility": "Layer grouping",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:10"
+   ]
+  },
+  {
+   "alias": "jdbc",
+   "name": "JDBC (MySQL)",
+   "responsibility": "Interface provided by Account database (MySQL)",
+   "evidence": [
+    "JavaProject/src/main/resources/META-INF/persistence.xml:1"
+   ]
+  },
+  {
+   "alias": "client",
+   "name": "HTTP client",
+   "responsibility": "External caller of the REST endpoint",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "form",
+   "to": "screen",
+   "label": "provides",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:114-140"
+   ]
+  },
+  {
+   "from": "rest",
+   "to": "http",
+   "label": "provides",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "facadeApi",
+   "label": "provides",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-39"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "regOp",
+   "label": "provides",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "regApi",
+   "label": "provides",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-60"
+   ]
+  },
+  {
+   "from": "pm",
+   "to": "pmApi",
+   "label": "provides",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-43",
+    "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java:19"
+   ]
+  },
+  {
+   "from": "db",
+   "to": "jdbc",
+   "label": "provides",
+   "evidence": [
+    "JavaProject/src/main/resources/META-INF/persistence.xml:1"
+   ]
+  },
+  {
+   "from": "user",
+   "to": "screen",
+   "label": "<<use>>",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:114-140"
+   ]
+  },
+  {
+   "from": "client",
+   "to": "http",
+   "label": "<<use>>",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:114-140"
+   ]
+  },
+  {
+   "from": "form",
+   "to": "facadeApi",
+   "label": "<<use>>",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/Swing/Registration.java:114-140"
+   ]
+  },
+  {
+   "from": "rest",
+   "to": "facadeApi",
+   "label": "<<use>>",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/boundary/SpringBoot/AuthenticationController.java:22-31"
+   ]
+  },
+  {
+   "from": "facade",
+   "to": "regOp",
+   "label": "<<use>>",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/LibraryFacade.java:37-39"
+   ]
+  },
+  {
+   "from": "um",
+   "to": "regApi",
+   "label": "<<use>>",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/controller/UserManager.java:65-97"
+   ]
+  },
+  {
+   "from": "reg",
+   "to": "pmApi",
+   "label": "<<use>>",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/entity/UserRegistry.java:26-60"
+   ]
+  },
+  {
+   "from": "pm",
+   "to": "jdbc",
+   "label": "<<use>>",
+   "evidence": [
+    "JavaProject/src/main/java/it/unina/reservations/database/PersistenceManager.java:19-43",
+    "JavaProject/src/main/java/it/unina/reservations/database/JpaUtil.java:19"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "Main components involved in registration",
+   "answered_by": [
+    "form",
+    "rest",
+    "facade",
+    "um",
+    "reg",
+    "pm",
+    "db"
+   ]
+  },
+  {
+   "detail": "Responsibility of each component",
+   "answered_by": [
+    "form",
+    "rest",
+    "facade",
+    "um",
+    "reg",
+    "pm",
+    "db"
+   ]
+  },
+  {
+   "detail": "Integration points to exercise",
+   "answered_by": [
+    "facadeApi",
+    "regOp",
+    "regApi",
+    "pmApi",
+    "jdbc",
+    "http"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "UserDTO, User entities",
+   "reason": "data classes"
+  },
+  {
+   "name": "Login form and authenticate flow",
+   "reason": "not registration"
+  },
+  {
+   "name": "Swing wizard styling",
+   "reason": "UI helpers"
+  },
+  {
+   "name": "direct component-to-component edges",
+   "reason": "drawn as provided/required interface pairs"
+  },
+  {
+   "name": "User factories as a component",
+   "reason": "created with new inside UserManager.register; not a replaceable seam"
+  }
+ ]
+}

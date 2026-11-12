@@ -1,0 +1,41 @@
+@startuml
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+title Package diagram: Municipal report management application, code packages and layers
+
+package "Boundary\n(presentation: Swing screens)" as screens {
+}
+package "Control\n(application: use-case controllers)" as controllers {
+}
+package "Entity\n(domain: entities and services)" as domain {
+}
+package "Database\n(persistence: JPA access)" as storage {
+}
+package "jakarta.persistence\n(JPA API, external)" as jpa <<muted>> {
+}
+hide <<muted>> stereotype
+
+note right of screens
+  Seven of ten screens enter Control
+  through the SystemServicesController
+  facade; the login screen uses its
+  login controller directly, and two
+  screens call no controller.
+end note
+note left of domain
+  JPA-annotated domain classes and
+  the report and user services live
+  here; the services call Database
+  directly. Layers exchange Map data
+  instead of domain objects.
+end note
+
+screens ..> controllers : calls controllers
+screens ..> domain : uses ReportCategory
+controllers ..> domain : calls services, enum
+domain ..> storage : stores data
+domain ..> jpa : maps with annotations
+storage ..> jpa : accesses via
+@enduml

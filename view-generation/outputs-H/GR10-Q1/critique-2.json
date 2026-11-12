@@ -1,0 +1,26 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "What are the main architectural components and what is each one responsible for?",
+     "answered": "yes",
+     "why": "The four code packages (Boundary, Control, Entity, Database) are the real top-level namespaces under src/main/java, and each box names its role and responsibility. The note on Boundary records the SystemServicesController facade as the main entry point. I checked the counts: 7 screens import Control.SystemServicesController, UserLoginGUI imports UserLoginController, and HomePageGUI and UserDashboardGUI import no controller. This is enough for an overview. Database's 'JPA access' is terse, but it is accurate for its two classes (JpaUtil, PersistenceService)."},
+    {"detail": "How is the system decomposed into layers or subsystems?",
+     "answered": "yes",
+     "why": "Each package shows its layer role (presentation, application, domain, persistence), and the drawing no longer adds layer wrapper packages that the code does not have. Entity is one package, as in the code. The top-to-bottom dependency direction makes the layering readable."},
+    {"detail": "What are the main dependencies among the components, layers or subsystems?",
+     "answered": "yes",
+     "why": "Every drawn edge matches the imports. Boundary imports Control (SystemServicesController, UserLoginController) and Entity.ReportCategory (ReceivedReportsGUI, ReportCreationGUI). Control imports Entity.ReportService, Entity.UserService and Entity.ReportCategory. Entity imports Database.PersistenceService (ReportService, UserService) and jakarta.persistence. Database imports jakarta.persistence. No dependency is missing: Control does not import Database, and Database does not import Entity or the upper packages."},
+    {"detail": "How are user-facing functionality, application logic, domain entities and data persistence separated?",
+     "answered": "yes",
+     "why": "The view shows where the separation is weaker than the layer names suggest: Boundary skips Control to use an Entity enum, domain classes carry JPA annotations (Entity -> jakarta.persistence), and the services sit in Entity and call Database directly. The Map-based data exchange is also confirmed: Map< appears in SystemServicesController, ReportService and UserService. This is what an architect needs before planning how the system will change."}
+  ],
+  "level": "right",
+  "level_why": "For an overview, the right elements are the four code packages plus the one external API that explains the domain-to-persistence coupling. The view leaves out classes, forms and MySQL. The two notes carry the class-level facts (the facade, the services' placement, Map data) without turning them into elements. There is nothing to cut, and adding classes would go past the overview level.",
+  "unsupported": [],
+  "missing": [],
+  "uml": [
+    "Minor: the external package uses a custom stereotype <<muted>> that is hidden only for styling. It does not show, but the source uses a non-standard stereotype. Use a plain package, or rely on the '(JPA API, external)' name alone."
+  ],
+  "fixes": [
+    "Optional: remove the hidden custom <<muted>> stereotype from the jakarta.persistence package in the source."
+  ]
+}

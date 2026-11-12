@@ -1,0 +1,28 @@
+{"verdict": "revise",
+ "concern_details": [
+  {"detail": "What are the main system components involved in seat booking?",
+   "answered": "yes",
+   "why": "Revision 1 fixed the containment. The view now follows the real Java packages: boundary (Swing, SpringBoot, NotificationServiceAdapter, NotificationConfiguration), controller (LibraryFacade, ReservationManager, StudyRoomManager, NotificationManager, «interface» NotificationService, strategy), dto, entity (with state) and database. These are the parts a developer changing seat booking would touch. Both Swing screens and REST controllers call LibraryFacade, and no boundary class reaches a manager directly, so the facade is correctly shown as the single entry point."},
+  {"detail": "How do these components interact?",
+   "answered": "partly",
+   "why": "The main create path is right and checked against the code: UI -> LibraryFacade.makeReservation -> ReservationManager, which falls back to AssignmentStrategy.selectSeat only when seatId is 0 (ReservationManager.java:400), sets ActiveState, saves through ReservationRegistry, and the registries use PersistenceManager. Two interactions a seat-booking change depends on are misrepresented. (a) 'lists rooms' on facade -> Study room manager understates it. Every step of the wizard before the booking goes this way: available rooms, available time slots, and room detail with per-area seat availability (LibraryFacade.java:81-101). Seat availability is what a developer changing seat booking most likely needs to find. (b) 'notifies' hides the mechanism. ReservationManager attaches NotificationManager as an Observer of the Reservation and calls reservation.notifyObservers() (ReservationManager.java:120-123). NotificationManager implements entity.Observer, and the call reaches it through Reservation (the entity). A developer changing what happens after a booking needs to know this goes through the Observer pattern in entity."}
+ ],
+ "level": "right",
+ "level_why": "The view has about 15 elements in 5 real packages, with the managers as classes and the leaf packages unopened. That suits a balanced view for a developer. The notification corner is the densest part: Notification configuration, Email notification adapter, «interface» Notification service and their 4 relations take a fifth of the view for something next to booking. Notification configuration could be dropped or merged into the adapter, with the wiring said in the README. That merge is optional. Nothing needs adding beyond label fixes and one Observer realization.",
+ "unsupported": [
+  "Label 'lists rooms' (Library facade -> Study room manager): the code shows the facade delegating getAvailableStudyRooms, getAvailableTimeSlots and getRoomDetail (seat availability per area) to StudyRoomManager (LibraryFacade.java:81-101). The dependency is supported, but the label claims less than it does.",
+  "Nothing else is drawn without support. I checked: Swing and SpringBoot -> LibraryFacade (imports in 9 Swing screens, ReservationController, StudyRoomController); ReservationManager -> strategy, entity.state.ActiveState, registries, NotificationManager; strategy -> entity.Seat; NotificationConfiguration -> NotificationManager.setNotificationService(new NotificationServiceAdapter()); registries -> PersistenceManager."
+ ],
+ "missing": [
+  "The Observer route of the booking notification: NotificationManager implements it.unina.reservations.entity.Observer (NotificationManager.java:15) and is called by Reservation.notifyObservers() (Reservation.java:181) after ReservationManager attaches it. One realization from Notification manager to an Observer interface in entity (or a label such as 'attaches as observer' on resmgr -> notifmgr) would show it."
+ ],
+ "uml": [
+  "Dependency labels are free verbs. «use» is given once in the legend instead of as the keyword on each arrow. UML lets a dependency carry a name, so this is acceptable. 'creates' (Notification configuration -> Email notification adapter) matches a standard stereotype, so it should be written as «create».",
+  "Otherwise correct for a package diagram: nested packages, classes and an «interface» inside packages, dashed dependencies, and a realization drawn with a hollow triangle."
+ ],
+ "fixes": [
+  "Relabel Library facade -> Study room manager to say what booking uses it for, e.g. 'rooms, time slots, seat availability'.",
+  "Show that notification goes through the Observer pattern: add NotificationManager realizing entity.Observer, or relabel resmgr -> notifmgr as 'attaches as observer'.",
+  "Write the Notification configuration -> Email notification adapter dependency as «create».",
+  "Optional cut: merge Notification configuration into the Email notification adapter element (or drop it and note the wiring in the README) to lighten the corner next to booking."
+ ]}

@@ -1,0 +1,70 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+
+title UML component diagram: Municipal Report Management System, runtime communication
+
+artifact "municipal-report-management-1.0-SNAPSHOT (no executable jar)" as jar
+
+component "Municipal Report Management application\nJava 23 JVM, dependency jars on the classpath\nentry point Boundary.HomePageGUI.main" as app {
+  [Application logic and GUI] as logic
+  [forms_rt 7.0.3 (GUI layout runtime)] as forms
+  [Persistence access] as persist
+  [Hibernate ORM 6.6 (JPA provider)] as hib
+  [MySQL Connector/J 9.4 (JDBC driver)] as jdbc
+}
+
+artifact "persistence.xml (packaged with the app)" as pxml
+
+component "MySQL server port 3306" as mysql {
+  artifact "Schema reports_db (user reports_user)" as schema
+}
+
+
+logic ..> forms : <<use>>
+logic --> persist : <<use>>
+persist ..> hib : <<use>> JPA
+hib ..> jdbc : <<use>> JDBC
+jdbc ---> mysql : TCP 3306
+persist .right.> pxml : <<use>>
+jar ..> app : <<manifest>>
+
+note right of pxml
+  Persistence unit Municipal_Report_Management_System,
+  RESOURCE_LOCAL, driver com.mysql.cj.jdbc.Driver,
+  URL 127.0.0.1:3306/reports_db, user and plaintext
+  password, hbm2ddl update. No external override:
+  moving the database means editing this file and repackaging.
+end note
+
+note right of mysql
+  Prerequisite from README: create database reports_db
+  and account reports_user@localhost by hand.
+  Hibernate only creates the tables.
+end note
+@enduml

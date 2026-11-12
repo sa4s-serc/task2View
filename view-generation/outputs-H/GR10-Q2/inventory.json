@@ -1,0 +1,163 @@
+{
+ "model_kind": "UML deployment diagram",
+ "detail_level": "balanced",
+ "takeaway": "The desktop app runs as a Swing process in a Java 23 JVM on the user's workstation and talks over JDBC/TCP port 3306 (Hibernate + MySQL Connector/J) to a MySQL server holding schema reports_db, which defaults to the same machine (127.0.0.1).",
+ "elements": [
+  {
+   "alias": "ws",
+   "name": "User workstation (citizen or municipal operator)",
+   "responsibility": "Machine running the Swing desktop client",
+   "evidence": [
+    "src/main/java/Boundary/HomePageGUI.java:75-87"
+   ]
+  },
+  {
+   "alias": "jvm",
+   "name": "Java 23 runtime (JVM)",
+   "responsibility": "Execution environment; no executable jar, launched with dependency classpath and main class Boundary.HomePageGUI",
+   "evidence": [
+    "pom.xml:13-14",
+    "README.md:17",
+    "src/main/java/Boundary/HomePageGUI.java:75"
+   ]
+  },
+  {
+   "alias": "app",
+   "name": "municipal-report-management-1.0-SNAPSHOT (no executable jar)",
+   "responsibility": "Application artifact with Swing GUI, controllers, entities and persistence support; entry points are main methods of the GUI classes",
+   "evidence": [
+    "pom.xml:9-11",
+    "src/main/java/Boundary/HomePageGUI.java:75"
+   ],
+   "members": [
+    "Boundary.*",
+    "Control.*",
+    "Entity.*",
+    "Database.*"
+   ]
+  },
+  {
+   "alias": "pxml",
+   "name": "persistence.xml (packaged with the app)",
+   "responsibility": "Deployment specification: driver, JDBC URL, user, plaintext password, hbm2ddl update; classpath resource inside the app",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:11-35"
+   ]
+  },
+  {
+   "alias": "libs",
+   "name": "Hibernate ORM 6.6, MySQL Connector/J 9.4, forms_rt 7.0.3",
+   "responsibility": "Runtime libraries: JPA provider, JDBC driver, GUI Designer layout runtime used by the Swing forms",
+   "evidence": [
+    "pom.xml:31-43",
+    "pom.xml:34-38",
+    "src/main/java/Boundary/HomePageGUI.java:4"
+   ]
+  },
+  {
+   "alias": "dbhost",
+   "name": "Database host (same machine by default)",
+   "responsibility": "Machine hosting MySQL; URL 127.0.0.1 and grant @localhost make it co-located by default",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:22"
+   ]
+  },
+  {
+   "alias": "mysql",
+   "name": "MySQL server port 3306, account reports_user@localhost",
+   "responsibility": "Database server execution environment",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:22",
+    "README.md:19"
+   ]
+  },
+  {
+   "alias": "schema",
+   "name": "Schema reports_db (user reports_user)",
+   "responsibility": "Stores users, reports, notes, status updates, notifications",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:22-28",
+    "README.md:23-28"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "app",
+   "to": "pxml",
+   "label": "configured by",
+   "evidence": [
+    "src/main/java/Database/JpaUtil.java:17"
+   ]
+  },
+  {
+   "from": "app",
+   "to": "libs",
+   "label": "use",
+   "evidence": [
+    "src/main/java/Database/JpaUtil.java:17-29",
+    "src/main/java/Database/PersistenceService.java:30"
+   ]
+  },
+  {
+   "from": "jvm",
+   "to": "mysql",
+   "label": "JDBC over TCP :3306",
+   "evidence": [
+    "src/main/resources/META-INF/persistence.xml:19-22"
+   ]
+  }
+ ],
+ "concern_details": [
+  {
+   "detail": "Which runtime environments and software artifacts are required",
+   "answered_by": [
+    "jvm",
+    "app",
+    "pxml",
+    "libs",
+    "mysql",
+    "schema"
+   ]
+  },
+  {
+   "detail": "Where are the application and its data executed and stored",
+   "answered_by": [
+    "ws",
+    "app",
+    "dbhost",
+    "schema"
+   ]
+  },
+  {
+   "detail": "How do the main runtime elements communicate",
+   "answered_by": [
+    "app",
+    "libs",
+    "mysql"
+   ]
+  },
+  {
+   "detail": "Technologies and runtime dependencies between application and database",
+   "answered_by": [
+    "libs",
+    "pxml",
+    "mysql"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "GUI, controllers, entities",
+   "reason": "component-level elements, belong to a component view"
+  },
+  {
+   "name": "JUnit",
+   "reason": "test scope only (forms_rt is a runtime library and is drawn)"
+  },
+  {
+   "name": "Build tool Maven / JDK on build machine",
+   "reason": "no CI or packaging config exists; only pom.xml"
+  }
+ ]
+}

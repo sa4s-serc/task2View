@@ -1,0 +1,27 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "What are the main system components involved in seat booking?",
+     "answered": "yes",
+     "why": "All components on the booking path are drawn and match the code: Swing wizard and REST controllers (ReservationSummary.java:100, ReservationController.java:29, StudyRoomController.java:44-65) -> LibraryFacade (makeReservation at :117 delegates to ReservationManager, availability at :81-101 delegates to StudyRoomManager) -> ReservationManager -> AssignmentStrategy/FirstAvailableAssignment, registries -> PersistenceManager -> MySQL via Hibernate (persistence.xml:8,21), and NotificationManager/NotificationServiceAdapter for the confirmation email. Nothing booking-relevant is missing, and librarian and auth parts are rightly left out."},
+    {"detail": "How do these components interact?",
+     "answered": "partly",
+     "why": "Most interactions are correct and directed: facade delegation, the Observer path (ReservationManager.java:120-122 attaches NotificationManager and calls notifyObservers; NotificationManager implements Observer, :15/:40) and the notification-service port. Two things weaken it. First, the Reservation manager is drawn as also PROVIDING 'Seat assignment' (the solid lollipop line resmgr - assignApi), which tells the developer that the manager implements the strategy contract when it only uses it (ReservationManager.java:31,46). Second, the resmgr -> model edge is labelled only 'saves, attaches observer', but before saving the manager reads students, areas and seats from the registries to validate the request and work out which seats are free (ReservationManager.java:52,109,165,182). A developer changing the booking rules needs to see that read and validation step."}
+  ],
+  "level": "right",
+  "level_why": "Balanced: 11 components in three layers, 4 interfaces where the code really has a seam (facade operations, AssignmentStrategy, Observer, NotificationService) and a note listing the four booking operations. No class-level detail (DTOs, wizard screens, state classes, factories) is drawn. The persistence tail (Persistence manager + MySQL) is already reduced to two elements, which suits a developer who must know where a reservation gets saved. No cuts or additions to the element set are needed.",
+  "unsupported": [
+    "Solid connector 'resmgr - assignApi' shows the Reservation manager as providing the Seat assignment interface. In the code ReservationManager has an AssignmentStrategy field and setter (ReservationManager.java:31,46) and calls it, so it only requires the interface. Only FirstAvailableAssignment implements it. The use dependency 'resmgr ..> assignApi' is correct by itself."
+  ],
+  "missing": [
+    "The Reservation manager reads from the model to validate the booking and work out which seats are free (userRegistry.findStudentById :52, roomRegistry.findSeatById/findAreaById/findRoomById :109,165,182) before reservationRegistry.saveReservation (:134). The edge label should say this, e.g. 'validates against, saves; attaches observer'."
+  ],
+  "uml": [
+    "resmgr - assignApi is a provided-interface (realization) connector on a component that does not realize the interface. Remove it so that Reservation manager connects to Seat assignment only by the <<use>> dependency.",
+    "The 'Booking operations' lollipop is provided by LibraryFacade, which is a class rather than a Java interface (LibraryFacade.java:13). Using it as the facade's provided operations is acceptable in a component view, but the note or README should say that it stands for the facade's public operations and is not a declared interface."
+  ],
+  "fixes": [
+    "Delete the solid connector 'resmgr - assignApi' and keep only 'resmgr ..> assignApi : <<use>>', so that the Seat assignment strategy is the only provider.",
+    "Relabel 'resmgr ..> model' to show the validation reads as well as the save and observer attach, e.g. 'validates (student, area, seat), saves, attaches observer'.",
+    "State in the note on Booking operations (or in the README) that this interface stands for LibraryFacade's public operations and is not a declared Java interface."
+  ]
+}

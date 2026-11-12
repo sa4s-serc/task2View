@@ -1,0 +1,21 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "Which parts of the application depend on this persisted information?",
+     "answered": "partly",
+     "why": "Revision 1 fixed most of the first critique. The layer chain matches the imports. Boundary imports only Control plus Entity.ReportCategory (ReportCreationGUI:4, ReceivedReportsGUI:4). Control imports only ReportService, UserService and ReportCategory. Only ReportService and UserService import Database.PersistenceService. The note now explains the coupling through field-keyed Map<String,Object> data and which entities each service owns. One real dependency on persisted data is still missing. The screens hard-code the stored status codes and repeat the lifecycle logic. ReportStatusUpdateGUI:15-18 redefines \"submitted\", \"assigned\", \"in_progress\" and \"resolved\", the same values as Report.STATUS_* (Report.java:33-36) that are stored in Report.currentStatusName. Its getNextDisplayStatus (ReportStatusUpdateGUI:387-391) repeats the Submitted->Assigned->InProgress->Resolved transition order. ReceivedReportsGUI:1049-1061 and SubmittedReportsGUI:603-605 map the stored codes to labels and back, and ReportService:802 does the same. A database engineer who changes how status is stored, or adds a state, has to change these screens too. The view says only that the state classes are 'rebuilt from the stored status text', which suggests the stored status matters only inside Entity. Also, the field-name coupling appears only in a note on Data services. No relation shows that Screens depend on the persisted field names or values."}
+  ],
+  "level": "right",
+  "level_why": "Four top-level packages, with Entity split into three logical groups, and the member lists kept in notes fits 'balanced'. No GUI, controller or entity classes are drawn, and there is nothing to cut. The one addition asked for below is a short note or a relabelled existing dependency, so it does not take the view past balanced.",
+  "unsupported": [
+    "The 'Persisted entities (stored)' note lists ReportCategory, Credentials and Location next to the entities. The persistence unit (persistence.xml:14-20) lists only User, Citizen, MunicipalOperator, Report, InternalNote, StatusUpdate and Notification. Credentials and Location are @Embeddable (stored as columns of their owning tables). ReportCategory is an enum stored as a string column (Report.java:49-51, @Enumerated(EnumType.STRING)). For a database engineer this distinction affects the schema, and the view presents all ten as equal stored entities.",
+    "Inventory evidence for the Controllers -> Data services relation cites src/main/java/Boundary/ActivityMonitoringGUI.java:132. That is a screen, not a controller, so it does not support the relation it is attached to. The relation itself is supported by the Control imports."
+  ],
+  "missing": [
+    "Screens depend on the stored status code values and repeat the lifecycle order. ReportStatusUpdateGUI:15-18 and 387-391, ReceivedReportsGUI:436-438 and 1049-1061, and SubmittedReportsGUI:603-605 use the strings stored in Report.currentStatusName (Report.java:33-36, 70). A change to how status is persisted reaches these screens directly, not through the State classes."
+  ],
+  "uml": [],
+  "fixes": [
+    "Show that Screens depend on the persisted status codes. For example, add to the 'Report status states' note or to a note on Screens: 'the stored status codes submitted/assigned/in_progress/resolved and their order are also hard-coded in ReportStatusUpdateGUI, ReceivedReportsGUI and SubmittedReportsGUI'. You could also relabel the Screens -> Controllers dependency to say that screens read field-keyed report data and status codes.",
+    "In the Persisted entities note, separate the JPA entities (User, Citizen, MunicipalOperator, Report, StatusUpdate, InternalNote, Notification) from the embedded values (Credentials, Location) and the enum column (ReportCategory).",
+    "Fix the inventory evidence for Controllers -> Data services: replace the ActivityMonitoringGUI citation with a Control file, e.g. ActivityMonitoringController.java:3-4."
+  ]}

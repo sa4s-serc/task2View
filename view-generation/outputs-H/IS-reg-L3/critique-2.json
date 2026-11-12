@@ -1,0 +1,29 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "Which components handle the registration request, validate personal information and selected role, manage role-specific data (student ID or librarian identifier), verify validity and uniqueness, and persist the new user, and what is each component's responsibility?",
+     "answered": "yes",
+     "why": "Each sub-question maps to a named component with its responsibility in the box: Registration form / Registration API (request entry; the form's blank-field check matches Registration.java:126-131), User manager (role, name, email, password, student-ID format, duplicate email/identifier, UserManager.java:65-97,173-221), User factories (StudentFactory sets studentNumber, LibrarianFactory sets internalIdentifierCode), User accounts (unique columns User.java:21, Student.java:19, Librarian.java:13), User registry and Persistence manager (save with rollback, false on failure, PersistenceManager.java:19-43). Small gaps a tester would want: the email rule is the institutional unina.it domain (UserManager.java:26), and the librarian code is only checked as alphanumeric, not against a pattern; the box text says 'email' and 'student ID format' without that distinction."},
+    {"detail": "What are the interactions and dependencies among the components involved in registration?",
+     "answered": "yes",
+     "why": "The chain form/API -> register (facade) -> User manager -> createUser (factories) and -> find and save user (registry) -> Persistence manager -> MySQL matches the calls in the code. The note covers the invalid/duplicate path (IllegalArgumentException -> HTTP 400 via RestExceptionHandler.java:19-22, error dialog on the form) and the failed-save path (RuntimeException, UserManager.java:93-94, not mapped, so HTTP 500). The REST error handler has no drawn connection, but the note explains that Spring applies it, which matches the code (no code dependency). Two error-path details are missing: the form also shows the save-failure message in a dialog (it catches every RuntimeException, Registration.java:138-140), and a duplicate that gets past the lookups (a race) fails the DB unique constraint, which turns into the same 500 path."}
+  ],
+  "level": "right",
+  "level_why": "The level is balanced: nine components in four layer groups, three provided interfaces and one external database. Each drawn component is a separate integration point a tester can stub or test (facade, manager, factories, registry, persistence, DB), and none is finer than the concern needs. Login, DTO mapping, UI helpers and JPA configuration are rightly left out. Merging further, for example the registry into the persistence manager, would hide the duplicate-lookup seam that the uniqueness tests target.",
+  "unsupported": [
+    "Student or librarian ..> POST /api/auth/register: the code shows a REST endpoint taking request parameters (AuthenticationController.java:22-28), which an HTTP client calls, not the person directly. This is a minor modelling liberty, not a false claim."
+  ],
+  "missing": [
+    "The institutional-domain rule for the email (must end in unina.it, UserManager.java:26). This is a key validation the tester needs for invalid-email cases.",
+    "The form shows a dialog for every RuntimeException, including the save failure (Registration.java:138-140). The note mentions a dialog only for validation and duplicate errors."
+  ],
+  "uml": [
+    "Library facade ..> User manager is labelled 'delegate register' with no «use», while every other usage carries «use». Make it consistent with «use».",
+    "Free-text labels on dependencies ('creates', 'stores', 'find and save', 'JPA, MySQL') act as informal stereotypes. Use the standard «create» for factories -> accounts and «use» elsewhere, and keep the descriptive words out of stereotype position or drop them.",
+    "The MySQL database is drawn as a deployment node inside a component diagram. This is acceptable as an external element, but a component (or «external» via a note) would keep the diagram to one model kind."
+  ],
+  "fixes": [
+    "Add the unina.it institutional-email rule to the User manager responsibility text, and say that the librarian code is only checked as alphanumeric.",
+    "Extend the error note: the form shows the save-failure message in a dialog too, and a duplicate that gets past the lookups (DB unique constraint) ends in the same save-failure / HTTP 500 path.",
+    "Put «use» on Library facade -> User manager and «create» on User factories -> User accounts so that dependency stereotypes are standard and consistent.",
+    "Optionally, route the REST interface use through an 'HTTP client' actor or label the actor to show it is any HTTP client, not the person."
+  ]}

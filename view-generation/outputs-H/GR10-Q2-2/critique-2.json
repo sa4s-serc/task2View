@@ -1,0 +1,38 @@
+{"verdict": "revise",
+  "concern_details": [
+    {"detail": "Which runtime environments and software artifacts are required to run the system?",
+     "answered": "yes",
+     "why": "The view shows Java 23 (pom.xml maven.compiler.source/target 23), the Maven artifact with default jar packaging and no mainClass or fat-jar plugin, the dependency jars on the classpath, the entry point HomePageGUI.main, forms_rt 7.0.3, Hibernate 6.6, Connector/J 9.4, persistence.xml and the MySQL server, plus the README prerequisite that the database and user are created by hand. One gap is small: the view does not separate the jar's own content from the separate dependency jars (see unsupported)."},
+    {"detail": "Where are the application and its data executed and stored?",
+     "answered": "partly",
+     "why": "It shows that the app and its libraries run in one JVM and that the data is in schema reports_db on a MySQL server. The view never states that the server is co-located with the app. That fact appears only inside the persistence.xml note (URL 127.0.0.1) and in the README note (reports_user@localhost). The note also does not say what the localhost-bound account means for a remote database: the MySQL account host has to change as well as persistence.xml. The view is good enough to place both elements, but the reader has to work out the host from the note text."},
+    {"detail": "How do the main runtime elements communicate with each other?",
+     "answered": "yes",
+     "why": "The view shows in-process calls from Application logic and GUI to Persistence access (ReportService and UserService are the only users of PersistenceService), then JPA to Hibernate, JDBC to Connector/J, and TCP 3306 to MySQL. This matches JpaUtil and persistence.xml."},
+    {"detail": "Which technologies and runtime dependencies are involved in the communication between the application and the database?",
+     "answered": "yes",
+     "why": "The view names JPA (Jakarta Persistence 3.1), Hibernate ORM 6.6, Connector/J 9.4 with driver com.mysql.cj.jdbc.Driver, JDBC, TCP 3306, the persistence unit name, RESOURCE_LOCAL and hbm2ddl update. All of them match persistence.xml and pom.xml. forms_rt is now off the database path."}
+  ],
+  "level": "right",
+  "level_why": "Ten elements and two short notes fit a balanced view for a DevOps engineer. Screens, controllers and domain are merged into one component, and only the libraries on the runtime classpath are shown. No element needs to be dropped. The fixes below change notation or labels and add no elements.",
+  "unsupported": [
+    "The <<manifest>> dependency goes from municipal-report-management-1.0-SNAPSHOT to the whole application component, and that component contains Hibernate, Connector/J and forms_rt. pom.xml has default jar packaging and no shade or assembly plugin, so the project jar holds only Boundary/Control/Entity/Database and persistence.xml. The three libraries come from their own Maven jars (hibernate-core 6.6.50.Final, mysql-connector-j 9.4.0, forms_rt 7.0.3). As drawn, the project jar looks as if it manifests the libraries too, which contradicts the '(no executable jar)' / 'dependency jars on the classpath' labels.",
+    "persistence.xml is labelled 'packaged with the app', but the view has no relation linking it to the jar. In the code it is src/main/resources/META-INF/persistence.xml, so it ends up inside the project jar. Drawn outside both the jar and the application, it can look like an external file that can be edited without repackaging, which is the opposite of what the note says."
+  ],
+  "missing": [
+    "A visible statement on the MySQL server element or the connector that the server is expected on the same host as the app (127.0.0.1). Also, moving it means changing both persistence.xml (then repackaging) and the reports_user@'localhost' account host from the README SQL.",
+    "HomePageGUI.main is the main entry point, but UserLoginGUI.main and UserRegistrationGUI.main also exist (UserLoginGUI.java:91, UserRegistrationGUI.java:145). A DevOps engineer writing a launch command should know which main class to use. A short phrase such as 'use HomePageGUI' is enough."
+  ],
+  "uml": [
+    "logic --> persist is a solid open-arrow line labelled <<use>>. In UML, <<use>> is a Usage dependency and must be drawn as a dashed arrow, as the other <<use>> relations are.",
+    "jdbc ---> mysql (TCP 3306) is a solid directed line with no UML relation kind. In a component diagram, use a dashed <<use>> dependency labelled 'JDBC over TCP 3306', or an assembly connector between a required interface on Connector/J and a provided interface (MySQL protocol, port 3306) on the MySQL server.",
+    "The <<manifest>> target is too broad. An artifact should manifest only the component it actually implements, here 'Application logic and GUI' plus 'Persistence access', or else the library components need their own manifesting jar artifacts. As drawn it is semantically wrong (see unsupported)."
+  ],
+  "fixes": [
+    "Change logic --> persist into a dashed <<use>> dependency. Change jdbc ---> mysql into a dashed <<use>> dependency labelled 'JDBC over TCP 3306', or an assembly connector, so that every relation is a valid UML relation kind.",
+    "Fix the <<manifest>> scope. Point the project jar's <<manifest>> only at Application logic and GUI and Persistence access, and mark the Hibernate, Connector/J and forms_rt components as coming from separate dependency jars on the classpath (for example in their labels). Do not add new artifact elements.",
+    "Show that persistence.xml is inside the project jar, for example with a dependency or a label on the jar artifact ('contains META-INF/persistence.xml'), so it does not look like an external config file.",
+    "Put 'same host as the app (127.0.0.1)' in the MySQL server label. In the prerequisite note, add that a remote database also needs the reports_user account host changed from 'localhost'.",
+    "Say in the application label that HomePageGUI is the main class to launch, even though UserLoginGUI and UserRegistrationGUI also have main methods."
+  ]
+}

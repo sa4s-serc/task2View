@@ -1,0 +1,27 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "Which runtime environments and software artifacts are required to run the system?",
+     "answered": "yes",
+     "why": "The view shows the Java 23 JVM (pom.xml compiler source/target 23), the application artifact and that no executable jar is built (the pom has no packaging or manifest config), the runtime libraries Hibernate 6.6, Connector/J 9.4 and forms_rt 7.0.3 (all compile scope; forms_rt is imported in Boundary/HomePageGUI.java:3-4), persistence.xml, the MySQL server and schema reports_db. The code pins no MySQL server version, so leaving one out is correct. One small gap: the GUIs load /images/logo.png, which is missing from src/main/resources. This does not stop the app from starting, so it is not needed at this level."},
+    {"detail": "Where are the application and its data executed and stored?",
+     "answered": "yes",
+     "why": "The app runs in the JVM on the user workstation and the data lives in reports_db on the MySQL server. The Database host device is marked 'same machine by default', which matches jdbc:mysql://127.0.0.1:3306 and the 'reports_user'@'localhost' grant in README.md. The note says that a separate host needs a new URL and a new grant."},
+    {"detail": "How do the main runtime elements communicate with each other?",
+     "answered": "yes",
+     "why": "There is one communication path, JVM to MySQL, JDBC over TCP :3306. The code agrees: the only other java.net.URL use is getResource for a classpath logo image, not network I/O."},
+    {"detail": "Which technologies and runtime dependencies are involved in the communication between the application and the database?",
+     "answered": "yes",
+     "why": "The view names JPA via Hibernate ORM 6.6 (provider in persistence.xml), the MySQL Connector/J 9.4 driver, and TCP 3306. The deployment spec lists the driver, URL, user, plaintext password and hbm2ddl update, and says the file is packaged with the app. The note covers schema creation by Hibernate and the manual creation of the DB and user."}
+  ],
+  "level": "right",
+  "level_why": "For a balanced deployment view there are two devices, two execution environments, three artifact groups plus one deployment spec, and one communication path. The app's internals and JUnit are left out, and the libraries are merged into one artifact. The labels are dense (password, hbm2ddl, the grant), but each one is a setting a DevOps engineer must change in a new environment. Nothing should be cut, and adding anything would go past the balanced level.",
+  "unsupported": [],
+  "missing": [],
+  "uml": [
+    "The app -- pxml link is a plain solid association labelled 'configured by'. UML does not relate a deployment specification to an artifact this way. Either nest the «deployment spec» inside the app artifact or connect it with a dashed dependency. Minor.",
+    "Deploying the schema artifact into MySQL and the app artifacts into the JVM by nesting is valid UML. The communication path between execution environments is valid, and «device», «executionEnvironment», «deployment spec» and «use» are all standard. No other problems."
+  ],
+  "fixes": [
+    "Optional: replace the solid 'configured by' association between the app and persistence.xml with a dashed dependency, or nest the deployment spec in the app artifact."
+  ]
+}

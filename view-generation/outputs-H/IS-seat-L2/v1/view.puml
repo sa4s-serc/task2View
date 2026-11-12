@@ -1,0 +1,57 @@
+@startuml
+skinparam componentStyle uml2
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+title cmp Seat booking in the study-room reservation application
+
+actor "Student" as student
+actor "Librarian" as librarian
+
+package "Entry points" as entry {
+  component "Desktop booking screens" as swing
+  component "Reservation REST API" as rest
+  component "Reservation scheduler" as sched
+}
+package "Booking logic" as logic {
+  component "Library facade" as facade
+  component "Reservation manager" as resMgr
+  component "Room availability manager" as roomMgr
+  component "Notification manager" as notifMgr
+  component "Seat assignment strategy" as strategy
+}
+package "Domain and persistence" as domain {
+  component "Reservation and seat model" as model
+  component "Registries" as registries
+  component "Persistence manager" as persist
+}
+component "Reservations database" as db <<external>>
+interface "Facade operations" as facadeApi
+interface "Seat selection" as strategyApi
+interface "JPA" as jpa
+
+student -[hidden]right- librarian
+student ..> swing : <<use>>
+librarian ..> swing : <<use>>
+swing ..> facadeApi : <<use>>
+rest ..> facadeApi : <<use>>
+sched ..> facadeApi : <<use>>
+facade - facadeApi
+strategy - strategyApi
+facade ..> resMgr : books, cancels
+facade ..> roomMgr : queries rooms
+facade ..> notifMgr : sends reminders
+resMgr ....> strategyApi : <<use>>
+resMgr ..> notifMgr : notifies
+resMgr ....> registries : saves reservation
+resMgr ...> model : creates reservation
+
+roomMgr ..> registries : reads rooms
+notifMgr ..> registries : updates reservation
+registries ..> model : loads
+registries ..> persist : stores data
+persist - jpa
+db - jpa
+persist ..> jpa : <<use>>
+@enduml

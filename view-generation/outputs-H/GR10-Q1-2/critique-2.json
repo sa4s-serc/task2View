@@ -1,0 +1,24 @@
+{"verdict": "accept",
+  "concern_details": [
+    {"detail": "What are the main architectural components and what is each one responsible for?", "answered": "yes", "why": "The four package components (Boundary, Control, Entity, Database) each have a responsibility note in the diagram, and the external JPA API is marked separately. The notes match the code: Swing GUIs in Boundary, one controller per use case behind SystemServicesController (Control/SystemServicesController.java:11-29), JPA entities plus ReportService/UserService in Entity, and JpaUtil/PersistenceService over Hibernate and MySQL (META-INF/persistence.xml:12,27)."},
+    {"detail": "How is the system decomposed into layers or subsystems?", "answered": "yes", "why": "Four layers, presentation, application, domain and persistence, are stacked top to bottom, and each is named after its package."},
+    {"detail": "What are the main dependencies among the components, layers or subsystems?", "answered": "yes", "why": "All dependencies go downward and are confirmed by imports. Boundary uses SystemServicesController and, for login only, UserLoginController (Boundary/UserLoginGUI.java:3,111). Control uses ReportService/UserService. Entity services use PersistenceService (Entity/ReportService.java:3, Entity/UserService.java:3). Entity and Database use jakarta.persistence. Boundary->Entity is also drawn. One small gap: that edge exists only because of the ReportCategory enum (Boundary/ReceivedReportsGUI.java:4, Boundary/ReportCreationGUI.java:4), and nothing in the view says so, so it can look like the UI uses domain entities or services."},
+    {"detail": "How are user-facing functionality, application logic, domain entities and data persistence separated?", "answered": "yes", "why": "The view shows the four parts and the notes give the two places where separation breaks down: login goes around the facade, and domain entities and services sit together with the services coupled directly to PersistenceService and JPA annotations on the entities."},
+    {"detail": "How do these parts collaborate to provide the main system functionalities?", "answered": "partly", "why": "The Control note lists the use cases the facade exposes, and the dependency chain implies the path screen -> controller -> domain service -> PersistenceService. But that chain is stated only in the README, not in the diagram. Status-update notification is also handled inside Control (ReportStatusUpdateController.java:13,21 creates NotificationController) and is not mentioned. This is acceptable for a static component overview, but one sentence in a note would close the gap."}
+  ],
+  "level": "right",
+  "level_why": "For an overview, four package-level components, one external library and four interfaces are the right granularity. No classes are drawn and there is nothing to cut. The remaining suggestions are short note text, not new elements.",
+  "unsupported": [],
+  "missing": [
+    "The Boundary -> Entity dependency is only on the ReportCategory enum (Boundary/ReceivedReportsGUI.java:4, ReportCreationGUI.java:4). The view does not say this, so it overstates how much the UI depends on the domain.",
+    "The diagram does not state the collaboration chain per use case (screen -> facade -> use-case controller -> ReportService/UserService -> PersistenceService). It appears only in the README. Notifications on status update, which go through NotificationController inside Control, are not mentioned either."
+  ],
+  "uml": [
+    "«library» is a standard-profile stereotype for Artifacts, not for Components. Drawing jakarta.persistence as a component with «library» is a small notation stretch. Either keep the component and leave 'external' in its name, or accept the stereotype as the documented convention given in the legend.",
+    "The 'Controller facade' and 'Login controller' lollipops stand for concrete classes, not Java interfaces. Only the services interface is marked as logical. For consistency, either label all three as logical interfaces or state this once in the legend."
+  ],
+  "fixes": [
+    "Label or annotate the Boundary -> Entity «use» dependency as 'ReportCategory enum only' so the architect does not read it as UI-to-domain-logic coupling.",
+    "Add one sentence to the Control note saying that each use case runs facade -> controller -> domain service -> PersistenceService, and that a status update also triggers a notification inside Control.",
+    "Mark all provided interfaces as logical in one consistent way (for example a legend line), since none of them is a Java interface."
+  ]}

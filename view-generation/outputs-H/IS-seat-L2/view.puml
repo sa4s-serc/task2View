@@ -1,0 +1,128 @@
+@startuml
+' ---- house style (document) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+skinparam componentStyle uml2
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 420 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 70
+
+title cmp Seat booking in the study-room reservation application
+
+actor "Student" as student
+
+package "Entry points" as entry {
+  component swing [
+    Desktop booking screens
+    ----
+    book, cancel, check in
+  ]
+  component rest [
+    Reservation REST API
+    ----
+    HTTP booking endpoints
+  ]
+  component sched [
+    Reservation scheduler
+    ----
+    expires bookings, reminders
+  ]
+}
+package "Booking logic" as logic {
+  component facade [
+    Library facade
+    ----
+    one entry point, delegates
+  ]
+  component resMgr <<accent>> [
+    Reservation manager
+    ----
+    booking flow: validates,
+    checks uniqueness, saves, notifies
+  ]
+  component strategy <<accent>> [
+    Seat assignment strategy
+    ----
+    picks the seat
+  ]
+  component roomMgr [
+    Room availability manager
+    ----
+    availability shown to users,
+    room deletion cancels bookings
+  ]
+  component notifMgr [
+    Notification manager
+    ----
+    confirmations and reminders
+  ]
+}
+package "Domain and persistence" as domain {
+  component model <<accent>> [
+    Reservation and seat model
+    ----
+    seat availability, one booking
+    per slot, opening days, states
+  ]
+  component registries <<accent>> [
+    Registries
+    ----
+    queries and stores;
+    shared occupancy rule
+  ]
+  component persist <<muted>> [
+    Persistence (JPA, MySQL)
+    ----
+    stores reservations, rooms
+  ]
+}
+interface "Facade operations" as facadeApi
+interface "Seat selection" as strategyApi
+interface "Reservation observer" as observerApi
+
+student -- swing
+swing ..> facadeApi : <<use>>
+rest ..> facadeApi : <<use>>
+sched ..> facadeApi : <<use>>
+facade -left- facadeApi
+facade ..> resMgr : books, cancels
+facade ..> roomMgr : queries rooms
+facade ..> notifMgr : sends reminders
+strategy -right- strategyApi
+resMgr ..> strategyApi : <<use>>
+resMgr ..> notifMgr : notifies
+resMgr ..> registries : saves reservation
+resMgr ..> model : creates reservation
+roomMgr ..> registries : reads, cancels bookings
+roomMgr ..> notifMgr : notifies on deletion
+notifMgr -right- observerApi
+notifMgr ..> registries : saves status
+model ..> observerApi : <<use>>
+model ..> registries : checks occupancy
+registries ..> model : loads
+registries ..> persist : stores data
+
+legend right
+  Blue fill: likely changed by a new booking rule.
+  Plain: may be affected (signatures, displayed availability, messages).
+  Grey: storage, unaffected unless the data changes.
+endlegend
+@enduml

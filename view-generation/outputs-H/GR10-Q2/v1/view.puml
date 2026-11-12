@@ -1,0 +1,62 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+left to right direction
+
+' ---- body ----
+title UML deployment diagram: Municipal Report Management System
+
+node "User workstation\n(citizen or municipal operator)" as ws <<device>> {
+  node "Java 23 runtime (JVM)" as jvm <<executionEnvironment>> {
+    artifact "municipal-report-management\n-1.0-SNAPSHOT (Maven build)" as app
+    artifact "persistence.xml\n(unit Municipal_Report_Management_System)" as pxml
+    artifact "Hibernate ORM 6.6 +\nMySQL Connector/J 9.4" as libs
+  }
+}
+
+node "Database host\n(127.0.0.1 by default)" as dbhost <<device>> {
+  node "MySQL server\nport 3306" as mysql <<executionEnvironment>> {
+    artifact "Schema reports_db\n(user reports_user)" as schema
+  }
+}
+
+app -[hidden]right-> pxml
+pxml -[hidden]right-> libs
+app ..> pxml : reads settings
+app --> libs : persists via JPA
+libs --> mysql : JDBC over TCP :3306
+mysql ..> schema : stores data
+
+note bottom of dbhost
+  Hibernate creates the tables on start
+  (hbm2ddl update).
+  The schema and its user are set up
+  manually.
+end note
+@enduml

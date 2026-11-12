@@ -1,0 +1,44 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "What are the main types of users that interact with the system?",
+      "answered": "yes",
+      "why": "Citizen and Municipal operator are the two roles the code distinguishes (UserDashboardGUI.java:14-15, UserRegistrationGUI.java:112-113; Entity/Citizen.java, Entity/MunicipalOperator.java). No other human or external actor exists in the code."
+    },
+    {
+      "detail": "What main goals can each type of user achieve through the system?",
+      "answered": "partly",
+      "why": "The dashboard goals per role are drawn and match configureDashboardCitizen/configureDashboardOperator (UserDashboardGUI.java:316-350). But the goal assignment is wrong in two places: 'Register an account' is drawn for the citizen only, while the registration form lets the user pick 'Municipal Operator' as role (UserRegistrationGUI.java:110-115, 183-202), so operators register too; and 'View report details' has no actor at all, although both citizens (SubmittedReportsGUI.requestReportDetails, line 147) and operators (ReceivedReportsGUI.requestReportDetails, line 237) open it directly. The README itself flags the registration point as an unconfirmed assumption instead of checking it."
+    },
+    {
+      "detail": "How are the different functionalities related to each other?",
+      "answered": "partly",
+      "why": "Four include/extend links are drawn, but two misstate the relation the code shows. Notifications are an optional choice ('View Notifications' button) inside the report-details dialog of submitted reports (SubmittedReportsGUI.java:237-262), so they are not an unconditional «include» of 'Follow my reports'. 'Update report status' is its own dashboard button that opens the received-reports list in status-update mode (UserDashboardGUI.java:556-575, ReceivedReportsGUI modeStatusUpdate) — i.e. it uses report selection; it is not an optional extension inserted into 'Review received reports'. The link a business analyst most needs — that the operator's status update triggers the citizen's notification — is not visible as a relation between the two actors' goals."
+    }
+  ],
+  "level": "right",
+  "level_why": "Ten use cases and two actors suit an overview of user goals; screens, filters, categories and entities are rightly left out. 'View report details' and 'Read status notifications' are sub-goals rather than user goals, but they carry the relations the third concern detail asks about, so they can stay if their relations are corrected. Adding history, image or 'view internal notes' use cases would go past overview and is not asked for.",
+  "unsupported": [
+    "Citizen-only association to 'Register an account': the code lets both roles register (UserRegistrationGUI.java:110-115 role combo with 'Citizen' and 'Municipal Operator'; UserRegistrationController.java:55-64 requires a role).",
+    "'Follow my reports' «include» 'Read status notifications': in the code notifications are shown only if the citizen chooses 'View Notifications' in the report-details dialog (SubmittedReportsGUI.java:237-262), an optional step, i.e. an «extend» of viewing report details, not a mandatory inclusion.",
+    "'Update report status' «extend» 'Review received reports': the code has a separate 'Update status' dashboard entry (UserDashboardGUI.java:556-575) that reuses the received-reports list (ReceivedReportsGUI with modeStatusUpdate=true) to select a report; there is no extension point in reviewing reports that optionally inserts a status update. Since the operator is also directly associated with 'Update report status', the extend is redundant and misleading."
+  ],
+  "missing": [
+    "Association of Municipal operator with 'Register an account' (role selected at registration).",
+    "Associations of both Citizen and Municipal operator with 'View report details' (SubmittedReportsGUI.java:147, ReceivedReportsGUI.java:237); currently that use case is reachable only through include/extend and no actor 'owns' it.",
+    "The relation showing that the citizen's notifications originate from the operator's status update (ReportStatusUpdateController / NotificationController.java:46). A short note on 'Update report status' or 'Read status notifications' would answer 'how are functionalities related' across the two user types without adding elements."
+  ],
+  "uml": [
+    "«extend» is used where the code shows a mandatory reuse or a separate entry point ('Update report status' → 'Review received reports'); «include»/«extend» direction and meaning must follow UML: extend = optional behaviour inserted into the base use case, include = always performed.",
+    "«include» used for an optional step ('Follow my reports' → 'Read status notifications'); this should be «extend» (from 'Read status notifications' to the base use case).",
+    "'View report details' is included/extended but has no actor association even though actors initiate it directly; in a use case diagram a user goal started by an actor should be associated with that actor."
+  ],
+  "fixes": [
+    "Associate both Citizen and Municipal operator with 'Register an account' (the code's registration form offers both roles) and drop the README assumption.",
+    "Associate both actors with 'View report details', and make 'Read status notifications' an «extend» of 'View report details' (citizen-side optional choice) instead of an «include» of 'Follow my reports'.",
+    "Remove the «extend» from 'Update report status' to 'Review received reports'; keep 'Update report status' as a direct operator goal that «include»s 'View report details' (or selecting a received report).",
+    "Add a note tying 'Update report status' to 'Read status notifications' (a status change creates a notification for the citizen who submitted the report), so the cross-actor relation is visible.",
+    "Keep 'Add internal note' «extend» 'View report details' (supported by ReceivedReportsGUI.java:331-361) and leave the rest of the element set at its current overview size."
+  ]
+}

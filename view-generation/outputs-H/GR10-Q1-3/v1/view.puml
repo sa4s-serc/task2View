@@ -1,0 +1,78 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+sequenceDiagram {
+  participant { Margin 0 12 }
+  lifeLine    { LineColor #94A3B8 }
+  group       { FontSize 12 }
+}
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+
+' ---- body ----
+title UML sequence diagram: main functionalities across the four layers
+hide footbox
+
+actor       "User\n(citizen or municipal operator)" as user
+participant "Boundary\n(presentation: Swing screens)" as screens
+participant "Control\n(application: use-case controllers)" as controllers
+participant "Entity\n(domain: entities and services)" as domain
+participant "Database\n(persistence: JPA access)" as storage
+participant "MySQL database\n(external)" as mysql
+
+== Sign in ==
+user -> screens : enter email, password
+screens -> controllers : verify credentials
+controllers -> domain : retrieve user data
+domain -> storage : find by fields
+storage -> mysql : query
+screens --> user : dashboard or error
+
+== Citizen reports a problem ==
+user -> screens : submit report form
+screens -> controllers : create report
+alt data valid, user is citizen
+  controllers -> domain : register new report
+  domain -> storage : save report
+  storage -> mysql : insert in transaction
+  domain --> controllers : new report id
+  controllers --> screens : success
+else invalid data
+  controllers --> screens : rejected with message
+end
+screens --> user : confirmation or error
+
+== Operator advances report status ==
+user -> screens : confirm status update
+screens -> controllers : update report status
+controllers -> domain : update status\nand notify citizen
+note right of domain
+  A notification is saved
+  for the citizen when the
+  new status is notifiable.
+end note
+domain -> storage : update report,\nsave notification
+storage -> mysql : write in transaction
+controllers --> screens : result
+screens --> user : confirmation
+@enduml

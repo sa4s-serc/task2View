@@ -1,0 +1,69 @@
+@startuml
+' ---- house style (document) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 260 }
+title   { FontSize 18; FontStyle bold }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 420 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<muted>> stereotype
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 70
+
+title pkg Seat booking in the study-room reservation application
+
+package "Entry points" as entry {
+  package "Desktop booking screens" as swing
+  package "Reservation REST API" as rest
+  package "Reservation scheduler" as sched
+}
+package "Booking logic" as logic {
+  package "Library facade" as facade
+  package "Reservation manager" as resMgr <<accent>>
+  package "Seat assignment strategy" as strategy <<accent>>
+  package "Room availability manager" as roomMgr
+  package "Notification manager" as notifMgr
+}
+package "Domain and persistence" as domain {
+  package "Reservation and seat model" as model <<accent>>
+  package "Registries" as registries <<accent>>
+  package "Persistence (JPA, MySQL)" as persist <<muted>>
+}
+
+swing ..> facade : calls
+rest ..> facade : calls
+sched ..> facade : calls
+facade ..> resMgr : books, cancels
+facade ..> roomMgr : queries rooms
+facade ....> notifMgr : sends reminders
+resMgr ..> strategy : selects seat
+resMgr ..> notifMgr : notifies
+resMgr ....> registries : saves reservation
+resMgr ..> model : creates reservation
+roomMgr ..> registries : reads, cancels bookings
+roomMgr ..> notifMgr : notifies on deletion
+notifMgr ....> registries : saves status
+model ..> registries : checks occupancy
+registries ..> model : loads
+registries ..> persist : stores data
+
+legend right
+  Blue fill: likely changed by a new booking rule.
+  Plain: may be affected (signatures, displayed availability, messages).
+  Grey: storage, unaffected unless the data changes.
+endlegend
+@enduml

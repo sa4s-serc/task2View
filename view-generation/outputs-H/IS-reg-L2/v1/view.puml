@@ -1,0 +1,92 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+</style>
+hide <<accent>> stereotype
+hide <<alert>> stereotype
+hide <<muted>> stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 90
+skinparam ranksep 60
+top to bottom direction
+
+' ---- body ----
+title Component view: user registration (student and librarian)
+
+actor "New user (student or librarian)" as user
+
+package "Presentation" as pres {
+  [Registration form (desktop)] as form
+  [Authentication REST API] as rest
+}
+package "Application" as app {
+  [Library facade] as facade
+  [User manager] as um
+  [User factories] as fac
+}
+package "Domain and persistence" as dom {
+  [User registry] as reg
+  [Persistence manager] as pm
+}
+component "Account database (MySQL)" as db <<muted>>
+
+interface "Sign-up screen" as screen
+interface "Register endpoint" as http
+interface "Library facade API" as facadeApi
+interface "Register operation" as regOp
+interface "User factory" as facApi
+interface "User registry API" as regApi
+interface "Persistence API" as pmApi
+interface "JPA / JDBC" as jpa
+
+form - screen
+rest - http
+facade - facadeApi
+um - regOp
+fac - facApi
+reg - regApi
+pm - pmApi
+db - jpa
+
+user ..> screen : <<use>>
+user ..> http : <<use>>
+form ..> facadeApi : <<use>>
+rest ..> facadeApi : <<use>>
+facade ..> regOp : <<use>>
+um ..> facApi : <<use>>
+um ..> regApi : <<use>>
+reg ..> pmApi : <<use>>
+pm ..> jpa : <<use>>
+
+note right of um
+  Integration points to exercise:
+  form and REST both reach the facade,
+  facade delegates to the user manager,
+  duplicate checks read the registry,
+  new user is saved through the database.
+end note
+
+legend bottom
+  Lollipop = provided interface; dashed arrow = required interface (use).
+  Grey = external system.
+endlegend
+@enduml

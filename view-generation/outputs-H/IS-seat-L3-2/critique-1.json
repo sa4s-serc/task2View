@@ -1,0 +1,72 @@
+{
+  "verdict": "revise",
+  "concern_details": [
+    {
+      "detail": "Which are the main components involved in the booking process and what is each one responsible for?",
+      "answered": "partly",
+      "why": "The modules are the right ones. But every package box in the diagram is empty. Only Reservation Manager ('applies booking rules') and Reservation Domain Model ('seat availability, states') show a responsibility. The other responsibilities are only in inventory.json, so a developer reading the PNG cannot tell what Library Facade, Study Room Manager, the three registries, Notification Manager or Persistence Manager do."
+    },
+    {
+      "detail": "How do the components interact and depend on each other?",
+      "answered": "yes",
+      "why": "The labelled dependencies follow the code: Swing/REST/Scheduler -> LibraryFacade -> ReservationManager -> strategy, registries, Area/Seat and NotificationManager; registries -> PersistenceManager. One booking-relevant dependency is missing: NotificationManager -> ReservationRegistry (see missing)."
+    },
+    {
+      "detail": "Which components handle booking requests?",
+      "answered": "yes",
+      "why": "The path Swing Desktop Client / REST API -> Library Facade ('delegates booking') -> Reservation Manager is drawn and matches ReservationController:29, LibraryFacade:118 and ReservationManager.makeReservation."
+    },
+    {
+      "detail": "Which components check seat availability?",
+      "answered": "partly",
+      "why": "The edges 'checks seats' (to the Domain Model) and Domain Model -> Reservation Registry 'queries bookings' are there. The view does not say what decides that a seat is taken: ReservationRegistry.occupiesSlot (ACTIVE or CONFIRMED), which Seat.isAvailable and Student's uniqueness check both rely on. Reservation Registry has no label, so it looks like plain storage."
+    },
+    {
+      "detail": "Which components apply booking rules?",
+      "answered": "partly",
+      "why": "Only Reservation Manager is labelled as applying the rules. In the code the rules are spread out. ReservationManager handles room active/open, area and seat-in-area. Student.hasActiveOrConfirmedReservationForDateAndSlot (Domain Model) enforces one booking per slot. ReservationRegistry.occupiesSlot sets which states block a seat. FirstAvailableAssignment chooses the seat. A developer adding rules needs to see all of these places."
+    },
+    {
+      "detail": "Which components manage and store reservations?",
+      "answered": "partly",
+      "why": "Reservation Manager -> Reservation Registry 'saves bookings' -> Persistence Manager is drawn. But Notification Manager also updates stored reservations (reminderSent via reservationRegistry.update, NotificationManager:74-82), and that edge is left out. The User Registry is called a store of reservations in the README, but it stores students, not reservations."
+    },
+    {
+      "detail": "Which components interact with external services such as the notification service?",
+      "answered": "yes",
+      "why": "The chain Notification Manager -> NotificationService <- Email Notification Adapter -> External email gateway (stub) is drawn. So are Reservation Manager -> Notification Manager 'notifies' (observer attach at ReservationManager:131) and Scheduler -> Facade. The Scheduler edge is labelled only 'triggers expiry', but it also triggers sendReminders (NotificationScheduler:26)."
+    },
+    {
+      "detail": "Which parts of the system need to be modified for the new booking rules, and which other components may be affected?",
+      "answered": "partly",
+      "why": "Colour alone marks 'likely changed' and 'may be affected'. The diagram does not say why each module is marked or which rule kind touches it. The Library Facade, REST API and Swing client are unmarked, though new rules that need new request data (ReservationRequestDTO) or new error messages would reach them. Reservation Registry is marked blue, but the reason (occupiesSlot) is not shown."
+    }
+  ],
+  "level": "right",
+  "level_why": "For a balanced view, about 15 class/package-level modules in 4 layers fits. The Swing client, Persistence Manager and the scheduler could stay. The three parallel 'opens sessions' edges to Persistence Manager add little and could be one note or one edge from the layer. What is wrong is not the number of elements but that the elements are empty boxes: the responsibilities the concern asks for are not visible."
+  ,
+  "unsupported": [
+    "README/inventory say Study Room Manager 'keeps its own occupancy computation' as a separate availability check. createSeatStatusMap (StudyRoomManager:326) uses ReservationRegistry.findReservationsByRoomAndDate, which already filters with occupiesSlot, and it serves librarian monitoring (monitoraSale), not booking. Browsing counts use Area.getAvailableSeats (StudyRoomManager:381). The 'derives occupancy' edge exists in the code, but it is about monitoring, not booking.",
+    "The README lists User Registry under 'manage and store reservations'. UserRegistry only finds and updates students (ReservationManager:37 resolveStudent). It stores no reservations.",
+    "Scheduler -> Facade is labelled 'triggers expiry' only. The code also triggers reminder sending (NotificationScheduler:26 sendReminders -> LibraryFacade:163)."
+  ],
+  "missing": [
+    "Responsibilities on the diagram itself (a short phrase per module, at least for Facade, Study Room Manager, the three registries and Notification Manager).",
+    "Where the booking rules live outside Reservation Manager: Student.hasActiveOrConfirmedReservationForDateAndSlot (one booking per slot, entity/Student.java:42) and ReservationRegistry.occupiesSlot (which states block a seat, entity/ReservationRegistry.java:120). These are the places a new rule is most likely to touch.",
+    "Dependency Notification Manager -> Reservation Registry (reads ending reservations and updates reminderSent, NotificationManager:18,74-82). It shows that a new reservation state or rule also affects reminder sending.",
+    "The fact that the boundary (REST API, Swing) and the Facade pass the booking request through (ReservationRequestDTO), so a rule that needs new input changes them too. Mark them as possibly affected."
+  ],
+  "uml": [
+    "swing --> facade, rest --> facade and sched --> facade are drawn as solid open-arrow lines (association). Between packages these must be dependencies (dashed, ideally «use»), like the other edges.",
+    "'NotificationService (interface)' is modelled as a package, and adapter ..> notifsvc carries the word 'realizes' on a plain dependency. Either show the interface as a UML interface (classifier) with a realization (dashed line, hollow triangle) from the adapter, or keep packages and use a «use» dependency without claiming realization.",
+    "Relation labels are free text on unstereotyped dependencies. A UML package diagram should use the standard «use» (or «import»/«access») keyword. The descriptive verbs can stay as names, but the kind of dependency should be standard.",
+    "Single classes (Reservation Manager, Library Facade, Persistence Manager, Notification Scheduler) are drawn as packages. State this once in the diagram, for example a note saying 'each package = one Java class or package', so readers do not assume they are Java packages (they are not: they all sit in controller/ or entity/)."
+  ],
+  "fixes": [
+    "Write a one-line responsibility inside each module package (or in a note per layer) so the PNG answers 'what is each one responsible for' without inventory.json.",
+    "Show where the booking rules live: label Reservation Manager with its rules (room open/active, area, seat in area), the Domain Model with 'one booking per slot (Student)', and Reservation Registry with 'occupiesSlot: which states block a seat'.",
+    "Add Notification Manager ..> Reservation Registry (reads/updates reservations for reminders). Mark REST API, Swing and the Facade as possibly affected when a rule needs new request data. Fix the Scheduler label to 'triggers expiry and reminders'.",
+    "Fix the notation: make all inter-package edges dashed «use» dependencies, model NotificationService as an interface with a proper realization from the adapter, or drop the word 'realizes'.",
+    "Correct the README: remove User Registry from 'store reservations', and describe the Study Room Manager occupancy as librarian monitoring that reuses occupiesSlot, not an independent availability check. Optionally merge the three 'opens sessions' edges."
+  ]
+}

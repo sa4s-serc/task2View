@@ -1,0 +1,39 @@
+I am giving you a software repository (the current folder) and a stakeholder's request, together with the
+request's inputs in the terms of ISO/IEC/IEEE 42010:2022. Produce one architecture view that addresses the
+stakeholder's concern, governed by the given viewpoint and model kind. Derive the architecture from the code
+in this folder; base every element and relation on it.
+
+Request (verbatim):
+I am a software developer. I need to modify the seat booking functionality to introduce new booking rules. Before making changes to the code, I need to understand the high-level architecture supporting this functionality. I want to identify the main components involved in the booking process, their responsibilities, and the interactions and dependencies among them. In particular, I need to understand which components are responsible for handling booking requests, checking seat availability, applying booking rules, managing and storing reservations, and interacting with external services such as the notification service. This understanding will help me identify which parts of the system need to be modified and which other components may be affected by the changes.
+
+Inputs (ISO/IEC/IEEE 42010:2022):
+- Entity of interest: application for booking study-room seats, with student and librarian users
+- Stakeholder: software developer who will modify the seat booking functionality
+- Stakeholder perspective: understand the high-level architecture of the seat booking functionality before changing the code, to identify which parts need to be modified and which other components may be affected by introducing new booking rules; detail level: balanced
+- Concern: Booking components, responsibilities and dependencies
+  - Which are the main components involved in the booking process and what is each one responsible for?
+  - How do the components interact and depend on each other?
+  - Which components handle booking requests?
+  - Which components check seat availability?
+  - Which components apply booking rules?
+  - Which components manage and store reservations?
+  - Which components interact with external services such as the notification service?
+  - Which parts of the system need to be modified for the new booking rules, and which other components may be affected?
+- Aspect: structural (module)
+- Viewpoint: module
+- Model kind: UML package diagram
+
+Write the view as PlantUML source in ./view-out/IS-seat-L3-2/view.puml, and a short ./view-out/IS-seat-L3-2/README.md
+that says what the view shows and how it addresses each part of the concern.
+
+Use the uml-view skill in .claude/skills (it builds on the plantuml-diagrams skill there) and follow all its
+steps. Write view.puml, view.png, inventory.json and README.md in ./view-out/IS-seat-L3-2/.
+The detail level is given in the stakeholder perspective (balanced); draw at that level and run
+check_inventory.py with --level balanced --graph .claude/repo-graph.json.
+A static dependency graph of the repository is in .claude/repo-graph.json; query it with the skill's
+graph_query.py as the skill describes.
+Then run check_view.py on view.puml as the skill describes and fix what it reports.
+
+This task has more than one view. Views already drawn for it:
+  - IS-seat-L3 (component): ./view-out/IS-seat-L3/inventory.json
+Read their inventories first: an element that stands for the same code keeps the same name and styling. Then run check_consistency.py on all the inventories, as the skill describes, and fix what it reports in your view.
