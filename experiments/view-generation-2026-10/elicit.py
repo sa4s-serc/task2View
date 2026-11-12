@@ -5,11 +5,11 @@ For each case of inputs.yaml:
   2. answers   the stakeholder confirms or corrects them in one round: a person at the terminal (--ask), or a
                simulated stakeholder (default) that knows only the case's long request text (original_request
                when there is one, else request); the agent sees only `request`
-  3. proposal  the agent proposes the views: one viewpoint per view from elicit/viewpoints.yaml, every concern in
-               at least one view, and any other viewpoint that answers a concern about as well ("also")
-  4. record    every proposed viewpoint becomes a view: no choice is forced where two are plausible, so a task
-               may get several views (case, case-2, ...); views with the same viewpoint are merged. One 42010
-               input record per view in inputs-elicited.yaml
+  3. proposal  the agent proposes the fewest views that cover the concerns: one viewpoint per view from
+               elicit/viewpoints.yaml, and any other viewpoint that answers a concern about as well ("also")
+  4. record    a task gets several views (case, case-2, ...) only when its concerns need different viewpoints;
+               the "also" viewpoints are not drawn, only noted as alternatives. Views with the same viewpoint
+               are merged. One 42010 input record per view in inputs-elicited.yaml
 
     cd Task2View/code && .venv/bin/python ../experiments/view-generation-2026-10/elicit.py [--only CASE] [--ask] [--redo]
 
@@ -80,17 +80,15 @@ def ask_person(qs: list[dict], prefill: dict) -> dict:
 
 
 def expand(views: list[dict]) -> list[dict]:
-    """Every proposed viewpoint becomes a view; views with the same viewpoint are merged."""
+    """One view per chosen viewpoint (same viewpoint merged); "also" viewpoints are kept only as alternatives."""
     out: dict[str, dict] = {}
     for v in views:
-        for vp, why, role in [(v["viewpoint"], v.get("reason"), "chosen")] + \
-                [(a["viewpoint"], a.get("reason"), "also") for a in v.get("also", [])]:
-            w = out.setdefault(vp, {"viewpoint": vp, "concern": v["concern"], "concern_details": [], "reasons": [],
-                                    "role": role})
-            w["concern_details"] += [d for d in v["concern_details"] if d not in w["concern_details"]]
-            w["reasons"].append(why)
-            w["role"] = "chosen" if "chosen" in (w["role"], role) else "also"
-    return sorted(out.values(), key=lambda w: w["role"] != "chosen")
+        w = out.setdefault(v["viewpoint"], {"viewpoint": v["viewpoint"], "concern": v["concern"],
+                                            "concern_details": [], "reasons": [], "alternatives": []})
+        w["concern_details"] += [d for d in v["concern_details"] if d not in w["concern_details"]]
+        w["reasons"].append(v.get("reason"))
+        w["alternatives"] += [a for a in v.get("also", []) if a not in w["alternatives"]]
+    return list(out.values())
 
 
 def records(case: str, c: dict, answers: dict, views: list[dict], vps: dict) -> dict:
@@ -110,7 +108,7 @@ def records(case: str, c: dict, answers: dict, views: list[dict], vps: dict) -> 
             "aspect": vp["aspect"],
             "viewpoint": v["viewpoint"],
             "model_kind": vp["model_kind"],
-            "elicitation": {"reasons": v["reasons"], "role": v["role"], "views_for_request": len(views),
+            "elicitation": {"reasons": v["reasons"], "alternatives": v["alternatives"], "views_for_request": len(views),
                             "detail_level_stated": answers.get("detail_level") in ("overview", "balanced", "detailed")},
         }
     return out
@@ -157,7 +155,8 @@ def main() -> int:
             v["also"] = [a for a in v.get("also", []) if a.get("viewpoint") in vps]
         views = expand([v for v in proposal["views"] if v.get("viewpoint") in vps])
         elicited.update(records(case, c, answers, views, vps))
-        print(f"{case}: " + " + ".join(f"{v['viewpoint']}{'' if v['role'] == 'chosen' else ' (also)'}" for v in views)
+        print(f"{case}: " + " + ".join(v["viewpoint"] + "".join(f" (or {a['viewpoint']})" for a in v["alternatives"])
+                                       for v in views)
               + f"   hand-made: {c['viewpoint']}", flush=True)
     target = HERE / "inputs-elicited.yaml"
     old = yaml.safe_load(target.read_text()) if target.exists() and args.only else {}

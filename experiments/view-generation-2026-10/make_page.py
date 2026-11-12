@@ -63,10 +63,12 @@ def h_html(task: str) -> str:
         el = v.get("elicitation", {})
         why = esc("; ".join(r for r in el.get("reasons", []) if r))
         read = lambda n: esc((out / n).read_text().strip().splitlines()[-1]) if (out / n).exists() else "not run"
+        alt = "".join(f'<p class="check">also plausible, not drawn: {esc(a["viewpoint"])} ({esc(a.get("reason") or "")})</p>'
+                      for a in el.get("alternatives", []))
         readme = esc((out / "README.md").read_text()) if (out / "README.md").exists() else "(none)"
-        blocks.append(f"""<div><h3>H view: {esc(v['viewpoint'])} ({esc(v['model_kind'])}){' (also plausible)' if el.get('role') == 'also' else ''}</h3>
+        blocks.append(f"""<div><h3>H view: {esc(v['viewpoint'])} ({esc(v['model_kind'])})</h3>
 <a href="outputs-H/{k}/view.png"><img src="outputs-H/{k}/view.png" alt="{k}"></a>
-<p class="check">answers: <ul class="check">{details}</ul></p><p class="check">why this viewpoint: {why}</p>
+<p class="check">answers: <ul class="check">{details}</ul></p><p class="check">why this viewpoint: {why}</p>{alt}
 <p class="check">detail level {esc(v['perspective']['detail_level'])}; readability and notation check: {read('view-check.txt')};
 names across this task's views: {read('consistency-check.txt') if len(views) > 1 else 'one view'}</p>{critic_html('outputs-H', k)}
 <details><summary>README</summary><pre>{readme}</pre></details>

@@ -28,39 +28,14 @@ cases:
       - The stakeholder picked code-structure for these four concerns, which the module viewpoint (UML package diagram)
         frames. It shows the layers and subsystems (UI, application logic, domain, persistence), what each is responsible
         for, and which depends on which.
-      role: chosen
-      views_for_request: 3
+      alternatives:
+      - viewpoint: component
+        reason: The 'main architectural components' wording could also be read as running parts with provided and
+          required interfaces. A component diagram at overview level would answer the responsibility and dependency
+          concerns about as well for a desktop application, so it is produced alongside the module view.
+      views_for_request: 2
       detail_level_stated: true
   GR10-Q1-2:
-    request: I am a software architect, and I would like a high-level component view of the system.
-    entity_of_interest: gr10
-    stakeholder: software architect
-    perspective:
-      description: reviewing the overall organization of the system before planning its future evolution
-      detail_level: overview
-    concern: Layered code structure and dependencies
-    concern_details:
-    - What are the main architectural components and what is each one responsible for?
-    - How is the system decomposed into layers or subsystems?
-    - What are the main dependencies among the components, layers or subsystems?
-    - How are user-facing functionality, application logic, domain entities and data persistence separated?
-    - How do these parts collaborate to provide the main system functionalities?
-    aspect: structural (component-and-connector)
-    viewpoint: component
-    model_kind: UML component diagram
-    elicitation:
-      reasons:
-      - The 'main architectural components' wording could also be read as running parts with provided and required
-        interfaces. A component diagram at overview level would answer the responsibility and dependency concerns
-        about as well for a desktop application, so it is produced alongside the module view.
-      - The stakeholder was not sure which aspect applies. At overview level, 'how parts collaborate' is best answered
-        by the interfaces each part offers and needs and how they connect, which the component viewpoint frames.
-        A sequence diagram would need one specific scenario, but the concern covers the main functionalities in
-        general.
-      role: chosen
-      views_for_request: 3
-      detail_level_stated: true
-  GR10-Q1-3:
     request: I am a software architect, and I would like a high-level component view of the system.
     entity_of_interest: gr10
     stakeholder: software architect
@@ -70,15 +45,20 @@ cases:
     concern: Collaboration among parts for main functionalities
     concern_details:
     - How do these parts collaborate to provide the main system functionalities?
-    aspect: behavioural
-    viewpoint: interaction
-    model_kind: UML sequence diagram
+    aspect: structural (component-and-connector)
+    viewpoint: component
+    model_kind: UML component diagram
     elicitation:
       reasons:
-      - Collaboration can also be read as the ordered messages exchanged among the parts in a scenario, such as
-        reporting a problem. A sequence diagram would show this, so it is produced as an additional view.
-      role: also
-      views_for_request: 3
+      - The stakeholder was not sure which aspect applies. At overview level, 'how parts collaborate' is best answered
+        by the interfaces each part offers and needs and how they connect, which the component viewpoint frames.
+        A sequence diagram would need one specific scenario, but the concern covers the main functionalities in
+        general.
+      alternatives:
+      - viewpoint: interaction
+        reason: Collaboration can also be read as the ordered messages exchanged among the parts in a scenario,
+          such as reporting a problem. A sequence diagram would show this, so it is produced as an additional view.
+      views_for_request: 2
       detail_level_stated: true
   GR10-Q2:
     request: I am a DevOps engineer, and I would like a complete deployment view of the system.
@@ -104,33 +84,13 @@ cases:
         nodes shows where the application and its data run and are stored. Communication paths, labelled with protocols
         and drivers, show how runtime elements talk to each other and which technologies and dependencies link the
         application to the database. One deployment view therefore covers everything, which is the fewest views.
-      role: chosen
-      views_for_request: 2
-      detail_level_stated: false
-  GR10-Q2-2:
-    request: I am a DevOps engineer, and I would like a complete deployment view of the system.
-    entity_of_interest: gr10
-    stakeholder: DevOps engineer
-    perspective:
-      description: Deploying and configuring the system in a new execution environment
-      detail_level: balanced
-    concern: Deployment environment and runtime communication
-    concern_details:
-    - Which runtime environments and software artifacts are required to run the system?
-    - Where are the application and its data executed and stored?
-    - How do the main runtime elements communicate with each other?
-    - Which technologies and runtime dependencies are involved in the communication between the application and
-      the database?
-    aspect: structural (component-and-connector)
-    viewpoint: component
-    model_kind: UML component diagram
-    elicitation:
-      reasons:
-      - The third concern also touched runtime-parts. A component diagram would show the running parts and their
-        interfaces, and how they connect, about as well as the deployment communication paths do. It does not show
-        nodes, execution environments or where data is stored, so it is only a partial alternative for that concern.
-      role: also
-      views_for_request: 2
+      alternatives:
+      - viewpoint: component
+        reason: The third concern also touched runtime-parts. A component diagram would show the running parts and
+          their interfaces, and how they connect, about as well as the deployment communication paths do. It does
+          not show nodes, execution environments or where data is stored, so it is only a partial alternative for
+          that concern.
+      views_for_request: 1
       detail_level_stated: false
   GR10-Q4:
     request: I am a software analyst, and I would like a use case diagram showing the functionalities provided by
@@ -157,7 +117,7 @@ cases:
         the functionalities relate. The request explicitly asks for a use case diagram, and an overview level of
         detail fits one diagram of the system boundary. No other viewpoint frames the 'users' aspect, so a single
         view is enough.
-      role: chosen
+      alternatives: []
       views_for_request: 1
       detail_level_stated: true
   GR10-Q3:
@@ -189,7 +149,7 @@ cases:
         class diagram shows the entities (users, reports, locations, categories, states, state changes, internal
         notes, notifications), their key attributes and their relationships. It also shows which attributes are
         kept as a report moves through its states, so one view covers all three concerns.
-      role: chosen
+      alternatives: []
       views_for_request: 2
       detail_level_stated: false
   GR10-Q3-2:
@@ -217,7 +177,7 @@ cases:
       - The stakeholder picked the code-structure aspect for this concern, and the module viewpoint frames it. A
         package diagram shows how the code is divided into modules or layers and which of them depend on the persistence
         layer and its data. This is a different kind of structure from the entities, so it needs its own view.
-      role: chosen
+      alternatives: []
       views_for_request: 2
       detail_level_stated: false
   IS-reg-L1:
@@ -237,7 +197,7 @@ cases:
       reasons:
       - The stakeholder picked runtime-parts for this concern, which the component viewpoint frames. A component
         diagram shows the running parts that take part in registration, with the interfaces they offer and need.
-      role: chosen
+      alternatives: []
       views_for_request: 2
       detail_level_stated: true
   IS-reg-L1-2:
@@ -259,7 +219,7 @@ cases:
         request is for a dynamic view. A sequence diagram shows the ordered messages among the parts in the registration
         scenario, and it can include the error path. The component viewpoint already covers runtime-parts in the
         first view, so this concern needs the interaction viewpoint for the steps.
-      role: chosen
+      alternatives: []
       views_for_request: 2
       detail_level_stated: true
   IS-reg-L2:
@@ -287,7 +247,7 @@ cases:
         shows the running parts involved in registration, and each part's responsibility can be written on it. The
         interfaces each part offers and needs, and the connectors between them, are the integration points to exercise
         in the tests.
-      role: chosen
+      alternatives: []
       views_for_request: 2
       detail_level_stated: true
   IS-reg-L2-2:
@@ -312,7 +272,7 @@ cases:
       - The stakeholder picked steps for this concern, which the interaction viewpoint frames. A sequence diagram
         shows the ordered messages exchanged among the registration components when a new user creates an account.
         It also gives the tester the call order and the success path to build test scenarios from.
-      role: chosen
+      alternatives: []
       views_for_request: 2
       detail_level_stated: true
   IS-reg-L3:
@@ -346,7 +306,7 @@ cases:
         shows the running parts that handle, validate, manage role data, check uniqueness and persist. It also shows
         each part's responsibility, the interfaces it offers and needs, and the dependencies between parts. Those
         interfaces are the integration points the tester needs.
-      role: chosen
+      alternatives: []
       views_for_request: 2
       detail_level_stated: true
   IS-reg-L3-2:
@@ -376,7 +336,7 @@ cases:
       - This concern was tied to the steps aspect, which the interaction viewpoint frames. A sequence diagram shows
         the ordered messages among the components in the registration scenario. It covers the error paths for invalid
         data and for an already existing account, so the tester sees which interactions to cover.
-      role: chosen
+      alternatives: []
       views_for_request: 2
       detail_level_stated: true
   IS-seat-L1:
@@ -400,31 +360,12 @@ cases:
         and 'how do these components interact' ask which running parts take part in seat booking and how they connect
         through interfaces. The component viewpoint frames exactly this, so one view covers both concerns. The developer
         needs a balanced overview of the parts and their connections, not a step-by-step message trace of one scenario.
-      role: chosen
-      views_for_request: 2
-      detail_level_stated: true
-  IS-seat-L1-2:
-    request: I am a software developer. I need to modify the seat booking functionality and understand the main
-      system components involved and how they interact.
-    entity_of_interest: progetto-is
-    stakeholder: software developer
-    perspective:
-      description: to modify the seat booking functionality
-      detail_level: balanced
-    concern: Components involved in seat booking and their interactions
-    concern_details:
-    - What are the main system components involved in seat booking?
-    - How do these components interact?
-    aspect: structural (module)
-    viewpoint: module
-    model_kind: UML package diagram
-    elicitation:
-      reasons:
-      - A developer modifying code may mean the code-level components. A package diagram would show the modules
-        or layers behind seat booking and their dependencies, which answers the same 'components and how they relate'
-        concerns from the source-code side.
-      role: also
-      views_for_request: 2
+      alternatives:
+      - viewpoint: module
+        reason: A developer modifying code may mean the code-level components. A package diagram would show the
+          modules or layers behind seat booking and their dependencies, which answers the same 'components and how
+          they relate' concerns from the source-code side.
+      views_for_request: 1
       detail_level_stated: true
   IS-seat-L2:
     request: I am a software developer. I need to modify the seat booking functionality to introduce new booking
@@ -455,37 +396,13 @@ cases:
         answers the impact question. One view therefore covers all four concerns. The concerns ask about the interactions
         between components in general. They do not ask for the ordered steps of one scenario, so a sequence diagram
         is not needed.
-      role: chosen
-      views_for_request: 2
-      detail_level_stated: false
-  IS-seat-L2-2:
-    request: I am a software developer. I need to modify the seat booking functionality to introduce new booking
-      rules. Before changing the code, I need to understand the main components involved in this functionality,
-      their responsibilities, and how they interact with each other. I also want to identify which parts of the
-      system may be affected by the modification.
-    entity_of_interest: progetto-is
-    stakeholder: Software developer who will modify the seat booking functionality
-    perspective:
-      description: Understanding the existing seat booking functionality before changing the code, in order to introduce
-        new booking rules and assess which parts of the system the modification may affect
-      detail_level: balanced
-    concern: Seat booking components, responsibilities, interactions and change impact
-    concern_details:
-    - What are the main components involved in the seat booking functionality?
-    - What is each of these components responsible for?
-    - How do these components interact with each other?
-    - Which parts of the system may be affected by modifying the seat booking functionality?
-    aspect: structural (module)
-    viewpoint: module
-    model_kind: UML package diagram
-    elicitation:
-      reasons:
-      - The developer will change code, and "components" could mean code modules as well as running parts. A package
-        diagram would show how the code is divided and which modules depend on the booking module. That answers
-        the responsibility, interaction and impact concerns equally well from the code-structure side, so the stakeholder
-        should see both.
-      role: also
-      views_for_request: 2
+      alternatives:
+      - viewpoint: module
+        reason: The developer will change code, and "components" could mean code modules as well as running parts.
+          A package diagram would show how the code is divided and which modules depend on the booking module. That
+          answers the responsibility, interaction and impact concerns equally well from the code-structure side,
+          so the stakeholder should see both.
+      views_for_request: 1
       detail_level_stated: false
   IS-seat-L3:
     request: I am a software developer. I need to modify the seat booking functionality to introduce new booking
@@ -526,45 +443,11 @@ cases:
         code-structure. The storage concern chooses it alongside data, but it asks which component stores reservations,
         not what the entities are. One component view answers all eight, so no separate data view is needed. The
         interfaces and connectors also show which components a change to the booking rules would affect.
-      role: chosen
-      views_for_request: 2
-      detail_level_stated: true
-  IS-seat-L3-2:
-    request: I am a software developer. I need to modify the seat booking functionality to introduce new booking
-      rules. Before making changes to the code, I need to understand the high-level architecture supporting this
-      functionality. I want to identify the main components involved in the booking process, their responsibilities,
-      and the interactions and dependencies among them. In particular, I need to understand which components are
-      responsible for handling booking requests, checking seat availability, applying booking rules, managing and
-      storing reservations, and interacting with external services such as the notification service. This understanding
-      will help me identify which parts of the system need to be modified and which other components may be affected
-      by the changes.
-    entity_of_interest: progetto-is
-    stakeholder: software developer who will modify the seat booking functionality
-    perspective:
-      description: understand the high-level architecture of the seat booking functionality before changing the
-        code, to identify which parts need to be modified and which other components may be affected by introducing
-        new booking rules
-      detail_level: balanced
-    concern: Booking components, responsibilities and dependencies
-    concern_details:
-    - Which are the main components involved in the booking process and what is each one responsible for?
-    - How do the components interact and depend on each other?
-    - Which components handle booking requests?
-    - Which components check seat availability?
-    - Which components apply booking rules?
-    - Which components manage and store reservations?
-    - Which components interact with external services such as the notification service?
-    - Which parts of the system need to be modified for the new booking rules, and which other components may be
-      affected?
-    aspect: structural (module)
-    viewpoint: module
-    model_kind: UML package diagram
-    elicitation:
-      reasons:
-      - The developer will change code, and the concerns on responsibilities, dependencies and what to modify also
-        chose code-structure. A package diagram shows which modules or layers hold the booking, availability and
-        rules logic and which modules depend on them. That answers these three concerns about as well as the component
-        view, from the code side.
-      role: also
-      views_for_request: 2
+      alternatives:
+      - viewpoint: module
+        reason: The developer will change code, and the concerns on responsibilities, dependencies and what to modify
+          also chose code-structure. A package diagram shows which modules or layers hold the booking, availability
+          and rules logic and which modules depend on them. That answers these three concerns about as well as the
+          component view, from the code side.
+      views_for_request: 1
       detail_level_stated: true
