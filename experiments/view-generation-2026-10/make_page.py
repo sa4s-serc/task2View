@@ -26,24 +26,38 @@ def esc(s: object) -> str:
     return html.escape(str(s))
 
 
+def inputs_table(case: str, c: dict, entities: dict) -> str:
+    """The 42010 inputs side by side: hand-made (A to G) and the record Phase 1 made for each H view."""
+    f = HERE / "inputs-elicited.yaml"
+    h = {k: v for k, v in (yaml.safe_load(f.read_text())["cases"] if f.exists() else {}).items()
+         if re.sub(r"-\d+$", "", k) == case}
+    recs = [("hand-made (A to G)", c)] + [(f"Phase 1, view {i} (H)", v) for i, v in enumerate(h.values(), 1)]
+
+    def cell(r: dict, field: str) -> str:
+        v = r.get(field)
+        if field == "entity_of_interest":
+            return esc(entities[v]["description"])
+        if field == "perspective":
+            return f"{esc(v['description'])} <i>(detail level: {esc(v['detail_level'])})</i>"
+        if field == "concern_details":
+            return "<ul>" + "".join(f"<li>{esc(d)}</li>" for d in v or []) + "</ul>"
+        return esc(v)
+    head = "".join(f"<th>{esc(n)}</th>" for n, _ in recs)
+    rows = "".join(f"<tr><th>{fld.replace('_', ' ')}</th>" + "".join(f"<td>{cell(r, fld)}</td>" for _, r in recs)
+                   + "</tr>" for fld in ["entity_of_interest", "stakeholder", "perspective", "concern",
+                                         "concern_details", "aspect", "viewpoint", "model_kind"])
+    return f"<details open><summary>Inputs (ISO 42010)</summary><table class=\"inp\"><tr><th></th>{head}</tr>{rows}</table>" \
+           f"{phase1_html(case)}</details>"
+
+
 def case_html(case: str, c: dict, entities: dict) -> str:
-    out = HERE / "outputs" / case
-    rows = [f"<tr><th>entity of interest</th><td>{esc(entities[c['entity_of_interest']]['description'])}</td></tr>"]
-    for f in FIELDS:
-        value = c[f]
-        if isinstance(value, dict):  # perspective: description and detail level
-            value = f"{value['description']} (detail level: {value['detail_level']})"
-        rows.append(f"<tr><th>{f.replace('_', ' ')}</th><td>{esc(value)}</td></tr>")
-        if f == "concern":
-            items = "".join(f"<li>{esc(d)}</li>" for d in c.get("concern_details", []))
-            rows.append(f"<tr><th>concern details</th><td><ul>{items}</ul></td></tr>")
     original = (f"<details><summary>original long request</summary><p>{esc(c['original_request'])}</p></details>"
                 if c.get("original_request") else "")
     columns = "".join(condition_html(case, d, label) for d, label in CONDITIONS.items() if (HERE / d / case).exists())
     return f"""<section id="{case}">
 <h2>{case}</h2>
 <p class="request">“{esc(c['request'])}”</p>{original}
-<details open><summary>Inputs (hand-made, used by A to G)</summary><table>{''.join(rows)}</table></details>
+{inputs_table(case, c, entities)}
 <div class="cols">{columns}</div>{h_html(case)}</section>"""
 
 
@@ -69,7 +83,7 @@ def phase1_html(task: str) -> str:
         f"<li><b>{esc(v['viewpoint'])}</b> for “{esc(v['concern'])}”: {esc(v.get('reason', ''))}"
         + "".join(f"<br><i>also plausible, not drawn: {esc(a['viewpoint'])}</i> ({esc(a.get('reason', ''))})"
                   for a in v.get("also", [])) + "</li>" for v in prop.get("views", []))
-    return f"""<details open><summary>Phase 1 inputs (H): generated from the request, not hand-made</summary>
+    return f"""<details><summary>How Phase 1 got these (questions and answers)</summary>
 <table class="p1"><tr><th></th><th>1. agent pre-fill (from the short request)</th>
 <th>2. stakeholder's answer (simulated, knows the long request)</th></tr>{''.join(rows)}</table>
 <p><b>3. proposed views</b></p><ul>{views}</ul></details>"""
@@ -101,7 +115,7 @@ def h_html(task: str) -> str:
 names across this task's views: {read('consistency-check.txt') if len(views) > 1 else 'one view'}</p>{critic_html('outputs-H', k)}
 <details><summary>README</summary><pre>{readme}</pre></details>
 <p class="links"><a href="outputs-H/{k}/view.puml">view.puml</a> · <a href="outputs-H/{k}/prompt.txt">prompt</a></p></div>""")
-    return (f"<h3 class=\"hrow\">H: {len(views)} view(s) from the elicited inputs (Phase 1)</h3>{phase1_html(task)}"
+    return (f"<h3 class=\"hrow\">H: {len(views)} view(s) from the Phase 1 inputs</h3>"
             f"<div class=\"cols\">{''.join(blocks)}</div>")
 
 
@@ -178,7 +192,7 @@ h2{{margin-top:2.5em;border-top:1px solid #ddd;padding-top:1em}} .request{{font-
 table{{border-collapse:collapse;width:100%}} th,td{{text-align:left;vertical-align:top;padding:4px 6px;border-bottom:1px solid #eee}}
 th{{width:9em;color:#555;font-weight:600}} ul{{margin:0;padding-left:1.1em}}
 img{{max-width:100%;border:1px solid #ddd}} pre{{white-space:pre-wrap;font-size:13px;background:#f6f6f6;padding:8px}}
-.changed{{color:#B91C1C}} .p1 th{{width:auto}} .p1 td{{width:42%}}
+.changed{{color:#B91C1C}} .p1 th{{width:auto}} .inp th{{width:auto}} .p1 td{{width:42%}}
 .hrow{{margin-top:1.5em;padding-top:.8em;border-top:2px solid #1D4ED8;color:#1D4ED8}}
 nav{{position:sticky;top:0;background:#fff;padding:6px 0;border-bottom:1px solid #ddd}}
 </style></head><body>
@@ -193,7 +207,7 @@ chosen by the agent; F as E with a static dependency graph of the repository, wh
 concern's code and against which the drawn relations are checked; G as F with component views built from a checked UML component model (components meet through provided and required interfaces; the PlantUML is generated), no element budget, and a tighter critic whose blocking findings must cite code and which only triggers a revision when a checked blocking finding remains. Layout issues are counted by puml-check, which
 B to F also used while working, so they favour those conditions; per node normalises for size. The judgement is
 the blind rating.</p>
-<h2 id="design-h">The new design (condition H): elicited inputs, several views per task</h2>
+<h2 id="design-h">The new design (condition H): elicited inputs, one view per needed viewpoint</h2>
 <p><img src="docs/architecture-H.png" alt="View generation in two phases, condition H"></p>
 <ol>
 <li><b>Phase 1, the ISO 42010 inputs.</b> The agent pre-fills five fixed questions from the request (role, purpose,
@@ -201,13 +215,13 @@ concerns, detail level, and for each concern what the stakeholder needs to see);
 term. The stakeholder confirms or corrects them in one round (here a simulated stakeholder that knows only the
 request's long text). The agent then proposes the views: one viewpoint per view from six viewpoints whose content
 can be recovered from code (use case, module, component, data model, interaction, deployment); every concern is
-covered, and every plausible viewpoint becomes a view, so a task may get several views.</li>
+covered; a task gets a second view only when a concern needs a different viewpoint. Other plausible viewpoints are noted, not drawn.</li>
 <li><b>Phase 2, one run per view</b>, in order within a task: F's generator, checks and critic, plus the reviewer's
 rules (one viewpoint per view, use-case system boundary, plain words instead of codes such as "IP5", styling
 stereotypes hidden), readability checks on the rendered view (house style, fits a 1600 px screen, one reading
 direction, grouping), and the same names for the same code across a task's views. No element budget.</li>
 </ol>
-<p>H appears below A to G in each case, with the inputs elicited for each view.</p>
+<p>H appears below A to G in each case, and each case’s inputs table puts the hand-made inputs next to the ones Phase 1 produced.</p>
 <h2 id="pipeline">The previous design (condition F)</h2>
 <p><img src="docs/architecture.png" alt="View generation pipeline, condition F"></p>
 <ol>
