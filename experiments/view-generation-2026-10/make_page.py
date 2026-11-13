@@ -47,6 +47,34 @@ def case_html(case: str, c: dict, entities: dict) -> str:
 <div class="cols">{columns}</div>{h_html(case)}</section>"""
 
 
+def phase1_html(task: str) -> str:
+    """Phase 1 for one task: the agent's pre-filled answers, the stakeholder's confirmed or corrected ones, the
+    proposed views."""
+    d = HERE / "elicited" / task
+    if not (d / "answers.json").exists():
+        return ""
+    pre, ans, prop = (json.loads((d / f"{n}.json").read_text()) for n in ("prefill", "answers", "proposal"))
+    show = lambda v: ("<ul>" + "".join(f"<li>{esc(x)}</li>" for x in v) + "</ul>") if isinstance(v, list) else esc(v)
+    rows = []
+    for key, label in [("stakeholder", "stakeholder"), ("perspective", "perspective"), ("concerns", "concerns"),
+                       ("detail_level", "detail level")]:
+        same = pre.get(key) == ans.get(key)
+        rows.append(f"<tr><th>{label}</th><td>{show(pre.get(key))}</td><td>{show(ans.get(key))}"
+                    f"{'' if same else ' <b class=changed>(corrected)</b>'}</td></tr>")
+    asp = lambda a: "<ul>" + "".join(f"<li>{esc(c)}: <b>{esc(', '.join(x))}</b></li>" for c, x in a.items()) + "</ul>"
+    same = pre.get("aspects") == ans.get("aspects")
+    rows.append(f"<tr><th>aspects per concern</th><td>{asp(pre.get('aspects', {}))}</td><td>"
+                f"{asp(ans.get('aspects', {}))}{'' if same else ' <b class=changed>(corrected)</b>'}</td></tr>")
+    views = "".join(
+        f"<li><b>{esc(v['viewpoint'])}</b> for “{esc(v['concern'])}”: {esc(v.get('reason', ''))}"
+        + "".join(f"<br><i>also plausible, not drawn: {esc(a['viewpoint'])}</i> ({esc(a.get('reason', ''))})"
+                  for a in v.get("also", [])) + "</li>" for v in prop.get("views", []))
+    return f"""<details open><summary>Phase 1 inputs (H): generated from the request, not hand-made</summary>
+<table class="p1"><tr><th></th><th>1. agent pre-fill (from the short request)</th>
+<th>2. stakeholder's answer (simulated, knows the long request)</th></tr>{''.join(rows)}</table>
+<p><b>3. proposed views</b></p><ul>{views}</ul></details>"""
+
+
 def h_html(task: str) -> str:
     """Condition H: the views Phase 1 proposed for this task, each with its elicited inputs."""
     f = HERE / "inputs-elicited.yaml"
@@ -73,7 +101,7 @@ def h_html(task: str) -> str:
 names across this task's views: {read('consistency-check.txt') if len(views) > 1 else 'one view'}</p>{critic_html('outputs-H', k)}
 <details><summary>README</summary><pre>{readme}</pre></details>
 <p class="links"><a href="outputs-H/{k}/view.puml">view.puml</a> · <a href="outputs-H/{k}/prompt.txt">prompt</a></p></div>""")
-    return (f"<h3 class=\"hrow\">H: {len(views)} view(s) from the elicited inputs (Phase 1)</h3>"
+    return (f"<h3 class=\"hrow\">H: {len(views)} view(s) from the elicited inputs (Phase 1)</h3>{phase1_html(task)}"
             f"<div class=\"cols\">{''.join(blocks)}</div>")
 
 
@@ -150,6 +178,7 @@ h2{{margin-top:2.5em;border-top:1px solid #ddd;padding-top:1em}} .request{{font-
 table{{border-collapse:collapse;width:100%}} th,td{{text-align:left;vertical-align:top;padding:4px 6px;border-bottom:1px solid #eee}}
 th{{width:9em;color:#555;font-weight:600}} ul{{margin:0;padding-left:1.1em}}
 img{{max-width:100%;border:1px solid #ddd}} pre{{white-space:pre-wrap;font-size:13px;background:#f6f6f6;padding:8px}}
+.changed{{color:#B91C1C}} .p1 th{{width:auto}} .p1 td{{width:42%}}
 .hrow{{margin-top:1.5em;padding-top:.8em;border-top:2px solid #1D4ED8;color:#1D4ED8}}
 nav{{position:sticky;top:0;background:#fff;padding:6px 0;border-bottom:1px solid #ddd}}
 </style></head><body>
