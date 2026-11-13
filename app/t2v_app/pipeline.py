@@ -1,8 +1,10 @@
-"""Jobs: one request on one repository, run in the background in two stages around the stakeholder's answers.
+"""Jobs: one request on one repository, run in the background.
 
-  prepare    get the repository, copy it for the agents, build the static graph, pre-fill the questions
-             -> state "questions", waiting for the stakeholder
-  generate   propose the views, generate each in order, check them together, write the report
+  prepare    get the repository, copy it for the agents, build the static graph, let the agent fill in the
+             42010 fields and propose the views
+             -> state "confirm" if the agent is unsure of anything, otherwise straight on to generate
+  generate   propose the views again if the stakeholder corrected a field, generate each view in order,
+             check them together, write the report
              -> state "done"
 
 Everything about a job is in its folder under T2V_HOME/jobs/<id>/; job.json holds its state.
@@ -105,10 +107,11 @@ def _run(job: Job, stage: str) -> None:
     try:
         (prepare if stage == "prepare" else generate)(job)
     except (ClaudeError, repo.RepoError) as e:
-        job.update(state="failed", failed_stage=stage, error=str(e))
+        job.update(state="failed", failed_stage=_stage_of(job.read()), error=str(e))
     except Exception as e:
         (job.dir / "error.txt").write_text(traceback.format_exc(), encoding="utf-8")
-        job.update(state="failed", failed_stage=stage, error=f"{type(e).__name__}: {e} (details in error.txt)")
+        job.update(state="failed", failed_stage=_stage_of(job.read()),
+                   error=f"{type(e).__name__}: {e} (details in error.txt)")
     finally:
         _active.discard(job.id)
 
@@ -128,8 +131,26 @@ def prepare(job: Job) -> None:
     prepared = repo.prepare(repo.root_of(job.source), job.repo)
     summary = repo.summary(job.repo, repo.build_graph(job.repo, job.graph))
     job.update(step="Reading your request", summary=summary, prepared=prepared)
-    prefilled = phase1.prefill(state["request"], repo.summary_text(summary), job.dir / "calls")
-    job.update(state="questions", step="", prefill=prefilled)
+    calls = job.dir / "calls"
+    prefilled = phase1.prefill(state["request"], repo.summary_text(summary), calls)
+    answers = phase1.as_answers(prefilled)
+    records = []
+    if not phase1.missing(answers):
+        job.update(step="Choosing the views", prefill=prefilled)
+        records = phase1.records(state["request"], answers, phase1.propose(state["request"], answers, calls))
+    if phase1.needs_stakeholder(prefilled):
+        job.update(state="confirm", step="", prefill=prefilled, proposed=records)
+    else:
+        job.update(state="generating", prefill=prefilled, answers=answers, records=records)
+        generate(job)
+
+
+def confirm(job: Job, answers: dict) -> None:
+    """The stakeholder's confirmation. The proposed views are kept only if nothing was corrected."""
+    state = job.read()
+    keep = state["proposed"] and not phase1.changed(answers, state["prefill"])
+    job.update(answers=answers, records=state["proposed"] if keep else None, progress=None)
+    start(job, "generate")
 
 
 def generate(job: Job) -> None:
@@ -139,10 +160,10 @@ def generate(job: Job) -> None:
         job.update(step="Choosing the views")
         views = phase1.propose(state["request"], state["answers"], job.dir / "calls")
         records = phase1.records(state["request"], state["answers"], views)
-        state = job.update(records=records, progress={r["id"]: "waiting" for r in records})
+    progress = state.get("progress") or {r["id"]: "waiting" for r in records}
+    job.update(records=records, progress=progress)
     report.write_inputs(job.out, records)
 
-    progress = state["progress"]
     for i, record in enumerate(records):
         case = record["id"]
         if progress[case] == "done":

@@ -31,7 +31,7 @@ def fill(template: str, record: dict, **extra: str) -> str:
     p = record["perspective"]
     said = record["clarifications"]
     return template.format(
-        case=record["id"], request=record["request"], entity=record["entity_of_interest"],
+        case=record["id"], request=record["request"], entity=record["entity_of_interest"], focus=record["focus"],
         stakeholder=record["stakeholder"], perspective=f"{p['description']}; detail level: {p['detail_level']}",
         detail_level=p["detail_level"], concern=record["concern"],
         details="\n".join(f"  - {d}" for d in record["concern_details"]),

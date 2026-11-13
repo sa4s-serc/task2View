@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import zipfile
 from pathlib import Path
 
@@ -25,11 +26,11 @@ def write_inputs(out: Path, records: list[dict]) -> None:
 
 def inputs_rows(record: dict) -> list[tuple[str, str]]:
     p = record["perspective"]
-    level = p["detail_level"] + ("" if record["elicitation"]["detail_level_stated"] else " (default, not stated)")
     return [("Entity of interest", record["entity_of_interest"]),
+            ("Part of the system in focus", record.get("focus", "")),
             ("Stakeholder", record["stakeholder"]),
             ("Stakeholder perspective", p["description"]),
-            ("Detail level", level),
+            ("Detail level", p["detail_level"]),
             ("Concern", record["concern"]),
             ("Concern details", "; ".join(record["concern_details"])),
             ("Aspect", record["aspect"]),
@@ -59,6 +60,15 @@ def review(view_dir: Path) -> dict:
             "open": kept.get("fixes", []) if kept.get("verdict") == "revise" else []}
 
 
+def takeaway(view_dir: Path) -> str:
+    """The one-sentence answer the view's README opens with, if it has one."""
+    try:
+        found = re.search(r"\*\*Takeaway:?\*\*:?\s*(.+)", (view_dir / "README.md").read_text(encoding="utf-8"))
+    except OSError:
+        return ""
+    return found.group(1).strip() if found else ""
+
+
 def _demote(markdown: str) -> str:
     """Push the headings of a view's README two levels down, so they sit under the view's heading."""
     return "\n".join("##" + line if line.startswith("#") else line for line in markdown.splitlines())
@@ -67,7 +77,8 @@ def _demote(markdown: str) -> str:
 def write_readme(out: Path, request: str, records: list[dict]) -> None:
     first = records[0]
     lines = ["# Architecture views", "", "**Request:** " + request, "",
-             f"**System:** {first['entity_of_interest']}  ", f"**Stakeholder:** {first['stakeholder']}  ",
+             f"**System:** {first['entity_of_interest']}  ", f"**In focus:** {first.get('focus', '')}  ",
+             f"**Stakeholder:** {first['stakeholder']}  ",
              f"**Perspective:** {first['perspective']['description']}", ""]
     if first["clarifications"]:
         lines += ["**Clarifications from the stakeholder:**", *[f"- {c}" for c in first["clarifications"]], ""]

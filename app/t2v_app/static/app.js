@@ -18,3 +18,8 @@ if (concerns && add) {
     concerns.lastElementChild.querySelector("input[type=text]").focus();
   });
 }
+
+// "Edit" on a field the agent filled in: show its input instead of the value.
+for (const button of document.querySelectorAll(".field .edit")) {
+  button.addEventListener("click", () => button.closest(".field").classList.add("open"));
+}

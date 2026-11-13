@@ -1,7 +1,7 @@
 # Task2View tool
 
-A local web tool: give it a repository and say what you need to understand; it asks you to confirm how it
-understood you, then draws the UML architecture view (or views) that answer your request, each with a README
+A local web tool: give it a repository and say what you need to understand; it works out what you need, asks you
+only where it is unsure, then draws the UML architecture view (or views) that answer your request, each with a README
 and the evidence in the code.
 
 It runs on your machine and uses your own Claude Code login. It needs no API key and stores none.
@@ -33,16 +33,18 @@ Keep the folder layout of the repository: the tool uses the `task2view` package 
 
 1. **Request.** Write what you need in your own words and give the repository: a zip, or the URL of a public
    GitHub repository (`https://github.com/<owner>/<repository>`).
-2. **Confirm.** One page shows how the request was understood, in the terms of ISO/IEC/IEEE 42010:2022: the
-   system, your role, what you will use the view for, the questions the view should answer (with what you need
-   to see for each), and the detail level. Correct what is wrong. The tool may add up to two questions of its
-   own when something else is unclear, and there is a box for anything else you want to say. This is the only
-   round of questions.
-3. **Result.** The views are chosen (one viewpoint per view; a second view only when your questions need a
-   different viewpoint) and drawn one after the other. For each view you get the diagram, a README that says how
-   it answers your questions, the checks that ran, and an independent review. "Download everything" gives a zip
-   with a top-level `README.md`, `inputs.yaml` (the 42010 inputs) and one folder per view (`view.puml`,
-   `view.png`, `inventory.json`, `README.md`).
+2. **Confirm.** The tool fills in every ISO/IEC/IEEE 42010:2022 field itself: the system, the part of the system
+   in focus, your role, what you will use the view for, the questions the view should answer (with the aspect of
+   each), the detail level, and the views it would draw (viewpoint and model kind). One page shows them all.
+   Fields it is unsure of are highlighted and open for your answer; the others show its value with an "Edit"
+   button. It may add up to two questions of its own. If it is sure of everything, this page is skipped and
+   drawing starts at once. If you change a field, the views are chosen again. This is the only round of questions.
+3. **Result.** The views are drawn one after the other (one viewpoint per view; a second view only when your
+   questions need a different viewpoint). While they are drawn, the page shows the final fields of each view and
+   which step it is at; a finished view can be opened while the next one is drawn. Each view shows the diagram
+   and its one-line takeaway; the full explanation, the 42010 inputs, and the checks with the independent review
+   open on click. "Download everything" gives a zip with a top-level `README.md`, `inputs.yaml` (the 42010
+   inputs) and one folder per view (`view.puml`, `view.png`, `inventory.json`, `README.md`).
 
 If a step fails (for example a usage limit), the page shows why; "Try again" continues and keeps finished views.
 
@@ -51,9 +53,9 @@ If a step fails (for example a usage limit), the page shows why; "Try again" con
 | Step | Who | What |
 |---|---|---|
 | Prepare | program | copy the repository, build a static dependency graph (tree-sitter) |
-| Pre-fill | agent, no tools | answer the five fixed questions from the request; at most two extra questions |
-| Confirm | you | one page, one round |
+| Fill in | agent, no tools | every 42010 field from the request, what it is unsure of, at most two extra questions |
 | Propose | agent, no tools | fewest views that cover your questions, from six viewpoints (`t2v_app/data/viewpoints.yaml`) |
+| Confirm | you | one page, one round; skipped if the agent is sure; views proposed again if you change a field |
 | Draw | agent with the `uml-view` skill | find the code, list elements with evidence, draw PlantUML |
 | Check | scripts | evidence exists, arrows are in the graph, notation and readability, same names across views |
 | Review | second agent, other model | are the questions answered, is the detail level right, is it supported by the code |

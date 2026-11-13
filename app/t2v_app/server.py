@@ -14,6 +14,8 @@ from .repo import GITHUB_URL, SUPPORTED_LANGUAGES
 REQUIRED = {"claude": "Claude Code, installed and logged in", "git": "git, to fetch GitHub repositories",
             "plantuml": "PlantUML, to render the views", "dot": "Graphviz, used by PlantUML",
             "java": "Java, used by PlantUML"}
+STAGES = {"drawing": "Draw from the code", "reviewing": "Independent review", "revising": "Revise if needed",
+          "reviewing the revision": "Review the revision", "checking": "Check against the code"}
 SERVED = {".png": "image/png"}      # every other result file is sent as plain text, never as a web page
 
 app = Flask(__name__)
@@ -88,18 +90,21 @@ def new_job():
 def job_page(job_id: str, error: str = "", answers: dict | None = None):
     job = job_or_404(job_id)
     state = job.read()
+    progress = state.get("progress") or {}
     views = []
-    if state["state"] == "done":
-        for record in state["records"]:
+    for record in state.get("records") or state.get("proposed") or []:
+        view = {"record": record, "inputs": report.inputs_rows(record), "step": progress.get(record["id"], "waiting")}
+        if view["step"] == "done":
             folder = job.out / record["id"]
             readme = folder / "README.md"
-            views.append({
-                "record": record, "inputs": report.inputs_rows(record), "checks": report.checks(folder),
-                "review": report.review(folder),
-                "readme": markdown.render(readme.read_text(encoding="utf-8", errors="replace")) if readme.exists()
+            view.update(
+                checks=report.checks(folder), review=report.review(folder),
+                takeaway=markdown.renderInline(report.takeaway(folder)),
+                readme=markdown.render(readme.read_text(encoding="utf-8", errors="replace")) if readme.exists()
                 else "",
-                "files": sorted(p.name for p in folder.iterdir() if p.is_file())})
-    return render_template("job.html", job=state, views=views, error=error,
+                files=sorted(p.name for p in folder.iterdir() if p.is_file()))
+        views.append(view)
+    return render_template("job.html", job=state, views=views, error=error, stages=STAGES,
                            answers=answers or state.get("answers") or state.get("prefill"),
                            questions=phase1.QUESTIONS, aspects=phase1.ASPECTS, viewpoints=phase1.VIEWPOINTS,
                            levels=phase1.QUESTIONS["detail_level"]["options"])
@@ -114,14 +119,13 @@ def job_version(job_id: str):
 def answer(job_id: str):
     job = job_or_404(job_id)
     state = job.read()
-    if state["state"] != "questions":
+    if state["state"] != "confirm":
         return redirect(url_for("job_page", job_id=job_id))
     answers = phase1.answers_from_form(request.form, state["prefill"])
     todo = phase1.missing(answers)
     if todo:
         return job_page(job_id, error="Please fill in: " + ", ".join(todo) + ".", answers=answers), 400
-    job.update(answers=answers)
-    pipeline.start(job, "generate")
+    pipeline.confirm(job, answers)
     return redirect(url_for("job_page", job_id=job_id))
 
 
