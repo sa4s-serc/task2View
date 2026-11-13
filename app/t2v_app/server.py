@@ -16,6 +16,8 @@ REQUIRED = {"claude": "Claude Code, installed and logged in", "git": "git, to fe
             "java": "Java, used by PlantUML"}
 STAGES = {"drawing": "Draw from the code", "reviewing": "Independent review", "revising": "Revise if needed",
           "reviewing the revision": "Review the revision", "checking": "Check against the code"}
+FEEDBACK_STAGES = {"applying your feedback": "Apply your feedback", "reviewing the change": "Independent review",
+                   "checking": "Check against the code"}
 SERVED = {".png": "image/png"}      # every other result file is sent as plain text, never as a web page
 
 app = Flask(__name__)
@@ -93,8 +95,11 @@ def job_page(job_id: str, error: str = "", answers: dict | None = None):
     progress = state.get("progress") or {}
     views = []
     for record in state.get("records") or state.get("proposed") or []:
-        view = {"record": record, "inputs": report.inputs_rows(record), "step": progress.get(record["id"], "waiting")}
-        if view["step"] == "done":
+        revising = any(f["view"] == record["id"] and not f["done"] for f in state.get("feedback") or [])
+        view = {"record": record, "inputs": report.inputs_rows(record), "stages": FEEDBACK_STAGES if revising else STAGES,
+                "step": progress.get(record["id"], "waiting")}
+        view["ready"] = view["step"] == "done" or revising
+        if view["ready"]:
             folder = job.out / record["id"]
             readme = folder / "README.md"
             view.update(
@@ -104,7 +109,7 @@ def job_page(job_id: str, error: str = "", answers: dict | None = None):
                 else "",
                 files=sorted(p.name for p in folder.iterdir() if p.is_file()))
         views.append(view)
-    return render_template("job.html", job=state, views=views, error=error, stages=STAGES,
+    return render_template("job.html", job=state, views=views, error=error,
                            answers=answers or state.get("answers") or state.get("prefill"),
                            questions=phase1.QUESTIONS, aspects=phase1.ASPECTS, viewpoints=phase1.VIEWPOINTS,
                            levels=phase1.QUESTIONS["detail_level"]["options"])
@@ -126,6 +131,17 @@ def answer(job_id: str):
     if todo:
         return job_page(job_id, error="Please fill in: " + ", ".join(todo) + ".", answers=answers), 400
     pipeline.confirm(job, answers)
+    return redirect(url_for("job_page", job_id=job_id))
+
+
+@app.post("/jobs/<job_id>/feedback")
+def feedback(job_id: str):
+    job = job_or_404(job_id)
+    state = job.read()
+    text = request.form.get("feedback", "").strip()[:config.MAX_FEEDBACK_CHARS]
+    view = request.form.get("view", "")
+    if state["state"] == "done" and text and view in [r["id"] for r in state["records"]]:
+        pipeline.add_feedback(job, view, text)
     return redirect(url_for("job_page", job_id=job_id))
 
 

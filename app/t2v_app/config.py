@@ -13,7 +13,8 @@ GENERATOR_MODEL = os.environ.get("T2V_GENERATOR_MODEL", "claude-sonnet-5-5")
 CRITIC_MODEL = os.environ.get("T2V_CRITIC_MODEL", "claude-opus-5-5")
 PERMISSION_MODE = os.environ.get("T2V_PERMISSION_MODE", "auto")
 
-MAX_EXTRA_QUESTIONS = 2          # on top of the five fixed questions
+MAX_EXTRA_QUESTIONS = 2
+MAX_FEEDBACK_CHARS = 4000          # on top of the five fixed questions
 DETAIL_LEVELS = ("overview", "balanced", "detailed")
 DEFAULT_DETAIL_LEVEL = "balanced"
 

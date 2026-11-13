@@ -6,6 +6,8 @@
   generate   propose the views again if the stakeholder corrected a field, generate each view in order,
              check them together, write the report
              -> state "done"
+  feedback   revise a finished view after the stakeholder's feedback, review and check it again
+             -> state "done"
 
 Everything about a job is in its folder under T2V_HOME/jobs/<id>/; job.json holds its state.
 """
@@ -84,6 +86,8 @@ def mark_interrupted() -> None:
 
 
 def _stage_of(state: dict) -> str:
+    if any(not f["done"] for f in state.get("feedback") or []):
+        return "feedback"
     return "generate" if state.get("answers") else "prepare"
 
 
@@ -105,7 +109,7 @@ def retry(job: Job) -> None:
 
 def _run(job: Job, stage: str) -> None:
     try:
-        (prepare if stage == "prepare" else generate)(job)
+        {"prepare": prepare, "generate": generate, "feedback": feedback}[stage](job)
     except (ClaudeError, repo.RepoError) as e:
         job.update(state="failed", failed_stage=_stage_of(job.read()), error=str(e))
     except Exception as e:
@@ -176,6 +180,36 @@ def generate(job: Job) -> None:
         phase2.run_view(record, records[:i], job.repo, job.graph, job.work / case / job.repo.name, job.out,
                         job.logs, step)
         step("done")
+    phase2.check_consistency([r["id"] for r in records], job.out)
+    report.write_readme(job.out, state["request"], records)
+    job.update(state="done", step="")
+
+
+def add_feedback(job: Job, view_id: str, text: str) -> None:
+    state = job.read()
+    job.update(feedback=[*(state.get("feedback") or []), {"view": view_id, "text": text, "done": False}])
+    start(job, "feedback")
+
+
+def feedback(job: Job) -> None:
+    state = job.read()
+    records, progress, given = state["records"], state["progress"], state["feedback"]
+    for n, entry in enumerate(given, 1):
+        if entry["done"]:
+            continue
+        record = next(r for r in records if r["id"] == entry["view"])
+        case = record["id"]
+        record["clarifications"] = [*record["clarifications"], f"Feedback on the drawn view: {entry['text']}"]
+
+        def step(name: str, case: str = case) -> None:
+            progress[case] = name
+            job.update(step=f"View {case.split('-')[1]}: {name}", progress=progress)
+
+        phase2.apply_feedback(record, entry["text"], n, job.work / case / job.repo.name, job.out, job.logs, step)
+        entry["done"] = True
+        progress[case] = "done"
+        job.update(records=records, feedback=given, progress=progress)
+    report.write_inputs(job.out, records)
     phase2.check_consistency([r["id"] for r in records], job.out)
     report.write_readme(job.out, state["request"], records)
     job.update(state="done", step="")

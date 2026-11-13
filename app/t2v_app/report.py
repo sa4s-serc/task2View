@@ -52,7 +52,8 @@ def review(view_dir: Path) -> dict:
     """The critic's verdict on the version that was kept."""
     try:
         loop = json.loads((view_dir / "loop.json").read_text())
-        kept = json.loads((view_dir / f"critique-{2 if loop.get('kept') == 'v2' else 1}.json").read_text())
+        latest = loop.get("feedback_critique") or f"critique-{2 if loop.get('kept') == 'v2' else 1}.json"
+        kept = json.loads((view_dir / latest).read_text())
     except (OSError, ValueError):
         return {}
     return {"revised": loop.get("revised", False), "kept": loop.get("kept"), "verdict": kept.get("verdict"),

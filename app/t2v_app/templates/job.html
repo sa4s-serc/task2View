@@ -105,17 +105,6 @@
       <textarea id="notes" name="notes" rows="2">{{ answers.notes|default('') }}</textarea>
     </div>
 
-    {% if views %}
-    <div class="field open">
-      <label>Views that will be drawn</label>
-      <p class="hint">Chosen from the fields above (ISO 42010: viewpoint and model kind). If you change a field, they are chosen again.</p>
-      <table>
-        <tr><th>Model kind</th><th>Viewpoint</th><th>Aspect</th><th>Concern</th></tr>
-        {% for v in views %}<tr><td>{{ v.record.model_kind }}</td><td>{{ v.record.viewpoint }}</td><td>{{ v.record.aspect }}</td><td>{{ v.record.concern }}</td></tr>{% endfor %}
-      </table>
-    </div>
-    {% endif %}
-
     <button type="submit">Confirm and draw the views</button>
     <span class="hint">Drawing takes about 5 to 10 minutes per view.</span>
   </form>
@@ -138,25 +127,26 @@
 <section class="view">
   <h2>View {{ loop.index }}: {{ r.model_kind }} <span class="hint">{{ r.concern }}</span></h2>
 
-  {% if v.step == 'done' %}
-    <a href="{{ url_for('job_file', job_id=job.id, name=r.id + '/view.png') }}"><img src="{{ url_for('job_file', job_id=job.id, name=r.id + '/view.png') }}" alt="View {{ loop.index }}"></a>
-    {% if v.takeaway %}<p class="takeaway">{{ v.takeaway|safe }}</p>{% endif %}
-    <details><summary>Explanation of the view</summary><div class="readme">{{ v.readme|safe }}</div></details>
-  {% else %}
-    {% set now = (stages.keys()|list).index(v.step) if v.step in stages else -1 %}
+  {% if v.step != 'done' %}
+    {% set now = (v.stages.keys()|list).index(v.step) if v.step in v.stages else -1 %}
     <ol class="steps">
-      {% for label in stages.values() %}<li class="{{ 'past' if loop.index0 < now }} {{ 'now' if loop.index0 == now }}">{{ label }}</li>{% endfor %}
+      {% for label in v.stages.values() %}<li class="{{ 'past' if loop.index0 < now }} {{ 'now' if loop.index0 == now }}">{{ label }}</li>{% endfor %}
     </ol>
   {% endif %}
+  {% if v.ready %}
+    <a href="{{ url_for('job_file', job_id=job.id, name=r.id + '/view.png') }}"><img src="{{ url_for('job_file', job_id=job.id, name=r.id + '/view.png') }}?v={{ job.version }}" alt="View {{ loop.index }}"></a>
+    {% if v.takeaway %}<p class="takeaway">{{ v.takeaway|safe }}</p>{% endif %}
+    <details><summary>Explanation of the view</summary><div class="readme">{{ v.readme|safe }}</div></details>
+  {% endif %}
 
-  <details {{ 'open' if v.step != 'done' }}><summary>ISO/IEC/IEEE 42010 inputs of this view</summary>
+  <details><summary>ISO/IEC/IEEE 42010 inputs of this view</summary>
     {{ inputs_table(v.inputs) }}
     {% for reason in r.elicitation.reasons %}<p>Why this viewpoint: {{ reason }}</p>{% endfor %}
     {% for a in r.elicitation.alternatives %}<p>Also plausible, not drawn: {{ viewpoints[a.viewpoint].model_kind }}. {{ a.reason }}</p>{% endfor %}
     {% if r.clarifications %}<p>Your clarifications:</p><ul>{% for c in r.clarifications %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
   </details>
 
-  {% if v.step == 'done' %}
+  {% if v.ready %}
   <details><summary>Checks:
     {% for c in v.checks %}<span class="state {{ 'done' if c.passed else 'failed' }}">{{ 'passed' if c.passed else 'issues' }}</span>{% endfor %}
     {% if v.review %}· review: {{ v.review.verdict }}{% endif %}</summary>
@@ -171,5 +161,25 @@
   {% endif %}
 </section>
 {% endfor %}
+{% endif %}
+
+{% if job.records and job.state in ('done', 'generating') and (job.feedback or job.state == 'done') %}
+<section class="card chat">
+  <h2>Anything to change?</h2>
+  <p class="hint">Say what is wrong or missing, including things you know that the code does not show. The view is revised, reviewed and checked again (about 5 minutes).</p>
+  {% for f in job.feedback %}
+  <p class="said"><span class="hint">You, on view {{ f.view.split('-')[1] }}{{ '' if f.done else ' (being applied)' }}:</span><br>{{ f.text }}</p>
+  {% endfor %}
+  {% if job.state == 'done' %}
+  <form method="post" action="{{ url_for('feedback', job_id=job.id) }}">
+    <input type="hidden" name="token" value="{{ token }}">
+    {% if views|length > 1 %}
+    <select name="view">{% for v in views %}<option value="{{ v.record.id }}">View {{ loop.index }}: {{ v.record.model_kind }}</option>{% endfor %}</select>
+    {% else %}<input type="hidden" name="view" value="{{ views[0].record.id }}">{% endif %}
+    <textarea name="feedback" rows="2" required placeholder="For example: operators can also reopen a resolved report; show that."></textarea>
+    <button type="submit">Send</button>
+  </form>
+  {% endif %}
+</section>
 {% endif %}
 {% endblock %}

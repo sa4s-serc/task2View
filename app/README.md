@@ -35,7 +35,8 @@ Keep the folder layout of the repository: the tool uses the `task2view` package 
    GitHub repository (`https://github.com/<owner>/<repository>`).
 2. **Confirm.** The tool fills in every ISO/IEC/IEEE 42010:2022 field itself: the system, the part of the system
    in focus, your role, what you will use the view for, the questions the view should answer (with the aspect of
-   each), the detail level, and the views it would draw (viewpoint and model kind). One page shows them all.
+   each), the detail level, and chooses the views (viewpoint and model kind). One page shows the fields; the chosen views are shown
+   after you confirm.
    Fields it is unsure of are highlighted and open for your answer; the others show its value with an "Edit"
    button. It may add up to two questions of its own. If it is sure of everything, this page is skipped and
    drawing starts at once. If you change a field, the views are chosen again. This is the only round of questions.
@@ -45,6 +46,9 @@ Keep the folder layout of the repository: the tool uses the `task2view` package 
    and its one-line takeaway; the full explanation, the 42010 inputs, and the checks with the independent review
    open on click. "Download everything" gives a zip with a top-level `README.md`, `inputs.yaml` (the 42010
    inputs) and one folder per view (`view.puml`, `view.png`, `inventory.json`, `README.md`).
+4. **Change.** Under the result, "Anything to change?" takes your feedback on a view, including things you know
+   that the code does not show. The view is revised, reviewed and checked again. What the code does not confirm
+   is drawn but marked "(unconfirmed)" and listed under Assumptions as stated by you.
 
 If a step fails (for example a usage limit), the page shows why; "Try again" continues and keeps finished views.
 
@@ -60,6 +64,7 @@ If a step fails (for example a usage limit), the page shows why; "Try again" con
 | Check | scripts | evidence exists, arrows are in the graph, notation and readability, same names across views |
 | Review | second agent, other model | are the questions answered, is the detail level right, is it supported by the code |
 | Revise | first agent | once, if the review asks; the better-scored version is kept |
+| Feedback | you, then both agents | optional, any number of times: revise, review and check again |
 
 The dependency graph covers Java, Python, JavaScript and TypeScript. Other languages still get a view, but its
 relations are not checked against a graph.

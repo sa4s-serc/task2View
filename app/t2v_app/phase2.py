@@ -133,18 +133,59 @@ def run_view(record: dict, earlier: list[dict], repo: Path, graph: Path, workdir
     loop = critic_loop(record, workdir, logs, session, step)
 
     step("checking")
+    _publish(record, workdir, out, {**loop, "session": session})
+    (out / case / "prompt.txt").write_text(prompt, encoding="utf-8")
+
+
+def apply_feedback(record: dict, text: str, round_no: int, workdir: Path, out: Path, logs: Path,
+                   step: Callable[[str], None]) -> None:
+    """Revise a finished view after the stakeholder's feedback, then review and check it again."""
+    case = record["id"]
+    produced = workdir / "view-out" / case
+    loop = json.loads((out / case / "loop.json").read_text())
+    before = produced / f"before-feedback-{round_no}"
+    before.mkdir(exist_ok=True)
+    for name in VIEW_FILES:
+        if (produced / name).exists():
+            shutil.copy(produced / name, before / name)
+
+    step("applying your feedback")
+    prompt = fill(_prompt("feedback.txt"), record, feedback=text)
+    try:
+        claude.session(prompt, workdir, logs / f"{case}.feedback-{round_no}.jsonl", config.GENERATOR_MODEL,
+                       GENERATOR_TOOLS, resume=loop.get("session", ""))
+    except claude.ClaudeError:
+        if not loop.get("session"):
+            raise
+        claude.session(prompt, workdir, logs / f"{case}.feedback-{round_no}.jsonl", config.GENERATOR_MODEL,
+                       GENERATOR_TOOLS)     # the first session can no longer be resumed; the prompt stands alone
+
+    step("reviewing the change")
+    name = f"critique-feedback-{round_no}.json"
+    claude.session(fill(_prompt("critic.txt"), record, out=name), workdir,
+                   logs / f"{case}.critic-feedback-{round_no}.jsonl", config.CRITIC_MODEL,
+                   ["Read", "Grep", "Glob", f"Write(view-out/{case}/{name})"])
+    step("checking")
+    _publish(record, workdir, out, {**loop, "feedback_critique": name}, keep=("prompt.txt",))
+
+
+def _publish(record: dict, workdir: Path, out: Path, loop: dict, keep: tuple[str, ...] = ()) -> None:
+    """Copy the view from the agents' working copy to the result folder and run the checks on it."""
+    case = record["id"]
     target = out / case
+    kept = {name: (target / name).read_bytes() for name in keep if (target / name).exists()}
     if target.exists():
         shutil.rmtree(target)
-    shutil.copytree(produced, target)
+    shutil.copytree(workdir / "view-out" / case, target)
+    for name, content in kept.items():
+        (target / name).write_bytes(content)
     (target / "loop.json").write_text(json.dumps(loop, indent=2), encoding="utf-8")
-    (target / "prompt.txt").write_text(prompt, encoding="utf-8")
     if (target / "inventory.json").exists():
         _check("check_inventory.py", target / "inventory-check.txt", str(target / "inventory.json"),
                "--repo", str(workdir), "--level", record["perspective"]["detail_level"],
                "--graph", str(workdir / GRAPH))
     _check("check_view.py", target / "view-check.txt", str(target / "view.puml"))
-    if shutil.which("plantuml") and not (target / "view.png").exists():
+    if shutil.which("plantuml"):
         with (target / "view.puml").open("rb") as src, (target / "view.png").open("wb") as png:
             subprocess.run(["plantuml", "-tpng", "-pipe"], stdin=src, stdout=png)
 
