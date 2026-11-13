@@ -13,5 +13,7 @@ if [ -z "$PYTHON" ]; then
 fi
 "$PYTHON" -m venv .venv
 .venv/bin/pip install --quiet --upgrade pip
-.venv/bin/pip install --quiet -e ../code -e . 2>&1 | grep -v -i "warn\|!!\|\*\*\*\|^ *$" || true
+if ! .venv/bin/pip install --quiet -e ../code -e . > .venv/install.log 2>&1; then
+  cat .venv/install.log; echo "Installation failed (log above, also in app/.venv/install.log)."; exit 1
+fi
 echo "Installed in app/.venv with $("$PYTHON" --version). Next: ./check.sh, then ./run.sh"
