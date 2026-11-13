@@ -1,0 +1,24 @@
+@startuml
+skinparam componentStyle uml2
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+title cmp PetClinic, whole system
+
+actor "Clinic user (browser)" as user
+component "PetClinic web application" as app {
+  component "Owners & Pets" as owners
+  component "Veterinarians" as vets
+}
+component "Clinic database" as db
+interface "/owners/** pages" as ownersWeb
+interface "/vets.html, /vets" as vetsWeb
+interface "JPA / JDBC" as jpa
+
+owners - ownersWeb
+vets - vetsWeb
+db - jpa
+owners ..> jpa : <<use>>
+vets ..> jpa : <<use>>
+user ..> ownersWeb : <<use>>
+user ..> vetsWeb : <<use>>
+@enduml

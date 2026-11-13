@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""puml-render: export PlantUML diagrams for a delivery target, with a reliable error contract.
+
+Usage:
+  puml-render FILE.puml [FILE2.puml ...] [--preset slide|print|web] [--formats svg,png,pdf]
+                        [--dpi N] [--out DIR] [--dark]
+
+Presets (dpi only affects PNG; SVG/PDF are vector):
+  slide  svg+png, dpi 192 (2x, good for 16:9 decks)         [default]
+  print  svg+pdf+png, dpi 300
+  web    svg only
+
+Errors: prints file:LINE:error:message (1-based) and exits 2. No error image is written.
+Exit codes: 0 ok, 2 syntax/render error or plantuml missing.
+Large PNGs: PlantUML silently crops at PLANTUML_LIMIT_SIZE (4096 px); this script raises it to 16384.
+"""
+import argparse, os, re, shutil, subprocess, sys
+
+PRESETS = {"slide": ("svg,png", 192), "print": ("svg,pdf,png", 300), "web": ("svg", 96)}
+
+def plantuml_cmd():
+    exe = os.environ.get("PLANTUML_BIN") or shutil.which("plantuml")
+    if exe: return [exe]
+    jar = os.environ.get("PLANTUML_JAR")
+    if jar:
+        java = (os.environ.get("PLANTUML_JAVA")
+                or (os.path.join(os.environ["JAVA_HOME"], "bin", "java") if os.environ.get("JAVA_HOME") else None)
+                or shutil.which("java") or "java")
+        return [java, "-Djava.awt.headless=true", "-jar", jar]
+    sys.exit("plantuml not found: brew install plantuml, or set PLANTUML_BIN / PLANTUML_JAR")
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("src", nargs="+"); ap.add_argument("--preset", choices=list(PRESETS), default="slide")
+    ap.add_argument("--formats"); ap.add_argument("--dpi", type=int); ap.add_argument("--out")
+    ap.add_argument("--dark", action="store_true")
+    a = ap.parse_args()
+    fmts, dpi = PRESETS[a.preset]
+    fmts = (a.formats or fmts).split(","); dpi = a.dpi or dpi
+    cmd = plantuml_cmd()
+    env = dict(os.environ, PLANTUML_LIMIT_SIZE=os.environ.get("PLANTUML_LIMIT_SIZE", "16384"))
+    status = 0
+    for fmt in fmts:
+        args = cmd + [f"-t{fmt}", "-stdrpt:2", "--no-error-image"]
+        if fmt == "png": args += [f"-Sdpi={dpi}"]
+        if a.dark: args += ["--dark-mode"]
+        if a.out:
+            os.makedirs(a.out, exist_ok=True); args += ["-o", os.path.abspath(a.out)]
+        r = subprocess.run(args + a.src, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=env)
+        errs = [l for l in (r.stdout + r.stderr).splitlines() if re.match(r"^.*?:\d+:error:", l)]
+        if r.returncode != 0 or errs:
+            status = 2
+            for e in errs or [f"plantuml exit {r.returncode}: {(r.stderr or r.stdout).strip()[-300:]}"]:
+                print(e, file=sys.stderr)
+            break
+        for s in a.src:
+            stem = os.path.splitext(os.path.basename(s))[0]
+            outdir = os.path.abspath(a.out) if a.out else os.path.dirname(os.path.abspath(s))
+            print(os.path.join(outdir, f"{stem}.{fmt}"))
+    sys.exit(status)
+
+if __name__ == "__main__":
+    main()

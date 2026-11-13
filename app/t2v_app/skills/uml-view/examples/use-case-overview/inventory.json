@@ -1,0 +1,34 @@
+{
+  "model_kind": "UML use case diagram",
+  "detail_level": "overview",
+  "takeaway": "A single, unauthenticated clinic user can manage owners and their pets, book visits for pets and look up veterinarians.",
+  "elements": [
+    {"alias": "clinicUser", "name": "Clinic user", "responsibility": "The only role: no security dependency, login page or role checks exist, so every visitor can do everything (name chosen by us; the code does not name the role)", "evidence": ["pom.xml:43-64", "src/main/resources/templates/fragments/layout.html:46-53"]},
+    {"alias": "clinic", "name": "PetClinic", "responsibility": "System boundary", "evidence": ["src/main/java/org/springframework/samples/petclinic/PetClinicApplication.java:28-34"]},
+    {"alias": "ucFind", "name": "Find an owner and their pets' visits", "responsibility": "Search by last name, open owner page with pets and visit history", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:94-130", "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:178-186", "src/main/resources/templates/owners/ownerDetails.html:44-73"]},
+    {"alias": "ucOwner", "name": "Register a new owner", "responsibility": "Create an owner with contact details", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:72-87"]},
+    {"alias": "ucUpdate", "name": "Update owner or pet details", "responsibility": "Edit an owner's contact data or a pet's name, birth date, type", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:148-171", "src/main/java/org/springframework/samples/petclinic/owner/PetController.java:139-179"]},
+    {"alias": "ucPet", "name": "Register a pet", "responsibility": "Add a pet (name unique per owner) to an owner", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/PetController.java:100-137"]},
+    {"alias": "ucVisit", "name": "Book a visit for a pet", "responsibility": "Record a future visit with a description", "evidence": ["src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:90-112"]},
+    {"alias": "ucVets", "name": "Look up veterinarians and their specialties", "responsibility": "Browse the paged vet list", "evidence": ["src/main/java/org/springframework/samples/petclinic/vet/VetController.java:45-54", "src/main/resources/templates/vets/vetList.html:7"]}
+  ],
+  "relations": [
+    {"from": "clinicUser", "to": "ucVets", "label": "(association)", "evidence": ["src/main/resources/templates/fragments/layout.html:51"]},
+    {"from": "clinicUser", "to": "ucVisit", "label": "(association)", "evidence": ["src/main/resources/templates/owners/ownerDetails.html:73"]},
+    {"from": "clinicUser", "to": "ucPet", "label": "(association)", "evidence": ["src/main/resources/templates/owners/ownerDetails.html:38"]},
+    {"from": "clinicUser", "to": "ucUpdate", "label": "(association)", "evidence": ["src/main/resources/templates/owners/ownerDetails.html:36", "src/main/resources/templates/owners/ownerDetails.html:72"]},
+    {"from": "clinicUser", "to": "ucOwner", "label": "(association)", "evidence": ["src/main/resources/templates/owners/findOwners.html:29"]},
+    {"from": "clinicUser", "to": "ucFind", "label": "(association)", "evidence": ["src/main/resources/templates/fragments/layout.html:46"]}
+  ],
+  "concern_details": [
+    {"detail": "the user roles the system distinguishes", "answered_by": ["clinicUser"]},
+    {"detail": "the goals each role can achieve", "answered_by": ["ucFind", "ucOwner", "ucUpdate", "ucPet", "ucVisit", "ucVets"]}
+  ],
+  "omitted": [
+    {"name": "Vet as an actor", "reason": "Vet is stored data (an entity), not a user of the system; no screen is restricted to vets"},
+    {"name": "Manage veterinarians or specialties", "reason": "no create/update endpoint exists; vets come only from seed data (db/*/data.sql)"},
+    {"name": "Vet list as JSON/XML (/vets)", "reason": "a technical interface, not a user goal; business audience"},
+    {"name": "Change language, error demo page (/oups)", "reason": "UI settings and a demo, not user goals"},
+    {"name": "<<include>>/<<extend>> between use cases", "reason": "booking a visit is reached from the owner page, but the code does not make it a reusable sub-goal; adding include would be a guess"}
+  ]
+}

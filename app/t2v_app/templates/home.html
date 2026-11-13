@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block main %}
+{% if missing %}
+<div class="warn"><strong>Not found on this machine:</strong>
+  <ul>{% for m in missing %}<li>{{ m }}</li>{% endfor %}</ul>
+  See the README for how to install them.</div>
+{% endif %}
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<h1>New request</h1>
+<form method="post" action="{{ url_for('new_job') }}" enctype="multipart/form-data" class="card">
+  <input type="hidden" name="token" value="{{ token }}">
+  <label for="request">What do you need to understand about the system, and what for?</label>
+  <p class="hint">Write it in your own words, for example who you are and what you are about to do. You will be able to confirm or correct how it was understood on the next page.</p>
+  <textarea id="request" name="request" rows="5" required>{{ form.get('request', '') }}</textarea>
+
+  <label>Repository</label>
+  <p class="hint">Either a zip of the repository or the URL of a public GitHub repository. The code analysis supports {{ languages|join(', ') }}.</p>
+  <div class="either">
+    <input type="file" name="repo_zip" accept=".zip">
+    <span>or</span>
+    <input type="url" name="repo_url" placeholder="https://github.com/owner/repository" value="{{ form.get('repo_url', '') }}">
+  </div>
+  <p class="hint">Use repositories you trust: an agent reads the code on this machine.</p>
+  <button type="submit">Start</button>
+</form>
+
+{% if jobs %}
+<h2>Requests</h2>
+<table class="jobs">
+  {% for j in jobs %}
+  <tr>
+    <td>{{ j.created }}</td>
+    <td><a href="{{ url_for('job_page', job_id=j.id) }}">{{ j.request|truncate(90) }}</a></td>
+    <td>{{ j.source.name }}</td>
+    <td><span class="state {{ j.state }}">{{ {'questions': 'waiting for your answers'}.get(j.state, j.state) }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% macro concern_row(i, text, chosen) %}
+<div class="concern">
+  <input type="text" name="concern-{{ i }}" value="{{ text }}" placeholder="A question the view should answer">
+  <div class="aspects">
+    <span>What do you need to see for it?</span>
+    {% for id, label in aspects.items() %}
+    <label><input type="checkbox" name="aspects-{{ i }}" value="{{ id }}" {{ 'checked' if id in chosen }}> {{ label }}</label>
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+{% block main %}
+<p class="request"><strong>Request:</strong> {{ job.request }}<br><span class="hint">Repository: {{ job.source.name }}</span></p>
+
+{% if job.state == 'failed' %}
+  <div class="error"><strong>This step failed.</strong> {{ job.error }}</div>
+  <form method="post" action="{{ url_for('retry', job_id=job.id) }}">
+    <input type="hidden" name="token" value="{{ token }}">
+    <button type="submit">Try again</button>
+    <span class="hint">Views that are already finished are kept.</span>
+  </form>
+
+{% elif job.state == 'preparing' %}
+  <div class="card progress" data-poll="{{ url_for('job_version', job_id=job.id) }}" data-version="{{ job.version }}">
+    <div class="spinner"></div> {{ job.step }}…
+  </div>
+
+{% elif job.state == 'questions' %}
+  <h1>Is this what you need?</h1>
+  <p>This is how your request was understood. Correct anything that is wrong and fill in what is empty; then the views are chosen and drawn.</p>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  {% if not job.summary.graph_languages %}
+  <div class="warn">No Java, Python, JavaScript or TypeScript code was found in this repository, so the views cannot be checked against a dependency graph.</div>
+  {% endif %}
+  <form method="post" action="{{ url_for('answer', job_id=job.id) }}" class="card">
+    <input type="hidden" name="token" value="{{ token }}">
+
+    <label for="entity">The system</label>
+    <p class="hint">What the views are about (ISO 42010: entity of interest).</p>
+    <input type="text" id="entity" name="entity" value="{{ answers.entity }}">
+
+    <label for="stakeholder">{{ questions.stakeholder.ask }}</label>
+    <p class="hint">{{ questions.stakeholder.explain }}</p>
+    <input type="text" id="stakeholder" name="stakeholder" value="{{ answers.stakeholder }}">
+
+    <label for="perspective">{{ questions.perspective.ask }}</label>
+    <p class="hint">{{ questions.perspective.explain }}</p>
+    <textarea id="perspective" name="perspective" rows="2">{{ answers.perspective }}</textarea>
+
+    <label>{{ questions.concerns.ask }}</label>
+    <p class="hint">{{ questions.concerns.explain }} For each one, tick what you need to see, or leave it empty if you are not sure.</p>
+    <div id="concerns" data-next="{{ answers.concerns|length + 1 }}">
+      {% for c in answers.concerns %}{{ concern_row(loop.index0, c.text, c.aspects) }}{% endfor %}
+      {{ concern_row(answers.concerns|length, '', []) }}
+    </div>
+    <template id="concern-template">{{ concern_row('__i__', '', []) }}</template>
+    <button type="button" id="add-concern" class="secondary">Add another question</button>
+
+    <label>{{ questions.detail_level.ask }}</label>
+    <p class="hint">{{ questions.detail_level.explain }}</p>
+    {% for id, label in levels.items() %}
+    <label class="option"><input type="radio" name="detail_level" value="{{ id }}" {{ 'checked' if answers.detail_level == id }}> <strong>{{ id }}</strong>: {{ label }}</label>
+    {% endfor %}
+    <label class="option"><input type="radio" name="detail_level" value="" {{ 'checked' if not answers.detail_level }}> not sure (balanced is used)</label>
+
+    {% for q in job.prefill.extra_questions %}
+    {% set qi = loop.index0 %}
+    {% set given = (answers.extra|default([])|selectattr('question', 'equalto', q.question)|map(attribute='answer')|first) or '' %}
+    <label>{{ q.question }}</label>
+    {% if q.why %}<p class="hint">Why this is asked: {{ q.why }}</p>{% endif %}
+    {% for o in q.options %}
+    <label class="option"><input type="radio" name="extra-{{ qi }}" value="{{ o }}" {{ 'checked' if o == given }}> {{ o }}</label>
+    {% endfor %}
+    <input type="text" name="extra-{{ qi }}-text" value="{{ given if given not in q.options }}" placeholder="{{ 'Or your own answer' if q.options else 'Your answer (optional)' }}">
+    {% endfor %}
+
+    <label for="notes">Anything else to correct or clarify?</label>
+    <p class="hint">Optional. For example what to leave out, or a part of the system to focus on.</p>
+    <textarea id="notes" name="notes" rows="3">{{ answers.notes|default('') }}</textarea>
+
+    <button type="submit">Confirm and draw the views</button>
+    <span class="hint">Drawing takes about 5 to 10 minutes per view.</span>
+  </form>
+
+{% elif job.state == 'generating' %}
+  <div class="card progress" data-poll="{{ url_for('job_version', job_id=job.id) }}" data-version="{{ job.version }}">
+    <div class="spinner"></div> {{ job.step }}…
+    <p class="hint">About 5 to 10 minutes per view. You can close this page and come back.</p>
+  </div>
+  {% if job.records %}
+  <h2>Views chosen for your request</h2>
+  <table>
+    {% for r in job.records %}
+    <tr>
+      <td><strong>{{ r.model_kind }}</strong><br>{{ r.concern }}
+        {% for a in r.elicitation.alternatives %}<br><span class="hint">also plausible, not drawn: {{ viewpoints[a.viewpoint].model_kind }}</span>{% endfor %}</td>
+      <td><span class="state {{ 'done' if job.progress[r.id] == 'done' else '' }}">{{ job.progress[r.id] }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+{% elif job.state == 'done' %}
+  <p><a class="button" href="{{ url_for('download', job_id=job.id) }}">Download everything (zip)</a>
+     <a href="{{ url_for('job_file', job_id=job.id, name='README.md') }}">README.md</a> ·
+     <a href="{{ url_for('job_file', job_id=job.id, name='inputs.yaml') }}">inputs.yaml</a></p>
+  {% for v in views %}
+  {% set r = v.record %}
+  <section class="view">
+    <h2>View {{ loop.index }}: {{ r.model_kind }} <span class="hint">{{ r.concern }}</span></h2>
+    <a href="{{ url_for('job_file', job_id=job.id, name=r.id + '/view.png') }}"><img src="{{ url_for('job_file', job_id=job.id, name=r.id + '/view.png') }}" alt="View {{ loop.index }}"></a>
+
+    <div class="readme">{{ v.readme|safe }}</div>
+
+    <details><summary>ISO/IEC/IEEE 42010 inputs of this view</summary>
+      <table>{% for k, val in v.inputs %}<tr><th>{{ k }}</th><td>{{ val }}</td></tr>{% endfor %}</table>
+      {% for reason in r.elicitation.reasons %}<p>Why this viewpoint: {{ reason }}</p>{% endfor %}
+      {% for a in r.elicitation.alternatives %}<p>Also plausible, not drawn: {{ viewpoints[a.viewpoint].model_kind }}. {{ a.reason }}</p>{% endfor %}
+      {% if r.clarifications %}<p>Your clarifications:</p><ul>{% for c in r.clarifications %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
+    </details>
+
+    <details><summary>Checks:
+      {% for c in v.checks %}<span class="state {{ 'done' if c.passed else 'failed' }}">{{ 'passed' if c.passed else 'issues' }}</span>{% endfor %}
+      {% if v.review %}· review: {{ v.review.verdict }}{% endif %}</summary>
+      {% for c in v.checks %}<p><strong>{{ c.label }}</strong></p><pre>{{ c.text }}</pre>{% endfor %}
+      {% if v.review %}
+      <p><strong>Independent review</strong> (a second agent that did not draw the view{{ '; the view was revised once after it' if v.review.revised and v.review.kept == 'v2' }}): {{ v.review.verdict }}, detail level {{ v.review.level }}</p>
+      <ul>{% for d in v.review.concern_details %}<li>{{ d.detail }}: <strong>{{ d.answered }}</strong>. {{ d.why }}</li>{% endfor %}</ul>
+      {% if v.review.open %}<p>Still open:</p><ul>{% for f in v.review.open %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
+      {% endif %}
+    </details>
+
+    <p class="hint">Files: {% for f in v.files %}<a href="{{ url_for('job_file', job_id=job.id, name=r.id + '/' + f) }}">{{ f }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>
+  </section>
+  {% endfor %}
+{% endif %}
+{% endblock %}

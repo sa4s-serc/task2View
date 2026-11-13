@@ -1,0 +1,74 @@
+@startuml
+' ---- house style (slide) ----
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam maxMessageSize 180
+skinparam wrapWidth 180
+<style>
+root {
+  FontName Helvetica
+  FontSize 14
+  FontColor #1F2937
+}
+element { BackgroundColor #F1F5F9; LineColor #475569; LineThickness 1.2; RoundCorner 6 }
+arrow   { LineColor #475569; LineThickness 1.2; FontSize 12; MaximumWidth 180 }
+note    { BackgroundColor #FFF7E0; LineColor #B45309; FontSize 12; MaximumWidth 220 }
+title   { FontSize 18; FontStyle bold }
+caption { FontSize 12; FontColor #64748B }
+legend  { FontSize 12; BackgroundColor white; LineColor #CBD5E1; MaximumWidth 320 }
+.accent { BackgroundColor #1D4ED8; FontColor white; LineColor #1E3A8A }
+.alert  { BackgroundColor #FEE2E2; FontColor #7F1D1D; LineColor #B91C1C }
+.muted  { BackgroundColor #F8FAFC; FontColor #64748B; LineColor #CBD5E1 }
+.boundary { BackgroundColor transparent; LineColor #94A3B8; LineStyle 6; LineThickness 1.2 }
+</style>
+hide stereotype
+' ---- layout (Graphviz dot) ----
+skinparam linetype polyline
+skinparam nodesep 50
+skinparam ranksep 60
+top to bottom direction
+
+' ---- body ----
+title dfd example
+' DFD notation: process = usecase (ellipse), external entity = rectangle, data store = database,
+' trust boundary = rectangle <<boundary>> (dashed, from the style block); PII flows -[#D55E00,bold]-> and say (PII).
+' DFD recipe: number processes (0, 1, 1.1); draw WRITES to stores and say "reads omitted" in the legend
+' when read-backs would loop around the diagram. Rows by zone, top-to-bottom (Public / App / Data+Third party);
+' write upward flows with a flipped arrowhead (server <-- p2) so the rows hold. Keep one level per diagram:
+' level 0 (context) then one level-1 per process. Boundaries stay top-to-bottom even for slides (direction="tb").
+' Hand-offs between processes in one zone: draw them through the store (p2 <-- db), not as a same-rank p1 -> p2;
+' Graphviz can put another process between the two, and the flow then loops over the zone title.
+
+rectangle "Public" as z_pub <<boundary>> {
+  rectangle "Client" as client
+  rectangle "Field worker" as server
+}
+rectangle "App" as z_app <<boundary>> {
+  usecase "1 Intake" as p1
+  usecase "2 Assign" as p2
+  usecase "3 Log visit" as p3
+}
+rectangle "Data" as z_data <<boundary>> {
+  database "Audit log" as audit
+  database "Case DB" as db
+}
+rectangle "External" as z_ext <<boundary>> {
+  rectangle "Partner portal" as court
+}
+
+' Flows from outside into App or External target the ZONE (z_app, z_ext); flows to and from a store target the store.
+' Short zone titles + zone-level links are what keeps edges off the titles (measured: 3 crossings -> 0).
+client -[#D55E00,bold]-> z_app : new case (PII)
+server -[#D55E00,bold]-> z_app : visit + GPS (PII)
+p2 <-- db : open cases
+server <-- p2 : job offer
+p1 -[#D55E00,bold]-> db : case (PII)
+p3 --> db : visit
+p3 --> audit : event
+p2 --> z_ext : filing
+
+legend right
+  <color:#D55E00><b>orange bold</b></color> = carries PII
+  dashed box = trust boundary; other store reads omitted
+endlegend
+@enduml

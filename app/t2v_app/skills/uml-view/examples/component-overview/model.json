@@ -1,0 +1,165 @@
+{
+ "title": "PetClinic, whole system",
+ "detail_level": "overview",
+ "components": [
+  {
+   "id": "app",
+   "name": "PetClinic web application",
+   "responsibility": "Single Spring Boot deployable",
+   "members": [
+    "org.springframework.samples.petclinic.PetClinicApplication",
+    "org.springframework.samples.petclinic.system.*",
+    "org.springframework.samples.petclinic.model.*"
+   ],
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/PetClinicApplication.java:28-34",
+    "pom.xml:52-64"
+   ]
+  },
+  {
+   "id": "owners",
+   "name": "Owners & Pets",
+   "parent": "app",
+   "responsibility": "Find, register and edit owners and pets; book visits",
+   "members": [
+    "org.springframework.samples.petclinic.owner.*"
+   ],
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:48-57",
+    "src/main/java/org/springframework/samples/petclinic/owner/PetController.java:47-60",
+    "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:42-49"
+   ],
+   "provides": [
+    "ownersWeb"
+   ],
+   "requires": [
+    "jpa"
+   ]
+  },
+  {
+   "id": "vets",
+   "name": "Veterinarians",
+   "parent": "app",
+   "responsibility": "Read-only vet list, cached",
+   "members": [
+    "org.springframework.samples.petclinic.vet.*"
+   ],
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/vet/VetController.java:45-79",
+    "src/main/java/org/springframework/samples/petclinic/vet/VetRepository.java:44-56",
+    "src/main/java/org/springframework/samples/petclinic/system/CacheConfiguration.java:31-38"
+   ],
+   "provides": [
+    "vetsWeb"
+   ],
+   "requires": [
+    "jpa"
+   ]
+  },
+  {
+   "id": "db",
+   "name": "Clinic database",
+   "external": true,
+   "responsibility": "H2 by default, MySQL or PostgreSQL by profile",
+   "evidence": [
+    "src/main/resources/application.properties:2-4",
+    "src/main/resources/application-mysql.properties:2-3",
+    "src/main/resources/application-postgres.properties:2-3",
+    "pom.xml:78-93"
+   ],
+   "provides": [
+    "jpa"
+   ]
+  }
+ ],
+ "interfaces": [
+  {
+   "id": "ownersWeb",
+   "name": "/owners/** pages",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:72-94"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.owner.OwnerController",
+    "org.springframework.samples.petclinic.owner.PetController",
+    "org.springframework.samples.petclinic.owner.VisitController"
+   ]
+  },
+  {
+   "id": "vetsWeb",
+   "name": "/vets.html, /vets",
+   "evidence": [
+    "src/main/java/org/springframework/samples/petclinic/vet/VetController.java:45",
+    "src/main/java/org/springframework/samples/petclinic/vet/VetController.java:72"
+   ],
+   "members": [
+    "org.springframework.samples.petclinic.vet.VetController"
+   ]
+  },
+  {
+   "id": "jpa",
+   "name": "JPA / JDBC",
+   "evidence": [
+    "pom.xml:78-93"
+   ]
+  }
+ ],
+ "actors": [
+  {
+   "id": "user",
+   "name": "Clinic user (browser)",
+   "uses": [
+    "ownersWeb",
+    "vetsWeb"
+   ],
+   "evidence": [
+    "src/main/resources/templates/fragments/layout.html:46-53",
+    "README.md:36"
+   ]
+  }
+ ],
+ "dependencies": [],
+ "concern_details": [
+  {
+   "detail": "functional areas of the web app",
+   "answered_by": [
+    "owners",
+    "vets"
+   ]
+  },
+  {
+   "detail": "how users reach them",
+   "answered_by": [
+    "user"
+   ]
+  },
+  {
+   "detail": "where data is kept and which stores are supported",
+   "answered_by": [
+    "db"
+   ]
+  }
+ ],
+ "omitted": [
+  {
+   "name": "system package (WelcomeController, CrashController, WebConfiguration, CacheConfiguration)",
+   "reason": "framework glue and configuration; caching shown as a technology label on Veterinarians"
+  },
+  {
+   "name": "model package (BaseEntity, NamedEntity, Person)",
+   "reason": "shared JPA superclasses, code-level detail; see class-balanced"
+  },
+  {
+   "name": "individual controllers and repositories",
+   "reason": "overview merges each controller/repository chain into one component"
+  },
+  {
+   "name": "Actuator endpoints, i18n message bundles, Thymeleaf templates",
+   "reason": "framework features, not architectural parts"
+  },
+  {
+   "name": "docker-compose and k8s files",
+   "reason": "deployment is a different abstraction level; see deployment-balanced"
+  }
+ ]
+}

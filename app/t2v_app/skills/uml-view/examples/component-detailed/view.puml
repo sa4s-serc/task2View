@@ -1,0 +1,25 @@
+@startuml
+skinparam componentStyle uml2
+skinparam defaultFontName Helvetica
+skinparam linetype polyline
+title cmp visit scheduling in Owners & Pets
+
+actor "Clinic user (browser)" as user
+component "Owners & Pets" as owners {
+  component "Visit booking" as visitBooking
+  component "Owner aggregate" as ownerAgg <<entity>>
+  component "Owner repository" as ownerRepo
+}
+component "Clinic database (visits table)" as db
+interface "Visit form (/visits/new)" as visitForm
+interface "Owner repository API" as ownerRepoApi
+interface "JPA" as jpa
+
+visitBooking - visitForm
+ownerRepo - ownerRepoApi
+db - jpa
+visitBooking ..> ownerRepoApi : <<use>>
+ownerRepo ..> jpa : <<use>>
+user ..> visitForm : <<use>>
+visitBooking ..> ownerAgg : adds visit
+@enduml

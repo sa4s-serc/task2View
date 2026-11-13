@@ -1,0 +1,837 @@
+#!/usr/bin/env python3
+"""puml-check: lint, render, measure and geometry-check PlantUML diagrams.
+
+Stdlib only. Verified against PlantUML 1.2026.8 SVG output (needs >= 1.2026.4
+for the SVG group attributes; older versions degrade to text-only checks).
+
+Usage:
+  puml-check FILE.puml [FILE2.puml ...] [options]
+
+Options:
+  --target 16:9|4:3|letter|letter-landscape|a4|a4-landscape|square|W:H
+                      aspect-ratio target (default: none -> no aspect issue)
+  --fit-width N       px width the diagram must fit; drives the tiny-text check
+                      (default: the target's usable width, 1200 for 16:9, 624 for letter; else off)
+  --png               also render a PNG (for a vision pass) and detect silent cropping
+  --dpi N             dpi for the PNG (default 192 = 2x)
+  --out DIR           keep rendered files here (default: temp dir)
+  --format json|text|gcc   report format (default text; gcc = file:line: kind: msg)
+  --lint-only         source lint only, no render
+  --no-lint           skip the source lint
+  --strict            treat warnings as failures (exit 1 on any issue)
+
+Exit codes: 0 clean, 1 issues found, 2 syntax/render error or tool failure.
+"""
+import argparse, json, math, os, re, shutil, struct, subprocess, sys, tempfile, time
+import xml.etree.ElementTree as ET
+
+NS = "{http://www.w3.org/2000/svg}"
+TARGETS = {"16:9": 16/9, "4:3": 4/3, "letter": 8.5/11, "letter-landscape": 11/8.5,
+           "a4": 210/297, "a4-landscape": 297/210, "square": 1.0}
+# usable px at 96 dpi (references/style.md): slide body under its title, or the page body inside 1 in margins
+SLOT = {"16:9": (1200, 600), "4:3": (900, 560), "letter": (624, 864), "a4": (602, 931),
+        "letter-landscape": (864, 624), "a4-landscape": (930, 602)}
+FIT_DEFAULT = {k: v[0] for k, v in SLOT.items()}
+FIT_HEIGHT = {k: v[1] for k, v in SLOT.items()}
+ASC, DESC = 0.80, 0.22      # ascent/descent as fraction of font-size (Java sans)
+MULT = re.compile(r"(?:[\d*]+|[nNmM])(?:\.\.(?:[\d*]+|[nNmM]))?")  # multiplicities: 1, *, 0..*, 1..n, 0..N
+TOL = 1.0                   # px shrink on boxes before intersecting
+ASPECT_TOL = 0.29           # |ln(ratio/target)| above this -> issue (about 1.33x off)
+MIN_FONT_PX = 9.0
+MAX_EDGE_LABEL = 40
+
+# ----------------------------------------------------------------------------- source lint
+BANNED_SKINPARAMS = {
+    "padding": "paints a 'Please use CSS style' banner into the image on 1.2026.x; use <style> ... { Margin/Padding }",
+    "participantpadding": "paints a banner into the image and is ignored; use <style> sequenceDiagram { participant { Margin 0 N } }",
+    "handwritten": "paints a banner into the image; use !option handwritten true (or drop it)",
+    "wrapmessagewidth": "does not exist (silently ignored); use skinparam maxMessageSize or <style> arrow { MaximumWidth N }",
+    "lifelinestrategy": "dead since 1.2025.5; use <style> sequenceDiagram { lifeLine { LineStyle 0 } }",
+    "sameclasswidth": "makes every class as wide as the widest one; use MinClassWidth instead",
+    "ratio": "no such skinparam; use !pragma ratio <h/w> (stretches whitespace only)",
+}
+ARROW_RE = re.compile(r"^\s*[^'\s].*?(?:<?[-.]+(?:\[[^\]]*\])?[-.]*(?:left|right|up|down|l|r|u|d)?[-.]*>?)\s*[^\s:]*\s*:\s*(.+)$")
+
+def lint_source(path):
+    issues = []
+    try:
+        lines = open(path, encoding="utf-8").read().splitlines()
+    except Exception as e:
+        return [{"kind": "read-error", "line": 0, "detail": str(e), "level": "error"}]
+    text = "\n".join(lines)
+    def add(kind, line, detail, level="warn"):
+        issues.append({"kind": kind, "line": line, "detail": detail, "level": level})
+    if not re.search(r"^\s*@start\w+", text, re.M):
+        add("missing-start", 1, "no @startuml (or @startxxx) line", "error")
+    if not re.search(r"^\s*@end\w+", text, re.M):
+        add("missing-end", len(lines), "no @enduml (or @endxxx) line", "error")
+    if re.search(r"^\s*(graph (TD|LR|TB|RL)|flowchart\b|sequenceDiagram\s*$|classDiagram\s*$|erDiagram\b|gantt\s*$|stateDiagram(-v2)?\s*$)", text, re.M):
+        add("mermaid-syntax", 1, "looks like Mermaid, not PlantUML", "error")
+    has_ortho = False
+    labelled_edges = 0
+    in_style = False
+    first_start = next((i for i, l in enumerate(lines, 1) if re.match(r"^\s*@start\w+", l)), None)
+    if re.search(r"^\s*@startuml", text, re.M) and re.search(r"^\s*nwdiag\s*\{", text, re.M):
+        add("nwdiag-under-startuml", 1, "PlantUML 1.2026.x rejects nwdiag inside @startuml; use @startnwdiag ... @endnwdiag (network names must be identifiers; use description = \"...\")", "error")
+    for i, raw in enumerate(lines, 1):
+        s = raw.strip()
+        if re.match(r"^<style", s): in_style = True
+        elif re.match(r"^</style>", s): in_style = False
+        if first_start and i != first_start and re.search(r"@start\w+", s):
+            add("stray-start-marker", i, "the text '@start...' appears again (even in a comment it starts a new diagram or breaks an include)")
+        if s.startswith("'") or s.startswith("/'"):
+            if in_style:
+                add("comment-in-style", i, "' comments are not allowed inside <style> ... </style> (\"bad definition\" error)", "error")
+            continue
+        m = re.match(r"^skinparam\s+(\w+)", s, re.I)
+        if m:
+            key = m.group(1).lower()
+            if key in BANNED_SKINPARAMS:
+                add("banned-skinparam", i, f"skinparam {m.group(1)}: {BANNED_SKINPARAMS[key]}")
+            if key == "linetype":   # the last setting wins
+                has_ortho = bool(re.search(r"ortho", s, re.I)); ortho_line = i
+        if re.match(r"^!pragma\s+layout\s+(elk|smetana)", s, re.I):
+            add("alt-layout-engine", i, "ELK/Smetana ignore nodesep/ranksep/linetype (ELK also ignores direction hints and loses SVG link groups, which weakens this checker)")
+        if re.match(r"^!pragma\s+teoz", s, re.I):
+            add("teoz-pragma", i, "teoz is the only sequence engine since 1.2026.7; the pragma is a no-op (harmless on older versions)", "info")
+        if re.match(r"^(alt|else|opt|loop|group|par|break|critical)\s+\[", s):
+            add("bracket-group-label", i, "do not type the brackets: PlantUML adds them, and [text] is link syntax (renders as a link and drops words); write  else declined")
+        if "<br>" in s or "<br/>" in s:
+            add("html-br", i, "<br> is printed literally; use \\n")
+        if re.match(r"^scale\s+\d+(\.\d+)?\s*$", s) and float(re.findall(r"\d+(?:\.\d+)?", s)[0]) > 4:
+            add("scale-cap", i, "scale > 4 is silently capped at ~4x in PNG; use skinparam dpi 192/288 instead")
+        if re.match(r"^scale\s+\d+\s+width", s) and int(re.findall(r"\d+", s)[0]) > 1000:
+            add("scale-cap", i, "scale N width is capped at ~4x the natural size; use skinparam dpi instead")
+        if re.match(r"^!include\s+https?://", s, re.I):
+            add("remote-include", i, "remote !include needs network and the LEGACY security profile; prefer a local file or inline style", "info")
+        # edge labels: "A --> B : label" in graphviz diagrams, "A -> B : msg" in sequence
+        m = re.match(r"^(?!note|legend|title|caption|header|footer|if|else|while|repeat|case|switch|:)[^:]*?\S+\s*[<]?[-.]{1,4}(\[[^\]]*\])?(left|right|up|down|le|ri|u|d|l|r)?[-.]*[>]?\s*\"?[^\"\s:]*\"?\s*:\s*(.+)$", s)
+        crow = re.match(r"^\S+\s+[|}{o]{1,2}[-.]+(?:\[[^\]]*\])?(?:left|right|up|down)?[-.]*[|}{o]{1,2}\s+\S+\s*:\s*(.+)$", s)
+        if crow:
+            labelled_edges += 1
+        elif m and re.search(r"[-.]{1,}", s) and not s.startswith("note"):
+            label = m.group(3).strip()
+            if re.search(r"(->|<-|--|\.\.)", s.split(":", 1)[0]):
+                labelled_edges += 1
+                if len(label) > MAX_EDGE_LABEL and "\\n" not in label:
+                    add("long-edge-label", i, f"edge/message label is {len(label)} chars (> {MAX_EDGE_LABEL}); shorten, add \\n, or set a wrap width")
+        # creole traps in labels/notes
+        if re.search(r"(?<![~\"])--[^-\s>][^-]*?--(?![->])", s) and ":" in s and not s.lstrip().startswith("skinparam"):
+            add("creole-strike", i, "'--text--' renders as strikethrough; escape with ~-- or wrap in \"\"...\"\"", "info")
+        if re.search(r"(?<![~\"\w])__\w+__", s):
+            add("creole-underline", i, "'__text__' renders underlined; escape with ~__", "info")
+        if len(re.findall(r"(?<!:)//", s.split("'")[0])) >= 2 and "http" in s:
+            add("creole-italic", i, "two '//' on one line italicise the text between them; write https:~// or wrap in \"\"...\"\"", "info")
+    if has_ortho and labelled_edges:
+        add("ortho-with-labels", ortho_line, f"linetype ortho with {labelled_edges} labelled edge(s): labels become Graphviz xlabels and overlap (GitHub #2326); use polyline or the default")
+    return issues
+
+# ----------------------------------------------------------------------------- rendering
+def plantuml_cmd():
+    exe = os.environ.get("PLANTUML_BIN") or shutil.which("plantuml")
+    if exe:
+        return [exe]
+    jar = os.environ.get("PLANTUML_JAR")
+    if jar:
+        java = (os.environ.get("PLANTUML_JAVA")
+                or (os.path.join(os.environ["JAVA_HOME"], "bin", "java") if os.environ.get("JAVA_HOME") else None)
+                or shutil.which("java") or "java")
+        return [java, "-Djava.awt.headless=true", "-jar", jar]
+    return None
+
+def render(cmd, src, outdir, fmt, extra=()):
+    env = dict(os.environ, PLANTUML_LIMIT_SIZE=os.environ.get("PLANTUML_LIMIT_SIZE", "16384"))
+    r = subprocess.run(cmd + [f"-t{fmt}", "-stdrpt:2", "--no-error-image", "-o", outdir, *extra, src],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=env)
+    errs = []
+    for line in (r.stdout + r.stderr).splitlines():
+        m = re.match(r"^(.*?):(\d+):error:(.*)$", line)
+        if m:
+            errs.append({"line": int(m.group(2)), "message": m.group(3).strip()})
+    if r.returncode != 0 and not errs:
+        tail = (r.stderr or r.stdout).strip().splitlines()[-3:]
+        errs.append({"line": 0, "message": "plantuml exit %d: %s" % (r.returncode, " | ".join(tail))})
+    return r.returncode, errs
+
+def png_size(path):
+    with open(path, "rb") as f:
+        head = f.read(24)
+    return struct.unpack(">II", head[16:24])
+
+# ----------------------------------------------------------------------------- geometry
+def num(v, default=0.0):
+    try:
+        return float(re.sub(r"[a-z%]+$", "", v))
+    except (TypeError, ValueError):
+        return default
+
+def bbox_of_points(pts):
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+def path_points(d):
+    """Flatten absolute M/L/C/Q/A/Z paths (what PlantUML emits) into polylines."""
+    toks = re.findall(r"[MLCQAZHVmlcqazhv]|-?[\d.]+(?:e-?\d+)?", d)
+    polys, cur, i, cmd, pos = [], [], 0, None, (0.0, 0.0)
+    def take(n):
+        nonlocal i
+        vals = [float(t) for t in toks[i:i+n]]; i += n; return vals
+    while i < len(toks):
+        if re.match(r"[A-Za-z]", toks[i]):
+            cmd = toks[i]; i += 1
+            if cmd in "Zz":
+                if cur: cur.append(cur[0]); polys.append(cur); cur = []
+                continue
+        try:
+            if cmd == "M":
+                if cur: polys.append(cur)
+                x, y = take(2); pos = (x, y); cur = [pos]; cmd = "L"
+            elif cmd == "L":
+                x, y = take(2); pos = (x, y); cur.append(pos)
+            elif cmd == "C":
+                x1, y1, x2, y2, x, y = take(6); p0 = pos
+                for k in range(1, 9):
+                    t = k / 8; u = 1 - t
+                    cur.append((u**3*p0[0] + 3*u*u*t*x1 + 3*u*t*t*x2 + t**3*x,
+                                u**3*p0[1] + 3*u*u*t*y1 + 3*u*t*t*y2 + t**3*y))
+                pos = (x, y)
+            elif cmd == "Q":
+                x1, y1, x, y = take(4); p0 = pos
+                for k in range(1, 9):
+                    t = k / 8; u = 1 - t
+                    cur.append((u*u*p0[0] + 2*u*t*x1 + t*t*x, u*u*p0[1] + 2*u*t*y1 + t*t*y))
+                pos = (x, y)
+            elif cmd == "A":
+                vals = take(7); pos = (vals[5], vals[6]); cur.append(pos)
+            else:
+                i += 1
+        except (ValueError, IndexError):
+            break
+    if cur: polys.append(cur)
+    return polys
+
+def seg_hits_box(p, q, b):
+    x0, y0, x1, y1 = b
+    if x0 >= x1 or y0 >= y1: return False
+    dx, dy = q[0] - p[0], q[1] - p[1]
+    t0, t1 = 0.0, 1.0
+    for pk, qk in ((-dx, p[0] - x0), (dx, x1 - p[0]), (-dy, p[1] - y0), (dy, y1 - p[1])):
+        if pk == 0:
+            if qk < 0: return False
+        else:
+            r = qk / pk
+            if pk < 0: t0 = max(t0, r)
+            else: t1 = min(t1, r)
+            if t0 > t1: return False
+    return True
+
+def segs_cross(a, b, c, d):
+    def o(p, q, r): return (q[0]-p[0])*(r[1]-p[1]) - (q[1]-p[1])*(r[0]-p[0])
+    d1, d2, d3, d4 = o(c, d, a), o(c, d, b), o(a, b, c), o(a, b, d)
+    return (d1 * d2 < 0) and (d3 * d4 < 0)
+
+def inter(a, b):
+    return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+
+def contains(outer, inner, pad=0.0):
+    return (outer[0]-pad <= inner[0] and outer[1]-pad <= inner[1]
+            and outer[2]+pad >= inner[2] and outer[3]+pad >= inner[3])
+
+def shrink(b, t=TOL):
+    return (b[0]+t, b[1]+t, b[2]-t, b[3]-t)
+
+def walk(el, owner, out):
+    tag = el.tag.replace(NS, "")
+    if tag == "g" and el.get("class") in ("entity", "link", "cluster", "legend", "title"):
+        owner = (el.get("class"), el.get("id") or el.get("data-qualified-name") or "?",
+                 el.get("data-source-line"))
+        if el.get("data-qualified-name") and el.get("id"):
+            out["names"][el.get("id")] = el.get("data-qualified-name")
+        if el.get("class") == "link":
+            out["edges"].setdefault(owner[1], {"owner": owner, "polys": []})["ends"] = (el.get("data-entity-1"), el.get("data-entity-2"))
+    if tag == "text" and (el.text or "").strip():
+        fs = num(el.get("font-size"), 12); x, y = num(el.get("x")), num(el.get("y"))
+        w = num(el.get("textLength"), len(el.text) * fs * 0.55)
+        if el.get("text-anchor") == "middle": x -= w / 2
+        elif el.get("text-anchor") == "end": x -= w
+        out["texts"].append({"text": el.text.strip(), "box": (x, y - ASC*fs, x + w, y + DESC*fs),
+                             "fs": fs, "owner": owner, "mono": "monospace" in (el.get("font-family") or "")})
+    elif tag in ("rect", "polygon", "ellipse", "path"):
+        if owner and owner[0] == "entity":
+            st = (el.get("style") or "") + " " + (el.get("stroke") or "")
+            out["stroke_stats"][0] += 1
+            if "stroke" not in st or "stroke:none" in st or re.search(r"stroke-width:0(?:\.0+)?(?![.\d])", st):
+                out["stroke_stats"][1] += 1
+        b = None
+        if tag == "rect":
+            x, y = num(el.get("x")), num(el.get("y"))
+            b = (x, y, x + num(el.get("width")), y + num(el.get("height")))
+        elif tag == "ellipse":
+            cx, cy, rx, ry = (num(el.get(k)) for k in ("cx", "cy", "rx", "ry"))
+            b = (cx - rx, cy - ry, cx + rx, cy + ry)
+        elif tag == "polygon":
+            v = [float(t) for t in re.findall(r"-?[\d.]+", el.get("points", ""))]
+            b = bbox_of_points(list(zip(v[0::2], v[1::2]))) if len(v) >= 4 else None
+        else:
+            d = el.get("d", "")
+            polys = path_points(d)
+            pts = [p for poly in polys for p in poly]
+            b = bbox_of_points(pts) if pts else None
+            if owner and owner[0] == "link":
+                out["edges"].setdefault(owner[1], {"owner": owner, "polys": []})["polys"] += polys
+            elif not owner and (el.get("fill") in (None, "none")) and not re.search(r"[CcAaQq]", d):
+                out["freepaths"] += polys
+        if b:
+            if owner and owner[0] in ("entity", "cluster"):
+                out["shapes"].append({"box": b, "owner": owner})
+            elif not owner or owner[0] != "link":
+                fill = el.get("fill") or ""
+                out["anyshapes"].append({"box": b, "tag": tag, "filled": fill not in ("", "none", "transparent")})
+    elif tag == "line":
+        p = (num(el.get("x1")), num(el.get("y1"))); q = (num(el.get("x2")), num(el.get("y2")))
+        if owner and owner[0] == "link":
+            out["edges"].setdefault(owner[1], {"owner": owner, "polys": []})["polys"].append([p, q])
+        else:
+            out["lines"].append((p, q, el.get("style") or "", el.get("stroke-dasharray") or ""))
+    for ch in el:
+        walk(ch, owner, out)
+
+def where(o):
+    if not o: return None
+    if o[2] is not None:
+        return f"{o[0]}:{o[1]} (src line {int(o[2]) + 1})"
+    return f"{o[0]}:{o[1]}"
+
+def short_name(names, key):
+    """An element's alias: the last part of its qualified name (SVG ids map to names via data-qualified-name)."""
+    return (names.get(key) or key or "").split(".")[-1]
+
+def make_resolver(src_lines, names, edges):
+    """SVG data-source-line counts lines after !include and macro expansion, so for C4, awslib and other
+    includes it points into the library. Keep it when that source line mentions the element's alias;
+    otherwise find the line in the user's file that declares the alias (or links both endpoints)."""
+    n_src = len(src_lines)
+    def alias(key):
+        return short_name(names, key)
+    def mentions(line, a):
+        return bool(a) and re.search(r"(?<![\w$])" + re.escape(a) + r"(?!\w)", line) is not None
+    def find(pred):
+        for i, l in enumerate(src_lines, 1):
+            if not l.lstrip().startswith("'") and pred(l):
+                return i
+        return None
+    def resolve(o):
+        if not o or o[2] is None:
+            return None
+        n = int(o[2]) + 1
+        here = src_lines[n - 1] if 0 < n <= n_src else ""
+        if o[0] in ("entity", "cluster"):
+            a = alias(o[1])
+            if re.fullmatch(r"GMN\d+", a) or not a:
+                return n if here else None
+            if mentions(here, a):
+                return n
+            return (find(lambda l: re.search(r"\bas\s+" + re.escape(a) + r"\b|\(\s*" + re.escape(a) + r"\s*,", l))
+                    or find(lambda l: mentions(l, a)) or (n if here else None))
+        if o[0] == "link":
+            ends = (edges.get(o[1]) or {}).get("ends") or (None, None)
+            a, b = alias(ends[0]) if ends[0] else "", alias(ends[1]) if ends[1] else ""
+            if (mentions(here, a) and mentions(here, b)) or not (a and b):
+                return n if here else None
+            def ordered(l, x, y):   # x appears before y: the link's own direction (Rel(x, y) or x --> y)
+                mx = re.search(r"(?<![\w$])" + re.escape(x) + r"(?!\w)", l); my = re.search(r"(?<![\w$])" + re.escape(y) + r"(?!\w)", l)
+                return bool(mx and my and mx.start() < my.start())
+            return (find(lambda l: ordered(l, a, b)) or find(lambda l: ordered(l, b, a))
+                    or (n if here else None))
+        return n if here else None
+    return resolve
+
+def analyse(svg_path, target, fit_width, src_lines=()):
+    root = ET.parse(svg_path).getroot()
+    vb = [float(v) for v in (root.get("viewBox") or "0 0 0 0").split()]
+    W, H = (vb[2], vb[3]) if vb[2] else (num(root.get("width")), num(root.get("height")))
+    dtype = root.get("data-diagram-type") or "UNKNOWN"
+    rep = {"diagram_type": dtype, "width": round(W, 1), "height": round(H, 1),
+           "aspect": round(W / H, 3) if H else None, "issues": []}
+    issues = rep["issues"]
+    def add(kind, detail, line=None, **kw):
+        d = {"kind": kind, "detail": detail}
+        if line: d["line"] = line
+        d.update(kw); issues.append(d)
+    out = {"texts": [], "shapes": [], "anyshapes": [], "edges": {}, "lines": [], "freepaths": [], "stroke_stats": [0, 0],
+           "names": {}}
+    walk(root, None, out)
+    T, S, E = out["texts"], out["shapes"], out["edges"]
+    src_line = make_resolver(list(src_lines), out["names"], E)
+    if dtype == "CLASS" and any(re.match(r"\s*entity\s", l) for l in src_lines):
+        rep["diagram_type"] = dtype = "CLASS/ER"
+    notes = {k for k, q in out["names"].items() if re.fullmatch(r"GMN\d+", q)}
+    known = set(out["names"])
+    rep["counts"] = {"texts": len(T),
+                     "nodes": len({s["owner"][1] for s in S if s["owner"][0] == "entity" and s["owner"][1] not in notes}),
+                     # links to [*] start/end pseudo-states (no entity group of their own) are not counted
+                     "edges": sum(1 for e in E.values() if all(x in known for x in (e.get("ends") or (None, None))))}
+    if dtype == "STATE":
+        # the SVG groups only states that have a description, so count from the source: transitions between
+        # named states ([*] start/end arrows excluded) and every state they or a declaration name
+        tr = [m for m in (re.match(r"^\s*(\[\*\]|[\w.]+)\s*-+(?:\[[^\]]*\])?(?:up|down|left|right)?-*>\s*(\[\*\]|[\w.]+)", l)
+                          for l in src_lines) if m]
+        names = {x for m in tr for x in m.groups() if x != "[*]"}
+        names |= {m.group(1) for m in (re.match(r"^\s*state\s+(?:\"[^\"]*\"\s+as\s+)?([\w.]+)", l) for l in src_lines) if m}
+        rep["counts"]["nodes"] = len(names)
+        rep["counts"]["edges"] = sum(1 for m in tr if "[*]" not in m.groups())
+    # 0a. borderless elements: LineColor transparent / title LineThickness 0 strip every stroke (PNG hides it, SVG shows it)
+    tot, bad = out["stroke_stats"]
+    if tot >= 4 and bad / tot > 0.5:
+        add("missing-stroke", f"{bad} of {tot} element shapes have no stroke in the SVG (borderless in SVG/PDF). Cause: LineColor transparent or a LineThickness 0 on root/title in <style>; put line properties on element/arrow only")
+    # 0. deprecation banner painted into the image
+    for t in T:
+        if re.match(r"Please\W+use\W+CSS", t["text"]):
+            add("deprecated-skinparam-banner", t["text"] + " (the warning is drawn INSIDE the image)")
+    # aspect
+    if target:
+        tr = TARGETS.get(target) or (lambda a, b: a / b)(*map(float, target.split(":")))
+        rep["target_aspect"] = round(tr, 3)
+        err = math.log((W / H) / tr) if H else 0
+        rep["aspect_error"] = round(err, 3)
+        sw, sh = SLOT.get(target, (fit_width or 0, 10**9))
+        fits_unscaled = bool(sw) and W <= sw and H <= sh
+        if abs(err) > ASPECT_TOL and not fits_unscaled:
+            if dtype == "SEQUENCE":
+                hint = "too wide: fewer/shorter participants, shorter messages" if err > 0 else "too tall: fewer messages, newpage, or split by phase"
+            elif dtype == "ACTIVITY":
+                hint = "too wide: fewer swimlanes, switch instead of elseif" if err > 0 else "too tall: split by phase, fewer actions"
+            elif dtype in ("DESCRIPTION", "CLASS", "CLASS/ER", "STATE", "OBJECT"):
+                hint = ("too wide: use top to bottom direction, build rows (-> same rank, --> next row), stack packages with -[hidden]-> links, or split"
+                        if err > 0 else
+                        "too tall: use left to right direction (chains), build rows (-> same rank, --> next row), lower ranksep, or split")
+            else:
+                hint = ("too wide" if err > 0 else "too tall") + f": this diagram type ({dtype}) has no direction control; split it or accept the shape"
+            add("aspect", f"{W:.0f}x{H:.0f} ratio {W/H:.2f} vs target {tr:.2f}; {hint}")
+        elif abs(err) > ASPECT_TOL:
+            use = (W * H) / (sw * sh) if sw and sh < 10**9 else 1
+            more = f"; it fills {use*100:.0f}% of the {sw}x{sh} slot, so a direction change or rows would use it better" if abs(err) > 0.5 and use < 0.5 else ""
+            add("aspect", f"{W:.0f}x{H:.0f} ratio {W/H:.2f} vs target {tr:.2f}, but it fits the {sw}x{sh} slot unscaled; acceptable{more}", level="info")
+    # tiny text at fit width
+    if fit_width and W and T:
+        scale = min(1.0, fit_width / W)
+        mn = min(t["fs"] for t in T) * scale
+        rep["min_font_px_at_fit"] = round(mn, 1)
+        if mn < MIN_FONT_PX:
+            add("tiny-text", f"scaled to {fit_width:.0f}px wide the smallest text is {mn:.1f}px (<{MIN_FONT_PX:.0f}px); change direction or build rows so it uses the slot's shape, cut content, or split")
+    # 1. clipped
+    for t in T:
+        b = t["box"]
+        if b[0] < -TOL or b[1] < -TOL or b[2] > W + TOL or b[3] > H + TOL:
+            add("text-clipped", f"'{t['text']}' extends past the canvas", src_line(t["owner"]), at=where(t["owner"]))
+    # 2. text vs text
+    for i in range(len(T)):
+        for j in range(i + 1, len(T)):
+            a, b = T[i], T[j]
+            if inter(shrink(a["box"]), shrink(b["box"])):
+                add("text-overlap", f"'{a['text']}' overlaps '{b['text']}'",
+                    src_line(a["owner"]) or src_line(b["owner"]), at=[where(a["owner"]), where(b["owner"])])
+    # 3. link/entity label inside a foreign node
+    for t in T:
+        if not t["owner"] or t["owner"][0] not in ("link", "entity"): continue
+        for s in S:
+            if s["owner"][0] != "entity" or s["owner"][1] == t["owner"][1]: continue
+            if inter(shrink(t["box"]), shrink(s["box"])):
+                add("text-on-node", f"label '{t['text']}' sits on node {s['owner'][1]}", src_line(t["owner"]), at=where(t["owner"])); break
+    # 4. foreign edge strikes through a label
+    for t in T:
+        for eid, e in E.items():
+            if t["owner"] and t["owner"][1] == eid: continue
+            if any(seg_hits_box(p, q, shrink(t["box"], 2)) for poly in e["polys"] for p, q in zip(poly, poly[1:])):
+                add("edge-through-text", f"edge {eid} runs through '{t['text']}'", src_line(e["owner"]), at=where(e["owner"])); break
+    # 4a. edge passes through a node or package it does not connect to
+    ent_boxes = {}
+    for sh in S:
+        k = sh["owner"][1]
+        b = sh["box"]
+        if k in ent_boxes:
+            o = ent_boxes[k]["box"]; ent_boxes[k]["box"] = (min(o[0], b[0]), min(o[1], b[1]), max(o[2], b[2]), max(o[3], b[3]))
+        else:
+            ent_boxes[k] = {"box": b, "kind": sh["owner"][0], "owner": sh["owner"]}
+    def inside(inner, outer):
+        return contains(outer, inner, 0.5)
+    for eid, e in E.items():
+        ends = e.get("ends") or (None, None)
+        if not ends[0] or not ends[1]: continue
+        a, b = ent_boxes.get(ends[0]), ent_boxes.get(ends[1])
+        segs_e = [(p, q) for poly in e["polys"] for p, q in zip(poly, poly[1:])]
+        for k, sh in ent_boxes.items():
+            if k in ends: continue
+            if sh["kind"] == "cluster":
+                # crossing a package that holds an endpoint is unavoidable
+                if (a and inside(a["box"], sh["box"])) or (b and inside(b["box"], sh["box"])): continue
+                box = shrink(sh["box"], 3)
+                if any(seg_hits_box(p, q, box) for p, q in segs_e):
+                    add("edge-through-cluster", f"edge {eid} cuts through package {k} it does not connect to", src_line(e["owner"]), at=where(e["owner"]), level="info")
+            else:
+                box = shrink(sh["box"], 3)
+                if any(seg_hits_box(p, q, box) for p, q in segs_e):
+                    add("edge-through-node", f"edge {eid} passes over node {k}", src_line(e["owner"]), at=where(e["owner"]))
+    # 4a'. edge has to cross several nested container borders to reach its endpoint (looks like a line drawn over boxes)
+    for eid, e in E.items():
+        ends = e.get("ends") or (None, None)
+        if not ends[0] or not ends[1]: continue
+        a, b = ent_boxes.get(ends[0]), ent_boxes.get(ends[1])
+        if not a or not b: continue
+        crossed = 0
+        for k, sh in ent_boxes.items():
+            if sh["kind"] != "cluster" or k in ends: continue
+            ina, inb = inside(a["box"], sh["box"]), inside(b["box"], sh["box"])
+            if ina != inb: crossed += 1
+        if crossed >= 3:
+            add("edge-crosses-nested-borders", f"edge {eid} crosses {crossed} container borders; link the container instead of the inner node, or flatten the nesting", src_line(e["owner"]), at=where(e["owner"]), level="info")
+    # 4b. label far from its own edge
+    def box_dist(b, pt):
+        dx = max(b[0] - pt[0], 0, pt[0] - b[2]); dy = max(b[1] - pt[1], 0, pt[1] - b[3])
+        return math.hypot(dx, dy)
+    label_blocks = {}
+    for t in T:
+        o = t["owner"]
+        if not o or o[0] != "link" or o[1] not in E: continue
+        if MULT.fullmatch(t["text"]) or t["text"] in ("<", ">"):   # multiplicities / direction glyphs sit at the ends
+            continue
+        blk = label_blocks.setdefault(o[1], {"box": t["box"], "fs": t["fs"], "words": [], "owner": o})
+        b = blk["box"]; tb = t["box"]
+        blk["box"] = (min(b[0], tb[0]), min(b[1], tb[1]), max(b[2], tb[2]), max(b[3], tb[3]))
+        blk["words"].append(t["text"]); blk["fs"] = max(blk["fs"], t["fs"])
+    for eid, blk in label_blocks.items():
+        label = " ".join(blk["words"])
+        if all(MULT.fullmatch(w) for w in label.split()):   # multiplicities sit at the ends, skip
+            continue
+        segs_e = [(p, q) for poly in E[eid]["polys"] for p, q in zip(poly, poly[1:])]
+        pts = [(p[0] + (q[0]-p[0])*k/10, p[1] + (q[1]-p[1])*k/10) for p, q in segs_e for k in range(11)]
+        dmin = min((box_dist(blk["box"], pt) for pt in pts), default=0)
+        if dmin > 4.0 * blk["fs"]:
+            add("detached-label", f"'{label}' sits {dmin:.0f}px from its own edge", src_line(blk["owner"]), at=where(blk["owner"]))
+        inner = shrink(blk["box"], 1.5)
+        if any(seg_hits_box(p, q, inner) for p, q in segs_e):
+            add("edge-through-own-label", f"edge {eid} runs through its own label '{label}' (typical for same-rank -> edges and HA pair links); move the text into the node or a note", src_line(blk["owner"]), at=where(blk["owner"]))
+    # 4c. label lying on a container border
+    cluster_boxes = [sh["box"] for sh in ent_boxes.values() if sh["kind"] == "cluster"]
+    for eid, blk in label_blocks.items():
+        b = shrink(blk["box"], 1.5)
+        for cb in cluster_boxes:
+            x0, y0, x1, y1 = cb
+            borders = [((x0, y0), (x1, y0)), ((x1, y0), (x1, y1)), ((x1, y1), (x0, y1)), ((x0, y1), (x0, y0))]
+            if any(seg_hits_box(p, q, b) for p, q in borders):
+                add("label-on-border", f"label '{' '.join(blk['words'])}' lies on a container border; shorten it, lengthen the edge (--->), or move the text into the node", src_line(blk["owner"]), at=where(blk["owner"]))
+                break
+    # 5. sequence diagrams: message text crossed by a lifeline, text over group frame
+    if dtype == "SEQUENCE":
+        lifelines = [(p, q) for p, q, st, da in out["lines"]
+                     if abs(p[0] - q[0]) < 0.5 and abs(q[1] - p[1]) > 0.3 * H]
+        xs = sorted({round(p[0], 1) for p, q in lifelines})
+        ly0 = min((min(p[1], q[1]) for p, q in lifelines), default=0)
+        ly1 = max((max(p[1], q[1]) for p, q in lifelines), default=H)
+        shapes = out["anyshapes"]
+        def opaque(sh, t):
+            """A shape that visually covers the lifeline under a text: participant boxes, notes, headers.
+            Group frames (alt/loop) are big transparent rects and do not count."""
+            b = sh["box"]
+            if sh["tag"] == "rect":
+                return (b[3] - b[1]) <= 4 * t["fs"]
+            return sh["filled"]
+        def text_line(txt):
+            """Sequence texts carry no source line in the SVG; find the line that holds the text (group labels: the
+            alt/else/loop line). Wrapped labels arrive one fragment at a time, so any fragment is enough."""
+            needle = txt.strip("[] ").split(" ")[0] if txt.startswith("[") else txt
+            group = txt.startswith("[")
+            for i, l in enumerate(src_lines, 1):
+                s = l.strip()
+                if s.startswith("'") or not needle:
+                    continue
+                if group and not re.match(r"(alt|else|opt|loop|group|par|break|critical)\b", s):
+                    continue
+                if needle in s:
+                    return i
+            return None
+        # participant names: declared display names and aliases, plus implicit participants named by messages
+        pwords = set()
+        for l in src_lines:
+            m = re.match(r'\s*(?:participant|actor|boundary|control|entity|database|collections|queue)\s+(?:"([^"]+)"|(\S+))(?:\s+as\s+(\S+))?', l)
+            if m:
+                pwords |= set(re.sub(r"\\n", " ", m.group(1) or m.group(2) or "").split()) | {m.group(3) or ""}
+            m = re.match(r"\s*([\w.]+)\s*<?[-.]+[>x\\/]*\s*([\w.]+)\s*(?::|$)", l)
+            if m:
+                pwords |= set(m.groups())
+        pwords.discard("")
+        for t in T:
+            b = t["box"]
+            if any(opaque(sh, t) and contains(sh["box"], b, 1.0) for sh in shapes):
+                continue
+            if b[3] < ly0 or b[1] > ly1:                 # title/caption above or below the lifelines
+                continue
+            cx = (b[0] + b[2]) / 2
+            hits = [x for x in xs if b[0] + 2 < x < b[2] - 2]
+            if set(t["text"].split()) <= pwords:
+                # a participant name sits centred on its own lifeline (actors and databases up to 5 px off): that
+                # one does not count. Message and group labels get no such pass, even when centred on a lifeline.
+                hits = [x for x in hits if abs(x - cx) >= 8]
+            if hits and t["text"].startswith("["):
+                # PlantUML starts else/loop labels ~11 px left of the group's first lifeline, so that one always touches
+                # the opening characters; only a lifeline further into the text means the label is too long
+                far = [x for x in hits if x - b[0] > 16]
+                if far:
+                    add("group-label-crosses-lifeline", f"'{t['text']}' (alt/else/loop label) is crossed by {len(far)} lifeline(s) past its own; these labels never wrap: shorten it to fit before the next lifeline, or reorder participants", text_line(t["text"]))
+                else:
+                    add("group-label-on-lifeline", f"'{t['text']}' starts on its group's first lifeline (PlantUML usually draws it there); keep it short, or start the group at a participant further left", text_line(t["text"]), level="info")
+            elif hits:
+                add("message-crosses-lifeline", f"'{t['text']}' is crossed by {len(hits)} lifeline(s); shorten it, set maxMessageSize / arrow MaximumWidth, or reorder participants", text_line(t["text"]))
+        # 5a. message arrows drawn across the lifelines between their two participants. A message is a horizontal
+        # line with an arrowhead polygon at one end; both ends sit on a lifeline or on an activation bar beside it.
+        def lifeline_at(x):
+            near = [l for l in xs if abs(l - x) <= 12]
+            return min(near, key=lambda l: abs(l - x)) if near else None
+        # arrowheads: small polygons (->), or short diagonal lines (->> open head, -\\ half head, ->x cross)
+        heads = [sh["box"] for sh in shapes if sh["tag"] == "polygon" and sh["box"][2] - sh["box"][0] <= 16]
+        heads += [bbox_of_points([p, q]) for p, q, st, da in out["lines"]
+                  if abs(p[0] - q[0]) > 0.5 and abs(p[1] - q[1]) > 0.5 and math.hypot(q[0] - p[0], q[1] - p[1]) < 20]
+        def has_head(p, q):
+            return any(h[1] - 1 <= p[1] <= h[3] + 1 and h[0] - 8 <= x <= h[2] + 8 for h in heads for x in (p[0], q[0]))
+        # participant names: texts in the head boxes that end where the lifelines start, or (actor, database) just
+        # above the lifeline; one SVG text per word, so join them per lifeline in reading order
+        head_boxes = [sh["box"] for sh in shapes if sh["tag"] == "rect" and abs(sh["box"][3] - ly0) <= 3]
+        head_row = {}
+        for t in T:
+            b = t["box"]
+            if xs and (any(contains(h, b, 1.0) for h in head_boxes) or ly0 - 1.6 * t["fs"] <= b[3] <= ly0 + 2):
+                cx = (b[0] + b[2]) / 2
+                head_row.setdefault(min(xs, key=lambda l: abs(l - cx)), []).append(t)
+        def pname(x):
+            ws = sorted(head_row.get(x, []), key=lambda t: (round(t["box"][1]), t["box"][0]))
+            return " ".join(t["text"] for t in ws) or f"x={x:.0f}"
+        n_msg, spans = 0, {}
+        for p, q, st, da in out["lines"]:
+            if abs(p[1] - q[1]) > 0.5 or abs(p[0] - q[0]) < 1 or not has_head(p, q):
+                continue
+            a, b = lifeline_at(p[0]), lifeline_at(q[0])
+            if a is None or b is None or a == b:
+                continue
+            n_msg += 1
+            k = sum(1 for x in xs if min(a, b) < x < max(a, b))
+            if k:
+                pair = tuple(sorted((a, b)))
+                spans[pair] = spans.get(pair, (0, k))[0] + 1, k
+        rep["lifeline_crossings"] = sum(c * k for c, k in spans.values())
+        if spans:
+            worst = sorted(spans.items(), key=lambda kv: -kv[1][0] * kv[1][1])[:3]
+            pairs = ", ".join(f"{pname(a)} - {pname(b)}: {c} message(s) over {k} lifeline(s)" for (a, b), (c, k) in worst)
+            add("message-spans-lifelines", f"{sum(c for c, k in spans.values())} of {n_msg} messages cross the lifelines between their participants ({pairs}); reorder participants so most messages go between neighbours", level="info")
+    # 5b. other diagram types (nwdiag, ...): text struck through by a plain line
+    if dtype not in ("SEQUENCE", "DESCRIPTION", "CLASS", "STATE", "OBJECT"):
+        shapes = out["anyshapes"]
+        line_segs = [(p, q) for p, q, st, da in out["lines"]]
+        for poly in out["freepaths"]:
+            line_segs += list(zip(poly, poly[1:]))
+        for t in T:
+            b = t["box"]
+            if any(sh["tag"] == "rect" and sh["filled"] and contains(sh["box"], b, 1.0) for sh in shapes):
+                continue
+            if any(seg_hits_box(p, q, shrink(b, 2)) for p, q in line_segs):
+                hint = "nwdiag: move address text into description = \"...\"" if dtype == "NWDIAG" else "shorten the partition/lane title or move the branch"
+                add("text-struck-by-line", f"'{t['text']}' is crossed by a line ({hint})")
+    # 6. edge-edge crossings (metric)
+    crossings, keys = 0, list(E)
+    segs = {k: [(p, q) for poly in E[k]["polys"] for p, q in zip(poly, poly[1:])] for k in keys}
+    for i in range(len(keys)):
+        for j in range(i + 1, len(keys)):
+            if any(segs_cross(*a, *b) for a in segs[keys[i]] for b in segs[keys[j]]):
+                crossings += 1
+    # 6a. edges that share a node and leave it along one trunk: the picture reads as one edge with stacked labels.
+    # Measure how long two such edges run within 3 px of each other once they are 20 px clear of the shared node.
+    def resample(k, step=4.0):
+        pts = []
+        for p, q in segs[k]:
+            n = max(1, math.ceil(math.hypot(q[0] - p[0], q[1] - p[1]) / step))
+            pts += [(p[0] + (q[0] - p[0]) * i / n, p[1] + (q[1] - p[1]) * i / n) for i in range(n)]
+        return pts
+    def seg_dist(pt, p, q):
+        dx, dy = q[0] - p[0], q[1] - p[1]; ll = dx * dx + dy * dy
+        t = 0 if not ll else max(0, min(1, ((pt[0] - p[0]) * dx + (pt[1] - p[1]) * dy) / ll))
+        return math.hypot(pt[0] - p[0] - t * dx, pt[1] - p[1] - t * dy)
+    alias = lambda k: short_name(out["names"], k)
+    samples = {k: resample(k) for k in keys}
+    bundles = {}
+    for i in range(len(keys)):
+        for j in range(i + 1, len(keys)):
+            ea, eb = (E[keys[i]].get("ends") or (None, None)), (E[keys[j]].get("ends") or (None, None))
+            shared = {x for x in ea if x} & {x for x in eb if x}
+            if len(shared) != 1 or set(ea) == set(eb): continue
+            node = shared.pop(); nb = ent_boxes.get(node)
+            if not nb: continue
+            nbox = nb["box"]
+            far = lambda pt: box_dist(nbox, pt) > 20
+            run = sum(4.0 for pt in samples[keys[i]] if far(pt) and min((seg_dist(pt, p, q) for p, q in segs[keys[j]]), default=99) <= 3)
+            if run >= 40:
+                bundles.setdefault(node, []).append((keys[i], keys[j], run))
+    trunks = []   # pairs that share a run, grouped per node into separate trunks (connected components)
+    for node, pairs in bundles.items():
+        groups = []
+        for a, b, run in pairs:
+            hit = [g for g in groups if a in g or b in g]
+            g = {a: run, b: run}
+            for h in hit:
+                groups.remove(h); g.update({k: max(v, g.get(k, 0)) for k, v in h.items()})
+            groups.append(g)
+        trunks += [(node, g) for g in groups]
+    # 6b. class diagrams: multiplicities of two edges at one node that nearly touch read as one jumble but never
+    # intersect, so text-overlap misses them. On a shared trunk they are part of that report; elsewhere their own.
+    crowded, notes = [], {}
+    if dtype in ("CLASS", "CLASS/ER", "OBJECT"):
+        LT = [t for t in T if t["owner"] and t["owner"][0] == "link" and t["owner"][1] in E and MULT.fullmatch(t["text"])]
+        for i in range(len(LT)):
+            for j in range(i + 1, len(LT)):
+                a, b = LT[i], LT[j]
+                ka, kb = a["owner"][1], b["owner"][1]
+                shared = {x for x in (E[ka].get("ends") or ()) if x} & {x for x in (E[kb].get("ends") or ()) if x}
+                A, B = a["box"], b["box"]
+                if ka == kb or not shared or inter(shrink(A), shrink(B)):   # an intersection is text-overlap
+                    continue
+                gap = math.hypot(max(B[0] - A[2], A[0] - B[2], 0), max(B[1] - A[3], A[1] - B[3], 0))
+                if gap >= 0.5 * min(a["fs"], b["fs"]):
+                    continue
+                n = next((t for t, (node, es) in enumerate(trunks) if node in shared and ka in es and kb in es), None)
+                if n is not None:
+                    notes.setdefault(n, []).append(f"'{a['text']}' and '{b['text']}' {gap:.1f}px apart")
+                else:
+                    crowded.append((a, b, gap, shared))
+    for n, (node, es) in enumerate(trunks):
+        others = sorted({alias(x) for k in es for x in E[k]["ends"] if x and x != node})
+        first = min(es, key=lambda k: src_line(E[k]["owner"]) or 10**9)
+        ends = f"; their end texts crowd ({', '.join(notes[n])})" if n in notes else ""
+        add("bundled-edges", f"{len(es)} edges at {alias(node)} (to {', '.join(others)}) leave it along one shared trunk for about {max(es.values()):.0f}px, so they read as one line with their labels crowded beside it{ends}. Give each target its own rank (---> on one edge), move the detail into the node's text ('writes PDFs, sends email'), or link to a package", src_line(E[first]["owner"]), at=where(E[first]["owner"]))
+    for a, b, gap, shared in crowded:
+        add("crowded-ends", f"'{a['text']}' and '{b['text']}' on two edges at {alias(next(iter(shared)))} are {gap:.1f}px apart and read as one; raise skinparam nodesep, or give one edge its own rank (---> on it)",
+            src_line(a["owner"]) or src_line(b["owner"]), at=[where(a["owner"]), where(b["owner"])])
+    # sequence messages are not edges: report null rather than a 0 that reads as "no crossings"
+    rep["edge_crossings"] = None if dtype == "SEQUENCE" else crossings
+    if crossings and len(E) and crossings >= max(4, len(E)):
+        add("many-crossings", f"{crossings} edge crossings for {len(E)} edges; reorder declarations, link to packages instead of members, or split", level="info")
+    n_clusters = len({s["owner"][1] for s in S if s["owner"][0] == "cluster"})
+    rep["counts"]["clusters"] = n_clusters
+    if len(E) > 15 or n_clusters > 4:
+        add("busy", f"{len(E)} edges and {n_clusters} containers; the node count may be fine but this many flows/boundaries rarely fits one slide. Consider splitting or drawing only the primary flows", level="info")
+    # density metric: text area / canvas
+    area = sum((t["box"][2]-t["box"][0]) * (t["box"][3]-t["box"][1]) for t in T)
+    rep["text_density"] = round(area / (W * H), 3) if W and H else None
+    if rep["text_density"] is not None and len(T) > 6:
+        if rep["text_density"] < 0.015:
+            add("sparse", f"text covers {rep['text_density']*100:.1f}% of the canvas; long edges/labels or stretched ranks. Shorten labels, lower ranksep, drop !pragma ratio, or group nodes", level="info")
+    return rep
+
+# ----------------------------------------------------------------------------- main
+def check_file(src, a, cmd):
+    rep = {"file": src, "status": "ok", "lint": [], "issues": []}
+    if not a.no_lint:
+        rep["lint"] = lint_source(src)
+        if any(l["level"] == "error" for l in rep["lint"]):
+            rep["status"] = "error"
+    if a.lint_only or rep["status"] == "error":
+        return rep
+    outdir = os.path.abspath(a.out or tempfile.mkdtemp(prefix="puml-check-"))
+    os.makedirs(outdir, exist_ok=True)
+    stem = os.path.splitext(os.path.basename(src))[0]
+    started = time.time()
+    rc, errs = render(cmd, src, outdir, "svg")
+    if rc != 0 or errs:
+        rep["status"] = "error"; rep["errors"] = errs; rep["exit"] = rc
+        stale = [p for p in (os.path.join(outdir, stem + e) for e in (".svg", ".png", ".pdf"))
+                 if os.path.exists(p) and os.path.getmtime(p) < started]
+        if stale:
+            rep["stale"] = stale
+        return rep
+    svg = os.path.join(outdir, stem + ".svg")
+    if not os.path.exists(svg):
+        cands = [f for f in os.listdir(outdir) if f.endswith(".svg") and f.startswith(stem)]
+        if not cands:
+            rep["status"] = "error"; rep["errors"] = [{"line": 0, "message": "no SVG produced (check @startuml name)"}]
+            return rep
+        svg = os.path.join(outdir, sorted(cands)[0])
+    fit = a.fit_width if a.fit_width is not None else FIT_DEFAULT.get(a.target or "", 0)
+    try:
+        src_lines = open(src, encoding="utf-8").read().splitlines()
+    except Exception:
+        src_lines = []
+    geo = analyse(svg, a.target, fit, src_lines)
+    rep.update(geo); rep["svg"] = svg
+    if a.png:
+        render(cmd, src, outdir, "png", extra=[f"-Sdpi={a.dpi}"])
+        png = os.path.join(outdir, stem + ".png")
+        if os.path.exists(png):
+            pw, ph = png_size(png)
+            rep["png"] = {"path": png, "width": pw, "height": ph, "dpi": a.dpi}
+            limit = int(os.environ.get("PLANTUML_LIMIT_SIZE", 16384))
+            if (pw >= limit and rep["width"] * a.dpi / 96 > limit) or (ph >= limit and rep["height"] * a.dpi / 96 > limit):
+                rep["issues"].append({"kind": "png-cropped", "detail":
+                    f"PNG {pw}x{ph} hit PLANTUML_LIMIT_SIZE={limit}; set PLANTUML_LIMIT_SIZE=16384 or lower --dpi"})
+    warn_lint = [l for l in rep["lint"] if l["level"] != "info"]
+    real = [i for i in rep["issues"] if i.get("level") != "info"]
+    rep["status"] = "warn" if (real or warn_lint) else "ok"
+    return rep
+
+def print_text(rep):
+    print(f"== {rep['file']}: {rep['status'].upper()}")
+    for l in rep.get("lint", []):
+        print(f"  lint  line {l['line']:>3}  {l['kind']:<22} {l['detail']}")
+    for e in rep.get("errors", []):
+        print(f"  ERROR line {e['line']:>3}  {e['message']}")
+    for p in rep.get("stale", []):
+        print(f"  STALE {p} is from an earlier run (this render failed); do not look at it")
+    if "width" in rep:
+        extra = f"  target={rep['target_aspect']} err={rep['aspect_error']:+.2f}" if "target_aspect" in rep else ""
+        print(f"  {rep['diagram_type']} {rep['width']:.0f}x{rep['height']:.0f} ratio={rep['aspect']}{extra}  "
+              f"texts={rep['counts']['texts']} nodes={rep['counts']['nodes']} edges={rep['counts']['edges']} "
+              + (f"crossings=n/a lifeline-crossings={rep['lifeline_crossings']}" if "lifeline_crossings" in rep
+                 else f"crossings={rep['edge_crossings']}") + f" density={rep['text_density']}"
+              + (f" minfont@fit={rep['min_font_px_at_fit']}" if "min_font_px_at_fit" in rep else ""))
+        for i in rep["issues"]:
+            ln = f"line {i['line']:>3}" if i.get("line") else "        "
+            print(f"  {i.get('level','warn'):<5} {ln}  {i['kind']:<26} {i['detail']}")
+        print(f"  svg: {rep['svg']}" + (f"\n  png: {rep['png']['path']} ({rep['png']['width']}x{rep['png']['height']})" if "png" in rep else ""))
+
+def print_gcc(rep):
+    f = rep["file"]
+    for l in rep.get("lint", []):
+        print(f"{f}:{l['line']}: {l['level']}: {l['kind']}: {l['detail']}")
+    for e in rep.get("errors", []):
+        print(f"{f}:{e['line']}: error: syntax: {e['message']}")
+    for p in rep.get("stale", []):
+        print(f"{p}:0: warn: stale-render: from an earlier run (this render failed); do not look at it")
+    for i in rep.get("issues", []):
+        print(f"{f}:{i.get('line') or 0}: {i.get('level','warn')}: {i['kind']}: {i['detail']}")
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("src", nargs="+")
+    ap.add_argument("--target"); ap.add_argument("--fit-width", type=float)
+    ap.add_argument("--png", action="store_true"); ap.add_argument("--dpi", type=int, default=192)
+    ap.add_argument("--out"); ap.add_argument("--format", choices=["json", "text", "gcc"], default="text")
+    ap.add_argument("--lint-only", action="store_true"); ap.add_argument("--no-lint", action="store_true")
+    ap.add_argument("--strict", action="store_true")
+    a = ap.parse_args()
+    if a.target and a.target not in TARGETS and not re.match(r"^\d+(\.\d+)?:\d+(\.\d+)?$", a.target):
+        sys.exit(f"bad --target {a.target!r}; use one of {', '.join(TARGETS)} or W:H")
+    cmd = None
+    if not a.lint_only:
+        cmd = plantuml_cmd()
+        if not cmd:
+            sys.exit("plantuml not found: brew install plantuml, or set PLANTUML_BIN / PLANTUML_JAR")
+    reps = [check_file(s, a, cmd) for s in a.src]
+    if a.format == "json":
+        print(json.dumps(reps if len(reps) > 1 else reps[0], indent=2))
+    else:
+        for r in reps:
+            (print_gcc if a.format == "gcc" else print_text)(r)
+    worst = 0
+    for r in reps:
+        if r["status"] == "error": worst = max(worst, 2)
+        elif r["status"] == "warn": worst = max(worst, 1)
+    sys.exit(worst)
+
+if __name__ == "__main__":
+    main()
