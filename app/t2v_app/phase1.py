@@ -46,7 +46,7 @@ def _text(value) -> str:
 def prefill(request: str, summary: str, workdir: Path) -> dict:
     got = claude.ask_json(_prompt("prefill.txt").format(
         max_extra=config.MAX_EXTRA_QUESTIONS, summary=summary, request=request, questions=_questions_text()),
-        config.GENERATOR_MODEL, workdir)
+        config.GENERATOR_MODEL, workdir, "prefill")
     concerns = [c for c in map(_text, got.get("concerns") or []) if c]
     aspects = got.get("aspects") if isinstance(got.get("aspects"), dict) else {}
     unsure = got.get("unsure") if isinstance(got.get("unsure"), dict) else {}
@@ -127,7 +127,7 @@ def propose(request: str, answers: dict, workdir: Path) -> list[dict]:
     got = claude.ask_json(_prompt("propose.txt").format(
         entity=answers["entity"], focus=answers["focus"], request=request, answers=json.dumps(stated, indent=2),
         viewpoints=listed),
-        config.GENERATOR_MODEL, workdir)
+        config.GENERATOR_MODEL, workdir, f"propose-{len(list(workdir.glob('propose*.json'))) + 1}")
     views: dict[str, dict] = {}
     for v in got.get("views") or []:
         if not isinstance(v, dict) or v.get("viewpoint") not in VIEWPOINTS:

@@ -75,6 +75,22 @@ def _demote(markdown: str) -> str:
     return "\n".join("##" + line if line.startswith("#") else line for line in markdown.splitlines())
 
 
+LEFT_OUT = {"upload.zip", "source", "repo", "work"}   # the repository itself; the export has no copy of it
+
+
+def export_bytes(job_dir: Path, tool: dict) -> io.BytesIO:
+    """Everything about a job except the repository: state, Phase 1 calls, timeline, logs, views, ratings."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr(f"{job_dir.name}/tool.json", json.dumps(tool, indent=2))
+        for path in sorted(job_dir.rglob("*")):
+            rel = path.relative_to(job_dir)
+            if path.is_file() and not path.is_symlink() and rel.parts[0] not in LEFT_OUT:
+                z.write(path, f"{job_dir.name}/{rel}")
+    buf.seek(0)
+    return buf
+
+
 def write_readme(out: Path, request: str, records: list[dict]) -> None:
     first = records[0]
     lines = ["# Architecture views", "", "**Request:** " + request, "",

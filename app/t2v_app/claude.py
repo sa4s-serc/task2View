@@ -27,8 +27,8 @@ def _run(cmd: list[str], cwd: Path, timeout: int, stdout) -> subprocess.Complete
         raise ClaudeError(f"Claude Code did not finish within {timeout // 60} minutes") from None
 
 
-def ask_json(prompt: str, model: str, cwd: Path) -> dict:
-    """One call with no tools; returns the JSON object in the reply."""
+def ask_json(prompt: str, model: str, cwd: Path, name: str) -> dict:
+    """One call with no tools; returns the JSON object in the reply. The prompt and reply are kept in cwd/<name>.json."""
     cwd.mkdir(parents=True, exist_ok=True)
     run = _run(["claude", "-p", prompt, "--model", model, "--output-format", "json", "--tools", ""],
                cwd, config.QUESTION_TIMEOUT, subprocess.PIPE)
@@ -36,6 +36,8 @@ def ask_json(prompt: str, model: str, cwd: Path) -> dict:
         reply = json.loads(run.stdout)
     except ValueError:
         raise ClaudeError(f"Claude Code failed: {run.stdout.strip()[:300]}") from None
+    (cwd / f"{name}.json").write_text(json.dumps({"model": model, "prompt": prompt, "reply": reply}, indent=2),
+                                      encoding="utf-8")
     text = reply.get("result") or ""
     if reply.get("is_error") or reply.get("api_error_status"):
         raise ClaudeError(f"Claude Code reported an error: {text[:300]}")

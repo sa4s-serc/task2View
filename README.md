@@ -1,5 +1,9 @@
 # Task2View
 
+> **Local web tool:** to generate views for your own request and repository with Claude Code, see
+> [app/README.md](app/README.md) (requirements, install, use, sharing results) and
+> [app/HOW-IT-WORKS.md](app/HOW-IT-WORKS.md).
+
 Generate a **stakeholder- and task-guided architecture view** from a code repository.
 
 Two inputs: a local repo (`--code`) and a free-text goal (`--goal`). One output: a viewpoint-selected view (JSON model + diagram). Catalogs follow **ISO/IEC/IEEE 42010** and **Views and Beyond**.

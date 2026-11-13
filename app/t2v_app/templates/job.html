@@ -118,13 +118,15 @@
 {% elif job.state == 'done' %}
   <p><a class="button" href="{{ url_for('download', job_id=job.id) }}">Download everything (zip)</a>
      <a href="{{ url_for('job_file', job_id=job.id, name='README.md') }}">README.md</a> ·
-     <a href="{{ url_for('job_file', job_id=job.id, name='inputs.yaml') }}">inputs.yaml</a></p>
+     <a href="{{ url_for('job_file', job_id=job.id, name='inputs.yaml') }}">inputs.yaml</a> ·
+     <a href="{{ url_for('export', job_id=job.id) }}">Export for sharing</a>
+     <span class="hint">(the views, your answers, ratings and feedback, and the agents' logs; not the repository)</span></p>
 {% endif %}
 
 {% if job.state != 'confirm' %}
 {% for v in views %}
 {% set r = v.record %}
-<section class="view">
+<section class="view" id="{{ r.id }}">
   <h2>View {{ loop.index }}: {{ r.model_kind }} <span class="hint">{{ r.concern }}</span></h2>
 
   {% if v.step != 'done' %}
@@ -157,6 +159,20 @@
     {% if v.review.open %}<p>Still open:</p><ul>{% for f in v.review.open %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
     {% endif %}
   </details>
+  {% if job.state == 'done' %}
+  <form method="post" action="{{ url_for('rating', job_id=job.id) }}" class="rating">
+    <input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="view" value="{{ r.id }}">
+    <strong>Your rating</strong> <span class="hint">1 = poor, 5 = very good.
+      {% if v.rating %}Saved {{ v.rating.time.replace('T', ' ') }}{{ '; the view has changed since, please rate it again' if v.rating.after_feedback_rounds != v.rounds }}.{% endif %}</span>
+    {% for key, label in criteria.items() %}
+    <div class="criterion"><span>{{ label }}</span>
+      {% for n in range(1, 6) %}<label><input type="radio" name="{{ key }}" value="{{ n }}" {{ 'checked' if v.rating and v.rating.scores.get(key) == n }}> {{ n }}</label>{% endfor %}
+    </div>
+    {% endfor %}
+    <textarea name="comment" rows="2" placeholder="Comment (optional): what is good, wrong or missing">{{ v.rating.comment if v.rating }}</textarea>
+    <button type="submit" class="secondary">Save rating</button>
+  </form>
+  {% endif %}
   <p class="hint">Files: {% for f in v.files %}<a href="{{ url_for('job_file', job_id=job.id, name=r.id + '/' + f) }}">{{ f }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>
   {% endif %}
 </section>

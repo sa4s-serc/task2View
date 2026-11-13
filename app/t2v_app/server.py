@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import platform
 import secrets
 import shutil
+import subprocess
+import sys
+from pathlib import Path
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for
 from markdown_it import MarkdownIt
@@ -107,11 +111,13 @@ def job_page(job_id: str, error: str = "", answers: dict | None = None):
                 takeaway=markdown.renderInline(report.takeaway(folder)),
                 readme=markdown.render(readme.read_text(encoding="utf-8", errors="replace")) if readme.exists()
                 else "",
-                files=sorted(p.name for p in folder.iterdir() if p.is_file()))
+                files=sorted(p.name for p in folder.iterdir() if p.is_file()),
+                rating=((state.get("ratings") or {}).get(record["id"]) or [None])[-1],
+                rounds=sum(1 for f in state.get("feedback") or [] if f["view"] == record["id"] and f["done"]))
         views.append(view)
     return render_template("job.html", job=state, views=views, error=error,
                            answers=answers or state.get("answers") or state.get("prefill"),
-                           questions=phase1.QUESTIONS, aspects=phase1.ASPECTS, viewpoints=phase1.VIEWPOINTS,
+                           criteria=pipeline.RATING_CRITERIA, questions=phase1.QUESTIONS, aspects=phase1.ASPECTS, viewpoints=phase1.VIEWPOINTS,
                            levels=phase1.QUESTIONS["detail_level"]["options"])
 
 
@@ -143,6 +149,45 @@ def feedback(job_id: str):
     if state["state"] == "done" and text and view in [r["id"] for r in state["records"]]:
         pipeline.add_feedback(job, view, text)
     return redirect(url_for("job_page", job_id=job_id))
+
+
+@app.post("/jobs/<job_id>/rating")
+def rating(job_id: str):
+    job = job_or_404(job_id)
+    state = job.read()
+    view = request.form.get("view", "")
+    scores = {k: int(request.form[k]) for k in pipeline.RATING_CRITERIA if request.form.get(k) in ("1", "2", "3", "4", "5")}
+    comment = request.form.get("comment", "").strip()[:config.MAX_FEEDBACK_CHARS]
+    if state["state"] == "done" and view in [r["id"] for r in state["records"]] and (scores or comment):
+        pipeline.rate(job, view, scores, comment)
+    return redirect(url_for("job_page", job_id=job_id) + f"#{view}")
+
+
+@app.get("/jobs/<job_id>/export")
+def export(job_id: str):
+    job = job_or_404(job_id)
+    if job.read()["state"] in pipeline.RUNNING:
+        abort(409)
+    return send_file(report.export_bytes(job.dir, tool_info()), mimetype="application/zip", as_attachment=True,
+                     download_name=f"task2view-export-{job.id}.zip")
+
+
+def tool_info() -> dict:
+    """What produced the results: the tool's commit, the models and the versions around them."""
+    def out(*cmd: str) -> str:
+        try:
+            return subprocess.run(cmd, capture_output=True, text=True, timeout=20).stdout.strip()
+        except (OSError, subprocess.TimeoutExpired):
+            return ""
+    here = str(config.PACKAGE)
+    return {"tool_commit": out("git", "-C", here, "rev-parse", "HEAD"),
+            "tool_changed_locally": bool(out("git", "-C", here, "status", "--porcelain", "--", ".")),
+            "generator_model": config.GENERATOR_MODEL, "critic_model": config.CRITIC_MODEL,
+            "permission_mode": config.PERMISSION_MODE, "claude_code": out("claude", "--version"),
+            "plantuml": out("plantuml", "-version").splitlines()[0] if shutil.which("plantuml") else "",
+            "python": sys.version.split()[0], "platform": platform.platform(),
+            # personal Claude Code instructions also reach the agents and may change the results
+            "user_claude_md": (Path.home() / ".claude" / "CLAUDE.md").exists()}
 
 
 @app.post("/jobs/<job_id>/retry")

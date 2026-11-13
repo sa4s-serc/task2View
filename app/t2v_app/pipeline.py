@@ -59,6 +59,10 @@ class Job:
             tmp = self.dir / "job.json.tmp"
             tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
             tmp.replace(self.dir / "job.json")
+            if "state" in changes or changes.get("step"):
+                with (self.dir / "timeline.jsonl").open("a", encoding="utf-8") as log:
+                    log.write(json.dumps({"time": datetime.now().isoformat(timespec="seconds"),
+                                          "state": state["state"], "step": state.get("step", "")}) + "\n")
             return state
 
 
@@ -213,3 +217,17 @@ def feedback(job: Job) -> None:
     phase2.check_consistency([r["id"] for r in records], job.out)
     report.write_readme(job.out, state["request"], records)
     job.update(state="done", step="")
+
+
+RATING_CRITERIA = {"answers": "Answers the concern", "level": "Right level of detail for this stakeholder",
+                   "correct": "Correct for the code and correct UML", "readable": "Easy to read"}
+
+
+def rate(job: Job, view_id: str, scores: dict, comment: str) -> None:
+    """Keep every rating; the page shows the latest. `rounds` says how many feedback rounds the view had then."""
+    state = job.read()
+    rounds = sum(1 for f in state.get("feedback") or [] if f["view"] == view_id and f["done"])
+    ratings = state.get("ratings") or {}
+    ratings.setdefault(view_id, []).append({"time": datetime.now().isoformat(timespec="seconds"),
+                                            "after_feedback_rounds": rounds, "scores": scores, "comment": comment})
+    job.update(ratings=ratings)
