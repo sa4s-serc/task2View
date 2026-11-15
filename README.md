@@ -1,8 +1,40 @@
 # Task2View
 
-> **Local web tool:** to generate views for your own request and repository with Claude Code or Codex, see
-> [app/README.md](app/README.md) (requirements, install, use, sharing results) and
-> [app/HOW-IT-WORKS.md](app/HOW-IT-WORKS.md).
+## Quick start: the local tool
+
+A web tool on your own machine: give it a repository and say what you need to understand; it draws the UML
+architecture views that answer it. It uses your own **Claude Code** or **Codex** login (no API key). Full guide:
+[app/README.md](app/README.md); how it works: [app/HOW-IT-WORKS.md](app/HOW-IT-WORKS.md).
+
+1. **Install** (macOS or Linux; Windows via WSL): git, Python 3.11 or newer, PlantUML with Graphviz and Java
+   (`brew install plantuml graphviz` / `sudo apt install plantuml graphviz default-jre`), and one agent:
+   - Claude Code: `curl -fsSL https://claude.ai/install.sh | bash`, then run `claude` once and log in
+     (Pro, Max, Team, Enterprise or Console account).
+   - Codex: `npm install -g @openai/codex` (or `brew install codex`), then `codex login` with your ChatGPT
+     account; run `codex update` to get the newest models.
+2. **Set up** (creates the virtual environment `app/.venv`; nothing is installed elsewhere):
+   ```bash
+   git clone git@github.com:sa4s-serc/task2View.git
+   cd task2View && git checkout research-question-reframe
+   cd app && ./setup.sh
+   ./check.sh                    # with Claude Code
+   T2V_AGENT=codex ./check.sh    # or with Codex
+   ```
+3. **Run** and open http://127.0.0.1:8642:
+   ```bash
+   ./run.sh                      # Claude Code: Sonnet 5.5 draws, Opus 5.5 reviews
+   T2V_AGENT=codex ./run.sh      # Codex: the best model your plan offers (gpt-6-astra, gpt-6.1-sol, gpt-6.1-terra; fallback gpt-5.6-terra)
+   ```
+4. **Use:** write your request, give a zip or a public GitHub URL, confirm or correct what the tool understood
+   (it asks only where it is unsure, and always about questions it added), wait about 5 to 10 minutes per view,
+   then ask for changes, rate each view, and click **Export for sharing**.
+5. **Share:** send the exported zip. The receiver collects all zips into one overview page and two tables:
+   ```bash
+   app/.venv/bin/t2v-collect ~/Downloads/task2view-export-*.zip --out ~/task2view-results
+   ```
+
+Each view counts against your Claude or ChatGPT usage. Use repositories you trust; exports contain no
+repository copy but quote its code. The rest of this README is about the research pipeline in `code/`.
 
 Generate a **stakeholder- and task-guided architecture view** from a code repository.
 
