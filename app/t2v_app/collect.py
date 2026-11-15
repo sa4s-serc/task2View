@@ -36,24 +36,14 @@ def unpack(export: Path, out: Path) -> list[Path]:
 
 
 def agent_usage(job: Path) -> dict:
-    """Time and estimated cost of every Claude Code call of a job, from the result events in its logs."""
-    seconds, cost, calls = 0.0, 0.0, 0
-    results = []
-    for log in (job / "logs").glob("*.jsonl"):
-        for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
-            try:
-                event = json.loads(line)
-            except ValueError:
-                continue
-            if isinstance(event, dict) and event.get("type") == "result":
-                results.append(event)
-    for call in (job / "calls").glob("*.json"):
-        results.append(json.loads(call.read_text()).get("reply") or {})
-    for r in results:
-        calls += 1
-        seconds += (r.get("duration_ms") or 0) / 1000
-        cost += r.get("total_cost_usd") or 0
-    return {"calls": calls, "agent_minutes": round(seconds / 60, 1), "estimated_cost_usd": round(cost, 2)}
+    """Calls, time, tokens and cost (Claude Code only) of a job's agent calls, from its usage.jsonl files."""
+    calls = [json.loads(line) for f in (job / "logs" / "usage.jsonl", job / "calls" / "usage.jsonl") if f.exists()
+             for line in f.read_text().splitlines() if line.strip()]
+    costs = [c["cost_usd"] for c in calls if c.get("cost_usd") is not None]
+    return {"calls": len(calls), "agent_minutes": round(sum(c["seconds"] for c in calls) / 60, 1),
+            "tokens_in": sum(c.get("input_tokens") or 0 for c in calls),
+            "tokens_out": sum(c.get("output_tokens") or 0 for c in calls),
+            "estimated_cost_usd": round(sum(costs), 2) if costs else ""}
 
 
 def wall_minutes(job: Path) -> float:
@@ -73,6 +63,11 @@ def asked(job: Path) -> bool:
         return False
 
 
+def agent_name(state: dict) -> str:
+    a = state.get("agent") or {"name": "claude"}
+    return f"{a['name']} ({a.get('draws', '?')} draws, {a.get('reviews', '?')} reviews)"
+
+
 def page(rows: list[dict]) -> str:
     e = lambda x: html.escape(str(x if x is not None else ""))
     parts = ["<!doctype html><meta charset='utf-8'><title>Task2View results</title><style>",
@@ -87,8 +82,10 @@ def page(rows: list[dict]) -> str:
         parts.append(f"<section><h2>{e(s['id'])}: {e(s.get('source', {}).get('name'))}</h2>"
                      f"<p><strong>Request:</strong> {e(s['request'])}</p>"
                      f"<p class='hint'>State {e(s['state'])} · confirmation page shown: {'yes' if row['asked'] else 'no'}"
-                     f" · {row['wall_minutes']} min in all · {row['calls']} agent calls, {row['agent_minutes']} agent min,"
-                     f" about ${row['estimated_cost_usd']} (estimate by Claude Code)</p>")
+                     f" · agent {e(agent_name(s))} · {row['wall_minutes']} min in all · {row['calls']} agent calls,"
+                     f" {row['agent_minutes']} agent min, {row['tokens_in']:,} tokens in, {row['tokens_out']:,} out"
+                     + (f", about ${row['estimated_cost_usd']} (Claude Code's estimate)" if row['estimated_cost_usd'] != "" else "")
+                     + "</p>")
         prefill = s.get("prefill") or {}
         if prefill.get("unsure") or prefill.get("extra_questions"):
             parts.append("<p><strong>The agent asked:</strong></p><ul>")
@@ -141,23 +138,23 @@ def main() -> None:
 
     with (args.out / "jobs.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["job", "repository", "request", "state", "confirmation_shown", "views", "feedback_rounds",
-                    "wall_minutes", "agent_calls", "agent_minutes", "estimated_cost_usd"])
+        w.writerow(["job", "agent", "repository", "request", "state", "confirmation_shown", "views", "feedback_rounds",
+                    "wall_minutes", "agent_calls", "agent_minutes", "tokens_in", "tokens_out", "estimated_cost_usd"])
         for r in rows:
             s = r["state"]
-            w.writerow([s["id"], s.get("source", {}).get("name"), s["request"], s["state"], r["asked"],
+            w.writerow([s["id"], agent_name(s), s.get("source", {}).get("name"), s["request"], s["state"], r["asked"],
                         "; ".join(f"{v['id']} {v['model_kind']}" for v in s.get("records") or []),
                         len(s.get("feedback") or []), r["wall_minutes"], r["calls"], r["agent_minutes"],
-                        r["estimated_cost_usd"]])
+                        r["tokens_in"], r["tokens_out"], r["estimated_cost_usd"]])
     with (args.out / "ratings.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["job", "view", "model_kind", "time", "after_feedback_rounds", *RATING_CRITERIA, "comment"])
+        w.writerow(["job", "agent", "view", "model_kind", "time", "after_feedback_rounds", *RATING_CRITERIA, "comment"])
         for r in rows:
             s = r["state"]
             kinds = {v["id"]: v["model_kind"] for v in s.get("records") or []}
             for view, ratings in (s.get("ratings") or {}).items():
                 for x in ratings:
-                    w.writerow([s["id"], view, kinds.get(view), x["time"], x["after_feedback_rounds"],
+                    w.writerow([s["id"], agent_name(s), view, kinds.get(view), x["time"], x["after_feedback_rounds"],
                                 *(x["scores"].get(k, "") for k in RATING_CRITERIA), x["comment"]])
     (args.out / "index.html").write_text(page(rows), encoding="utf-8")
     print(f"{len(rows)} jobs in {args.out}/: index.html, jobs.csv, ratings.csv")

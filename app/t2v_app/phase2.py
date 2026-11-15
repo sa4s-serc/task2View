@@ -13,12 +13,10 @@ import sys
 from pathlib import Path
 from typing import Callable
 
-from . import claude, config
+from . import agent, config
 
 SKILLS = config.PACKAGE / "skills"
 SCRIPTS = SKILLS / "uml-view" / "scripts"
-GENERATOR_TOOLS = ["Bash(python3 -I .claude/skills/*)", "Bash(python3 .claude/skills/*)", "Bash(.claude/skills/*)",
-                   "Bash(plantuml *)"]
 VIEW_FILES = ["view.puml", "view.png", "inventory.json", "README.md"]
 GRAPH = Path(".claude") / "repo-graph.json"
 
@@ -84,8 +82,8 @@ def critic_loop(record: dict, workdir: Path, logs: Path, session: str, step: Cal
 
     def critique(n: int) -> tuple[int, int]:
         name = f"critique-{n}.json"
-        claude.session(fill(_prompt("critic.txt"), record, out=name), workdir, logs / f"{case}.critic-{n}.jsonl",
-                       config.CRITIC_MODEL, ["Read", "Grep", "Glob", f"Write(view-out/{case}/{name})"])
+        agent.session(fill(_prompt("critic.txt"), record, out=name), workdir, logs / f"{case}.critic-{n}.jsonl",
+                      "review", output=f"view-out/{case}/{name}")
         return score(produced / name)
 
     step("reviewing")
@@ -98,8 +96,8 @@ def critic_loop(record: dict, workdir: Path, logs: Path, session: str, step: Cal
     if verdict != "revise":
         return loop
     step("revising")
-    claude.session(fill(_prompt("revise.txt"), record), workdir, logs / f"{case}.revise.jsonl",
-                   config.GENERATOR_MODEL, GENERATOR_TOOLS, resume=session)
+    agent.session(fill(_prompt("revise.txt"), record), workdir, logs / f"{case}.revise.jsonl", "draw",
+                  resume=session)
     if not (produced / "v1" / "view.puml").exists():
         return {**loop, "note": "revision did not keep v1; kept what it wrote"}
     step("reviewing the revision")
@@ -126,10 +124,10 @@ def run_view(record: dict, earlier: list[dict], repo: Path, graph: Path, workdir
     make_workdir(repo, graph, workdir, earlier, out)
     prompt = generator_prompt(record, earlier)
     step("drawing")
-    session = claude.session(prompt, workdir, logs / f"{case}.jsonl", config.GENERATOR_MODEL, GENERATOR_TOOLS)
+    session = agent.session(prompt, workdir, logs / f"{case}.jsonl", "draw")
     produced = workdir / "view-out" / case
     if not (produced / "view.puml").exists():
-        raise claude.ClaudeError(f"The generator wrote no view for {case}; see logs/{case}.jsonl")
+        raise agent.AgentError(f"The generator wrote no view for {case}; see logs/{case}.jsonl")
     loop = critic_loop(record, workdir, logs, session, step)
 
     step("checking")
@@ -152,19 +150,18 @@ def apply_feedback(record: dict, text: str, round_no: int, workdir: Path, out: P
     step("applying your feedback")
     prompt = fill(_prompt("feedback.txt"), record, feedback=text)
     try:
-        claude.session(prompt, workdir, logs / f"{case}.feedback-{round_no}.jsonl", config.GENERATOR_MODEL,
-                       GENERATOR_TOOLS, resume=loop.get("session", ""))
-    except claude.ClaudeError:
+        agent.session(prompt, workdir, logs / f"{case}.feedback-{round_no}.jsonl", "draw",
+                      resume=loop.get("session", ""))
+    except agent.AgentError:
         if not loop.get("session"):
             raise
-        claude.session(prompt, workdir, logs / f"{case}.feedback-{round_no}.jsonl", config.GENERATOR_MODEL,
-                       GENERATOR_TOOLS)     # the first session can no longer be resumed; the prompt stands alone
+        # the first session can no longer be resumed; the prompt stands alone
+        agent.session(prompt, workdir, logs / f"{case}.feedback-{round_no}.jsonl", "draw")
 
     step("reviewing the change")
     name = f"critique-feedback-{round_no}.json"
-    claude.session(fill(_prompt("critic.txt"), record, out=name), workdir,
-                   logs / f"{case}.critic-feedback-{round_no}.jsonl", config.CRITIC_MODEL,
-                   ["Read", "Grep", "Glob", f"Write(view-out/{case}/{name})"])
+    agent.session(fill(_prompt("critic.txt"), record, out=name), workdir,
+                  logs / f"{case}.critic-feedback-{round_no}.jsonl", "review", output=f"view-out/{case}/{name}")
     step("checking")
     _publish(record, workdir, out, {**loop, "feedback_critique": name}, keep=("prompt.txt",))
 

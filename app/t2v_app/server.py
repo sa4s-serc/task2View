@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import platform
 import secrets
 import shutil
@@ -13,10 +14,11 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, sen
 from markdown_it import MarkdownIt
 
 from . import config, phase1, pipeline, report
+from .agent import AGENTS
 from .repo import GITHUB_URL, SUPPORTED_LANGUAGES
 
-REQUIRED = {"claude": "Claude Code, installed and logged in", "git": "git, to fetch GitHub repositories",
-            "plantuml": "PlantUML, to render the views", "dot": "Graphviz, used by PlantUML",
+REQUIRED = {config.AGENT: f"{AGENTS.get(config.AGENT)}, installed and logged in",
+            "git": "git, to fetch GitHub repositories", "plantuml": "PlantUML, to render the views", "dot": "Graphviz, used by PlantUML",
             "java": "Java, used by PlantUML"}
 STAGES = {"drawing": "Draw from the code", "reviewing": "Independent review", "revising": "Revise if needed",
           "reviewing the revision": "Review the revision", "checking": "Check against the code"}
@@ -63,6 +65,7 @@ def job_or_404(job_id: str) -> pipeline.Job:
 def home_page(error: str = "", status: int = 200):
     missing = [what for tool, what in REQUIRED.items() if not shutil.which(tool)]
     return render_template("home.html", jobs=pipeline.all_jobs(), missing=missing, error=error,
+                           agent=AGENTS[config.AGENT], draws=config.GENERATOR_MODEL, reviews=config.CRITIC_MODEL,
                            form=request.form, languages=sorted(SUPPORTED_LANGUAGES)), status
 
 
@@ -182,12 +185,15 @@ def tool_info() -> dict:
     here = str(config.PACKAGE)
     return {"tool_commit": out("git", "-C", here, "rev-parse", "HEAD"),
             "tool_changed_locally": bool(out("git", "-C", here, "status", "--porcelain", "--", ".")),
+            "agent": config.AGENT, "agent_version": out(config.AGENT, "--version"),
             "generator_model": config.GENERATOR_MODEL, "critic_model": config.CRITIC_MODEL,
-            "permission_mode": config.PERMISSION_MODE, "claude_code": out("claude", "--version"),
+            "claude_permission_mode": config.PERMISSION_MODE if config.AGENT == "claude" else "",
+            "codex_effort": config.CODEX_EFFORT if config.AGENT == "codex" else "",
             "plantuml": out("plantuml", "-version").splitlines()[0] if shutil.which("plantuml") else "",
             "python": sys.version.split()[0], "platform": platform.platform(),
-            # personal Claude Code instructions also reach the agents and may change the results
-            "user_claude_md": (Path.home() / ".claude" / "CLAUDE.md").exists()}
+            # personal instructions also reach the agents and may change the results
+            "user_instructions": (Path.home() / ".claude" / "CLAUDE.md").exists() if config.AGENT == "claude"
+            else (Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "AGENTS.md").exists()}
 
 
 @app.post("/jobs/<job_id>/retry")
@@ -212,9 +218,12 @@ def download(job_id: str):
 
 
 def main() -> None:
+    if config.AGENT not in AGENTS:
+        sys.exit(f"T2V_AGENT must be one of: {', '.join(AGENTS)} (it is '{config.AGENT}').")
     config.T2V_HOME.mkdir(parents=True, exist_ok=True)
     pipeline.mark_interrupted()
     print(f"Task2View is running at http://127.0.0.1:{config.T2V_PORT}  (jobs are kept in {config.T2V_HOME})")
+    print(f"Agent: {AGENTS[config.AGENT]}; {config.GENERATOR_MODEL} draws, {config.CRITIC_MODEL} reviews")
     app.run(host="127.0.0.1", port=config.T2V_PORT, threaded=True)
 
 

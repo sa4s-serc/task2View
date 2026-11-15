@@ -1,12 +1,17 @@
 #!/bin/sh
-# Checks everything the tool needs, including that Claude Code is logged in and can use both models.
-# The two model checks are tiny calls and count (very little) against your Claude usage.
+# Checks everything the tool needs, including that the agent (Claude Code, or Codex with T2V_AGENT=codex) is
+# logged in and can use its models. The model checks are tiny calls and count very little against your usage.
 cd "$(dirname "$0")"
 ok=1
 need() {  # need <command> <what it is for>
   if command -v "$1" >/dev/null 2>&1; then echo "ok       $1"; else echo "MISSING  $1 ($2)"; ok=0; fi
 }
-need claude "Claude Code: the agents"
+AGENT="${T2V_AGENT:-claude}"
+case "$AGENT" in
+  claude) need claude "Claude Code: the agents (T2V_AGENT=claude)" ;;
+  codex)  need codex "Codex: the agents (T2V_AGENT=codex)" ;;
+  *) echo "T2V_AGENT must be claude or codex (it is '$AGENT')"; exit 1 ;;
+esac
 need git "fetching GitHub repositories"
 need java "used by PlantUML"
 need dot "Graphviz, used by PlantUML"
@@ -16,16 +21,19 @@ if command -v plantuml >/dev/null 2>&1; then
   printf '@startuml\nA -> B\n@enduml\n' | plantuml -tpng -pipe >/dev/null 2>&1 \
     && echo "ok       plantuml renders" || { echo "FAILED   plantuml cannot render (check java and dot)"; ok=0; }
 fi
-if command -v claude >/dev/null 2>&1; then
-  echo "         Claude Code $(claude --version 2>/dev/null)"
-  . ./.venv/bin/activate 2>/dev/null
-  gen=$(python3 -c 'from t2v_app import config; print(config.GENERATOR_MODEL)' 2>/dev/null || echo claude-sonnet-5-5)
-  critic=$(python3 -c 'from t2v_app import config; print(config.CRITIC_MODEL)' 2>/dev/null || echo claude-opus-5-5)
-  for model in "$gen" "$critic"; do
-    reply=$(cd "${TMPDIR:-/tmp}" && claude -p "Reply with the single word ok." --model "$model" --tools "" 2>&1 | head -3)
+if command -v "$AGENT" >/dev/null 2>&1; then
+  echo "         $AGENT $($AGENT --version 2>/dev/null)"
+  models=$(T2V_AGENT=$AGENT .venv/bin/python -c 'from t2v_app import config; print(config.GENERATOR_MODEL, config.CRITIC_MODEL)' 2>/dev/null)
+  for model in $(echo "$models" | tr ' ' '\n' | sort -u); do
+    if [ "$AGENT" = claude ]; then
+      reply=$(cd "${TMPDIR:-/tmp}" && claude -p "Reply with the single word ok." --model "$model" --tools "" 2>&1 | head -3)
+    else
+      reply=$(cd "${TMPDIR:-/tmp}" && codex exec --skip-git-repo-check --ignore-user-config --ephemeral \
+              -c 'sandbox_mode="read-only"' -m "$model" "Reply with the single word ok." < /dev/null 2>&1 | tail -3)
+    fi
     case "$reply" in
-      *[Oo][Kk]*) echo "ok       Claude Code can use $model" ;;
-      *) echo "FAILED   Claude Code with $model: $reply"; ok=0 ;;
+      *[Oo][Kk]*) echo "ok       $AGENT can use $model" ;;
+      *) echo "FAILED   $AGENT with $model: $reply"; ok=0 ;;
     esac
   done
 fi

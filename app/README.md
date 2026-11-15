@@ -5,7 +5,8 @@ you only where it is unsure, then draws the UML architecture view (or views) tha
 an explanation and the evidence in the code. You can then ask for changes, rate each view, and export everything
 to share.
 
-It runs on your machine and uses your own Claude Code login. It needs no API key and stores none.
+It runs on your machine and uses your own login to a coding agent: **Claude Code** (default) or **Codex**. It needs
+no API key and stores none. Install and log in to one of them; you do not need both.
 
 How it works inside, file by file: [HOW-IT-WORKS.md](HOW-IT-WORKS.md).
 
@@ -17,8 +18,13 @@ macOS or Linux (on Windows, use WSL). Install these first:
 |---|---|---|---|
 | git | get this repository, fetch GitHub repositories | preinstalled / `sudo apt install git` | `git --version` |
 | Python 3.11 or newer | runs the tool | `brew install python@3.13` / `sudo apt install python3.12 python3.12-venv` | `python3 --version` |
-| Claude Code | the agents | `curl -fsSL https://claude.ai/install.sh \| bash` (or `brew install --cask claude-code`) | `claude --version` |
+| Claude Code **or** Codex | the agents | Claude Code: `curl -fsSL https://claude.ai/install.sh \| bash` (or `brew install --cask claude-code`). Codex: `npm install -g @openai/codex` (or `brew install codex`) | `claude --version` / `codex --version` |
 | Java, Graphviz, PlantUML | render the views | `brew install plantuml graphviz` (brings Java) / `sudo apt install plantuml graphviz default-jre` | `plantuml -version`, `dot -V` |
+
+### Choosing the agent
+
+Claude Code is the default. To use Codex, start the tool with `T2V_AGENT=codex` (section 3). The agent and its
+models are shown on the home page and recorded in every job and export, so results from the two can be told apart.
 
 ### Claude Code login
 
@@ -39,6 +45,22 @@ Your personal Claude Code setup also reaches the agents: a `~/.claude/CLAUDE.md`
 MCP servers. For results that can be compared with other people's, keep them out of the way while you use the
 tool (for example rename `~/.claude/CLAUDE.md` for the time being). The export records whether that file existed.
 
+### Codex login
+
+1. Run `codex login` and log in with your ChatGPT account (or an OpenAI API key, which is then billed).
+   `codex login status` should say you are logged in.
+2. The default model is **gpt-5.6-terra** for both drawing and reviewing: it was the strongest model offered to
+   a ChatGPT plan when this was written. Which models you can use depends on your plan: `codex debug models`
+   lists them. To use others, set `T2V_GENERATOR_MODEL` and `T2V_CRITIC_MODEL` (a different model for reviewing
+   is better, if your plan has a strong one). `T2V_AGENT=codex ./check.sh` tests them.
+3. The tool ignores your `~/.codex/config.toml` (model, MCP servers, profiles) so that every run uses the same
+   settings; only the login is used from there. A personal `~/.codex/AGENTS.md` still reaches the agents: keep it
+   out of the way for comparable results. The export records whether it existed.
+
+Differences from Claude Code that matter for results: Codex cannot be limited to a list of tools, so its
+sandbox limits it instead (the drawing agent can write only inside its working copy and has no network; the
+reviewing agent can only read, and the tool saves its review); and Codex reports tokens but no cost.
+
 ## 2. Install
 
 ```bash
@@ -48,6 +70,7 @@ git checkout research-question-reframe
 cd app
 ./setup.sh      # creates app/.venv (a Python virtual environment) and installs the tool into it
 ./check.sh      # checks every requirement, including the Claude Code login and both models
+T2V_AGENT=codex ./check.sh      # the same, for Codex
 ```
 
 `setup.sh` finds Python 3.11 or newer, creates the virtual environment `app/.venv`, and installs two packages
@@ -59,8 +82,12 @@ You do not need to activate the virtual environment; the scripts use it directly
 ## 3. Run
 
 ```bash
-./run.sh        # starts the tool; open http://127.0.0.1:8642 in your browser
+./run.sh                    # starts the tool with Claude Code; open http://127.0.0.1:8642 in your browser
+T2V_AGENT=codex ./run.sh    # or with Codex
 ```
+
+The agent is set when the tool starts and applies to every job started then; restart the tool to switch. Use the
+same agent when you press "Try again" on a job, so that one job is not done by two agents.
 
 Stop it with Ctrl+C. Jobs are kept in `~/task2view-jobs` and are still there next time. If the tool was stopped
 while a view was being drawn, that job shows "failed"; "Try again" continues it and keeps finished views.
@@ -100,7 +127,8 @@ send the zip (by email or a shared drive).
 The export contains: your request; what the tool filled in, asked, and what you answered; the views
 (`view.png`, `view.puml`, `inventory.json`, `README.md`, earlier versions); checks and reviews; your feedback and
 ratings; a timeline of the steps; the prompts and replies of the agents and their full logs (each tool call);
-and `tool.json` (tool version, models, Claude Code version, platform). It does **not** contain the repository
+the time and tokens of every agent call; and `tool.json` (tool version, agent and its version, models,
+platform). It does **not** contain the repository
 itself, but the logs and views quote parts of its code, so share exports only of code you may share.
 
 Whoever receives exports collects them into one overview:
@@ -111,20 +139,22 @@ cd app
 open ~/task2view-results/index.html      # Linux: xdg-open
 ```
 
-This writes `index.html` (every job: request, questions asked, confirmed fields, views, checks, review, feedback,
-ratings, time and estimated cost), `jobs.csv` (one row per job) and `ratings.csv` (one row per rating), next to
+This writes `index.html` (every job: agent, request, questions asked, confirmed fields, views, checks, review,
+feedback, ratings, time, tokens, and cost where Claude Code estimates it), `jobs.csv` (one row per job) and `ratings.csv` (one row per rating), next to
 the unpacked exports. Running it again with more zips adds them.
 
 ## 6. Troubleshooting
 
 | Problem | What to do |
 |---|---|
-| `./check.sh` says Claude Code FAILED with a model | Run `claude` and log in again; check that your plan includes that model, or set `T2V_GENERATOR_MODEL` / `T2V_CRITIC_MODEL` |
+| `./check.sh` says FAILED with a model | Log in again (`claude`, or `codex login`); check that your plan includes that model, or set `T2V_GENERATOR_MODEL` / `T2V_CRITIC_MODEL` |
 | "Claude Code stopped: ... limit" | Usage limit reached. Wait until it resets, then "Try again" |
 | "Port 8642 is in use" | Another copy of the tool is running; stop it, or start with `T2V_PORT=8650 ./run.sh` |
 | `plantuml cannot render` | Install Java and Graphviz (`java -version`, `dot -V`) |
 | `Python 3.11 or newer is needed` | Install a newer Python (table above), then `./setup.sh` |
 | An agent asks for permission or a step hangs | Agents run in Claude Code's `auto` permission mode. If your account does not offer it, set `T2V_PERMISSION_MODE=acceptEdits` |
+| Codex: "model is not supported when using Codex with a ChatGPT account" | Pick a model from `codex debug models` and set `T2V_GENERATOR_MODEL` / `T2V_CRITIC_MODEL` |
+| Codex: "Codex stopped: ..." | Run `codex login status`; the message after "stopped" says why (often a usage limit) |
 | Something else failed | The page shows the error; details are in `~/task2view-jobs/jobs/<job>/error.txt` and `logs/` |
 
 ## 7. Settings (environment variables)
@@ -135,17 +165,21 @@ Set before `./run.sh`, for example `T2V_PORT=8650 ./run.sh`.
 |---|---|---|
 | `T2V_HOME` | `~/task2view-jobs` | where jobs are kept (must be outside any git repository) |
 | `T2V_PORT` | `8642` | port of the web page |
-| `T2V_GENERATOR_MODEL` | `claude-sonnet-5-5` | model that fills in the fields, chooses and draws the views |
-| `T2V_CRITIC_MODEL` | `claude-opus-5-5` | model that reviews |
-| `T2V_PERMISSION_MODE` | `auto` | Claude Code permission mode of the agent sessions |
+| `T2V_AGENT` | `claude` | the agent: `claude` (Claude Code) or `codex` (Codex) |
+| `T2V_GENERATOR_MODEL` | `claude-sonnet-5-5`; Codex: `gpt-5.6-terra` | model that fills in the fields, chooses and draws the views |
+| `T2V_CRITIC_MODEL` | `claude-opus-5-5`; Codex: `gpt-5.6-terra` | model that reviews |
+| `T2V_PERMISSION_MODE` | `auto` | Claude Code only: permission mode of the agent sessions |
+| `T2V_CODEX_EFFORT` | `high` | Codex only: reasoning effort |
 
 ## 8. Safety
 
 - The server listens on `127.0.0.1` only (not reachable from other machines) and rejects requests from other web
   pages.
-- No key is handled: agents run through the `claude` command with the login already on this machine.
+- No key is handled: agents run through the `claude` or `codex` command with the login already on this machine.
 - The agents work on a copy of the repository in the job folder. Existing diagrams, binaries, symbolic links and
   agent configuration shipped with the repository (`.claude/`, `CLAUDE.md`, `AGENTS.md`, `.mcp.json`) are not
-  copied. The drawing agent may run only the skill's scripts and PlantUML; the reviewing agent may only read,
-  and write its review file. Anything else is decided by Claude Code's permission mode.
+  copied. With Claude Code, the drawing agent may run only the skill's scripts and PlantUML; the reviewing agent
+  may only read, and write its review file; anything else is decided by Claude Code's permission mode. With
+  Codex, the drawing agent runs in Codex's `workspace-write` sandbox (writes only in its working copy, no
+  network) and the reviewing agent in the `read-only` sandbox.
 - Still, an agent reads the repository's files, so **use repositories you trust**.

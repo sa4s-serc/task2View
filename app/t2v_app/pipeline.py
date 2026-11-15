@@ -24,7 +24,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import config, phase1, phase2, repo, report
-from .claude import ClaudeError
+from .agent import AgentError
 
 JOB_ID = re.compile(r"\d{8}-\d{6}-[0-9a-f]{6}")
 RUNNING = ("preparing", "generating")
@@ -71,7 +71,8 @@ def create(request: str, source: dict) -> Job:
     job.dir.mkdir(parents=True)
     (job.dir / "job.json").write_text(json.dumps({
         "id": job.id, "created": f"{datetime.now():%Y-%m-%d %H:%M}", "request": request, "source": source,
-        "state": "preparing", "step": "Waiting to start", "version": 0}), encoding="utf-8")
+        "state": "preparing", "step": "Waiting to start", "version": 0,
+        "agent": {"name": config.AGENT, "draws": config.GENERATOR_MODEL, "reviews": config.CRITIC_MODEL}}), encoding="utf-8")
     return job
 
 
@@ -114,7 +115,7 @@ def retry(job: Job) -> None:
 def _run(job: Job, stage: str) -> None:
     try:
         {"prepare": prepare, "generate": generate, "feedback": feedback}[stage](job)
-    except (ClaudeError, repo.RepoError) as e:
+    except (AgentError, repo.RepoError) as e:
         job.update(state="failed", failed_stage=_stage_of(job.read()), error=str(e))
     except Exception as e:
         (job.dir / "error.txt").write_text(traceback.format_exc(), encoding="utf-8")

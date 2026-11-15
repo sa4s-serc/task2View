@@ -54,9 +54,16 @@ something the fields do not cover that would change the view. Unsure fields are 
 agent's question; the others show the agent's value with "Edit". No field marked unsure and no extra question:
 the confirmation page is skipped.
 
-## Models and Claude Code calls
+## The agent: Claude Code or Codex
 
-All calls go through the `claude` command (`t2v_app/claude.py`), with the Claude Code login of the machine.
+`t2v_app/agent.py` is the one interface the pipeline uses: `ask_json` (Fill in, Propose) and `session` with a
+role, `draw` or `review`. `T2V_AGENT` picks the implementation: `claude.py` (Claude Code, default) or `codex.py`
+(Codex). Prompts, skills, checks and the rest of the pipeline are the same for both. Every call adds a line to
+`usage.jsonl` (in `calls/` or `logs/`): agent, model, seconds, tokens, and cost when Claude Code estimates it.
+
+### Claude Code
+
+All calls go through the `claude` command, with the Claude Code login of the machine.
 
 | Step | Call | Model | Tools |
 |---|---|---|---|
@@ -67,6 +74,28 @@ All calls go through the `claude` command (`t2v_app/claude.py`), with the Claude
 Revise and Feedback continue the drawing session (`--resume`), so the agent keeps what it found in the code.
 Agent sessions run with `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`, in a working copy of the repository that has
 the two skills in `.claude/skills/` and the static graph in `.claude/repo-graph.json`.
+
+### Codex
+
+All calls go through `codex exec --json --skip-git-repo-check --ignore-user-config`, with the Codex login of
+the machine, the model given with `-m`, reasoning effort `T2V_CODEX_EFFORT` (high) and `approval_policy="never"`.
+
+| Step | Sandbox | Notes |
+|---|---|---|
+| Fill in, Propose | `read-only`, `--ephemeral` | the reply is the last agent message |
+| Draw, Revise, Feedback | `workspace-write` | writes only in the working copy, no network; Revise and Feedback use `codex exec resume <id>` |
+| Review | `read-only` | the prompt adds that it cannot write files; the tool writes the JSON reply to the review file |
+
+Codex reads the skills from `.claude/skills/` because the prompt names that folder (Codex would also discover
+skills in `.agents/skills/`, but the skill's own instructions use the `.claude/` paths). `~/.codex/config.toml`
+is ignored; a personal `~/.codex/AGENTS.md` is not.
+
+Differences that matter when comparing results:
+- Claude Code limits each agent to a list of tools; Codex limits it by sandbox (any command, but writes only in
+  the working copy). The prompts are the same.
+- With Codex the same model draws and reviews by default (only one strong model on a ChatGPT plan); with
+  Claude Code a different, stronger model reviews.
+- Codex reports tokens but no cost.
 
 ## The skills
 
@@ -109,7 +138,9 @@ app/
     phase2.py     draw, review, revise, checks for one view; feedback rounds; consistency across views
     report.py     inputs.yaml, the result README, check and review summaries, download and export zips
     collect.py    t2v-collect: export zips → index.html, jobs.csv, ratings.csv
-    claude.py     the two kinds of headless Claude Code calls
+    agent.py      the agent interface: ask_json, session (draw / review), usage records
+    claude.py     Claude Code as the agent
+    codex.py      Codex as the agent
     prompts/      prefill, propose, generate, critic, revise, feedback
     data/         questions.yaml (fields and their plain-language explanations), viewpoints.yaml
     skills/       uml-view, plantuml-diagrams
@@ -124,16 +155,16 @@ Each request is a folder `~/task2view-jobs/jobs/<YYYYMMDD-HHMMSS-xxxxxx>/`:
 |---|---|---|
 | `job.json` | state, request, fill-in, answers, records, progress, feedback, ratings | yes |
 | `timeline.jsonl` | one line per state or step change, with time | yes |
-| `calls/` | prompt and reply of each Fill in and Propose call | yes |
-| `logs/` | full event stream of each agent session (`view-N.jsonl`, `.critic-N`, `.revise`, `.feedback-N`) | yes |
+| `calls/` | prompt and reply of each Fill in and Propose call; `usage.jsonl` | yes |
+| `logs/` | full event stream of each agent session (`view-N.jsonl`, `.critic-N`, `.revise`, `.feedback-N`); `usage.jsonl` | yes |
 | `repo-graph.json` | static dependency graph | yes |
 | `out/` | `README.md`, `inputs.yaml`, and `view-N/` (view, inventory, README, checks, reviews, earlier versions) | yes |
 | `error.txt` | details of an unexpected failure | yes |
 | `upload.zip`, `source/`, `repo/`, `work/` | the repository and the agents' working copies | no |
 
-The export adds `tool.json`: the tool's git commit and whether it was changed locally, the models, the
-permission mode, the Claude Code, PlantUML and Python versions, the platform, and whether a personal
-`~/.claude/CLAUDE.md` existed.
+The export adds `tool.json`: the tool's git commit and whether it was changed locally, the agent and its version,
+the models, the Claude Code permission mode or the Codex reasoning effort, the PlantUML and Python versions, the
+platform, and whether personal instructions (`~/.claude/CLAUDE.md` or `~/.codex/AGENTS.md`) existed.
 
 States of a job: `preparing` → `confirm` (only if the agent asks) → `generating` → `done`; `failed` from any
 running state, continued with "Try again" from the stage that failed.
@@ -149,17 +180,17 @@ feedback can be told apart.
 
 - `index.html`: per job the request, what the agent asked, the confirmed fields, each view with its takeaway,
   checks, review verdict, feedback and ratings, and time and estimated cost.
-- `jobs.csv`: job, repository, request, state, whether the confirmation page was shown, views, feedback rounds,
-  wall-clock minutes, number of agent calls, agent minutes, estimated cost.
-- `ratings.csv`: job, view, model kind, time, feedback rounds before the rating, the four scores, comment.
+- `jobs.csv`: job, agent and models, repository, request, state, whether the confirmation page was shown, views,
+  feedback rounds, wall-clock minutes, number of agent calls, agent minutes, tokens in and out, estimated cost.
+- `ratings.csv`: job, agent, view, model kind, time, feedback rounds before the rating, the four scores, comment.
 
-Time and cost come from the result events Claude Code writes in the logs (`duration_ms`, `total_cost_usd`);
-the cost is Claude Code's API-price estimate, also on a subscription.
+Time, tokens and cost come from the `usage.jsonl` files. Cost is Claude Code's API-price estimate (also on a
+subscription); Codex gives none.
 
 ## Not covered yet
 
 - Run with real agents only on single-view requests; two-view requests, feedback on the second view, and the
   automatic start without a confirmation page were checked on rendered pages only.
 - No hosting: each person runs the tool on their own machine with their own Claude Code login.
-- Only Claude Code; no other model providers.
+- Agents: Claude Code and Codex only.
 - The module viewpoint has no worked example in the skill.

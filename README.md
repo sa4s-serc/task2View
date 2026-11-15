@@ -1,6 +1,6 @@
 # Task2View
 
-> **Local web tool:** to generate views for your own request and repository with Claude Code, see
+> **Local web tool:** to generate views for your own request and repository with Claude Code or Codex, see
 > [app/README.md](app/README.md) (requirements, install, use, sharing results) and
 > [app/HOW-IT-WORKS.md](app/HOW-IT-WORKS.md).
 

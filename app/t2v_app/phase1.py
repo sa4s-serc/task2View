@@ -16,7 +16,7 @@ from pathlib import Path
 
 import yaml
 
-from . import claude, config
+from . import agent, config
 
 QUESTIONS = yaml.safe_load((config.PACKAGE / "data" / "questions.yaml").read_text())["questions"]
 VIEWPOINTS = yaml.safe_load((config.PACKAGE / "data" / "viewpoints.yaml").read_text())["viewpoints"]
@@ -44,9 +44,9 @@ def _text(value) -> str:
 
 
 def prefill(request: str, summary: str, workdir: Path) -> dict:
-    got = claude.ask_json(_prompt("prefill.txt").format(
+    got = agent.ask_json(_prompt("prefill.txt").format(
         max_extra=config.MAX_EXTRA_QUESTIONS, summary=summary, request=request, questions=_questions_text()),
-        config.GENERATOR_MODEL, workdir, "prefill")
+        workdir, "prefill")
     concerns = [c for c in map(_text, got.get("concerns") or []) if c]
     aspects = got.get("aspects") if isinstance(got.get("aspects"), dict) else {}
     unsure = got.get("unsure") if isinstance(got.get("unsure"), dict) else {}
@@ -124,10 +124,10 @@ def propose(request: str, answers: dict, workdir: Path) -> list[dict]:
     }
     listed = "\n".join(f"- {k}: {v['model_kind']}; shows {v['shows']}; frames aspects {', '.join(v['frames'])}"
                        for k, v in VIEWPOINTS.items())
-    got = claude.ask_json(_prompt("propose.txt").format(
+    got = agent.ask_json(_prompt("propose.txt").format(
         entity=answers["entity"], focus=answers["focus"], request=request, answers=json.dumps(stated, indent=2),
         viewpoints=listed),
-        config.GENERATOR_MODEL, workdir, f"propose-{len(list(workdir.glob('propose*.json'))) + 1}")
+        workdir, f"propose-{len(list(workdir.glob('propose*.json'))) + 1}")
     views: dict[str, dict] = {}
     for v in got.get("views") or []:
         if not isinstance(v, dict) or v.get("viewpoint") not in VIEWPOINTS:
@@ -139,7 +139,7 @@ def propose(request: str, answers: dict, workdir: Path) -> list[dict]:
         w["alternatives"] += [a for a in v.get("also") or [] if isinstance(a, dict)
                               and a.get("viewpoint") in VIEWPOINTS and a not in w["alternatives"]]
     if not views:
-        raise claude.ClaudeError("No view was proposed for this request")
+        raise agent.AgentError("No view was proposed for this request")
     return list(views.values())
 
 
