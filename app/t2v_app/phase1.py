@@ -51,6 +51,10 @@ def prefill(request: str, summary: str, workdir: Path) -> dict:
     aspects = got.get("aspects") if isinstance(got.get("aspects"), dict) else {}
     unsure = got.get("unsure") if isinstance(got.get("unsure"), dict) else {}
     extra = [q for q in got.get("extra_questions") or [] if isinstance(q, dict) and _text(q.get("question"))]
+    added = [c for c in got.get("added") or [] if c in concerns]
+    if added and "concerns" not in unsure:     # questions the stakeholder did not ask are confirmed before drawing
+        unsure["concerns"] = ("Your request does not ask these directly; keep them only if you need them: "
+                              + "; ".join(added))
     return {
         "entity": _text(got.get("entity")),
         "focus": _text(got.get("focus")),

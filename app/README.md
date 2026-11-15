@@ -49,10 +49,12 @@ tool (for example rename `~/.claude/CLAUDE.md` for the time being). The export r
 
 1. Run `codex login` and log in with your ChatGPT account (or an OpenAI API key, which is then billed).
    `codex login status` should say you are logged in.
-2. The default model is **gpt-5.6-terra** for both drawing and reviewing: it was the strongest model offered to
-   a ChatGPT plan when this was written. Which models you can use depends on your plan: `codex debug models`
-   lists them. To use others, set `T2V_GENERATOR_MODEL` and `T2V_CRITIC_MODEL` (a different model for reviewing
-   is better, if your plan has a strong one). `T2V_AGENT=codex ./check.sh` tests them.
+2. Models: which ones you can use depends on your ChatGPT plan, so the tool uses the best one your login offers,
+   in this order: **gpt-6-astra**, **gpt-6.1-sol**, **gpt-6.1-terra**, and **gpt-5.6-terra** as the fallback
+   (offered also on the free plan). The best one draws; the next best reviews, so that a different model reviews
+   when your plan has two. `./run.sh` prints the models chosen, and `T2V_AGENT=codex ./check.sh` tests them.
+   Keep Codex up to date (`codex update`; gpt-6.1-terra needs version 0.159 or later). To choose yourself, set
+   `T2V_GENERATOR_MODEL` and `T2V_CRITIC_MODEL`; `codex debug models` lists what your plan offers.
 3. The tool ignores your `~/.codex/config.toml` (model, MCP servers, profiles) so that every run uses the same
    settings; only the login is used from there. A personal `~/.codex/AGENTS.md` still reaches the agents: keep it
    out of the way for comparable results. The export records whether it existed.
@@ -102,7 +104,8 @@ To update later: `git pull`, then `./setup.sh` again.
 2. **Confirm.** The tool fills in every ISO/IEC/IEEE 42010:2022 field itself: the system, the part of the system
    in focus, your role, what you will use the view for, the questions the view should answer (with the aspect of
    each), and the detail level. One page shows them. Fields it is unsure of are highlighted and open for your
-   answer; the others show its value with an "Edit" button. It may add up to two questions of its own. If it is
+   answer; the others show its value with an "Edit" button. Questions the tool added that your request does not
+   ask are always shown for you to keep or remove. It may add up to two questions of its own. If it is
    sure of everything, this page is skipped and drawing starts at once. This is the only round of questions.
 3. **Drawing.** After you confirm, the tool chooses the views (viewpoint and model kind; a second view only when
    your questions need a different viewpoint) and draws them one after the other. The page shows each view's
@@ -166,8 +169,8 @@ Set before `./run.sh`, for example `T2V_PORT=8650 ./run.sh`.
 | `T2V_HOME` | `~/task2view-jobs` | where jobs are kept (must be outside any git repository) |
 | `T2V_PORT` | `8642` | port of the web page |
 | `T2V_AGENT` | `claude` | the agent: `claude` (Claude Code) or `codex` (Codex) |
-| `T2V_GENERATOR_MODEL` | `claude-sonnet-5-5`; Codex: `gpt-5.6-terra` | model that fills in the fields, chooses and draws the views |
-| `T2V_CRITIC_MODEL` | `claude-opus-5-5`; Codex: `gpt-5.6-terra` | model that reviews |
+| `T2V_GENERATOR_MODEL` | `claude-sonnet-5-5`; Codex: the best model your plan offers | model that fills in the fields, chooses and draws the views |
+| `T2V_CRITIC_MODEL` | `claude-opus-5-5`; Codex: the next best (or the same) | model that reviews |
 | `T2V_PERMISSION_MODE` | `auto` | Claude Code only: permission mode of the agent sessions |
 | `T2V_CODEX_EFFORT` | `high` | Codex only: reasoning effort |
 

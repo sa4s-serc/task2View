@@ -50,7 +50,9 @@ recovered from code: use case, module (package diagram), component, data model (
 
 **When the agent asks.** The fill-in prompt (`prompts/prefill.txt`) lets the agent mark a field unsure only if
 the request gives no basis for it or two readings would lead to different views; extra questions only for
-something the fields do not cover that would change the view. Unsure fields are opened and highlighted with the
+something the fields do not cover that would change the view. The agent also lists the concerns it added that
+the request does not ask for itself; if there are any, the concerns field is always unsure, so the stakeholder
+keeps or removes them before anything is drawn. Unsure fields are opened and highlighted with the
 agent's question; the others show the agent's value with "Edit". No field marked unsure and no extra question:
 the confirmation page is skipped.
 
@@ -78,7 +80,8 @@ the two skills in `.claude/skills/` and the static graph in `.claude/repo-graph.
 ### Codex
 
 All calls go through `codex exec --json --skip-git-repo-check --ignore-user-config`, with the Codex login of
-the machine, the model given with `-m`, reasoning effort `T2V_CODEX_EFFORT` (high) and `approval_policy="never"`.
+the machine, the model given with `-m` (by default the best of `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6.1-terra`,
+`gpt-5.6-terra` that `codex debug models` lists for the login; the next best reviews), reasoning effort `T2V_CODEX_EFFORT` (high) and `approval_policy="never"`.
 
 | Step | Sandbox | Notes |
 |---|---|---|
@@ -93,8 +96,9 @@ is ignored; a personal `~/.codex/AGENTS.md` is not.
 Differences that matter when comparing results:
 - Claude Code limits each agent to a list of tools; Codex limits it by sandbox (any command, but writes only in
   the working copy). The prompts are the same.
-- With Codex the same model draws and reviews by default (only one strong model on a ChatGPT plan); with
-  Claude Code a different, stronger model reviews.
+- With Codex the best model draws and the next best reviews (the same model if the plan offers only one);
+  with Claude Code a stronger model (Opus) reviews what Sonnet draws. Which Codex models were used depends on
+  the plan; the export records them.
 - Codex reports tokens but no cost.
 
 ## The skills
