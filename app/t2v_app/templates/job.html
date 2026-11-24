@@ -150,7 +150,7 @@
 
   {% if v.ready %}
   <details><summary>Checks:
-    {% for c in v.checks %}<span class="state {{ 'done' if c.passed else 'failed' }}">{{ 'passed' if c.passed else 'issues' }}</span>{% endfor %}
+    {% for c in v.checks %}<span class="state {{ {'passed': 'done', 'issues': 'failed'}.get(c.verdict, '') }}">{{ c.verdict }}</span>{% endfor %}
     {% if v.review %}· review: {{ v.review.verdict }}{% endif %}</summary>
     {% for c in v.checks %}<p><strong>{{ c.label }}</strong></p><pre>{{ c.text }}</pre>{% endfor %}
     {% if v.review %}

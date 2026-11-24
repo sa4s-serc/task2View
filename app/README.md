@@ -12,14 +12,44 @@ How it works inside, file by file: [HOW-IT-WORKS.md](HOW-IT-WORKS.md).
 
 ## 1. Requirements
 
-macOS or Linux (on Windows, use WSL). Install these first:
+macOS or Linux; on Windows, use WSL (see "Windows (WSL)" below). Install these first:
 
 | Needed | Why | Install (macOS / Ubuntu) | Check |
 |---|---|---|---|
 | git | get this repository, fetch GitHub repositories | preinstalled / `sudo apt install git` | `git --version` |
 | Python 3.11 or newer | runs the tool | `brew install python@3.13` / `sudo apt install python3.12 python3.12-venv` | `python3 --version` |
 | Claude Code **or** Codex | the agents | Claude Code: `curl -fsSL https://claude.ai/install.sh \| bash` (or `brew install --cask claude-code`). Codex: `npm install -g @openai/codex` (or `brew install codex`) | `claude --version` / `codex --version` |
-| Java, Graphviz, PlantUML | render the views | `brew install plantuml graphviz` (brings Java) / `sudo apt install plantuml graphviz default-jre` | `plantuml -version`, `dot -V` |
+| Java, Graphviz, PlantUML **from 2023 or later** | render and check the views | macOS: `brew install plantuml graphviz` (brings Java). Ubuntu: `sudo apt install graphviz default-jre`, then PlantUML as below | `plantuml -version`, `dot -V` |
+
+**PlantUML on Ubuntu (and WSL).** Do not use `apt install plantuml`: Ubuntu 24.04 ships version 1.2020, which lays
+diagrams out differently and leaves out the element data the tool's layout checks read, so those checks cannot
+run. Install the current release instead:
+
+```bash
+mkdir -p ~/.local/bin
+curl -L -o ~/.local/bin/plantuml.jar https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
+printf '#!/bin/sh\nexec java -jar "$HOME/.local/bin/plantuml.jar" "$@"\n' > ~/.local/bin/plantuml
+chmod +x ~/.local/bin/plantuml
+plantuml -version          # should print a 2023 or later version; if not, put ~/.local/bin first in PATH
+```
+
+If you installed the old package before, remove it (`sudo apt remove plantuml`) or make sure `~/.local/bin` comes
+first in your `PATH`. `./check.sh` fails with "plantuml is too old" until a recent one is found.
+
+### Windows (WSL)
+
+The tool runs in WSL 2 (Ubuntu), not in Windows itself. Do everything inside the WSL terminal:
+
+1. Clone the repository **inside the Linux file system** (for example `~/task2view`), not under `/mnt/c/...`.
+   A checkout on the Windows drive leads to "dubious ownership" errors from git, a broken `.venv`, and scripts
+   that do not run.
+2. Install the requirements above with the Ubuntu commands, including PlantUML from its release.
+3. Log in to Claude Code or Codex inside WSL; a login on the Windows side is not seen there.
+4. Open the tool at http://127.0.0.1:8642 in your Windows browser; WSL forwards the port.
+5. Exports are downloaded by the Windows browser, usually to `/mnt/c/Users/<you>/Downloads/` as seen from WSL.
+
+If a script says "cannot execute: required file not found", it was checked out with Windows line endings: clone
+again inside WSL (the repository now forces Unix line endings for its scripts).
 
 ### Choosing the agent
 
@@ -142,7 +172,8 @@ cd app
 open ~/task2view-results/index.html      # Linux: xdg-open
 ```
 
-This writes `index.html` (every job: agent, request, questions asked, confirmed fields, views, checks, review,
+Give the zip files as they are named, or with an unquoted `*` pattern; check first where your browser saved them
+(on WSL, usually `/mnt/c/Users/<you>/Downloads/`). This writes `index.html` (every job: agent, request, questions asked, confirmed fields, views, checks, review,
 feedback, ratings, time, tokens, and cost where Claude Code estimates it), `jobs.csv` (one row per job) and `ratings.csv` (one row per rating), next to
 the unpacked exports. Running it again with more zips adds them.
 
@@ -154,6 +185,8 @@ the unpacked exports. Running it again with more zips adds them.
 | "Claude Code stopped: ... limit" | Usage limit reached. Wait until it resets, then "Try again" |
 | "Port 8642 is in use" | Another copy of the tool is running; stop it, or start with `T2V_PORT=8650 ./run.sh` |
 | `plantuml cannot render` | Install Java and Graphviz (`java -version`, `dot -V`) |
+| `plantuml is too old` | Install the current PlantUML (section 1); Ubuntu's package is from 2020 |
+| A check shows "skipped" | The view is fine, but some layout checks could not run because PlantUML is too old; install a newer one |
 | `Python 3.11 or newer is needed` | Install a newer Python (table above), then `./setup.sh` |
 | An agent asks for permission or a step hangs | Agents run in Claude Code's `auto` permission mode. If your account does not offer it, set `T2V_PERMISSION_MODE=acceptEdits` |
 | Codex: "model is not supported when using Codex with a ChatGPT account" | Pick a model from `codex debug models` and set `T2V_GENERATOR_MODEL` / `T2V_CRITIC_MODEL` |

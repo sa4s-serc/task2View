@@ -19,7 +19,15 @@ need plantuml "renders the views"
 if [ -x .venv/bin/t2v-app ]; then echo "ok       app/.venv"; else echo "MISSING  app/.venv (run ./setup.sh)"; ok=0; fi
 if command -v plantuml >/dev/null 2>&1; then
   printf '@startuml\nA -> B\n@enduml\n' | plantuml -tpng -pipe >/dev/null 2>&1 \
-    && echo "ok       plantuml renders" || { echo "FAILED   plantuml cannot render (check java and dot)"; ok=0; }
+    && echo "ok       plantuml renders" || { echo "FAILED   plantuml cannot render (check java and dot)"; ok=0; }  # The layout checks read element data from the SVG; PlantUML versions from before about 2023 do not write it,
+  # and their layouts differ. Such a version renders, but the checks would be skipped: require a newer one.
+  if printf '@startuml\ncomponent A\ncomponent B\nA ..> B\n@enduml\n' | plantuml -tsvg -pipe 2>/dev/null \
+      | grep -q 'data-diagram-type='; then
+    echo "ok       plantuml is recent enough ($(plantuml -version 2>/dev/null | head -1 | cut -c1-40))"
+  else
+    echo "FAILED   plantuml is too old ($(plantuml -version 2>/dev/null | head -1 | cut -c1-40)): install a newer one (README, Requirements)"
+    ok=0
+  fi
 fi
 if command -v "$AGENT" >/dev/null 2>&1; then
   echo "         $AGENT $($AGENT --version 2>/dev/null)"

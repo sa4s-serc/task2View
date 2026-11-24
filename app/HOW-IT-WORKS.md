@@ -109,14 +109,16 @@ Differences that matter when comparing results:
   (`DERIVATION.md`), worked examples from spring-petclinic, and the check scripts:
   - `check_inventory.py`: every `file:line` exists; diagram and inventory match both ways; drawn relations have a
     code dependency in the graph; every concern detail is answered or explained; the detail level is the given one.
-  - `check_view.py`: notation and readability (use cases inside a boundary, no invented codes, house style, fits a
-    screen, one reading direction, grouping).
+  - `check_view.py`: notation and readability (use cases inside a boundary, no invented codes, house style, no
+    legend for standard UML notation, notes of at most six lines; on the rendered diagram: fits a screen, one
+    reading direction, grouping). The rendered checks need a PlantUML from 2023 or later; with an older one they
+    are reported as skipped, not passed.
   - `check_consistency.py`: the same code has the same name in all views of a request.
   - `graph_query.py`, `component_model.py`: queries on the static graph for the agent.
 - `plantuml-diagrams`: PlantUML authoring, rendering and layout checks (`puml-check`, `puml-render`).
 
 Check results are kept in the view folder (`inventory-check.txt`, `view-check.txt`, `consistency-check.txt`),
-each starting with `passed` or `issues`.
+each starting with `passed`, `skipped` (clean, but some checks could not run) or `issues`.
 
 ## Feedback on a finished view
 

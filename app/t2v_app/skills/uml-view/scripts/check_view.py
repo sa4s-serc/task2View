@@ -10,7 +10,12 @@ Checks (each is a general rule, not tied to one system):
   styling    the styling stereotypes <<accent>>, <<alert>>, <<muted>> are hidden, so they are not printed as text
   style      one shared style for every view (the plantuml-diagrams house style): Helvetica, no text below 12 pt,
              colours only from the house palette (colour carries meaning, with a legend)
-On the rendered diagram (needs plantuml on PATH; skipped otherwise):
+  legend     a legend explains only this view's own encodings (colours, the styling stereotypes), never standard
+             UML notation such as arrows, triangles or lollipops, which a UML reader already knows; a view that
+             uses a styling colour has a legend for it
+  notes      a note has at most NOTE_LINES lines; longer text (signatures, lists, explanations) goes in the README
+On the rendered diagram (needs plantuml on PATH, a version whose SVG names diagram types and elements; checks
+that cannot run are reported as "skipped", never passed silently):
   fit        readable on one screen: scaled to 1600 px wide, no text smaller than 9 px. Group or split the view
              rather than shrinking it (no element count is imposed)
   flow       one reading direction: at most a quarter of the arrows run against the main direction
@@ -21,7 +26,8 @@ Grounding: Purchase 1997 (crossings, then bends, hurt reading most); Moody 2009,
 (complexity management, cognitive integration, colour only for meaning); Störrle 2014/2017 (UML layout quality
 affects comprehension, more so as diagrams grow).
 
-Exit 0 when clean, 1 when an issue is found. Stdlib only.
+Exit 0 when clean, 1 when an issue is found, 3 when clean but some checks were skipped (not a problem of the
+view: install a newer PlantUML). Stdlib only.
 """
 from __future__ import annotations
 
@@ -41,6 +47,9 @@ HOUSE = {"#475569", "#64748B", "#CBD5E1", "#F8FAFC", "#B91C1C", "#FFF7E0", "#FEE
          "#1F2937", "#1E3A8A", "#1D4ED8", "#D55E00", "#94A3B8", "#FFF7ED", "#FEF2F2", "#F5F3FF", "#F0FDF4", "#C2410C",
          "#6D28D9", "#15803D", "#FFFFFF", "#000000", "#WHITE", "#BLACK", "#TRANSPARENT"}
 
+NOTE_LINES = 6        # a note longer than this is a paragraph; a reader looks for it in the text, not the picture
+STANDARD = re.compile(r"(?i)\b(arrow|triangle|lollipop|circle|inheritance|generali[sz]ation|realiz|dependenc|"
+                      r"aggregation|composition|association|tabbed|dashed|solid)")
 CODE = re.compile(r"\b[A-Z]{1,4}\d{1,3}\b")
 STYLING = ("accent", "alert", "muted")
 # words that legitimately end in digits in architecture views
@@ -70,14 +79,27 @@ def check(src: str) -> list[str]:
             depth += l.count("{") - l.count("}")
         if not any(re.match(r"^(rectangle|package)\b.*\{", l) for l in body):
             issues.append("boundary: no system boundary; put the use cases in rectangle \"<system name>\" { ... }")
-    in_note = False
+    in_note, block, start = "", [], 0
     for n, raw in enumerate(lines, 1):
         l = raw.strip()
-        if re.match(r"^(note|legend)\b", l) and not re.search(r"\bnote\b.*:|\{", l):
-            in_note = True
+        opened = re.match(r"^(note|legend)\b", l)
+        if opened and not re.search(r"\bnote\b.*:|\{", l):
+            in_note, block, start = opened.group(1), [], n
+            continue
         if in_note:
             if re.match(r"^end ?(note|legend)\b", l):
-                in_note = False
+                text = [b for b in block if b.strip()]
+                if in_note == "note" and len(text) > NOTE_LINES:
+                    issues.append(f"notes: the note at line {start} has {len(text)} lines; keep notes to "
+                                  f"{NOTE_LINES} short lines and put the rest (signatures, lists, explanations) in "
+                                  "the README")
+                if in_note == "legend" and STANDARD.search(" ".join(text)):
+                    issues.append(f"legend: the legend at line {start} explains standard UML notation "
+                                  f"('{STANDARD.search(' '.join(text)).group(0)}'); a UML reader knows it. Keep "
+                                  "only this view's own encodings (colours, styling stereotypes), or drop the legend")
+                in_note = ""
+            else:
+                block.append(l)
             continue
         for text in labels(l):
             for code in CODE.findall(text):
@@ -87,6 +109,10 @@ def check(src: str) -> list[str]:
     for s in STYLING:
         if re.search(rf"<<\s*{s}\s*>>", src) and not re.search(rf"hide\s+<<\s*{s}\s*>>\s+stereotype", src):
             issues.append(f"styling: <<{s}>> is used but not hidden; add 'hide <<{s}>> stereotype'")
+    used = [s for s in STYLING if re.search(rf"^(?!\s*hide\b).*<<\s*{s}\s*>>", src, re.M)]
+    if used and not re.search(r"^\s*legend\b(?!\s*\{)", src, re.M | re.I):
+        issues.append(f"legend: <<{used[0]}>> colours an element but there is no legend; say in a legend what the "
+                      "colour means")
     for m in re.finditer(r"(?i)fontsize\s+(\d+)", src):
         if int(m.group(1)) < 12:
             issues.append(f"style: FontSize {m.group(1)} is below 12; keep the house style sizes")
@@ -101,28 +127,31 @@ def check(src: str) -> list[str]:
     return issues
 
 
-def rendered(src_path: Path) -> list[str]:
-    """Checks on the rendered SVG: fit, flow, grouping."""
+def rendered(src_path: Path) -> tuple[list[str], list[str]]:
+    """Checks on the rendered SVG: fit, flow, grouping. Returns (issues, checks that could not run)."""
     if not shutil.which("plantuml"):
-        return []
+        return [], ["fit, flow, grouping: plantuml is not on PATH"]
     with tempfile.TemporaryDirectory() as tmp:
         tmp_src = Path(tmp) / "v.puml"
         tmp_src.write_text(src_path.read_text(encoding="utf-8"), encoding="utf-8")
-        subprocess.run(["plantuml", "-tsvg", str(tmp_src)], capture_output=True)
+        subprocess.run(["plantuml", "-tsvg", str(tmp_src)], capture_output=True, stdin=subprocess.DEVNULL)
         svg = Path(tmp) / "v.svg"
         if not svg.exists():
-            return ["render: plantuml produced no SVG"]
+            return ["render: plantuml produced no SVG"], []
         root = ET.parse(svg).getroot()
     vb = [float(v) for v in (root.get("viewBox") or "0 0 0 0").split()]
     width = vb[2] or float(re.sub(r"[^\d.]", "", root.get("width", "0")) or 0)
-    dtype = root.get("data-diagram-type", "")
-    issues = []
+    dtype = root.get("data-diagram-type")
+    issues, skipped = [], []
     sizes = [float(t.get("font-size")) for t in root.iter(f"{NS}text") if t.get("font-size") and (t.text or "").strip()]
     scale = min(1.0, FIT_WIDTH / width) if width else 1.0
     if sizes and min(sizes) * scale < MIN_PX:
         issues.append(f"fit: {width:.0f} px wide; on a {FIT_WIDTH} px screen its text shrinks to "
                       f"{min(sizes) * scale:.1f} px. Group elements into containers, shorten labels, or split the "
                       "view by concern; do not drop what the concern needs")
+    if dtype is None:       # older PlantUML: its SVG does not name the diagram type, elements or arrows
+        return issues, ["flow, grouping: this PlantUML writes no element data into its SVG; install a newer "
+                        "PlantUML (see the tool's README). Not a problem of the view"]
     if dtype != "SEQUENCE":
         dirs = []
         for g in root.iter(f"{NS}g"):
@@ -175,18 +204,21 @@ def rendered(src_path: Path) -> list[str]:
         if len(flat) >= 10 and not clusters:
             issues.append(f"grouping: {len(flat)} boxes side by side with no container; nest them in their layer, "
                           "subsystem or node so the reader sees the structure first")
-    return issues
+    return issues, skipped
 
 
 def main() -> int:
     if len(sys.argv) != 2:
         print(__doc__)
         return 2
-    issues = check(Path(sys.argv[1]).read_text(encoding="utf-8")) + rendered(Path(sys.argv[1]))
+    found, skipped = rendered(Path(sys.argv[1]))
+    issues = check(Path(sys.argv[1]).read_text(encoding="utf-8")) + found
     for i in issues:
         print(i)
+    for k in skipped:
+        print(f"skipped: {k}")
     print("clean" if not issues else f"{len(issues)} issue(s)")
-    return 1 if issues else 0
+    return 1 if issues else 3 if skipped else 0
 
 
 if __name__ == "__main__":

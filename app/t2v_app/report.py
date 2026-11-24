@@ -39,12 +39,13 @@ def inputs_rows(record: dict) -> list[tuple[str, str]]:
 
 
 def checks(view_dir: Path) -> list[dict]:
-    """Each check that ran on the view: its label, whether it passed, and its output."""
+    """Each check that ran on the view: its label, its verdict (passed, skipped, issues) and its output."""
     out = []
     for name, label in CHECKS.items():
         if (view_dir / name).exists():
             verdict, _, text = (view_dir / name).read_text(encoding="utf-8", errors="replace").partition("\n")
-            out.append({"label": label, "file": name, "text": text.strip(), "passed": verdict == "passed"})
+            out.append({"label": label, "file": name, "text": text.strip(), "verdict": verdict,
+                        "passed": verdict == "passed"})
     return out
 
 

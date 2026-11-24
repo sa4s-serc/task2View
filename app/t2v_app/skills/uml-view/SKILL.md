@@ -107,7 +107,19 @@ notation, not the content. See `examples/README.md`.
 - **Several views of one task tell one story** (42010 cl. 5: correspondences between views). When the prompt
   names views already drawn for the same task, read their inventory.json: an element that stands for the same
   code (the same members) keeps the same name, and the same styling; do not give one part two names.
-- Title = model kind + scope. A legend only if colour or line style carries meaning. [GD, ART, RCH, NIR]
+- Title = model kind + scope. **No legend for standard UML notation** (arrows, triangles, lollipops, dashed
+  lines, package tabs): a UML reader knows it, and explaining it only adds clutter. A legend only for this
+  view's own encodings: colours and the styling stereotypes. check_view.py checks this. [GD, ART, RCH, NIR]
+  (Reviewer finding 2026-11: a legend explaining the inheritance triangle was redundant.)
+- **Short notes; details in the README.** A note says one thing in at most six short lines. Signatures, lists of
+  methods, test checklists and explanations go in the README, where they can be read and copied. Where UML has a
+  place for the detail, use it instead of a note: operations in the compartment of a class or interface.
+  check_view.py checks note length. (Reviewer finding 2026-11: long notes hurt readability.)
+- **Say what a box stands for in the code.** Name the code unit with the element when the name differs (for
+  example `Booking control` over `ControlPrenotazioni`). A component is a unit larger than one class (a package,
+  module, layer or service). If the code has no such unit and a component is in fact one class, say so in the
+  README ("each component here is one class; the code has no larger units") instead of presenting a class as a
+  larger part. (Reviewer finding 2026-11: classes were drawn as components without saying so.)
 
 ### Component views: build them from a model (only when the prompt asks for model.json)
 When the prompt asks for it, do not write the PlantUML of a UML component diagram by hand. Write `view-out/<case>/model.json` (shape in the
@@ -138,6 +150,8 @@ Fix every error it reports; then render view.png from view.puml with plantuml.
   `queue`, `rectangle` or `database` as UML elements (rejects A365, JAB, REL #54). `artifact ..> node : <<deploy>>`.
 - Keep the «component» notation: no `skinparam componentStyle rectangle` (rejects REL, NII #55).
 - A dashed arrow is a dependency or a reply, never "async"; async messages are `->>`. (Rejects GD #56.)
+- No legend for standard UML notation, although plantuml-diagrams asks for a legend "whenever colour, shape or
+  line style carries meaning": in UML, shapes and line styles already have a standard meaning. (Amends GD #10.)
 - No crow's-foot in a class diagram; that is ER notation (#59).
 
 ## 5. Render, check, revise
@@ -157,8 +171,10 @@ Fix every error it reports; then render view.png from view.puml with plantuml.
    dependency behind them. For each "undrawn" dependency, draw it if the concern needs it, otherwise list it under
    `omitted` with the reason. Exit 0 means clean.
 4. Run `python3 -I .claude/skills/uml-view/scripts/check_view.py view-out/<case>/view.puml` (use-case system
-   boundary, no codes in labels, styling stereotypes hidden, house style; on the rendered view: fits a 1600 px
-   screen, one reading direction, grouping) and fix what it reports. Exit 0 means clean. When the task has other
+   boundary, no codes in labels, styling stereotypes hidden, house style, no legend for standard UML, short
+   notes; on the rendered view: fits a 1600 px screen, one reading direction, grouping) and fix what it reports.
+   Exit 0 means clean; exit 3 means clean, but some checks could not run because PlantUML is too old: do not
+   try to fix the view for that, and say in the README which checks were skipped. When the task has other
    views, also run `python3 -I .claude/skills/uml-view/scripts/check_consistency.py <their inventory.json files>
    view-out/<case>/inventory.json` and fix the names in your view.
 5. Keep the best version, not the last: if a revision has more issues or loses a concern detail, revert it.

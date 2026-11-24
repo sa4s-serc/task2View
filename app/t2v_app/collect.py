@@ -109,7 +109,7 @@ def page(rows: list[dict]) -> str:
             if (view / "view.png").exists():
                 parts.append(f"<img src='{e(s['id'])}/out/{e(r['id'])}/view.png' alt='{e(r['id'])}'>")
             parts.append(f"<p>{e(takeaway(view))}</p><p class='hint'>Checks: "
-                         + ", ".join(f"{e(c['label'])} {'passed' if c['passed'] else 'issues'}" for c in checks(view))
+                         + ", ".join(f"{e(c['label'])} {e(c['verdict'])}" for c in checks(view))
                          + f" · review: {e(rv.get('verdict'))}, kept {e(rv.get('kept'))}</p>")
             for f in [f for f in s.get("feedback") or [] if f["view"] == r["id"]]:
                 parts.append(f"<p><strong>Feedback:</strong> {e(f['text'])}</p>")

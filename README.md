@@ -7,7 +7,8 @@ architecture views that answer it. It uses your own **Claude Code** or **Codex**
 [app/README.md](app/README.md); how it works: [app/HOW-IT-WORKS.md](app/HOW-IT-WORKS.md).
 
 1. **Install** (macOS or Linux; Windows via WSL): git, Python 3.11 or newer, PlantUML with Graphviz and Java
-   (`brew install plantuml graphviz` / `sudo apt install plantuml graphviz default-jre`), and one agent:
+   (`brew install plantuml graphviz`; on Ubuntu/WSL `sudo apt install graphviz default-jre` and PlantUML from its
+   release, not from apt, see [app/README.md](app/README.md)), and one agent:
    - Claude Code: `curl -fsSL https://claude.ai/install.sh | bash`, then run `claude` once and log in
      (Pro, Max, Team, Enterprise or Console account).
    - Codex: `npm install -g @openai/codex` (or `brew install codex`), then `codex login` with your ChatGPT

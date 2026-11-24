@@ -111,10 +111,11 @@ def critic_loop(record: dict, workdir: Path, logs: Path, session: str, step: Cal
 
 
 def _check(script: str, result: Path, *args: str) -> None:
-    """Run a check script of the skill; its output goes to `result`, with a first line "passed" or "issues"."""
+    """Run a check script of the skill; its output goes to `result`, with a first line "passed", "skipped" (clean,
+    but some checks could not run) or "issues"."""
     run = subprocess.run([sys.executable, "-I", str(SCRIPTS / script), *args], capture_output=True, text=True)
-    result.write_text(("passed\n" if run.returncode == 0 else "issues\n") + (run.stdout or run.stderr),
-                      encoding="utf-8")
+    verdict = {0: "passed", 3: "skipped"}.get(run.returncode, "issues")
+    result.write_text(f"{verdict}\n" + (run.stdout or run.stderr), encoding="utf-8")
 
 
 def run_view(record: dict, earlier: list[dict], repo: Path, graph: Path, workdir: Path, out: Path, logs: Path,
